@@ -1,0 +1,380 @@
+{
+  "parameters": {
+    "rateUsCooldownDays": {
+      "defaultValue": {
+        "value": "3"
+      },
+      "valueType": "NUMBER"
+    },
+    "rateUsUseDaysGate": {
+      "defaultValue": {
+        "value": "1"
+      },
+      "description": "1 = first rate-us after rateUsFirstShowDays; 0 = session-based (rateUsFirstSession)",
+      "valueType": "NUMBER"
+    },
+    "rateUsFirstShowDays": {
+      "defaultValue": {
+        "value": "7"
+      },
+      "description": "Days after first app open before first rate-us (when rateUsUseDaysGate is 1)",
+      "valueType": "NUMBER"
+    },
+    "rateUsFirstSession": {
+      "defaultValue": {
+        "value": "2"
+      },
+      "valueType": "NUMBER"
+    },
+    "rateUsSessionInterval": {
+      "defaultValue": {
+        "value": "5"
+      },
+      "valueType": "NUMBER"
+    },
+    "notificationCooldownDays": {
+      "defaultValue": {
+        "value": "3"
+      },
+      "valueType": "NUMBER"
+    },
+    "notificationSessionInterval": {
+      "defaultValue": {
+        "value": "5"
+      },
+      "valueType": "NUMBER"
+    },
+    "notificationIosSettingsThreshold": {
+      "defaultValue": {
+        "value": "2"
+      },
+      "valueType": "NUMBER"
+    },
+    "notificationAndroidSettingsThreshold": {
+      "defaultValue": {
+        "value": "2"
+      },
+      "valueType": "NUMBER"
+    },
+    "locationSessionInterval": {
+      "defaultValue": {
+        "value": "5"
+      },
+      "valueType": "NUMBER"
+    },
+    "identificationReminderIntervalDays": {
+      "defaultValue": {
+        "value": "2"
+      },
+      "valueType": "NUMBER"
+    },
+    "inactivityTimeoutDays": {
+      "defaultValue": {
+        "value": "3"
+      },
+      "valueType": "NUMBER"
+    },
+    "subscriptionSessionInterval": {
+      "defaultValue": {
+        "value": "5"
+      },
+      "valueType": "NUMBER"
+    },
+    "subscriptionDelayMs": {
+      "defaultValue": {
+        "value": "2000"
+      },
+      "valueType": "NUMBER"
+    },
+    "subscriptionFirstSessionDiscount": {
+      "defaultValue": {
+        "value": "50"
+      },
+      "valueType": "NUMBER"
+    },
+    "subscription50OfferEndTs": {
+      "defaultValue": {
+        "value": "0"
+      },
+      "valueType": "NUMBER"
+    },
+    "discountTimerDurationHours": {
+      "defaultValue": {
+        "value": "24"
+      },
+      "valueType": "NUMBER"
+    },
+    "discountCycleDurationHours": {
+      "defaultValue": {
+        "value": "48"
+      },
+      "valueType": "NUMBER"
+    },
+    "discountDefaultPercentage": {
+      "defaultValue": {
+        "value": "50"
+      },
+      "valueType": "NUMBER"
+    },
+    "discountDefaultDurationSeconds": {
+      "defaultValue": {
+        "value": "1200"
+      },
+      "valueType": "NUMBER"
+    },
+    "discountBannerCooldownHours": {
+      "defaultValue": {
+        "value": "24"
+      },
+      "valueType": "NUMBER"
+    },
+    "discountBannerShowDelayMs": {
+      "defaultValue": {
+        "value": "0"
+      },
+      "valueType": "NUMBER"
+    },
+    "versionCheckCooldownHours": {
+      "defaultValue": {
+        "value": "24"
+      },
+      "valueType": "NUMBER"
+    },
+    "versionCheckSessionInterval": {
+      "defaultValue": {
+        "value": "5"
+      },
+      "valueType": "NUMBER"
+    },
+    "freeUserDailyScanLimit": {
+      "defaultValue": {
+        "value": "2"
+      },
+      "valueType": "NUMBER"
+    },
+    "freeUserDailyFeedPostLimit": {
+      "defaultValue": {
+        "value": "1"
+      },
+      "valueType": "NUMBER"
+    },
+    "purchaseValidationMaxAttempts": {
+      "defaultValue": {
+        "value": "5"
+      },
+      "valueType": "NUMBER"
+    },
+    "purchaseValidationDelayMs": {
+      "defaultValue": {
+        "value": "3000"
+      },
+      "valueType": "NUMBER"
+    },
+    "regularUserPostRetentionDays": {
+      "defaultValue": {
+        "value": "30"
+      },
+      "valueType": "NUMBER"
+    },
+    "premiumUserPostRetentionDays": {
+      "defaultValue": {
+        "value": "90"
+      },
+      "valueType": "NUMBER"
+    },
+    "dataCacheRefreshIntervalHours": {
+      "defaultValue": {
+        "value": "12"
+      },
+      "valueType": "NUMBER"
+    },
+    "guestLoginTimeoutMs": {
+      "defaultValue": {
+        "value": "30000"
+      },
+      "valueType": "NUMBER"
+    },
+    "splashScreenDelayMs": {
+      "defaultValue": {
+        "value": "800"
+      },
+      "valueType": "NUMBER"
+    },
+    "splashStoreHydrationDelayMs": {
+      "defaultValue": {
+        "value": "100"
+      },
+      "valueType": "NUMBER"
+    },
+    "onboardingNavigationDelayMs": {
+      "defaultValue": {
+        "value": "0"
+      },
+      "valueType": "NUMBER"
+    },
+    "guestLoginNavigationDelayMs": {
+      "defaultValue": {
+        "value": "400"
+      },
+      "valueType": "NUMBER"
+    },
+    "apiTimeoutMs": {
+      "defaultValue": {
+        "value": "30000"
+      },
+      "valueType": "NUMBER"
+    },
+    "apiAuthWaitTimeoutMs": {
+      "defaultValue": {
+        "value": "5000"
+      },
+      "valueType": "NUMBER"
+    },
+    "apiAuthCheckIntervalMs": {
+      "defaultValue": {
+        "value": "100"
+      },
+      "valueType": "NUMBER"
+    },
+    "defaultPageSize": {
+      "defaultValue": {
+        "value": "10"
+      },
+      "valueType": "NUMBER"
+    },
+    "homePageSize": {
+      "defaultValue": {
+        "value": "100"
+      },
+      "valueType": "NUMBER"
+    },
+    "cataloguePageSize": {
+      "defaultValue": {
+        "value": "100"
+      },
+      "valueType": "NUMBER"
+    },
+    "collectionPageSize": {
+      "defaultValue": {
+        "value": "50"
+      },
+      "valueType": "NUMBER"
+    },
+    "feedPageSize": {
+      "defaultValue": {
+        "value": "20"
+      },
+      "valueType": "NUMBER"
+    },
+    "homeDisplayCount": {
+      "defaultValue": {
+        "value": "4"
+      },
+      "valueType": "NUMBER"
+    },
+    "catalogueCacheTtlHours": {
+      "defaultValue": {
+        "value": "168"
+      },
+      "valueType": "NUMBER"
+    },
+    "networkFailureHistoryLimit": {
+      "defaultValue": {
+        "value": "10"
+      },
+      "valueType": "NUMBER"
+    },
+    "traceNameMaxLength": {
+      "defaultValue": {
+        "value": "50"
+      },
+      "valueType": "NUMBER"
+    },
+    "cachePrefix": {
+      "defaultValue": {
+        "value": "data_cache_"
+      },
+      "valueType": "STRING"
+    },
+    "cacheTimestampPrefix": {
+      "defaultValue": {
+        "value": "cache_timestamp_"
+      },
+      "valueType": "STRING"
+    },
+    "timingDelayBeforeInteractionMs": {
+      "defaultValue": {
+        "value": "1000"
+      },
+      "valueType": "NUMBER"
+    },
+    "mineralOfTheDayPopupCooldownHours": {
+      "defaultValue": {
+        "value": "24"
+      },
+      "valueType": "NUMBER"
+    },
+    "darkModeEnabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "theme_default": {
+      "defaultValue": {
+        "value": "system"
+      },
+      "description": "Dark mode A/B: system/variant_a = follow device + Appearance; light/variant_b = lock light, hide Appearance.",
+      "valueType": "STRING"
+    },
+    "theme_default": {
+      "defaultValue": {
+        "value": "system"
+      },
+      "description": "Dark mode A/B: system/variant_a = follow device + Appearance; light/variant_b = lock light, hide Appearance.",
+      "valueType": "STRING"
+    },
+    "appLogsEnabled": {
+      "defaultValue": {
+        "value": "false"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "appleSubscriptionsEnabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN"
+    },
+    "androidPlayStoreUrl": {
+      "defaultValue": {
+        "value": "https://play.google.com/store/apps/details?id=com.trackzio.birds"
+      },
+      "valueType": "STRING"
+    },
+    "iosAppStoreUrl": {
+      "defaultValue": {
+        "value": "https://apps.apple.com/app/id6758651735"
+      },
+      "valueType": "STRING"
+    },
+    "privacyPolicyUrl": {
+      "defaultValue": {
+        "value": "https://trackzio.com/privacy-policy-birdzy-ai"
+      },
+      "valueType": "STRING"
+    },
+    "termsOfServiceUrl": {
+      "defaultValue": {
+        "value": "https://trackzio.com/birdzy-terms-of-service"
+      },
+      "valueType": "STRING"
+    },
+    "quizEnabled": {
+      "defaultValue": {
+        "value": "1"
+      },
+      "valueType": "NUMBER"
+    }
+  }
+}

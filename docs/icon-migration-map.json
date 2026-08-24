@@ -1,0 +1,312 @@
+{
+  "migratedAt": "2026-08-22T15:03:38.818Z",
+  "homeSkipped": [
+    "Identify_by_photo_home.webp",
+    "Identify_by_sound_home.webp",
+    "ask_ai_home.webp",
+    "bird_of_the_day_home.webp",
+    "bird_sound_home.webp",
+    "subs_banner_home.webp",
+    "go_pro.webp"
+  ],
+  "applied": [
+    {
+      "root": "Onboarding_1.webp",
+      "asset": "onboarding/light/background_1.webp",
+      "imagesKey": "onboardingBg1"
+    },
+    {
+      "root": "Onboarding_2.webp",
+      "asset": "onboarding/light/background_2.webp",
+      "imagesKey": "onboardingBg2"
+    },
+    {
+      "root": "Onboarding_3.webp",
+      "asset": "onboarding/light/background_3.webp",
+      "imagesKey": "onboardingBg3"
+    },
+    {
+      "root": "Onboarding_4.webp",
+      "asset": "onboarding/light/background_4.webp",
+      "imagesKey": "onboardingBg4"
+    },
+    {
+      "root": "Onboarding.webp",
+      "asset": "onboarding/light/background_5.webp",
+      "imagesKey": "onboardingBg5"
+    },
+    {
+      "root": "Gift_post_onboard.webp",
+      "asset": "onboarding/post_auth/light/gift.webp",
+      "imagesKey": "onboardingGift"
+    },
+    {
+      "root": "postonboarding_notification.webp",
+      "asset": "onboarding/post_auth/light/notification.webp",
+      "imagesKey": "onboardingNotification"
+    },
+    {
+      "root": "auth_bg.webp",
+      "asset": "branding/splash/background/dark/auth_bg.webp",
+      "imagesKey": "authBgDark"
+    },
+    {
+      "root": "identification.webp",
+      "asset": "identification/light/identification_bg.webp",
+      "imagesKey": "identifyBg"
+    },
+    {
+      "root": "blurry.webp",
+      "asset": "identification/light/blurry.webp",
+      "imagesKey": "identificationTipBlurry"
+    },
+    {
+      "root": "too_bright.webp",
+      "asset": "identification/light/too_bright.webp",
+      "imagesKey": "identificationTipTooBright"
+    },
+    {
+      "root": "too_dark.webp",
+      "asset": "identification/light/too_dark.webp",
+      "imagesKey": "identificationTipTooDark"
+    },
+    {
+      "root": "too_far.webp",
+      "asset": "identification/light/too_far.webp",
+      "imagesKey": "identificationTipTooFar"
+    },
+    {
+      "root": "tip_alert.webp",
+      "asset": "identification/light/bell.webp",
+      "imagesKey": "identificationAlertIcon"
+    },
+    {
+      "root": "analyse_snanner_view_bg.webp",
+      "asset": "askai/ask_ai_bg.webp",
+      "imagesKey": "analyseAi"
+    },
+    {
+      "root": "Scan.webp",
+      "asset": "askai/scan.webp",
+      "imagesKey": "askAiScan"
+    },
+    {
+      "root": "camera_icon.webp",
+      "asset": "common/iconfix/camera.webp",
+      "imagesKey": "iconfixCamera"
+    },
+    {
+      "root": "trash.webp",
+      "asset": "catalogue/icons/species/trash.webp",
+      "imagesKey": "trashLight"
+    },
+    {
+      "root": "Setting.webp",
+      "asset": "catalogue/icons/species/setting.webp",
+      "imagesKey": "mushroomSetting"
+    },
+    {
+      "root": "location_icon.webp",
+      "asset": "catalogue/icons/species/location.webp",
+      "imagesKey": "mushroomLocation"
+    },
+    {
+      "root": "post_onboardng_location.webp",
+      "asset": "catalogue/icons/species/location_post.webp",
+      "imagesKey": "locationPost"
+    },
+    {
+      "root": "empty_catalogue.webp",
+      "asset": "catalogue/icons/empty_catalogue_lights.webp",
+      "imagesKey": "emptyCatalogueLight"
+    },
+    {
+      "root": "empty_catalogue.webp",
+      "asset": "catalogue/icons/empty_catalogue_darks.webp",
+      "imagesKey": "emptyCatalogueDark"
+    },
+    {
+      "root": "empty_inside_collection.webp",
+      "asset": "catalogue/icons/species/no_collection.webp",
+      "imagesKey": "emptyCollection"
+    },
+    {
+      "root": "empty_collection_outside.webp",
+      "asset": "collection/icons/empty_collection_light.webp",
+      "imagesKey": "emptyCollectionLight"
+    },
+    {
+      "root": "empty_collection_outside.webp",
+      "asset": "collection/icons/empty_collection_dark.webp",
+      "imagesKey": "emptyCollectionDark"
+    },
+    {
+      "root": "no_post.webp",
+      "asset": "catalogue/icons/species/no_post.webp",
+      "imagesKey": "emptyFeed"
+    },
+    {
+      "root": "colelction_placeholder.webp",
+      "asset": "collection/details/card_image_placeholder.webp",
+      "imagesKey": "card_image_placeholder"
+    },
+    {
+      "root": "subs_to_premium.webp",
+      "asset": "collection/details/mushroom/subs_to_premium.webp",
+      "imagesKey": "mushroomSubsToPremium"
+    },
+    {
+      "root": "subs_1.webp",
+      "asset": "subscription/list/light/1.webp",
+      "imagesKey": "subscriptionListIdentification"
+    },
+    {
+      "root": "subs_2.webp",
+      "asset": "subscription/list/light/2.webp",
+      "imagesKey": "subscriptionListCollection"
+    },
+    {
+      "root": "subs_3.webp",
+      "asset": "subscription/list/light/3.webp",
+      "imagesKey": "subscriptionListDetails"
+    },
+    {
+      "root": "subs_4.webp",
+      "asset": "subscription/list/light/4.webp",
+      "imagesKey": "subscriptionListFeed"
+    },
+    {
+      "root": "subs_5.webp",
+      "asset": "subscription/list/light/5.webp",
+      "imagesKey": "subscriptionListMushroomOfDay"
+    },
+    {
+      "root": "subs_6.webp",
+      "asset": "subscription/list/light/6.webp",
+      "imagesKey": "subscriptionListAiChat"
+    },
+    {
+      "root": "identify_popup.webp",
+      "asset": "subscription/carousel/light/identify.webp",
+      "imagesKey": "subscriptionIconIdentification"
+    },
+    {
+      "root": "collection_popup.webp",
+      "asset": "subscription/carousel/light/collection.webp",
+      "imagesKey": "subscriptionIconCollection"
+    },
+    {
+      "root": "detail.webp",
+      "asset": "subscription/carousel/light/detail.webp",
+      "imagesKey": "subscriptionIconDetails"
+    },
+    {
+      "root": "subs_0.webp",
+      "asset": "subscription/carousel/light/shroom_of_the_day.webp",
+      "imagesKey": "subscriptionIconMushroomOfDay"
+    },
+    {
+      "root": "ask_ai_popup.webp",
+      "asset": "subscription/carousel/light/ai.webp",
+      "imagesKey": "subscriptionIconAiChat"
+    },
+    {
+      "root": "subs_4.webp",
+      "asset": "subscription/carousel/light/feed.webp",
+      "imagesKey": "subscriptionIconFeed"
+    },
+    {
+      "root": "Congratulation_popup.webp",
+      "asset": "home/popup/mushroom/light/congratulations_bg.webp",
+      "imagesKey": "popupCongratulationsBg"
+    },
+    {
+      "root": "location_popup.webp",
+      "asset": "home/popup/mushroom/light/location_permission_bg.webp",
+      "imagesKey": "popupLocationPermissionBg"
+    },
+    {
+      "root": "notification_popup.webp",
+      "asset": "home/popup/mushroom/light/notification_permission_bg.webp",
+      "imagesKey": "popupNotificationPermissionBg"
+    },
+    {
+      "root": "Rate_us_popup.webp",
+      "asset": "home/popup/mushroom/light/rate_us_popup.webp",
+      "imagesKey": "rateUsPopupIllustration"
+    },
+    {
+      "root": "feedback_popup.webp",
+      "asset": "home/popup/mushroom/light/rate_us.webp",
+      "imagesKey": "rateUsSheetBgLight"
+    },
+    {
+      "root": "identify_popup.webp",
+      "asset": "home/popup/mushroom/light/identify_popup_bg.webp",
+      "imagesKey": "subscriptionPopupIconIdentification"
+    },
+    {
+      "root": "collection_popup.webp",
+      "asset": "home/popup/mushroom/light/collection.webp",
+      "imagesKey": "subscriptionPopupIconCollection"
+    },
+    {
+      "root": "detail.webp",
+      "asset": "home/popup/mushroom/light/detail.webp",
+      "imagesKey": "subscriptionPopupIconDetails"
+    },
+    {
+      "root": "ask_ai_popup.webp",
+      "asset": "home/popup/mushroom/light/chat_popup_bg.webp",
+      "imagesKey": "subscriptionPopupIconAiChat"
+    },
+    {
+      "root": "collection_2_popup.webp",
+      "asset": "home/popup/mushroom/light/collection_1.webp",
+      "imagesKey": "collectionAltBgLight"
+    },
+    {
+      "root": "subs_0.webp",
+      "asset": "home/popup/mushroom/light/bird_of_the_day_popup.webp",
+      "imagesKey": "subscriptionPopupIconMushroomOfDay"
+    },
+    {
+      "root": "go_pro.webp",
+      "asset": "collection/details/mushroom/go_pro.webp",
+      "imagesKey": "mushroomGoPro",
+      "note": "Home header goPro unchanged (home/go_pro.webp)"
+    }
+  ],
+  "unmatchedKeptInIcons": [
+    "Illustration.webp",
+    "alert.webp",
+    "alert_camera.webp",
+    "bird sounds.webp",
+    "details_record.webp",
+    "edit.webp",
+    "header.webp",
+    "large_bird_identificaion.webp",
+    "medium_bird_identificaion.webp",
+    "move.webp",
+    "pause.webp",
+    "play.webp",
+    "record.webp",
+    "record_stop.webp",
+    "save.webp",
+    "small_bird_identificaion.webp",
+    "sound_details.webp",
+    "storage_popup.webp",
+    "very_large_bird_identificaion.webp",
+    "volume-high.webp",
+    "wizard.webp"
+  ],
+  "homeSkippedKeptInIcons": [
+    "Identify_by_photo_home.webp",
+    "Identify_by_sound_home.webp",
+    "ask_ai_home.webp",
+    "bird_of_the_day_home.webp",
+    "bird_sound_home.webp",
+    "subs_banner_home.webp"
+  ],
+  "unmatchedNotInRoot": []
+}

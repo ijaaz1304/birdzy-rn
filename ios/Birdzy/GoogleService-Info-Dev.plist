@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>480281695791-u1pfnubup05bhjh9mvd950bjq58ud4kj.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.480281695791-u1pfnubup05bhjh9mvd950bjq58ud4kj</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCoriCKVizuTs6Xu904Mx9Co6q94KuX7VE</string>
+	<key>GCM_SENDER_ID</key>
+	<string>480281695791</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.trackzio.birds.dev</string>
+	<key>PROJECT_ID</key>
+	<string>birdzy-app-dev</string>
+	<key>STORAGE_BUCKET</key>
+	<string>birdzy-app-dev.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:480281695791:ios:d2406536b12ea38f8958da</string>
+</dict>
+</plist>

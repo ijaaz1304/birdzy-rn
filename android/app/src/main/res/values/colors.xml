@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Birdzy brand teal — matches JS splash (APP_COLORS.splashBackground) -->
+    <color name="splash_background">#01474F</color>
+</resources>

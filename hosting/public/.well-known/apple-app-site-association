@@ -1,0 +1,81 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "FUQBY8BYY3.com.trackzio.birds",
+        "paths": [
+          "/home",
+          "/home/*",
+          "/identify",
+          "/identify/*",
+          "/camera",
+          "/camera/*",
+          "/catalogue",
+          "/catalogue/*",
+          "/catalog",
+          "/catalog/*",
+          "/collection",
+          "/collection/*",
+          "/feed",
+          "/feed/*",
+          "/subs",
+          "/subs/*",
+          "/subscription",
+          "/subscription/*",
+          "/settings",
+          "/settings/*",
+          "/ask-ai",
+          "/ask-ai/*",
+          "/askai",
+          "/askai/*",
+          "/guides",
+          "/guides/*",
+          "/quiz",
+          "/quiz/*",
+          "/personality",
+          "/personality/*",
+          "/rock-personality",
+          "/rock-personality/*"
+        ]
+      },
+      {
+        "appID": "FUQBY8BYY3.com.trackzio.birds.dev",
+        "paths": [
+          "/home",
+          "/home/*",
+          "/identify",
+          "/identify/*",
+          "/camera",
+          "/camera/*",
+          "/catalogue",
+          "/catalogue/*",
+          "/catalog",
+          "/catalog/*",
+          "/collection",
+          "/collection/*",
+          "/feed",
+          "/feed/*",
+          "/subs",
+          "/subs/*",
+          "/subscription",
+          "/subscription/*",
+          "/settings",
+          "/settings/*",
+          "/ask-ai",
+          "/ask-ai/*",
+          "/askai",
+          "/askai/*",
+          "/guides",
+          "/guides/*",
+          "/quiz",
+          "/quiz/*",
+          "/personality",
+          "/personality/*",
+          "/rock-personality",
+          "/rock-personality/*"
+        ]
+      }
+    ]
+  }
+}

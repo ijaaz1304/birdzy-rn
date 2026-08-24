@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Birdzy — identify birds by photo and sound, build your life list, and explore with AI." />
+    <meta name="theme-color" content="#1a1410" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Birdzy" />
+    <meta property="og:title" content="Birdzy — Open in App" />
+    <meta property="og:description" content="Identify birds, manage your life list, and explore species with AI." />
+    <meta property="og:type" content="website" />
+    <title>Birdzy</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #120e0a;
+        --bg-soft: #1a1410;
+        --card: rgba(255, 255, 255, 0.06);
+        --card-border: rgba(255, 255, 255, 0.1);
+        --text: #f5f0eb;
+        --muted: rgba(245, 240, 235, 0.72);
+        --hint: rgba(245, 240, 235, 0.55);
+        --accent: #c47b3a;
+        --accent-strong: #a8642d;
+        --accent-soft: rgba(196, 123, 58, 0.18);
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+        --radius: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top, rgba(196, 123, 58, 0.16), transparent 34%),
+          linear-gradient(180deg, var(--bg) 0%, #0a0806 100%);
+        color: var(--text);
+      }
+
+      .page {
+        width: min(960px, 100%);
+        margin: 0 auto;
+        padding: 28px 20px 48px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 28px;
+        align-items: center;
+        margin-bottom: 28px;
+      }
+
+      @media (min-width: 760px) {
+        .hero {
+          grid-template-columns: 96px 1fr;
+        }
+      }
+
+      .logo-wrap {
+        width: 96px;
+        height: 96px;
+        margin: 0 auto;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--card-border);
+        background: linear-gradient(145deg, #2a2118, #1a1410);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.4rem;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: #f0d4b8;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2rem, 5vw, 2.8rem);
+        line-height: 1.05;
+      }
+
+      .lead {
+        margin: 0;
+        max-width: 54ch;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.6;
+      }
+
+      .status-card,
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .status-card {
+        padding: 22px;
+        margin-bottom: 22px;
+      }
+
+      .status-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .spinner {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-top-color: var(--accent);
+        animation: spin 0.9s linear infinite;
+        flex: 0 0 auto;
+        margin-top: 2px;
+      }
+
+      .spinner.hidden {
+        display: none;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #statusTitle {
+        margin: 0 0 6px;
+        font-size: 1.15rem;
+      }
+
+      #statusMessage {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .route-pill {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #f0d4b8;
+        font-size: 0.85rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 20px;
+        border-radius: 999px;
+        border: 0;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.98rem;
+        cursor: pointer;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+      }
+
+      .button:active {
+        transform: scale(0.98);
+      }
+
+      .button-primary {
+        background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+        color: #fff;
+      }
+
+      .button-secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        border: 1px solid var(--card-border);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      @media (min-width: 760px) {
+        .grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .panel h2 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+
+      .panel p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+        font-size: 0.95rem;
+      }
+
+      .routes {
+        margin-top: 22px;
+        padding: 18px;
+      }
+
+      .routes h2 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .routes p {
+        margin: 0 0 14px;
+        color: var(--hint);
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+
+      .route-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .route-list a {
+        color: #f0d4b8;
+        text-decoration: none;
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 0.84rem;
+      }
+
+      .route-list a:hover {
+        background: rgba(196, 123, 58, 0.18);
+      }
+
+      footer {
+        margin-top: 28px;
+        text-align: center;
+        color: var(--hint);
+        font-size: 0.84rem;
+        line-height: 1.6;
+      }
+
+      footer a {
+        color: #f0d4b8;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div class="logo-wrap" aria-hidden="true">🐦</div>
+        <div>
+          <div class="eyebrow">Trackzio Birdzy</div>
+          <h1 id="pageTitle">Open Birdzy</h1>
+          <p class="lead" id="pageLead">
+            We are sending you to the right place in the app. If Birdzy is not installed, you will
+            be taken to the app store.
+          </p>
+        </div>
+      </section>
+
+      <section class="status-card" aria-live="polite">
+        <div class="status-row">
+          <div class="spinner" id="spinner" aria-hidden="true"></div>
+          <div>
+            <h2 id="statusTitle">Opening Birdzy…</h2>
+            <p id="statusMessage">Please wait while we try to launch the app.</p>
+            <div class="route-pill" id="routePill"></div>
+            <div class="actions">
+              <a id="openAppBtn" class="button button-primary hidden" href="#">Open in Birdzy</a>
+              <a id="storeBtn" class="button button-secondary hidden" href="#">Get Birdzy</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" id="featureGrid">
+        <article class="panel">
+          <h2>Identify instantly</h2>
+          <p>Snap a photo or record a call to identify birds with AI-powered matching.</p>
+        </article>
+        <article class="panel">
+          <h2>Build your life list</h2>
+          <p>Save sightings, track collections, and organize your personal birding library.</p>
+        </article>
+        <article class="panel">
+          <h2>Explore &amp; learn</h2>
+          <p>Access the wizard, quizzes, Ask AI, and premium field-guide features.</p>
+        </article>
+      </section>
+
+      <section class="status-card routes">
+        <h2>Supported deep links</h2>
+        <p>
+          Share any of these paths after your hosting domain. The app opens the matching screen once
+          you are signed in and past onboarding.
+        </p>
+        <div class="route-list" id="routeList"></div>
+      </section>
+
+      <footer>
+        <p>
+          Need help?
+          <a href="https://trackzio.com" rel="noopener noreferrer">Visit Trackzio</a>
+        </p>
+        <p id="manualHint" class="hidden">
+          Manual test mode is on. Automatic redirects are disabled — use the buttons above.
+        </p>
+      </footer>
+    </main>
+
+    <script>
+      (function () {
+        var SUPPORTED_ROUTES = [
+          'home',
+          'identify',
+          'camera',
+          'catalogue',
+          'catalog',
+          'collection',
+          'feed',
+          'subs',
+          'subscription',
+          'settings',
+          'ask-ai',
+          'askai',
+          'guides',
+          'quiz',
+          'personality',
+          'rock-personality',
+        ];
+
+        var ROUTE_LABELS = {
+          home: 'Home',
+          identify: 'Identify',
+          camera: 'Camera',
+          catalogue: 'Catalogue',
+          catalog: 'Catalogue',
+          collection: 'Collection',
+          feed: 'Feed',
+          subs: 'Premium',
+          subscription: 'Premium',
+          settings: 'Settings',
+          'ask-ai': 'Ask AI',
+          askai: 'Ask AI',
+          guides: 'Guides',
+          quiz: 'Which Bird Are You?',
+          personality: 'Bird Personality',
+          'rock-personality': 'Bird Personality',
+        };
+
+        var isDevHost = /birdzy-app-dev\./i.test(window.location.hostname);
+        var SCHEME = isDevHost ? 'birdzy-dev' : 'birdzy';
+        var ANDROID_PACKAGE = isDevHost ? 'com.trackzio.birds.dev' : 'com.trackzio.birds';
+        var PLAY_STORE_URL =
+          'https://play.google.com/store/apps/details?id=' + encodeURIComponent(ANDROID_PACKAGE);
+        var APP_STORE_URL = ''; // PENDING: Birdzy App Store ID
+
+        var params = new URLSearchParams(window.location.search);
+        var manualMode = params.get('manual') === '1';
+        var parts = window.location.pathname.split('/').filter(Boolean);
+        var route = (parts[0] || 'home').toLowerCase();
+        if (SUPPORTED_ROUTES.indexOf(route) === -1) {
+          route = 'home';
+        }
+
+        var query = window.location.search || '';
+        var hash = window.location.hash || '';
+        var routeLabel = ROUTE_LABELS[route] || 'Home';
+        var customUrl = SCHEME + '://' + route + query + hash;
+
+        var smartBanner = document.createElement('meta');
+        smartBanner.name = 'apple-itunes-app';
+        smartBanner.content = 'app-id=6758651735, app-argument=' + encodeURIComponent(customUrl);
+        document.head.appendChild(smartBanner);
+
+        var pageTitle = document.getElementById('pageTitle');
+        var pageLead = document.getElementById('pageLead');
+        var statusTitle = document.getElementById('statusTitle');
+        var statusMessage = document.getElementById('statusMessage');
+        var routePill = document.getElementById('routePill');
+        var spinner = document.getElementById('spinner');
+        var openAppBtn = document.getElementById('openAppBtn');
+        var storeBtn = document.getElementById('storeBtn');
+        var manualHint = document.getElementById('manualHint');
+        var routeList = document.getElementById('routeList');
+
+        routePill.textContent = '/' + route + ' → ' + routeLabel;
+
+        pageTitle.textContent = 'Open ' + routeLabel + ' in Birdzy';
+        pageLead.textContent =
+          'This link opens the ' +
+          routeLabel.toLowerCase() +
+          ' screen in Birdzy. If the app is not installed, we will send you to the app store instead.';
+
+        function uniqueRoutesForList() {
+          var seen = {};
+          var items = [];
+          SUPPORTED_ROUTES.forEach(function (name) {
+            var label = ROUTE_LABELS[name];
+            if (!label || seen[label]) return;
+            seen[label] = true;
+            items.push({ name: name, label: label });
+          });
+          return items;
+        }
+
+        uniqueRoutesForList().forEach(function (item) {
+          var link = document.createElement('a');
+          link.href = '/' + item.name;
+          link.textContent = item.label;
+          routeList.appendChild(link);
+        });
+
+        function detectPlatform() {
+          var ua = navigator.userAgent || '';
+          var isAndroid = /Android/i.test(ua);
+          var isIOS = /iPhone|iPad|iPod/i.test(ua);
+          var isMobile = isAndroid || isIOS;
+          return { isAndroid: isAndroid, isIOS: isIOS, isMobile: isMobile };
+        }
+
+        function getStoreUrl(platform) {
+          if (platform.isIOS) return APP_STORE_URL;
+          var referrer = 'birdzy_dl=' + encodeURIComponent(route);
+          return PLAY_STORE_URL + '&referrer=' + encodeURIComponent(referrer);
+        }
+
+        function buildAndroidIntentUrl() {
+          var fallback = encodeURIComponent(getStoreUrl({ isIOS: false }));
+          return (
+            'intent://' +
+            route +
+            query +
+            hash +
+            '#Intent;scheme=' +
+            SCHEME +
+            ';package=' +
+            ANDROID_PACKAGE +
+            ';S.browser_fallback_url=' +
+            fallback +
+            ';end'
+          );
+        }
+
+        function showFallback(platform, reason) {
+          spinner.classList.add('hidden');
+          openAppBtn.classList.remove('hidden');
+          storeBtn.classList.remove('hidden');
+          statusTitle.textContent = 'Birdzy is not installed yet';
+          statusMessage.textContent =
+            reason ||
+            'Tap below to open the app if you already installed it, or download Birdzy from the store.';
+          storeBtn.textContent = platform.isIOS ? 'Download on the App Store' : 'Get it on Google Play';
+          storeBtn.href = getStoreUrl(platform);
+        }
+
+        function showManualMode(platform) {
+          spinner.classList.add('hidden');
+          openAppBtn.classList.remove('hidden');
+          storeBtn.classList.remove('hidden');
+          manualHint.classList.remove('hidden');
+          statusTitle.textContent = 'Manual test mode';
+          statusMessage.textContent =
+            'Automatic redirects are disabled. Use the buttons to test app launch and store fallback.';
+          openAppBtn.href = customUrl;
+          storeBtn.href = getStoreUrl(platform);
+          storeBtn.textContent = platform.isIOS ? 'Open App Store' : 'Open Play Store';
+        }
+
+        var appPossiblyOpened = false;
+        function markPossiblyOpened() {
+          appPossiblyOpened = true;
+        }
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) markPossiblyOpened();
+        });
+        window.addEventListener('pagehide', markPossiblyOpened);
+        window.addEventListener('blur', markPossiblyOpened);
+
+        openAppBtn.addEventListener('click', function (event) {
+          event.preventDefault();
+          var platform = detectPlatform();
+          if (platform.isAndroid) {
+            window.location.href = buildAndroidIntentUrl();
+            return;
+          }
+          window.location.href = customUrl;
+        });
+
+        storeBtn.addEventListener('click', function (event) {
+          event.preventDefault();
+          var platform = detectPlatform();
+          if (platform.isIOS && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(window.location.href).catch(function () {});
+          }
+          window.location.href = getStoreUrl(platform);
+        });
+
+        function tryOpenApp() {
+          var platform = detectPlatform();
+
+          if (manualMode) {
+            showManualMode(platform);
+            return;
+          }
+
+          if (!platform.isMobile) {
+            spinner.classList.add('hidden');
+            openAppBtn.classList.remove('hidden');
+            storeBtn.classList.remove('hidden');
+            statusTitle.textContent = 'Open Birdzy on your phone';
+            statusMessage.textContent =
+              'Scan or open this link on your mobile device to launch the app, or download Birdzy from your app store.';
+            openAppBtn.href = customUrl;
+            storeBtn.href = PLAY_STORE_URL;
+            storeBtn.textContent = 'Google Play';
+            return;
+          }
+
+          if (platform.isAndroid) {
+            statusTitle.textContent = 'Opening Birdzy on Android…';
+            statusMessage.textContent =
+              'Trying to launch the app. If it is not installed, Google Play will open automatically.';
+            window.location.href = buildAndroidIntentUrl();
+            window.setTimeout(function () {
+              if (!appPossiblyOpened) {
+                showFallback(platform, 'We could not detect Birdzy on this device.');
+              }
+            }, 2200);
+            return;
+          }
+
+          if (platform.isIOS) {
+            statusTitle.textContent = 'Opening Birdzy on iOS…';
+            statusMessage.textContent =
+              'Trying to launch the app. If nothing happens, tap Open in Birdzy or download from the App Store.';
+            window.location.href = customUrl;
+            window.setTimeout(function () {
+              if (!appPossiblyOpened) {
+                showFallback(platform, 'If Birdzy did not open, install it from the App Store.');
+              }
+            }, 1800);
+            return;
+          }
+
+          showFallback(platform);
+        }
+
+        openAppBtn.href = customUrl;
+        storeBtn.href = getStoreUrl(detectPlatform());
+
+        tryOpenApp();
+      })();
+    </script>
+  </body>
+</html>

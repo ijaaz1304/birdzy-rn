@@ -1,0 +1,27 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.trackzio.birds",
+      "sha256_cert_fingerprints": [
+        "65:FF:26:D1:72:AB:B3:86:B1:A5:58:5B:5B:7C:D6:63:D8:20:B4:3F:D7:33:B4:6E:68:3D:BD:A9:E9:A4:51:5A",
+        "C5:81:53:CA:E0:CA:3A:D8:35:D1:BD:5A:A3:42:61:EA:20:93:04:83:E9:47:1C:4D:81:19:F4:12:A7:9D:AE:B5"
+      ]
+    }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.trackzio.birds.dev",
+      "sha256_cert_fingerprints": [
+        "65:FF:26:D1:72:AB:B3:86:B1:A5:58:5B:5B:7C:D6:63:D8:20:B4:3F:D7:33:B4:6E:68:3D:BD:A9:E9:A4:51:5A"
+      ]
+    }
+  }
+]

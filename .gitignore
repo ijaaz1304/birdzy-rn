@@ -1,0 +1,81 @@
+# macOS
+.DS_Store
+*.pem
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Metro
+.metro-health-check*
+
+# Testing
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment — local overrides only (.env / .env.dev / .env.prod are tracked on this branch)
+.env.local
+.env.*.local
+
+# Ruby / Bundler
+vendor/bundle/
+
+# React Native
+*.jsbundle
+
+# Xcode
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcuserstate
+**/.xcode.env.local
+ios/Pods/
+ios/build/
+
+# Android
+android/.gradle/
+android/.idea/
+android/local.properties
+android/**/*.iml
+android/**/build/
+android/**/.cxx/
+android/**/*.hprof
+android/.kotlin/
+*.keystore
+!android/app/debug.keystore
+# Prod upload keystore is tracked on this branch for release builds
+*.jks
+!android/app/src/prod/minerals-upload-key.jks
+
+# fastlane
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots/
+**/fastlane/test_output/
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

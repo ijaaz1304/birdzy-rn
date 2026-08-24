@@ -1,0 +1,49 @@
+{
+  "replacements": [
+    {
+      "find": "borderRadius: 12.5",
+      "replaceWith": "borderRadius: Radius.md",
+      "import": { "symbol": "Radius", "from": "design" }
+    },
+    {
+      "find": "borderRadius: 12",
+      "replaceWith": "borderRadius: Radius.md",
+      "import": { "symbol": "Radius", "from": "design" }
+    },
+    {
+      "find": "borderRadius: 8",
+      "replaceWith": "borderRadius: Radius.sm",
+      "import": { "symbol": "Radius", "from": "design" }
+    },
+    {
+      "find": "borderRadius: 16",
+      "replaceWith": "borderRadius: Radius.lg",
+      "import": { "symbol": "Radius", "from": "design" }
+    },
+    {
+      "find": "padding: 16",
+      "replaceWith": "padding: spacing[4]",
+      "import": { "symbol": "spacing", "from": "design-system/spacing" }
+    },
+    {
+      "find": "paddingHorizontal: 16",
+      "replaceWith": "paddingHorizontal: spacing[4]",
+      "import": { "symbol": "spacing", "from": "design-system/spacing" }
+    },
+    {
+      "find": "paddingVertical: 16",
+      "replaceWith": "paddingVertical: spacing[4]",
+      "import": { "symbol": "spacing", "from": "design-system/spacing" }
+    },
+    {
+      "find": "margin: 16",
+      "replaceWith": "margin: spacing[4]",
+      "import": { "symbol": "spacing", "from": "design-system/spacing" }
+    },
+    {
+      "find": "gap: 16",
+      "replaceWith": "gap: spacing[4]",
+      "import": { "symbol": "spacing", "from": "design-system/spacing" }
+    }
+  ]
+}

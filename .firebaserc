@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "birdzy-app-dev",
+    "dev": "birdzy-app-dev",
+    "prod": "birdzy-app"
+  }
+}

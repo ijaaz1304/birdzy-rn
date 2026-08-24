@@ -1,0 +1,226 @@
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+apply plugin: "com.google.gms.google-services"
+apply plugin: "com.google.firebase.crashlytics"
+
+react {
+    autolinkLibrariesWithApp()
+}
+
+// Release signing
+def releaseKeystoreFile = rootProject.file("app/src/prod/minerals-upload-key.jks")
+def keystorePropertiesFile = rootProject.file("app/keystore.properties")
+def hasReleaseKeystore = releaseKeystoreFile.exists()
+def keystoreProperties = new Properties()
+
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def localGradleProps = new Properties()
+def localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localGradleProps.load(it) }
+}
+
+def loadDotEnvValue = { String key ->
+    def envFile = rootProject.file("../.env")
+    if (!envFile.exists()) {
+        return ""
+    }
+    def value = ""
+    envFile.eachLine { line ->
+        def trimmed = line.trim()
+        if (trimmed.isEmpty() || trimmed.startsWith("#") || !trimmed.contains("=")) {
+            return
+        }
+        def parts = trimmed.split("=", 2)
+        if (parts.length == 2 && parts[0].trim() == key) {
+            value = parts[1].trim()
+        }
+    }
+    return value
+}
+
+def metaInstallReferrerDecryptKey =
+        System.getenv("META_INSTALL_REFERRER_DECRYPTION_KEY")
+        ?: project.findProperty("META_INSTALL_REFERRER_DECRYPTION_KEY")
+        ?: rootProject.findProperty("META_INSTALL_REFERRER_DECRYPTION_KEY")
+        ?: loadDotEnvValue("META_INSTALL_REFERRER_DECRYPTION_KEY")
+        ?: localGradleProps.getProperty("META_INSTALL_REFERRER_DECRYPTION_KEY", "")
+
+def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
+
+android {
+    ndkVersion rootProject.ext.ndkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdk rootProject.ext.compileSdkVersion
+
+    namespace "com.trackzio.birds"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs += "-opt-in=androidx.photopicker.ExperimentalPhotoPickerApi"
+    }
+
+    defaultConfig {
+        applicationId "com.trackzio.birds"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+
+        def ciVersionCode = System.getenv("ANDROID_VERSION_CODE")
+        def ciVersionName = System.getenv("ANDROID_VERSION_NAME")
+        versionCode(ciVersionCode != null ? ciVersionCode.toInteger() : 46)
+        versionName(ciVersionName != null ? ciVersionName : "1.1.0")
+
+        missingDimensionStrategy "store", "play"
+
+        // 🔥 Remove unused language resources
+        resConfigs "en"
+
+        // Meta Install Referrer: 64-char hex from App settings > Basic > Android (same as GPIR key).
+        // Resolved from env var, root .env (after npm run env:dev|prod), or android/local.properties.
+        buildConfigField "String", "META_INSTALL_REFERRER_DECRYPTION_KEY", "\"${metaInstallReferrerDecryptKey}\""
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+
+        if (hasReleaseKeystore) {
+            release {
+                storeFile file('src/prod/minerals-upload-key.jks')
+                storePassword keystoreProperties.getProperty('storePassword')
+                keyAlias keystoreProperties.getProperty('keyAlias')
+                keyPassword keystoreProperties.getProperty('keyPassword')
+            }
+        }
+    }
+
+    flavorDimensions "environment"
+
+    productFlavors {
+        dev {
+            dimension "environment"
+            applicationIdSuffix ".dev"
+            // Dev release APK must use debug cert so SHA-1 matches mushrooms-app-dev Firebase.
+            signingConfig signingConfigs.debug
+            manifestPlaceholders = [
+                deepLinkScheme: "birdzy-dev",
+                deepLinkHost1: "birdzy-app-dev.web.app",
+                deepLinkHost2: "birdzy-app-dev.firebaseapp.com",
+            ]
+        }
+        prod {
+            dimension "environment"
+            manifestPlaceholders = [
+                deepLinkScheme: "birdzy",
+                deepLinkHost1: "birdzy-app.web.app",
+                deepLinkHost2: "birdzy-app.firebaseapp.com",
+            ]
+        }
+    }
+
+    buildTypes {
+
+        debug {
+            signingConfig signingConfigs.debug
+
+            ndk {
+                abiFilters "arm64-v8a", "x86", "x86_64"
+            }
+        }
+
+        release {
+            signingConfig hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
+            // Surfaced in App Logs via react-native-device-info build flags (diagnostics only).
+            buildConfigField "boolean", "USING_DEBUG_SIGNING_FOR_RELEASE", "${!hasReleaseKeystore}"
+
+            // 🔥 Critical optimizations
+            minifyEnabled true
+            shrinkResources true
+
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+
+            ndk {
+                abiFilters "arm64-v8a"
+                debugSymbolLevel 'none'
+            }
+        }
+    }
+
+    // 🔥 Remove duplicated metadata
+    packagingOptions {
+        resources {
+            excludes += [
+                    "META-INF/**",
+                    "**/*.kotlin_module",
+                    "**/kotlin/**"
+            ]
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+dependencies {
+
+    implementation("com.facebook.react:react-android")
+
+    // Bundled + remote WebP in RN Image (react-native-webp-format)
+    implementation("com.facebook.fresco:webpsupport:3.6.0")
+    implementation("com.facebook.fresco:animated-webp:3.6.0")
+
+    // Google Play Install Referrer (UTM / install attribution)
+    implementation("com.android.installreferrer:installreferrer:2.2")
+
+    // Google Play In-App Review API (required for react-native-in-app-review on Android)
+    implementation("com.google.android.play:review:2.0.2")
+    implementation("com.google.android.play:review-ktx:2.0.2")
+
+    // Android embedded photo picker (API 34+, SDK extension 15+)
+    implementation("androidx.photopicker:photopicker:1.0.0-alpha02")
+
+    if (hermesEnabled.toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    } else {
+        implementation jscFlavor
+    }
+}
+
+// Prod release must not silently fall back to debug signing (breaks Google Sign-In SHA-1 match).
+gradle.taskGraph.whenReady { graph ->
+    def prodReleaseTasks = [
+            ':app:assembleProdRelease',
+            ':app:bundleProdRelease',
+    ]
+    if (graph.allTasks.any { prodReleaseTasks.contains(it.path) }) {
+        if (!hasReleaseKeystore) {
+            throw new GradleException(
+                    'Prod release build requires android/app/src/prod/minerals-upload-key.jks. ' +
+                            'Without it, the APK is signed with the debug certificate and Google Sign-In fails in release (DEVELOPER_ERROR). ' +
+                            'See docs/GOOGLE_SIGNIN_TROUBLESHOOTING.md and docs/CI_CD_SETUP.md.'
+            )
+        }
+        if (!keystorePropertiesFile.exists()) {
+            throw new GradleException(
+                    'Prod release build requires android/app/keystore.properties.'
+            )
+        }
+    }
+}
+
+// Required for react-native-vector-icons
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"

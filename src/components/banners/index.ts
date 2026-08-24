@@ -1,0 +1,1 @@
+export { RockOfDayBanner } from "./RockOfDayBanner";

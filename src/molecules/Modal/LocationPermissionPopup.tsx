@@ -1,0 +1,221 @@
+/**
+ * Location permission popup — centered modal on home (Figma: Before the identification flow).
+ */
+
+import { AppImage } from "@/components/AppImage";
+import { CloseIcon } from "@/components/shared/CloseIcon";
+import React, { useEffect } from "react";
+import {
+  ActivityIndicator,
+  BackHandler,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useTheme, useIsDark } from "../../hooks/useTheme";
+import { Text } from "../../atoms";
+import { Images } from "../../assets";
+import { MODAL_STRINGS } from "../../config/strings/modals.strings";
+import { OVERLAY_COLORS } from "../../constants/colorConstants";
+import { getPopupChromeStyle } from "../../design-system/modalTokens";
+
+export interface LocationPermissionPopupProps {
+  visible: boolean;
+  onClose: () => void;
+  onAllowLocation: () => void;
+  onCustomLocation: () => void;
+  loading?: boolean;
+}
+
+export const LocationPermissionPopup: React.FC<
+  LocationPermissionPopupProps
+> = ({
+  visible,
+  onClose,
+  onAllowLocation,
+  onCustomLocation,
+  loading = false,
+}) => {
+  const theme = useTheme();
+  const isDark = useIsDark();
+  const colors = theme.colors;
+  const spacing = theme.spacing;
+  const radius = theme.radius;
+  const copy = MODAL_STRINGS.bottomSheets.enableLocation;
+
+  useEffect(() => {
+    if (!visible) return undefined;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      onClose();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, onClose]);
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+      presentationStyle="overFullScreen"
+    >
+      <View
+        style={[
+          styles.overlay,
+          { backgroundColor: OVERLAY_COLORS.MODAL_BACKDROP },
+        ]}
+      >
+        <View style={[styles.card, getPopupChromeStyle(theme)]}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={[
+              styles.closeButton,
+              {
+                backgroundColor: colors.surfaceSecondary,
+                borderRadius: radius.xl,
+              },
+            ]}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          >
+            <CloseIcon isDark={isDark} variant="plain" size={14} />
+          </TouchableOpacity>
+
+          <AppImage
+            source={
+              isDark ? Images.mushroomLocationDark : Images.mushroomLocation
+            }
+            style={styles.heroIcon}
+            resizeMode="contain"
+          />
+
+          <Text
+            variant="headline"
+            size="large"
+            weight="bold"
+            style={[styles.title, { color: colors.textPrimary }]}
+          >
+            {copy.title}
+          </Text>
+
+          <Text
+            variant="body"
+            size="medium"
+            color="textSecondary"
+            style={[styles.subtitle, { marginTop: spacing[2] }]}
+          >
+            {copy.subtitle}
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              styles.primaryButton,
+              {
+                backgroundColor: colors.primary,
+                borderRadius: radius.xl,
+                marginTop: spacing[4],
+              },
+            ]}
+            onPress={onAllowLocation}
+            disabled={loading}
+            activeOpacity={0.85}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.onPrimary} />
+            ) : (
+              <Text
+                variant="body"
+                size="medium"
+                weight="semibold"
+                style={{ color: colors.onPrimary }}
+              >
+                {copy.enableButton}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.secondaryButton,
+              {
+                borderColor: colors.border,
+                borderRadius: radius.xl,
+                marginTop: spacing[3],
+              },
+            ]}
+            onPress={onCustomLocation}
+            activeOpacity={0.85}
+            disabled={loading}
+          >
+            <Text variant="body" size="medium" weight="semibold">
+              {copy.customLocationButton}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 335,
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    position: "relative",
+    zIndex: 1,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+  },
+  heroIcon: {
+    width: 64,
+    height: 64,
+    marginBottom: 8,
+  },
+  title: {
+    textAlign: "center",
+    lineHeight: 28,
+  },
+  subtitle: {
+    textAlign: "center",
+    lineHeight: 24,
+  },
+  primaryButton: {
+    width: "100%",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
+  },
+  secondaryButton: {
+    width: "100%",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    minHeight: 44,
+  },
+});

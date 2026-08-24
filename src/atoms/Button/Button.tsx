@@ -1,0 +1,121 @@
+/**
+ * Button atom component
+ */
+
+import React from "react";
+import { TouchableOpacity, TouchableOpacityProps, ActivityIndicator, StyleProp, StyleSheet, ViewStyle, TextStyle } from "react-native";
+import { useTheme } from "../../hooks/useTheme";
+import { Text } from "../Text";
+
+import { spacing } from "../../design-system/spacing";
+
+export interface ButtonProps extends Omit<TouchableOpacityProps, "style"> {
+  title: string;
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "small" | "medium" | "large";
+  loading?: boolean;
+  disabled?: boolean;
+  fullWidth?: boolean;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: TextStyle;
+}
+
+export const Button: React.FC<ButtonProps> = ({
+  title,
+  variant = "primary",
+  size = "medium",
+  loading = false,
+  disabled = false,
+  fullWidth = false,
+  style,
+  textStyle,
+  ...props
+}) => {
+  const theme = useTheme();
+
+  const getButtonStyle = (): ViewStyle => {
+    const baseStyle: ViewStyle = {
+      borderRadius: theme.radius.button,
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "row",
+    };
+
+    const sizeStyles: Record<string, ViewStyle> = {
+      small: {
+        minHeight: 36,
+        paddingVertical: theme.spacing[2],
+        paddingHorizontal: theme.spacing[4],
+      },
+      medium: {
+        minHeight: 44,
+        paddingVertical: theme.spacing[3],
+        paddingHorizontal: theme.spacing[6],
+      },
+      large: {
+        minHeight: 48,
+        paddingVertical: 12,
+        paddingHorizontal: spacing[4],
+      },
+    };
+
+    // Variant styles
+    const variantStyles: Record<string, ViewStyle> = {
+      primary: {
+        backgroundColor: theme.colors.primary,
+      },
+      secondary: {
+        backgroundColor: theme.colors.secondary,
+      },
+      outline: {
+        backgroundColor: "transparent",
+        borderWidth: 1,
+        borderColor: theme.colors.primary,
+      },
+      ghost: {
+        backgroundColor: "transparent",
+      },
+    };
+
+    return {
+      ...baseStyle,
+      ...sizeStyles[size],
+      ...variantStyles[variant],
+      ...(fullWidth && { width: "100%" }),
+      ...(disabled && { opacity: 0.5 }),
+      ...(StyleSheet.flatten(style) ?? {}),
+    };
+  };
+
+  const getTextColor = (): string => {
+    if (variant === "outline" || variant === "ghost") {
+      return theme.colors.primary;
+    }
+    return theme.colors.onPrimary;
+  };
+
+  return (
+    <TouchableOpacity
+      style={getButtonStyle()}
+      disabled={disabled || loading}
+      activeOpacity={0.7}
+      {...props}
+    >
+      {loading ? (
+        <ActivityIndicator size="small" color={getTextColor()} />
+      ) : (
+        <Text
+          variant="body"
+          size={size === "small" ? "medium" : "large"}
+          weight="semibold"
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+          style={[{ color: getTextColor(), textAlign: "center" }, textStyle]}
+        >
+          {title}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+};

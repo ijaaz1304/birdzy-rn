@@ -1,0 +1,536 @@
+{
+  "constantsPath": "config/colors",
+  "replacements": [
+    { "find": "'rgba(0,0,0,0.5)'", "replaceWith": "APP_COLORS.overlay" },
+    { "find": "\"rgba(0,0,0,0.5)\"", "replaceWith": "APP_COLORS.overlay" },
+    { "find": "'rgba(0,0,0,0.4)'", "replaceWith": "APP_COLORS.overlayLight" },
+    { "find": "\"rgba(0,0,0,0.4)\"", "replaceWith": "APP_COLORS.overlayLight" },
+    { "find": "'rgba(0,0,0,0.45)'", "replaceWith": "APP_COLORS.overlayDim" },
+    { "find": "\"rgba(0,0,0,0.45)\"", "replaceWith": "APP_COLORS.overlayDim" },
+    {
+      "find": "'rgba(255,255,255,0.2)'",
+      "replaceWith": "APP_COLORS.overlayCloseButton"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.2)\"",
+      "replaceWith": "APP_COLORS.overlayCloseButton"
+    },
+    {
+      "find": "'rgba(255,255,255,0.25)'",
+      "replaceWith": "APP_COLORS.blurOverlayLight"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.25)\"",
+      "replaceWith": "APP_COLORS.blurOverlayLight"
+    },
+    {
+      "find": "'rgba(255,255,255,0.6)'",
+      "replaceWith": "APP_COLORS.blurOverlayLightFallback"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.6)\"",
+      "replaceWith": "APP_COLORS.blurOverlayLightFallback"
+    },
+    {
+      "find": "'rgba(0,0,0,0.7)'",
+      "replaceWith": "APP_COLORS.modalBackdropDark"
+    },
+    {
+      "find": "\"rgba(0,0,0,0.7)\"",
+      "replaceWith": "APP_COLORS.modalBackdropDark"
+    },
+    {
+      "find": "'rgba(0,0,0,0.55)'",
+      "replaceWith": "APP_COLORS.modalBackdropLight"
+    },
+    {
+      "find": "\"rgba(0,0,0,0.55)\"",
+      "replaceWith": "APP_COLORS.modalBackdropLight"
+    },
+    {
+      "find": "'rgba(17,17,17,0.98)'",
+      "replaceWith": "APP_COLORS.modalSheetBgDark"
+    },
+    {
+      "find": "\"rgba(17,17,17,0.98)\"",
+      "replaceWith": "APP_COLORS.modalSheetBgDark"
+    },
+    {
+      "find": "'rgba(255,255,255,0.98)'",
+      "replaceWith": "APP_COLORS.modalSheetBgLight"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.98)\"",
+      "replaceWith": "APP_COLORS.modalSheetBgLight"
+    },
+    {
+      "find": "'rgba(0,0,0,0.08)'",
+      "replaceWith": "APP_COLORS.modalCloseButtonBgLight"
+    },
+    {
+      "find": "\"rgba(0,0,0,0.08)\"",
+      "replaceWith": "APP_COLORS.modalCloseButtonBgLight"
+    },
+    {
+      "find": "'rgba(0,0,0,0.82)'",
+      "replaceWith": "APP_COLORS.modalMineralOfTheDayBackdropDark"
+    },
+    {
+      "find": "\"rgba(0,0,0,0.82)\"",
+      "replaceWith": "APP_COLORS.modalMineralOfTheDayBackdropDark"
+    },
+    {
+      "find": "'rgba(0,0,0,0.75)'",
+      "replaceWith": "APP_COLORS.modalMineralOfTheDayBackdropLight"
+    },
+    {
+      "find": "\"rgba(0,0,0,0.75)\"",
+      "replaceWith": "APP_COLORS.modalMineralOfTheDayBackdropLight"
+    },
+    { "find": "'#FFFFFF'", "replaceWith": "APP_COLORS.modalTextOnPrimary" },
+    { "find": "\"#FFFFFF\"", "replaceWith": "APP_COLORS.modalTextOnPrimary" },
+    { "find": "'#F0A83A'", "replaceWith": "APP_COLORS.modalRibbonWarning" },
+    { "find": "\"#F0A83A\"", "replaceWith": "APP_COLORS.modalRibbonWarning" },
+    { "find": "'#666666'", "replaceWith": "APP_COLORS.modalRefreshButtonBg" },
+    { "find": "\"#666666\"", "replaceWith": "APP_COLORS.modalRefreshButtonBg" },
+    { "find": "'#3A7D44'", "replaceWith": "APP_COLORS.modalSuccessButtonBg" },
+    { "find": "\"#3A7D44\"", "replaceWith": "APP_COLORS.modalSuccessButtonBg" },
+    { "find": "'#FFA726'", "replaceWith": "APP_COLORS.modalEmojiSelectedBg" },
+    { "find": "\"#FFA726\"", "replaceWith": "APP_COLORS.modalEmojiSelectedBg" },
+    { "find": "'#7EB3E2'", "replaceWith": "APP_COLORS.brandPrimary" },
+    { "find": "\"#7EB3E2\"", "replaceWith": "APP_COLORS.brandPrimary" },
+    { "find": "'#0C2A45'", "replaceWith": "APP_COLORS.brandPrimaryDark" },
+    { "find": "\"#0C2A45\"", "replaceWith": "APP_COLORS.brandPrimaryDark" },
+    { "find": "'#B4CBE0'", "replaceWith": "APP_COLORS.brandLight" },
+    { "find": "\"#B4CBE0\"", "replaceWith": "APP_COLORS.brandLight" },
+    { "find": "'#092138'", "replaceWith": "APP_COLORS.brandDarkBg" },
+    { "find": "\"#092138\"", "replaceWith": "APP_COLORS.brandDarkBg" },
+    { "find": "'#DA64B0'", "replaceWith": "APP_COLORS.upgradeGradientStart" },
+    { "find": "\"#DA64B0\"", "replaceWith": "APP_COLORS.upgradeGradientStart" },
+    { "find": "'#2E19AA'", "replaceWith": "APP_COLORS.upgradeGradientEnd" },
+    { "find": "\"#2E19AA\"", "replaceWith": "APP_COLORS.upgradeGradientEnd" },
+    { "find": "'#34228F'", "replaceWith": "APP_COLORS.upgradeCtaText" },
+    { "find": "\"#34228F\"", "replaceWith": "APP_COLORS.upgradeCtaText" },
+    { "find": "'#275F4F'", "replaceWith": "APP_COLORS.mineralOfDayTitle" },
+    { "find": "\"#275F4F\"", "replaceWith": "APP_COLORS.mineralOfDayTitle" },
+    { "find": "'#EDE2CE'", "replaceWith": "APP_COLORS.mineralOfDayTagBg" },
+    { "find": "\"#EDE2CE\"", "replaceWith": "APP_COLORS.mineralOfDayTagBg" },
+    { "find": "'#C4A15D'", "replaceWith": "APP_COLORS.mineralOfDayTagText" },
+    { "find": "\"#C4A15D\"", "replaceWith": "APP_COLORS.mineralOfDayTagText" },
+    { "find": "'#0D5C4F'", "replaceWith": "APP_COLORS.mineralOfDayDotActive" },
+    {
+      "find": "\"#0D5C4F\"",
+      "replaceWith": "APP_COLORS.mineralOfDayDotActive"
+    },
+    { "find": "'#1E1E1F'", "replaceWith": "APP_COLORS.textPrimaryDark" },
+    { "find": "\"#1E1E1F\"", "replaceWith": "APP_COLORS.textPrimaryDark" },
+    { "find": "'#606062'", "replaceWith": "APP_COLORS.textSecondary" },
+    { "find": "\"#606062\"", "replaceWith": "APP_COLORS.textSecondary" },
+    { "find": "'#fff'", "replaceWith": "APP_COLORS.surfaceWhite" },
+    { "find": "\"#fff\"", "replaceWith": "APP_COLORS.surfaceWhite" },
+    { "find": "'#f0f0f0'", "replaceWith": "APP_COLORS.surfacePlaceholder" },
+    { "find": "\"#f0f0f0\"", "replaceWith": "APP_COLORS.surfacePlaceholder" },
+    { "find": "'#E5E5E5'", "replaceWith": "APP_COLORS.borderLight" },
+    { "find": "\"#E5E5E5\"", "replaceWith": "APP_COLORS.borderLight" },
+    { "find": "'#F6F6F6'", "replaceWith": "APP_COLORS.surfaceAuthLight" },
+    { "find": "\"#F6F6F6\"", "replaceWith": "APP_COLORS.surfaceAuthLight" },
+    { "find": "'#171717'", "replaceWith": "APP_COLORS.surfaceAuthDark" },
+    { "find": "\"#171717\"", "replaceWith": "APP_COLORS.surfaceAuthDark" },
+    { "find": "'#D7E5F0'", "replaceWith": "APP_COLORS.promoCardBlueBg" },
+    { "find": "\"#D7E5F0\"", "replaceWith": "APP_COLORS.promoCardBlueBg" },
+    { "find": "'#F9F4ED'", "replaceWith": "APP_COLORS.promoCardCreamBg" },
+    { "find": "\"#F9F4ED\"", "replaceWith": "APP_COLORS.promoCardCreamBg" },
+    { "find": "'#EBE6DB'", "replaceWith": "APP_COLORS.promoCardSoilBg" },
+    { "find": "\"#EBE6DB\"", "replaceWith": "APP_COLORS.promoCardSoilBg" },
+    { "find": "'#5C5048'", "replaceWith": "APP_COLORS.promoCardSoilSubText" },
+    { "find": "\"#5C5048\"", "replaceWith": "APP_COLORS.promoCardSoilSubText" },
+    {
+      "find": "'rgba(255,255,255,0)'",
+      "replaceWith": "APP_COLORS.promoCardGradientStart"
+    },
+    {
+      "find": "\"rgba(255,255,255,0)\"",
+      "replaceWith": "APP_COLORS.promoCardGradientStart"
+    },
+    {
+      "find": "'rgba(250,250,250,0.3)'",
+      "replaceWith": "APP_COLORS.promoCardGradientMid"
+    },
+    {
+      "find": "\"rgba(250,250,250,0.3)\"",
+      "replaceWith": "APP_COLORS.promoCardGradientMid"
+    },
+    {
+      "find": "'#C7BB9D'",
+      "replaceWith": "APP_COLORS.promoCardAskGradientStart"
+    },
+    {
+      "find": "\"#C7BB9D\"",
+      "replaceWith": "APP_COLORS.promoCardAskGradientStart"
+    },
+    { "find": "'#EF4444'", "replaceWith": "APP_COLORS.error" },
+    { "find": "\"#EF4444\"", "replaceWith": "APP_COLORS.error" },
+    { "find": "'#FEF2F2'", "replaceWith": "APP_COLORS.errorLightBg" },
+    { "find": "\"#FEF2F2\"", "replaceWith": "APP_COLORS.errorLightBg" },
+    { "find": "'#555'", "replaceWith": "APP_COLORS.textMuted" },
+    { "find": "\"#555\"", "replaceWith": "APP_COLORS.textMuted" },
+    { "find": "'#666'", "replaceWith": "APP_COLORS.textMutedDark" },
+    { "find": "\"#666\"", "replaceWith": "APP_COLORS.textMutedDark" },
+    {
+      "find": "'#0C2A4501'",
+      "replaceWith": "APP_COLORS.promoCardAskGradientEndLight"
+    },
+    {
+      "find": "\"#0C2A4501\"",
+      "replaceWith": "APP_COLORS.promoCardAskGradientEndLight"
+    },
+    {
+      "find": "'#7EB3E201'",
+      "replaceWith": "APP_COLORS.promoCardAskGradientEndDark"
+    },
+    {
+      "find": "\"#7EB3E201\"",
+      "replaceWith": "APP_COLORS.promoCardAskGradientEndDark"
+    },
+    { "find": "'#111111'", "replaceWith": "APP_COLORS.surfaceDark" },
+    { "find": "\"#111111\"", "replaceWith": "APP_COLORS.surfaceDark" },
+    { "find": "'#111'", "replaceWith": "APP_COLORS.surfaceDark" },
+    { "find": "\"#111\"", "replaceWith": "APP_COLORS.surfaceDark" },
+    { "find": "'#FFF'", "replaceWith": "APP_COLORS.surfaceWhite" },
+    { "find": "\"#FFF\"", "replaceWith": "APP_COLORS.surfaceWhite" },
+    { "find": "'#000'", "replaceWith": "APP_COLORS.shadowBlack" },
+    { "find": "\"#000\"", "replaceWith": "APP_COLORS.shadowBlack" },
+    { "find": "'#000000'", "replaceWith": "APP_COLORS.shadowBlack" },
+    { "find": "\"#000000\"", "replaceWith": "APP_COLORS.shadowBlack" },
+    { "find": "'#333'", "replaceWith": "APP_COLORS.borderDark" },
+    { "find": "\"#333\"", "replaceWith": "APP_COLORS.borderDark" },
+    { "find": "'#333333'", "replaceWith": "APP_COLORS.borderDark" },
+    { "find": "\"#333333\"", "replaceWith": "APP_COLORS.borderDark" },
+    { "find": "'#444'", "replaceWith": "APP_COLORS.borderDarkLighter" },
+    { "find": "\"#444\"", "replaceWith": "APP_COLORS.borderDarkLighter" },
+    { "find": "'#444444'", "replaceWith": "APP_COLORS.borderDarkLighter" },
+    { "find": "\"#444444\"", "replaceWith": "APP_COLORS.borderDarkLighter" },
+    { "find": "'#ffffff'", "replaceWith": "APP_COLORS.modalTextOnPrimary" },
+    { "find": "\"#ffffff\"", "replaceWith": "APP_COLORS.modalTextOnPrimary" },
+    { "find": "'rgba(0, 0, 0, 0.5)'", "replaceWith": "APP_COLORS.overlay" },
+    { "find": "\"rgba(0, 0, 0, 0.5)\"", "replaceWith": "APP_COLORS.overlay" },
+    {
+      "find": "'rgba(0, 0, 0, 0.4)'",
+      "replaceWith": "APP_COLORS.overlayLight"
+    },
+    {
+      "find": "\"rgba(0, 0, 0, 0.4)\"",
+      "replaceWith": "APP_COLORS.overlayLight"
+    },
+    {
+      "find": "'rgba(0, 0, 0, 0.7)'",
+      "replaceWith": "APP_COLORS.modalBackdropDark"
+    },
+    {
+      "find": "\"rgba(0, 0, 0, 0.7)\"",
+      "replaceWith": "APP_COLORS.modalBackdropDark"
+    },
+    {
+      "find": "'rgba(255, 255, 255, 0.25)'",
+      "replaceWith": "APP_COLORS.blurOverlayLight"
+    },
+    {
+      "find": "\"rgba(255, 255, 255, 0.25)\"",
+      "replaceWith": "APP_COLORS.blurOverlayLight"
+    },
+    {
+      "find": "'rgba(0, 0, 0, 0.75)'",
+      "replaceWith": "APP_COLORS.modalMineralOfTheDayBackdropLight"
+    },
+    {
+      "find": "\"rgba(0, 0, 0, 0.75)\"",
+      "replaceWith": "APP_COLORS.modalMineralOfTheDayBackdropLight"
+    },
+    {
+      "find": "'rgba(255, 255, 255, 0)'",
+      "replaceWith": "APP_COLORS.promoCardGradientStart"
+    },
+    {
+      "find": "\"rgba(255, 255, 255, 0)\"",
+      "replaceWith": "APP_COLORS.promoCardGradientStart"
+    },
+    { "find": "'#5D5D5D'", "replaceWith": "APP_COLORS.textSecondaryGray" },
+    { "find": "\"#5D5D5D\"", "replaceWith": "APP_COLORS.textSecondaryGray" },
+    { "find": "'#423C2C'", "replaceWith": "APP_COLORS.surfaceBrownDark" },
+    { "find": "\"#423C2C\"", "replaceWith": "APP_COLORS.surfaceBrownDark" },
+    { "find": "'#E0DBCF'", "replaceWith": "APP_COLORS.surfaceBrownLight" },
+    { "find": "\"#E0DBCF\"", "replaceWith": "APP_COLORS.surfaceBrownLight" },
+    { "find": "'#B0B0B0'", "replaceWith": "APP_COLORS.borderGray" },
+    { "find": "\"#B0B0B0\"", "replaceWith": "APP_COLORS.borderGray" },
+    { "find": "'#E0E0E0'", "replaceWith": "APP_COLORS.borderGrayLight" },
+    { "find": "\"#E0E0E0\"", "replaceWith": "APP_COLORS.borderGrayLight" },
+    { "find": "'#2A2A2A'", "replaceWith": "APP_COLORS.surfaceDarkAlt" },
+    { "find": "\"#2A2A2A\"", "replaceWith": "APP_COLORS.surfaceDarkAlt" },
+    { "find": "'#F0F0F0'", "replaceWith": "APP_COLORS.surfaceLightAlt" },
+    { "find": "\"#F0F0F0\"", "replaceWith": "APP_COLORS.surfaceLightAlt" },
+    { "find": "'#1a1a1a'", "replaceWith": "APP_COLORS.surfaceDarkMuted" },
+    { "find": "\"#1a1a1a\"", "replaceWith": "APP_COLORS.surfaceDarkMuted" },
+    { "find": "'#6D6D6D'", "replaceWith": "APP_COLORS.iconBgDark" },
+    { "find": "\"#6D6D6D\"", "replaceWith": "APP_COLORS.iconBgDark" },
+    { "find": "'#007AFF'", "replaceWith": "APP_COLORS.linkBlue" },
+    { "find": "\"#007AFF\"", "replaceWith": "APP_COLORS.linkBlue" },
+    { "find": "'#7BAED6'", "replaceWith": "APP_COLORS.brandLightBlue" },
+    { "find": "\"#7BAED6\"", "replaceWith": "APP_COLORS.brandLightBlue" },
+    { "find": "'#B91C1C'", "replaceWith": "APP_COLORS.errorDark" },
+    { "find": "\"#B91C1C\"", "replaceWith": "APP_COLORS.errorDark" },
+    { "find": "'#3D3630'", "replaceWith": "APP_COLORS.borderBrown" },
+    { "find": "\"#3D3630\"", "replaceWith": "APP_COLORS.borderBrown" },
+    {
+      "find": "'rgba(255,255,255,0.4)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite40"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.4)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite40"
+    },
+    {
+      "find": "'rgba(255,255,255,0.35)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite35"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.35)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite35"
+    },
+    {
+      "find": "'rgba(255,255,255,0.5)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite50"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.5)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite50"
+    },
+    {
+      "find": "'rgba(255, 255, 255, 0.10)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite10"
+    },
+    {
+      "find": "\"rgba(255, 255, 255, 0.10)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite10"
+    },
+    {
+      "find": "'rgba(255,255,255,0.10)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite10"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.10)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite10"
+    },
+    {
+      "find": "'rgba(0, 0, 0, 0.12)'",
+      "replaceWith": "APP_COLORS.overlayDark12"
+    },
+    {
+      "find": "\"rgba(0, 0, 0, 0.12)\"",
+      "replaceWith": "APP_COLORS.overlayDark12"
+    },
+    { "find": "'rgba(0,0,0,0.3)'", "replaceWith": "APP_COLORS.overlayDark30" },
+    {
+      "find": "\"rgba(0,0,0,0.3)\"",
+      "replaceWith": "APP_COLORS.overlayDark30"
+    },
+    {
+      "find": "'rgba(239, 68, 68, 0.10)'",
+      "replaceWith": "APP_COLORS.errorBgAlpha"
+    },
+    {
+      "find": "\"rgba(239, 68, 68, 0.10)\"",
+      "replaceWith": "APP_COLORS.errorBgAlpha"
+    },
+    {
+      "find": "'rgba(239,68,68,0.10)'",
+      "replaceWith": "APP_COLORS.errorBgAlpha"
+    },
+    {
+      "find": "\"rgba(239,68,68,0.10)\"",
+      "replaceWith": "APP_COLORS.errorBgAlpha"
+    },
+    {
+      "find": "'rgba(199,187,157,0)'",
+      "replaceWith": "APP_COLORS.promoGradientTransparent"
+    },
+    {
+      "find": "\"rgba(199,187,157,0)\"",
+      "replaceWith": "APP_COLORS.promoGradientTransparent"
+    },
+    {
+      "find": "'rgba(199,187,157,0.2)'",
+      "replaceWith": "APP_COLORS.promoGradientOverlay"
+    },
+    {
+      "find": "\"rgba(199,187,157,0.2)\"",
+      "replaceWith": "APP_COLORS.promoGradientOverlay"
+    },
+    {
+      "find": "'rgba(255,255,255,0.15)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite15"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.15)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite15"
+    },
+    {
+      "find": "'rgba(0,0,0,0.06)'",
+      "replaceWith": "APP_COLORS.overlayBlack06"
+    },
+    {
+      "find": "\"rgba(0,0,0,0.06)\"",
+      "replaceWith": "APP_COLORS.overlayBlack06"
+    },
+    {
+      "find": "'rgba(255,255,255,0.3)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite30"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.3)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite30"
+    },
+    {
+      "find": "'rgba(209, 209, 209, 1)'",
+      "replaceWith": "APP_COLORS.tooltipTextLight"
+    },
+    {
+      "find": "\"rgba(209, 209, 209, 1)\"",
+      "replaceWith": "APP_COLORS.tooltipTextLight"
+    },
+    {
+      "find": "'rgba(93, 93, 93, 1)'",
+      "replaceWith": "APP_COLORS.tooltipTextDark"
+    },
+    {
+      "find": "\"rgba(93, 93, 93, 1)\"",
+      "replaceWith": "APP_COLORS.tooltipTextDark"
+    },
+    {
+      "find": "'rgba(255,255,255,0.45)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite45"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.45)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite45"
+    },
+    {
+      "find": "'rgba(255,255,255,0.7)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite70"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.7)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite70"
+    },
+    {
+      "find": "'rgba(255, 255, 255, 0.8)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite80"
+    },
+    {
+      "find": "\"rgba(255, 255, 255, 0.8)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite80"
+    },
+    {
+      "find": "'rgba(255,255,255,0.95)'",
+      "replaceWith": "APP_COLORS.blurOverlayWhite95"
+    },
+    {
+      "find": "\"rgba(255,255,255,0.95)\"",
+      "replaceWith": "APP_COLORS.blurOverlayWhite95"
+    },
+    { "find": "'#564828'", "replaceWith": "APP_COLORS.rockBannerBrown" },
+    { "find": "\"#564828\"", "replaceWith": "APP_COLORS.rockBannerBrown" },
+    {
+      "find": "'rgba(73,73,73,0.5)'",
+      "replaceWith": "APP_COLORS.rockBannerDarkAlpha"
+    },
+    {
+      "find": "\"rgba(73,73,73,0.5)\"",
+      "replaceWith": "APP_COLORS.rockBannerDarkAlpha"
+    },
+    {
+      "find": "'rgba(90,71,57,0.6)'",
+      "replaceWith": "APP_COLORS.rockBannerBrownAlpha"
+    },
+    {
+      "find": "\"rgba(90,71,57,0.6)\"",
+      "replaceWith": "APP_COLORS.rockBannerBrownAlpha"
+    },
+    { "find": "'#F6F0E3'", "replaceWith": "APP_COLORS.rockBannerCream" },
+    { "find": "\"#F6F0E3\"", "replaceWith": "APP_COLORS.rockBannerCream" },
+    {
+      "find": "'rgba(224,219,207,0.5)'",
+      "replaceWith": "APP_COLORS.rockBannerCreamAlpha"
+    },
+    {
+      "find": "\"rgba(224,219,207,0.5)\"",
+      "replaceWith": "APP_COLORS.rockBannerCreamAlpha"
+    },
+    {
+      "find": "'rgba(222,177,144,0.6)'",
+      "replaceWith": "APP_COLORS.rockBannerPeachAlpha"
+    },
+    {
+      "find": "\"rgba(222,177,144,0.6)\"",
+      "replaceWith": "APP_COLORS.rockBannerPeachAlpha"
+    },
+    {
+      "find": "'rgba(14, 84, 148, 1)'",
+      "replaceWith": "APP_COLORS.planCardShadowBlue"
+    },
+    {
+      "find": "\"rgba(14, 84, 148, 1)\"",
+      "replaceWith": "APP_COLORS.planCardShadowBlue"
+    },
+    {
+      "find": "'rgb(116, 126, 59)'",
+      "replaceWith": "APP_COLORS.mineralShadowOlive"
+    },
+    {
+      "find": "\"rgb(116, 126, 59)\"",
+      "replaceWith": "APP_COLORS.mineralShadowOlive"
+    },
+    {
+      "find": "'rgba(128,128,128,0.15)'",
+      "replaceWith": "APP_COLORS.overlayGray15"
+    },
+    {
+      "find": "\"rgba(128,128,128,0.15)\"",
+      "replaceWith": "APP_COLORS.overlayGray15"
+    },
+    { "find": "'#46804F'", "replaceWith": "APP_COLORS.guideGreenDefault" },
+    { "find": "\"#46804F\"", "replaceWith": "APP_COLORS.guideGreenDefault" },
+    { "find": "'#21190B'", "replaceWith": "APP_COLORS.guideCardDark" },
+    { "find": "\"#21190B\"", "replaceWith": "APP_COLORS.guideCardDark" },
+    { "find": "'#606970'", "replaceWith": "APP_COLORS.borderMuted" },
+    { "find": "\"#606970\"", "replaceWith": "APP_COLORS.borderMuted" },
+    {
+      "find": "'rgba(12, 42, 69, 1)'",
+      "replaceWith": "APP_COLORS.brandPrimaryDarkRgb"
+    },
+    {
+      "find": "\"rgba(12, 42, 69, 1)\"",
+      "replaceWith": "APP_COLORS.brandPrimaryDarkRgb"
+    },
+    { "find": "'#F5ECD7'", "replaceWith": "APP_COLORS.rockPersonalityStart" },
+    { "find": "\"#F5ECD7\"", "replaceWith": "APP_COLORS.rockPersonalityStart" },
+    { "find": "'#4E82B2'", "replaceWith": "APP_COLORS.rockPersonalityEnd" },
+    { "find": "\"#4E82B2\"", "replaceWith": "APP_COLORS.rockPersonalityEnd" },
+    {
+      "find": "'#FCB30D'",
+      "replaceWith": "APP_COLORS.subscriptionDiscountTimer"
+    },
+    {
+      "find": "\"#FCB30D\"",
+      "replaceWith": "APP_COLORS.subscriptionDiscountTimer"
+    },
+    { "find": "'#65CCFF'", "replaceWith": "APP_COLORS.subscriptionDiscountBg" },
+    {
+      "find": "\"#65CCFF\"",
+      "replaceWith": "APP_COLORS.subscriptionDiscountBg"
+    },
+    { "find": "'#A47758'", "replaceWith": "APP_COLORS.subscriptionPremium" },
+    { "find": "\"#A47758\"", "replaceWith": "APP_COLORS.subscriptionPremium" },
+    { "find": "'#949494'", "replaceWith": "APP_COLORS.subscriptionMuted" },
+    { "find": "\"#949494\"", "replaceWith": "APP_COLORS.subscriptionMuted" }
+  ]
+}

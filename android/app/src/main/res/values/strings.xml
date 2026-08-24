@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Birdzy</string>
+    <string name="facebook_app_id"></string>
+    <string name="facebook_client_token"></string>
+</resources>

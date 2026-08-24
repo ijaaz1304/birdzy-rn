@@ -1,0 +1,54 @@
+diff --git a/node_modules/@react-native-community/geolocation/ios/RNCGeolocation.mm b/node_modules/@react-native-community/geolocation/ios/RNCGeolocation.mm
+index 03df64d..85f3d6f 100644
+--- a/node_modules/@react-native-community/geolocation/ios/RNCGeolocation.mm
++++ b/node_modules/@react-native-community/geolocation/ios/RNCGeolocation.mm
+@@ -268,41 +268,29 @@ - (void)timeout:(NSTimer *)timer
+   BOOL wantsAlways = NO;
+   BOOL wantsWhenInUse = NO;
+   if (_locationConfiguration.authorizationLevel == RNCGeolocationAuthorizationLevelDefault) {
+-    if ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSLocationAlwaysUsageDescription"] &&
+-        [_locationManager respondsToSelector:@selector(requestAlwaysAuthorization)]) {
+-      wantsAlways = YES;
+-    } else if ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSLocationWhenInUseUsageDescription"] &&
++    // ITMS-90683: Always location API removed — never request Always authorization.
++    // Prefer When In Use only (matches app Info.plist + react-native-permissions).
++    if ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSLocationWhenInUseUsageDescription"] &&
+                [_locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {
+       wantsWhenInUse = YES;
+     }
+   } else if (_locationConfiguration.authorizationLevel == RNCGeolocationAuthorizationLevelAlways) {
+-    wantsAlways = YES;
++    // Treat misconfigured "always" requests as When In Use — app does not support background location.
++    wantsWhenInUse = YES;
+   } else if (_locationConfiguration.authorizationLevel == RNCGeolocationAuthorizationLevelWhenInUse) {
+     wantsWhenInUse = YES;
+   }
+ 
+   // Request location access permission
+-  if (wantsAlways) {
+-#if !TARGET_OS_VISION
+-    [_locationManager requestAlwaysAuthorization];
+-    [self enableBackgroundLocationUpdates];
+-#endif
+-  } else if (wantsWhenInUse) {
++  // ITMS-90683: Always location API removed
++  if (wantsWhenInUse) {
+     [_locationManager requestWhenInUseAuthorization];
+   }
+ }
+ 
+ - (void)enableBackgroundLocationUpdates
+ {
+-#if !TARGET_OS_VISION
+-  // iOS 9+ requires explicitly enabling background updates
+-  NSArray *backgroundModes  = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UIBackgroundModes"];
+-  if (backgroundModes && [backgroundModes containsObject:@"location"]) {
+-    if ([_locationManager respondsToSelector:@selector(setAllowsBackgroundLocationUpdates:)]) {
+-      [_locationManager setAllowsBackgroundLocationUpdates:YES];
+-    }
+-  }
+-#endif
++  // ITMS-90683: Always location API removed — background location updates disabled.
+ }
+ 
+ 

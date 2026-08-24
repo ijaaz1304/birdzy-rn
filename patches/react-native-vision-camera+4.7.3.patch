@@ -1,0 +1,22 @@
+diff --git a/node_modules/react-native-vision-camera/ios/Core/Extensions/CLLocationManager+requestAccess.swift b/node_modules/react-native-vision-camera/ios/Core/Extensions/CLLocationManager+requestAccess.swift
+index b678fe8..b926833 100644
+--- a/node_modules/react-native-vision-camera/ios/Core/Extensions/CLLocationManager+requestAccess.swift
++++ b/node_modules/react-native-vision-camera/ios/Core/Extensions/CLLocationManager+requestAccess.swift
+@@ -11,7 +11,7 @@ import Foundation
+ extension CLLocationManager {
+   enum AccessType {
+     case whenInUse
+-    case always
++    // ITMS-90683: Always location API removed — app uses When In Use only
+   }
+ 
+   static func requestAccess(for accessType: AccessType, _ callback: @escaping (_ status: CLAuthorizationStatus) -> Void) {
+@@ -21,8 +21,6 @@ extension CLLocationManager {
+     switch accessType {
+     case .whenInUse:
+       manager.requestWhenInUseAuthorization()
+-    case .always:
+-      manager.requestAlwaysAuthorization()
+     }
+   }
+ 

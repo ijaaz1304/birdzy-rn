@@ -1,0 +1,37 @@
+{
+  "full_pack": [
+    {
+      "name": "weekly_pack_birdzy",
+      "type": "SUBS",
+      "title": "Weekly"
+    },
+    {
+      "name": "yearly_birdzy_pack",
+      "androidName": "yearly_pack_birdzy",
+      "type": "SUBS",
+      "title": "Yearly"
+    },
+    {
+      "name": "lifetime_birdzy",
+      "type": "IAP",
+      "title": "Lifetime"
+    }
+  ],
+  "half_pack": [
+    {
+      "name": "weekly_pack_birdzy",
+      "type": "SUBS",
+      "title": "Weekly"
+    },
+    {
+      "name": "yearly_birdzy_pack_half_price",
+      "type": "SUBS",
+      "title": "Yearly"
+    },
+    {
+      "name": "lifetime_birdzy_half_price",
+      "type": "IAP",
+      "title": "Lifetime"
+    }
+  ]
+}

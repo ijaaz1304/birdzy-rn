@@ -1,0 +1,11 @@
+{
+  "name": "react-native-auto-crop",
+  "version": "0.0.1",
+  "description": "Native subject segmentation + auto-crop (iOS Vision, Android ML Kit)",
+  "main": "src/index.ts",
+  "react-native": "src/index.ts",
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  }
+}

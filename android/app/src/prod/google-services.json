@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "123389676792",
+    "project_id": "birdzy-app",
+    "storage_bucket": "birdzy-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123389676792:android:4094f61f563b7b43dd7f0d",
+        "android_client_info": {
+          "package_name": "com.trackzio.birds"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "123389676792-2c1m0c2la85jb727dudl28it2qrl9hm1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1u17iPwyL9p4RQdHq_bAliCHDxRdu7Fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "123389676792-2c1m0c2la85jb727dudl28it2qrl9hm1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "123389676792-pfh5cvfu10k3lln6n65ip57uc3e3gem3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.trackzio.birds"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

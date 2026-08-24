@@ -1,0 +1,28 @@
+---
+description: Use AppImage for all rendered images (never react-native Image/ImageBackground)
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# AppImage — single image pipeline
+
+Always render images through `@/components/AppImage`:
+
+```tsx
+import { AppImage, AppImageBackground } from "@/components/AppImage";
+
+<AppImage source={Images.icon} style={styles.icon} resizeMode="contain" />
+<AppImage source={{ uri: remoteUrl }} style={styles.thumb} resizeMode="cover" />
+
+<AppImageBackground source={Images.popupBg} style={styles.bg} resizeMode="cover">
+  {children}
+</AppImageBackground>
+```
+
+Do **not** use `Image` or `ImageBackground` from `react-native` for UI (except inside `AppImage.tsx`).
+
+Remote cached thumbnails: `CachedRemoteImage` from the same module (or `AppImage` with `{ uri }`).
+
+`react-native` `Image` is only allowed for non-UI APIs: `Image.resolveAssetSource`, `Image.getSize`, etc.
+
+Why: Bundled PNG/WebP use FastImage (reliable decode for icons and art). Icons with `tintColor` auto-route to RN Image. Remote URLs use FastImage. Local `file://` / `content://` / `ph://` use RN Image.
