@@ -127,12 +127,18 @@ export const MushroomOfTheDayModal = ({
   const closeBg = isDark ? colors.surfaceSecondary : "#111111";
   const closeBorder = isDark ? colors.borderSecondary : "#6D6D6D";
 
-  const specimenSource = useMemo(
-    () =>
-      typeof mushroomImage === "string"
-        ? { uri: mushroomImage }
-        : mushroomImage || Images.mineralSample,
-    [mushroomImage]
+  const specimenSource = useMemo(() => {
+    if (typeof mushroomImage === "string" && mushroomImage.trim()) {
+      return { uri: mushroomImage.trim() };
+    }
+    if (mushroomImage && typeof mushroomImage === "object") {
+      return mushroomImage;
+    }
+    return Images.mineralSample;
+  }, [mushroomImage]);
+
+  const lightHeaderHeight = Math.round(
+    layout.headerWidth / MUSHROOM_OF_DAY_HEADER_LIGHT_ASPECT
   );
 
   return (
@@ -183,7 +189,7 @@ export const MushroomOfTheDayModal = ({
               styles.headerContainer,
               {
                 width: layout.headerWidth,
-                height: layout.headerHeight,
+                height: isDark ? layout.headerHeight : lightHeaderHeight,
               },
             ]}
           >
@@ -191,13 +197,9 @@ export const MushroomOfTheDayModal = ({
               source={isDark ? Images.mushroomTodayDark : Images.mushroomToday}
               style={{
                 width: layout.headerWidth,
-                height: isDark
-                  ? layout.headerHeight
-                  : Math.round(
-                      layout.headerWidth / MUSHROOM_OF_DAY_HEADER_LIGHT_ASPECT
-                    ),
+                height: isDark ? layout.headerHeight : lightHeaderHeight,
               }}
-              resizeMode="contain"
+              resizeMode="cover"
               preferRNImage
             />
           </View>

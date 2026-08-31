@@ -9,20 +9,7 @@ import { getArchetypeImageUrls } from "../../utils/mushroomApiMappers";
 import { getPrimaryCommonName } from "../../utils/mushroomDisplayUtils";
 import { normalizeCollectionIds } from "./collection.utils";
 
-export type EditMushroomTabId =
-  | "overview"
-  | "safety"
-  | "similar"
-  | "physical"
-  | "habitat";
-
-export const EDIT_MUSHROOM_TABS: { id: EditMushroomTabId; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "safety", label: "Safety" },
-  { id: "similar", label: "Similar species" },
-  { id: "physical", label: "Physical Traits" },
-  { id: "habitat", label: "Habitat and distribution" },
-];
+export type EditMushroomTabId = "overview" | "physical" | "habitat";
 
 export const EDIT_BIRD_TABS: { id: EditMushroomTabId; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -253,6 +240,93 @@ export function parseEditableMushroomData(
   };
 }
 
+export function flattenBirdSpecimenUpdate(
+  payload: Record<string, unknown>
+): Record<string, unknown> {
+  const nestedKeys = [
+    "scientificClassification",
+    "birdWatchingTips",
+    "rangeDetails",
+    "potentialHazards",
+  ] as const;
+
+  const allowed = new Set([
+    "commonName",
+    "scientificName",
+    "summary",
+    "wikipediaLink",
+    "birdType",
+    "customLocation",
+    "flightPattern",
+    "flightSpeed",
+    "flightAltitude",
+    "diet",
+    "habitat",
+    "lifeExpectancyInWild",
+    "conservationStatus",
+    "funFacts",
+    "lengthRange",
+    "wingspanRange",
+    "weightRange",
+    "keyIdentificationMarks",
+    "dominantColors",
+    "sexDifferences",
+    "isIdentified",
+    "isOwned",
+    "matchScore",
+    "_collections",
+    "_archetype",
+    "scientificClassification.kingdom",
+    "scientificClassification.phylum",
+    "scientificClassification.class",
+    "scientificClassification.order",
+    "scientificClassification.family",
+    "scientificClassification.genus",
+    "scientificClassification.species",
+    "birdWatchingTips.bestTime",
+    "birdWatchingTips.preferredLocations",
+    "birdWatchingTips.behavioralCues",
+    "potentialHazards.toHumans",
+    "potentialHazards.toPets",
+    "potentialHazards.tobirds",
+    "rangeDetails.yearRound",
+    "rangeDetails.migration",
+    "rangeDetails.breeding",
+    "rangeDetails.nonBreeding",
+  ]);
+
+  const out: Record<string, unknown> = {};
+  const assign = (key: string, value: unknown) => {
+    if (!allowed.has(key)) return;
+    if (value === undefined || value === "") return;
+    if (Array.isArray(value) && value.length === 0) return;
+    out[key] = value;
+  };
+
+  for (const prefix of nestedKeys) {
+    const nested = payload[prefix];
+    if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+      for (const [key, value] of Object.entries(
+        nested as Record<string, unknown>
+      )) {
+        assign(`${prefix}.${key}`, value);
+      }
+    }
+  }
+
+  if (payload.isWishlisted === false) {
+    out.isWishlisted = false;
+  }
+
+  for (const [key, value] of Object.entries(payload)) {
+    if ((nestedKeys as readonly string[]).includes(key)) continue;
+    if (key === "isWishlisted") continue;
+    assign(key, value);
+  }
+
+  return out;
+}
+
 export function buildMushroomUpdatePayload(
   formData: EditableMushroomData
 ): Record<string, unknown> {
@@ -260,12 +334,10 @@ export function buildMushroomUpdatePayload(
     formData.summary?.trim() ||
     formData.detailedDescription?.trim() ||
     undefined;
-  const name = formData.commonName?.trim() || undefined;
-  const commonNames = name ? [name] : undefined;
-  const imageUrls = (formData.images || [])
-    .filter((p) => !p.isDeleted && p.uri)
-    .map((p) => p.uri);
-
+  const collections = normalizeCollectionIds(
+    formData._collections,
+    formData._collection
+  );
   const classification = formData.scientificClassification;
   const hasClassification =
     classification &&
@@ -273,41 +345,13 @@ export function buildMushroomUpdatePayload(
       (v) => typeof v === "string" && v.trim()
     );
 
-  const geoHotspots = splitList(formData.distributionHotspotsText);
-
-  const collections = normalizeCollectionIds(
-    formData._collections,
-    formData._collection
-  );
-
-  const raw: Record<string, unknown> = {
-    name,
-    commonNames,
+  return flattenBirdSpecimenUpdate({
+    commonName: formData.commonName?.trim() || undefined,
     scientificName: formData.scientificName?.trim() || undefined,
     summary,
-    detailedDescription: summary,
     customLocation: formData.customLocation ?? "",
-    gpsLocation: formData.gpsLocation,
     _archetype: formData._archetype,
     ...(collections.length > 0 ? { _collections: collections } : {}),
-    edibility: formData.edibility?.trim() || undefined,
-    toxicitySeverity: formData.toxicitySeverity?.trim() || undefined,
-    psychoactive: formData.psychoactive?.trim() || undefined,
-    symptoms: formData.symptoms?.trim() || undefined,
-    capShape: formData.capShape?.trim() || undefined,
-    capSurface: splitList(formData.capSurface),
-    capColor: formData.capColor?.trim() || undefined,
-    undersideType: formData.undersideType?.trim() || undefined,
-    stemPresence: formData.stemPresence?.trim() || undefined,
-    stemSurface: splitList(formData.stemSurface),
-    ringPresent: formData.ringPresent?.trim() || undefined,
-    volvaPresent: formData.volvaPresent?.trim() || undefined,
-    capDiameterRange: formData.capDiameterRange?.trim() || undefined,
-    growthPattern: formData.growthPattern?.trim() || undefined,
-    habitatType: splitList(formData.habitatType),
-    geographicDistribution: splitList(formData.geographicDistribution),
-    commonlyFoundIn: splitList(formData.geographicDistribution),
-    geoRegionTags: geoHotspots,
     lengthRange: formData.lengthRange?.trim() || undefined,
     wingspanRange: formData.wingspanRange?.trim() || undefined,
     weightRange: formData.weightRange?.trim() || undefined,
@@ -317,9 +361,9 @@ export function buildMushroomUpdatePayload(
     conservationStatus: formData.conservationStatus?.trim() || undefined,
     birdType: splitList(formData.birdType),
     diet: splitList(formData.diet),
+    habitat: splitList(formData.habitatType),
     keyIdentificationMarks: splitList(formData.keyIdentificationMarks),
-    ...(formData.bestTimeToWatch?.trim() ||
-    formData.preferredLocations?.trim()
+    ...(formData.bestTimeToWatch?.trim() || formData.preferredLocations?.trim()
       ? {
           birdWatchingTips: {
             ...(formData.bestTimeToWatch?.trim()
@@ -332,12 +376,7 @@ export function buildMushroomUpdatePayload(
         }
       : {}),
     ...(hasClassification ? { scientificClassification: classification } : {}),
-    ...(imageUrls.length > 0 ? { imageUrls } : {}),
-  };
-
-  return Object.fromEntries(
-    Object.entries(raw).filter(([, v]) => v !== undefined)
-  );
+  });
 }
 
 export type SpecimenAddOptions = {
@@ -346,6 +385,9 @@ export type SpecimenAddOptions = {
   collectionIds?: string | string[];
   /** @deprecated Prefer `collectionIds` */
   _collection?: string;
+  comment?: string;
+  userCapturedSounds?: string[];
+  userCapturedImages?: string[];
 };
 
 export function resolveSpecimenGbifId(raw: Record<string, unknown>): string {
@@ -373,7 +415,7 @@ export function resolveSpecimenMindatId(raw: Record<string, unknown>): number {
   return 0;
 }
 
-/** POST /core/specimen/add — merges archetype data with edited form fields. */
+/** POST /core/specimen/add — bird required fields: scientificName, imageUrls, _collections. */
 export function buildMushroomSpecimenAddPayload(
   archetypeRaw: Record<string, unknown>,
   formData: EditableMushroomData,
@@ -382,34 +424,23 @@ export function buildMushroomSpecimenAddPayload(
 ): AddMushroomSpecimenRequest {
   const edited = buildMushroomUpdatePayload(formData);
 
-  const canonicalName =
-    (typeof archetypeRaw.canonicalName === "string" &&
-      archetypeRaw.canonicalName.trim()) ||
-    (typeof archetypeRaw.scientificName === "string" &&
-      archetypeRaw.scientificName.trim()) ||
-    formData.scientificName?.trim() ||
-    formData.commonName?.trim() ||
-    "";
-
   const scientificName =
     formData.scientificName?.trim() ||
     (typeof archetypeRaw.scientificName === "string" &&
       archetypeRaw.scientificName.trim()) ||
-    canonicalName;
+    formData.commonName?.trim() ||
+    (typeof archetypeRaw.commonName === "string" &&
+      archetypeRaw.commonName.trim()) ||
+    "";
 
-  const imageUrls =
-    ((edited.imageUrls as string[] | undefined) ?? []).filter(Boolean).length >
-    0
-      ? (edited.imageUrls as string[]) ?? []
-      : getArchetypeImageUrls(archetypeRaw);
+  const imageUrls = (formData.images || [])
+    .filter((p) => !p.isDeleted && p.uri)
+    .map((p) => p.uri);
+  const resolvedImageUrls =
+    imageUrls.length > 0 ? imageUrls : getArchetypeImageUrls(archetypeRaw);
 
-  if (imageUrls.length === 0) {
-    throw new Error("At least one image is required to save this mushroom.");
-  }
-
-  const gbifId = resolveSpecimenGbifId(archetypeRaw);
-  if (!gbifId) {
-    throw new Error("GBIF id is required to save this mushroom.");
+  if (resolvedImageUrls.length === 0) {
+    throw new Error("At least one image is required to save this bird.");
   }
 
   const commonName =
@@ -422,27 +453,75 @@ export function buildMushroomSpecimenAddPayload(
           ? archetypeRaw.commonName
           : undefined,
     });
-  const commonNames = commonName ? [commonName] : undefined;
 
   const collections = normalizeCollectionIds(
     options.collectionIds,
-    options._collection
+    options._collection,
+    formData._collections,
+    formData._collection
   );
 
-  return {
-    ...(edited as unknown as AddMushroomSpecimenRequest),
+  const birdsLifeId =
+    (typeof archetypeRaw.birdsLifeId === "string" &&
+      archetypeRaw.birdsLifeId.trim()) ||
+    undefined;
+  const wikipediaLink =
+    (typeof archetypeRaw.wikipediaLink === "string" &&
+      archetypeRaw.wikipediaLink.trim()) ||
+    (typeof archetypeRaw.wikipediaUrl === "string" &&
+      archetypeRaw.wikipediaUrl.trim()) ||
+    undefined;
+  const soundUrls = Array.isArray(archetypeRaw.soundUrls)
+    ? (archetypeRaw.soundUrls as string[]).filter(Boolean)
+    : undefined;
+  const userCapturedSounds =
+    options.userCapturedSounds ??
+    (Array.isArray(archetypeRaw.userCapturedSounds)
+      ? (archetypeRaw.userCapturedSounds as string[]).filter(Boolean)
+      : undefined);
+  const userCapturedImages =
+    options.userCapturedImages ??
+    (Array.isArray(archetypeRaw.userCapturedImages)
+      ? (archetypeRaw.userCapturedImages as string[]).filter(Boolean)
+      : undefined);
+
+  const payload: Record<string, unknown> = {
     scientificName,
-    canonicalName,
-    gbifId,
-    mindatId: resolveSpecimenMindatId(archetypeRaw),
-    imageUrls,
-    commonNames,
-    name: commonName,
+    imageUrls: resolvedImageUrls,
+    defaultImageUrl: resolvedImageUrls[0],
+    commonName: commonName || undefined,
+    summary: edited.summary,
+    wikipediaLink,
+    birdsLifeId,
+    soundUrls: soundUrls?.length ? soundUrls : undefined,
+    userCapturedSounds: userCapturedSounds?.length
+      ? userCapturedSounds
+      : undefined,
+    userCapturedImages: userCapturedImages?.length
+      ? userCapturedImages
+      : undefined,
+    comment: options.comment,
     _archetype: archetypeId,
     isIdentified: options.isIdentified ?? false,
     isWishlisted: options.isWishlisted ?? false,
     ...(collections.length > 0 ? { _collections: collections } : {}),
+    birdType: edited.birdType,
+    flightPattern: edited.flightPattern,
+    flightAltitude: edited.flightAltitude,
+    diet: edited.diet,
+    habitat: edited.habitat,
+    conservationStatus: edited.conservationStatus,
+    lengthRange: edited.lengthRange,
+    wingspanRange: edited.wingspanRange,
+    weightRange: edited.weightRange,
+    dominantColors: edited.dominantColors,
+    keyIdentificationMarks: edited.keyIdentificationMarks,
+    customLocation: edited.customLocation,
   };
+
+  return Object.fromEntries(
+    Object.entries(payload).filter(([, v]) => v !== undefined)
+  ) as unknown as AddMushroomSpecimenRequest;
 }
 
 export function buildMushroomSpecimenAddFromRaw(

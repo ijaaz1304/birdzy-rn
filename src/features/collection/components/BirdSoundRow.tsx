@@ -1,0 +1,164 @@
+import { AppImage } from "@/components/AppImage";
+import React from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Images, SoundLibraryPlayIcon } from "../../../assets";
+import { Text } from "../../../atoms";
+import { FONTS } from "../../../common/typography";
+import { APP_COLORS } from "../../../config/colors";
+import { COLLECTION_STRINGS } from "../../../config/strings/collection.strings";
+import { Radius } from "../../../design";
+import { spacing } from "../../../design-system/spacing";
+import type { BirdSoundListItem } from "../utils/birdSoundListItems";
+
+type Props = {
+  item: BirdSoundListItem;
+  isPlaying: boolean;
+  onPress: () => void;
+  surfaceSecondary: string;
+  textPrimary: string;
+  textSecondary: string;
+};
+
+export function BirdSoundRow({
+  item,
+  isPlaying,
+  onPress,
+  surfaceSecondary,
+  textPrimary,
+  textSecondary,
+}: Props) {
+  const strings = COLLECTION_STRINGS.birdDetails.sounds;
+  const durationLabel = isPlaying ? strings.playing : item.durationLabel;
+
+  return (
+    <TouchableOpacity
+      style={[styles.row, { backgroundColor: surfaceSecondary }]}
+      onPress={onPress}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={isPlaying ? strings.pauseA11y : strings.playA11y}
+    >
+      <View
+        style={[
+          styles.playButton,
+          isPlaying && styles.pauseButton,
+        ]}
+      >
+        {isPlaying ? (
+          <AppImage
+            source={Images.soundPause}
+            style={styles.pauseIcon}
+            resizeMode="contain"
+          />
+        ) : (
+          <SoundLibraryPlayIcon width={24} height={24} color="#FFFFFF" />
+        )}
+      </View>
+
+      <View style={styles.content}>
+        <View style={styles.titleRow}>
+          <View style={styles.titleGroup}>
+            <Text
+              style={[styles.title, { color: textPrimary }]}
+              numberOfLines={1}
+            >
+              {item.title}
+            </Text>
+            {item.isUserRecording ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{strings.myRecording}</Text>
+              </View>
+            ) : null}
+          </View>
+          {durationLabel ? (
+            <Text style={[styles.duration, { color: textSecondary }]}>
+              {durationLabel}
+            </Text>
+          ) : null}
+        </View>
+        {item.metaLine ? (
+          <Text
+            style={[styles.meta, { color: textSecondary }]}
+            numberOfLines={1}
+          >
+            {item.metaLine}
+          </Text>
+        ) : null}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[2],
+    padding: spacing[2],
+    borderRadius: Radius.md,
+    minHeight: 60,
+  },
+  playButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: APP_COLORS.createButtonFg,
+    flexShrink: 0,
+  },
+  pauseButton: {
+    backgroundColor: "transparent",
+  },
+  pauseIcon: {
+    width: 40,
+    height: 40,
+  },
+  content: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing[1],
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[2],
+  },
+  titleGroup: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[2],
+  },
+  title: {
+    flexShrink: 1,
+    fontFamily: FONTS.bold,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  badge: {
+    backgroundColor: APP_COLORS.createButtonBg,
+    borderRadius: 100,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1],
+    flexShrink: 0,
+  },
+  badgeText: {
+    fontFamily: FONTS.medium,
+    fontSize: 12,
+    lineHeight: 16,
+    color: APP_COLORS.createButtonFg,
+  },
+  duration: {
+    fontFamily: FONTS.medium,
+    fontSize: 14,
+    lineHeight: 20,
+    flexShrink: 0,
+  },
+  meta: {
+    fontFamily: FONTS.regular,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+});

@@ -14,7 +14,7 @@ import { useStrings } from "../../hooks/useStrings";
 import { Images } from "../../assets";
 import { OVERLAY_COLORS } from "../../constants/colorConstants";
 import { Radius } from "../../design";
-import { getPopupChromeStyle, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
+import { getPopupChromeStyle, getPopupPrimaryCtaStyle, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -142,7 +142,7 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
                 variant="primary"
                 size="large"
                 onPress={onRetry}
-                style={styles.actionButton}
+                style={[styles.actionButton, getPopupPrimaryCtaStyle(theme)]}
               />
             </View>
           </View>

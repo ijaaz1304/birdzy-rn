@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { BlurView } from "@react-native-community/blur";
 import { FONTS } from "../../../common/typography";
 import {
   POST_AUTH_LAYOUT,
@@ -32,6 +33,10 @@ type Props = {
 /** Match SubscriptionPlanRow in SubscriptionSheetContent — bold 16px amount. */
 const PRICE_AMOUNT_FONT_SIZE = 16;
 const PRICE_SUFFIX_FONT_SIZE = 12;
+
+/** Unselected pack — Figma glass card */
+const UNSELECTED_PACK_SHADOW = "rgba(114, 84, 129, 0.16)";
+const UNSELECTED_PACK_BLUR = 8;
 
 /** Shared row layout for subscription paywall + post-auth onboarding plan cards. */
 export const HORIZONTAL_PLAN_ROW_STYLE = {
@@ -88,19 +93,37 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        selected ? styles.cardSelected : styles.cardUnselected,
         {
           backgroundColor: selected
             ? colors.planCardBackgroundSelected
-            : colors.planCardBackground,
+            : "transparent",
           borderColor: selected
             ? colors.planBorderSelected
             : colors.planBorderUnselected,
-          borderWidth: 1.5,
           opacity: pressed ? 0.85 : 1,
           zIndex: showPopular ? 3 : 1,
         },
       ]}
     >
+      {!selected ? (
+        <View style={styles.blurClip} pointerEvents="none">
+          {Platform.OS === "ios" ? (
+            <BlurView
+              style={StyleSheet.absoluteFillObject}
+              blurType="light"
+              blurAmount={UNSELECTED_PACK_BLUR}
+              reducedTransparencyFallbackColor={colors.planCardBackground}
+            />
+          ) : null}
+          <View
+            style={[
+              StyleSheet.absoluteFillObject,
+              { backgroundColor: colors.planCardBackground },
+            ]}
+          />
+        </View>
+      ) : null}
       {showPopular ? (
         <View style={styles.popularBadgeWrap}>
           <PostAuthPopularBadge colors={colors} />
@@ -185,16 +208,30 @@ const styles = StyleSheet.create({
     flex: 1,
     alignSelf: "stretch",
     borderRadius: 16,
+    borderWidth: 1.5,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 12,
     minWidth: 0,
     overflow: "visible",
-    shadowColor: "rgba(203, 75, 0, 0.08)",
+  },
+  cardUnselected: {
+    shadowColor: UNSELECTED_PACK_SHADOW,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 16,
-    elevation: 2,
+    elevation: 4,
+  },
+  cardSelected: {
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  blurClip: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
+    overflow: "hidden",
   },
   popularBadgeWrap: {
     position: "absolute",

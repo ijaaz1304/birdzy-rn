@@ -50,7 +50,10 @@ const SEND_BUTTON_SIZE = 48;
 const MEDIA_ICON_SIZE = 20;
 const SEND_ICON_SIZE = 24;
 
-const ASK_AI_SUGGESTED_QUESTIONS = [...ASK_AI_STRINGS.suggestedQuestions];
+const ASK_AI_SUGGESTED_QUESTIONS = [
+  ...ASK_AI_STRINGS.suggestedQuestions,
+  ASK_AI_STRINGS.gotBittenPrompt,
+];
 
 /** Figma: Radius xl = 24px */
 const SUGGESTED_CHIP_BORDER_RADIUS = 24;
@@ -110,6 +113,30 @@ type AskAIScreenNavigationProp = NativeStackNavigationProp<
 >;
 type AskAIScreenRouteProp = RouteProp<AskAIStackParamList, "AskAIMain">;
 
+function shouldUseGotBitten(
+  assistant: "chat" | "gotBitten" | undefined,
+  message: string
+): boolean {
+  if (assistant === "gotBitten") return true;
+  const trimmed = message.trim();
+  if (trimmed === ASK_AI_STRINGS.gotBittenPrompt) return true;
+  return /\b(bit me|bitten|bird bite)\b/i.test(trimmed);
+}
+
+async function requestAskAiReply(params: {
+  assistant?: "chat" | "gotBitten";
+  message: string;
+  imageUris?: string[];
+}): Promise<string> {
+  if (shouldUseGotBitten(params.assistant, params.message)) {
+    return aiService.gotBitten({
+      message: params.message,
+      imageUris: params.imageUris,
+    });
+  }
+  return aiService.chat(params.message, params.imageUris);
+}
+
 export const AskAIScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
@@ -117,6 +144,8 @@ export const AskAIScreen: React.FC = () => {
   const navigation = useNavigation<AskAIScreenNavigationProp>();
   const route = useRoute<AskAIScreenRouteProp>();
   const isPremium = useSubscriptionStore(selectIsPremium);
+  const assistant = route.params?.assistant;
+  const isGotBittenAssistant = assistant === "gotBitten";
   const flatListRef = useRef<FlatList>(null);
   const initialMessageProcessedRef = useRef(false);
   const selectedImageProcessedRef = useRef<string | null>(null);
@@ -127,7 +156,9 @@ export const AskAIScreen: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: WELCOME_MESSAGE_ID,
-      text: ASK_AI_STRINGS.welcomeMessage,
+      text: isGotBittenAssistant
+        ? ASK_AI_STRINGS.gotBittenWelcome
+        : ASK_AI_STRINGS.welcomeMessage,
       isUser: false,
       timestamp: new Date(),
     },
@@ -221,7 +252,10 @@ export const AskAIScreen: React.FC = () => {
       setIsAiTyping(true);
 
       try {
-        const aiResponse = await aiService.chat(initialMessage);
+        const aiResponse = await requestAskAiReply({
+          assistant,
+          message: initialMessage,
+        });
         if (!isPremium) await incrementAskAiUsage();
         analyticsService.logEvent(EVENTS.ask_ai_response_success);
         setIsAiTyping(false);
@@ -247,7 +281,7 @@ export const AskAIScreen: React.FC = () => {
     };
 
     sendInitialMessage();
-  }, [route.params?.initialMessage, navigation, isPremium]);
+  }, [route.params?.initialMessage, assistant, navigation, isPremium]);
 
   useEffect(() => {
     const selectedImageUri = route.params?.selectedImageUri;
@@ -289,7 +323,7 @@ export const AskAIScreen: React.FC = () => {
 
     try {
       const aiResponse = await Promise.race([
-        aiService.chat(trimmed),
+        requestAskAiReply({ assistant, message: trimmed }),
         new Promise<string>((_, reject) =>
           setTimeout(
             () => reject(new Error("AI request timed out. Please try again.")),
@@ -340,6 +374,10 @@ export const AskAIScreen: React.FC = () => {
       (messages.length === 1 && messages[0].id === WELCOME_MESSAGE_ID)) &&
     !isAiTyping;
 
+  const suggestedQuestions = isGotBittenAssistant
+    ? [ASK_AI_STRINGS.gotBittenPrompt, ...ASK_AI_STRINGS.suggestedQuestions]
+    : ASK_AI_SUGGESTED_QUESTIONS;
+
   const IMAGE_PICKER_OPTIONS = AI_CROPPER_OPTIONS;
 
   const sendImageFromUri = async (imageUri: string) => {
@@ -361,7 +399,13 @@ export const AskAIScreen: React.FC = () => {
 
     try {
       const aiResponse = await Promise.race([
-        aiService.chat("What can you tell me about this?", [imageUri]),
+        requestAskAiReply({
+          assistant,
+          message: isGotBittenAssistant
+            ? ASK_AI_STRINGS.gotBittenImagePrompt
+            : "What can you tell me about this?",
+          imageUris: [imageUri],
+        }),
         new Promise<string>((_, reject) =>
           setTimeout(
             () => reject(new Error("AI request timed out. Please try again.")),
@@ -623,7 +667,7 @@ export const AskAIScreen: React.FC = () => {
                 ]}
                 keyboardShouldPersistTaps="handled"
               >
-                {ASK_AI_SUGGESTED_QUESTIONS.map((question) => (
+                {suggestedQuestions.map((question) => (
                   <TouchableOpacity
                     key={question}
                     activeOpacity={0.7}

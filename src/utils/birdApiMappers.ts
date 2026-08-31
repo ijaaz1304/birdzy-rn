@@ -11,6 +11,7 @@ import type {
   BirdSpecimenListItem,
   BirdSpecimen,
   BirdSpecimenCollectionRef,
+  BirdProfileDetails,
 } from "../services/api/features/bird.api.types";
 import type {
   BirdListItem,
@@ -113,8 +114,59 @@ function asString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function firstString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    const text = asString(value);
+    if (text) return text;
+  }
+  return undefined;
+}
+
 function asNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+/** Pull optional Figma profile fields from a detail payload when the API sends them. */
+export function extractBirdProfile(
+  raw: Record<string, unknown>
+): BirdProfileDetails | undefined {
+  const nestedRaw = raw.birdProfile ?? raw.extendedDetails;
+  const nested =
+    nestedRaw && typeof nestedRaw === "object" && !Array.isArray(nestedRaw)
+      ? (nestedRaw as Record<string, unknown>)
+      : {};
+  const src = { ...raw, ...nested };
+  const profile: BirdProfileDetails = {
+    size: firstString(src.size, src.birdSize, src.sizeCategory),
+    familyDescription: firstString(src.familyDescription, src.familyNotes),
+    shape: firstString(src.shape, src.shapeSilhouette, src.silhouette),
+    beak: firstString(src.beak, src.bill),
+    tailShape: firstString(src.tailShape, src.tail),
+    legCharacteristics: firstString(
+      src.legCharacteristics,
+      src.legs,
+      src.feet
+    ),
+    feedingBehavior: firstString(src.feedingBehavior),
+    vocalBehavior: firstString(src.vocalBehavior),
+    territoriality: firstString(src.territoriality),
+    socialBehavior: firstString(src.socialBehavior),
+    dietType: firstString(src.dietType),
+    feedingStyle: firstString(src.feedingStyle),
+    breedingSeason: firstString(src.breedingSeason),
+    nestType: firstString(src.nestType),
+    nestingMaterial: firstString(src.nestingMaterial),
+    parentalCare: firstString(src.parentalCare),
+    residentStatus: firstString(
+      src.residentStatus,
+      src.residentOrMigratory
+    ),
+    migrationPath: firstString(src.migrationPath, src.migrationPathNotes),
+    seasonalPresence: firstString(src.seasonalPresence),
+  };
+  return Object.values(profile).some((value) => Boolean(value))
+    ? profile
+    : undefined;
 }
 
 /** Normalize raw API match/archetype/specimen into BirdMatch. */
@@ -158,6 +210,7 @@ export function normalizeBirdMatch(
     dominantColors: asStringArray(raw.dominantColors),
     sexDifferences: asString(raw.sexDifferences),
     rangeDetails: raw.rangeDetails as BirdMatch["rangeDetails"],
+    profile: extractBirdProfile(raw),
     lengthRange: asString(raw.lengthRange),
     wingspanRange: asString(raw.wingspanRange),
     weightRange: asString(raw.weightRange),
@@ -235,6 +288,7 @@ export function normalizeBirdDetail(raw: Record<string, unknown>): BirdDetail {
     dominantColors: match.dominantColors,
     sexDifferences: match.sexDifferences,
     rangeDetails: match.rangeDetails,
+    profile: match.profile,
     lengthRange: match.lengthRange,
     wingspanRange: match.wingspanRange,
     weightRange: match.weightRange,

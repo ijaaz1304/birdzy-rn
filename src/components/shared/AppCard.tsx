@@ -2,7 +2,7 @@ import { AppImage } from "@/components/AppImage";
 import React from "react";
 import { View, StyleSheet, TouchableOpacity, ImageSourcePropType } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { Images } from "../../assets";
+import { CatalogueVolumeIcon, Images } from "../../assets";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Space } from "../../design";
 import AppText from "./AppText";
@@ -23,6 +23,12 @@ type Props = {
   remindersCount?: number;
   onPress?: () => void;
   onStarPress?: () => void;
+  /** Figma 8609:40912 — speaker on photo (bottom-right). */
+  showSoundButton?: boolean;
+  /** When false, catalogue speaker uses the mute/no-sound glyph. */
+  hasSound?: boolean;
+  soundPlaying?: boolean;
+  onSoundPress?: () => void;
   style?: object;
   /** List grids: first image only, no auto-slide (faster catalogue scrolling). */
   enableImageCarousel?: boolean;
@@ -38,6 +44,10 @@ const AppCard: React.FC<Props> = React.memo(
     remindersCount,
     onPress,
     onStarPress,
+    showSoundButton = false,
+    hasSound = true,
+    soundPlaying = false,
+    onSoundPress,
     style,
     enableImageCarousel = true,
   }) => {
@@ -118,6 +128,7 @@ const AppCard: React.FC<Props> = React.memo(
                 onStarPress();
               }}
               style={[
+                styles.overlayButton,
                 styles.starButton,
                 { backgroundColor: colors.surfacePrimary },
               ]}
@@ -140,6 +151,44 @@ const AppCard: React.FC<Props> = React.memo(
               />
             </TouchableOpacity>
           )}
+
+          {showSoundButton ? (
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation?.();
+                onSoundPress?.();
+              }}
+              style={[
+                styles.overlayButton,
+                styles.soundButton,
+                { backgroundColor: colors.surfacePrimary },
+              ]}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel={
+                !hasSound
+                  ? "No bird sound available"
+                  : soundPlaying
+                    ? "Stop bird sound"
+                    : "Play bird sound"
+              }
+            >
+              {hasSound ? (
+                <CatalogueVolumeIcon
+                  width={24}
+                  height={24}
+                  color={soundPlaying ? colors.primaryCTA : colors.textPrimary}
+                />
+              ) : (
+                <AppImage
+                  source={Images.noSound}
+                  style={styles.soundIcon}
+                  resizeMode="contain"
+                />
+              )}
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Text section */}
@@ -196,6 +245,10 @@ const AppCard: React.FC<Props> = React.memo(
       imageUrlsEqual &&
       prevProps.onPress === nextProps.onPress &&
       prevProps.onStarPress === nextProps.onStarPress &&
+      prevProps.showSoundButton === nextProps.showSoundButton &&
+      prevProps.hasSound === nextProps.hasSound &&
+      prevProps.soundPlaying === nextProps.soundPlaying &&
+      prevProps.onSoundPress === nextProps.onSoundPress &&
       prevProps.style === nextProps.style &&
       prevProps.enableImageCarousel === nextProps.enableImageCarousel
     );
@@ -244,18 +297,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  starButton: {
+  overlayButton: {
     position: "absolute",
-    top: 12,
-    right: 12,
-    borderRadius: 50,
-    padding: 4,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 2,
     zIndex: 2,
   },
+  starButton: {
+    top: 8,
+  },
+  soundButton: {
+    bottom: 8,
+  },
+  soundIcon: {
+    width: 24,
+    height: 24,
+  },
   starIcon: {
-    width: 20,
-    height: 20,
+    width: 24,
+    height: 24,
   },
   remindersBadge: {
     position: "absolute",

@@ -9,9 +9,10 @@ import { FONTS } from "../../../common/typography";
 import { useTheme } from "../../../hooks/useTheme";
 import { Radius } from "../../../design";
 
-const SOUND_CARD_BG = "#747E3B";
-const PHOTO_CARD_BG = "#F5EBEB";
-const PHOTO_INNER_BG = "#EDC8AB";
+/** Identify by sound card — rgba(1, 71, 79, 1) */
+const SOUND_CARD_BG = "#01474F";
+/** Identify by photo card — rgba(235, 228, 238, 1) */
+const PHOTO_CARD_BG = "#EBE4EE";
 
 type Props = {
   onSoundPress: () => void;
@@ -44,7 +45,7 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
         <View style={styles.soundIllustration}>
           <AppImage
             source={Images.homeIdentifyBySound}
-            style={styles.soundImage}
+            style={styles.illustrationImage}
             resizeMode="contain"
           />
         </View>
@@ -68,10 +69,10 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
             color={theme.colors.textPrimary}
           />
         </View>
-        <View style={[styles.photoIllustration, { backgroundColor: PHOTO_INNER_BG }]}>
+        <View style={styles.photoIllustration}>
           <AppImage
             source={Images.homeIdentifyByPhoto}
-            style={styles.photoImage}
+            style={styles.illustrationImage}
             resizeMode="contain"
           />
         </View>
@@ -111,24 +112,17 @@ const styles = StyleSheet.create({
   soundIllustration: {
     height: 72,
     borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.9)",
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-  },
-  soundImage: {
-    width: "100%",
-    height: "100%",
   },
   photoIllustration: {
     height: 72,
     borderRadius: 8,
     overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
   },
-  photoImage: {
-    width: "88%",
+  illustrationImage: {
+    width: "100%",
     height: "100%",
   },
 });

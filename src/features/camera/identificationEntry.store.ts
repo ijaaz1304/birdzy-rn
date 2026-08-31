@@ -13,6 +13,8 @@ type IdentificationEntryStore = {
   setCameraPermissionGranted: (granted: boolean | null) => void;
   startEntryHandler: (() => void) | null;
   setStartEntryHandler: (handler: (() => void) | null) => void;
+  startSoundEntryHandler: (() => void) | null;
+  setStartSoundEntryHandler: (handler: (() => void) | null) => void;
 };
 
 export const useIdentificationEntryStore = create<IdentificationEntryStore>(
@@ -31,5 +33,8 @@ export const useIdentificationEntryStore = create<IdentificationEntryStore>(
       set({ cameraPermissionGranted: granted }),
     startEntryHandler: null,
     setStartEntryHandler: (handler) => set({ startEntryHandler: handler }),
+    startSoundEntryHandler: null,
+    setStartSoundEntryHandler: (handler) =>
+      set({ startSoundEntryHandler: handler }),
   })
 );

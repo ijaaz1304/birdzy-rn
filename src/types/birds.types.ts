@@ -7,6 +7,7 @@ import type {
   BirdArchetypeStats,
   BirdWatchingTips,
   BirdRangeDetails,
+  BirdProfileDetails,
   BirdPotentialHazards,
   SimilarBird,
 } from "../services/api/features/bird.api.types";
@@ -17,6 +18,7 @@ export type {
   BirdArchetypeStats,
   BirdWatchingTips,
   BirdRangeDetails,
+  BirdProfileDetails,
   BirdPotentialHazards,
   SimilarBird,
   ScientificClassification,
@@ -61,6 +63,7 @@ export interface BirdDetail extends BirdListItem {
   dominantColors?: string[];
   sexDifferences?: string;
   rangeDetails?: BirdRangeDetails;
+  profile?: BirdProfileDetails;
   lengthRange?: string;
   wingspanRange?: string;
   weightRange?: string;

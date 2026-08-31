@@ -71,7 +71,7 @@ export const PoorResultsWarningModal: React.FC<
           style={[
             styles.button,
             {
-              backgroundColor: colors.primary,
+              backgroundColor: colors.primaryCTA,
               borderRadius: radius.xl,
               minHeight: 50,
             },

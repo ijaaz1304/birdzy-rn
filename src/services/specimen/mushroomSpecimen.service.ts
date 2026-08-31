@@ -12,6 +12,8 @@ import {
   AddMushroomSpecimenRequest,
   UpdateMushroomSpecimenRequest,
   MushroomArchetypeFilterParams,
+  AddBirdSpecimenRequest,
+  UpdateBirdSpecimenRequest,
 } from "../api/features/core.api.types";
 import { normalizeSpecimenListItem, normalizeMushroomDetail } from "../../utils/mushroomApiMappers";
 import { ApiException, normalizeError } from "../api/errors";
@@ -41,7 +43,7 @@ class MushroomSpecimenService {
    * Add a new specimen to collection
    */
   async addSpecimen(
-    data: AddMushroomSpecimenRequest
+    data: AddBirdSpecimenRequest | AddMushroomSpecimenRequest
   ): Promise<MushroomSpecimen> {
     try {
       const response = await coreApi.addSpecimen(data);
@@ -118,7 +120,7 @@ class MushroomSpecimenService {
    */
   async updateSpecimen(
     id: string,
-    data: UpdateMushroomSpecimenRequest
+    data: UpdateBirdSpecimenRequest | UpdateMushroomSpecimenRequest
   ): Promise<MushroomSpecimen> {
     const log = useAppLogsStore.getState();
     log.info("[MushroomSpecimen] updateSpecimen called", {

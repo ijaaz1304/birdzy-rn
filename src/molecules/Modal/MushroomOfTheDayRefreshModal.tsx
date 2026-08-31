@@ -11,7 +11,7 @@ import { Modal } from "./Modal";
 import { ModalBackgroundSvg } from "./ModalBackgroundSvg";
 import { Card } from "../Card";
 import { useStrings } from "../../hooks/useStrings";
-import { getDarkPopupBorderStyle } from "../../design-system/modalTokens";
+import { getDarkPopupBorderStyle, getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 
 export interface MushroomOfTheDayRefreshModalProps {
   visible: boolean;
@@ -84,7 +84,7 @@ export const MushroomOfTheDayRefreshModal: React.FC<
               variant="primary"
               size="large"
               onPress={onUpgrade}
-              style={styles.upgradeButton}
+              style={[styles.upgradeButton, getPopupPrimaryCtaStyle(theme)]}
             />
           </View>
         </Card>

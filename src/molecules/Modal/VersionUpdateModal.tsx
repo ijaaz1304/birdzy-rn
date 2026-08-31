@@ -13,6 +13,7 @@ import { Icon } from "../../atoms";
 import { BottomSheetWithHeader } from "./BottomSheetWithHeader";
 
 import { Radius } from "../../design";
+import { getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 
 export interface VersionUpdateModalProps {
   visible: boolean;
@@ -149,7 +150,7 @@ export const VersionUpdateModal: React.FC<VersionUpdateModalProps> = ({
           size="large"
           onPress={onUpdate}
           fullWidth={isRequired}
-          style={styles.updateButton}
+          style={[styles.updateButton, getPopupPrimaryCtaStyle(theme)]}
         />
       </View>
     </BottomSheetWithHeader>

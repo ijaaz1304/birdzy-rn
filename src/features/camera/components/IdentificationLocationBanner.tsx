@@ -17,6 +17,8 @@ export interface IdentificationLocationBannerProps {
   onPressLocation?: () => void;
   /** When true, shows status only — no toggle or sheet triggers. */
   readOnly?: boolean;
+  /** Override the off-state prompt (e.g. sound identify copy). */
+  prompt?: string;
   style?: ViewStyle;
 }
 
@@ -29,12 +31,14 @@ export const IdentificationLocationBanner: React.FC<
   onToggleLocation,
   onPressLocation,
   readOnly = false,
+  prompt: promptOverride,
   style,
 }) => {
   const strings = useStrings();
   const theme = useTheme();
   const isDark = useIsDark();
   const copy = strings.camera.location;
+  const offPrompt = promptOverride ?? copy.turnOnPrompt;
   const isCamera = variant === "camera";
   const isResults = variant === "results";
   const textSize = isCamera ? "medium" : "small";
@@ -62,7 +66,7 @@ export const IdentificationLocationBanner: React.FC<
           variant === "gallery" && styles.galleryPromptPressableText,
         ]}
       >
-        {copy.turnOnPrompt}
+        {offPrompt}
       </Text>
     );
 

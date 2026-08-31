@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -14,8 +14,8 @@ import { Images } from "../assets";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Splash">;
 
-/** Onboarding splash art — 1500×3248, anchored to bottom like onboarding slides. */
-const SPLASH_ART_ASPECT = 3248 / 1500;
+/** Transparent splash bird art — 852×639. */
+const SPLASH_BIRD_ASPECT = 852 / 639;
 
 /**
  * Splash visuals only (no navigation). Used by Splash route and App.tsx bootstrap
@@ -23,10 +23,8 @@ const SPLASH_ART_ASPECT = 3248 / 1500;
  */
 export const SplashScreenContent: React.FC = () => {
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-  const splashArtHeight = useMemo(
-    () => Math.max(screenHeight, screenWidth * SPLASH_ART_ASPECT),
-    [screenHeight, screenWidth]
-  );
+  const birdWidth = Math.min(screenWidth * 0.88, 420);
+  const birdHeight = birdWidth / SPLASH_BIRD_ASPECT;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.88)).current;
@@ -70,24 +68,24 @@ export const SplashScreenContent: React.FC = () => {
     <View
       style={[
         styles.wrapper,
-        { backgroundColor: APP_COLORS.splashBackground },
+        { backgroundColor: APP_COLORS.splashBackground, minHeight: screenHeight },
       ]}
     >
       <Animated.View
         style={[
           styles.artContainer,
           {
-            width: screenWidth,
-            height: splashArtHeight,
+            width: birdWidth,
+            height: birdHeight,
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }, { translateY: floatAnim }],
           },
         ]}
       >
         <AppImage
-          source={Images.onboardingSplash}
+          source={Images.splashBird}
           style={styles.artImage}
-          resizeMode="cover"
+          resizeMode="contain"
         />
       </Animated.View>
     </View>
@@ -104,11 +102,12 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
     overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
   artContainer: {
-    position: "absolute",
-    left: 0,
-    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
   },
   artImage: {
     width: "100%",

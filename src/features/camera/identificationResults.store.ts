@@ -4,9 +4,12 @@ import type { PossibleMatchListItem } from "../../utils/mushroomApiMappers";
 type IdentificationResultsStore = {
   matches: PossibleMatchListItem[];
   identificationImage?: { uri: string };
+  /** Uploaded recording URLs from POST /core/ai/identify-sound `data.soundUrls`. */
+  uploadedSoundUrls?: string[];
   setResults: (
     matches: PossibleMatchListItem[],
-    identificationImage?: { uri: string }
+    identificationImage?: { uri: string },
+    extras?: { uploadedSoundUrls?: string[] }
   ) => void;
   clear: () => void;
 };
@@ -16,8 +19,18 @@ export const useIdentificationResultsStore = create<IdentificationResultsStore>(
   (set) => ({
     matches: [],
     identificationImage: undefined,
-    setResults: (matches, identificationImage) =>
-      set({ matches, identificationImage }),
-    clear: () => set({ matches: [], identificationImage: undefined }),
+    uploadedSoundUrls: undefined,
+    setResults: (matches, identificationImage, extras) =>
+      set({
+        matches,
+        identificationImage,
+        uploadedSoundUrls: extras?.uploadedSoundUrls,
+      }),
+    clear: () =>
+      set({
+        matches: [],
+        identificationImage: undefined,
+        uploadedSoundUrls: undefined,
+      }),
   })
 );

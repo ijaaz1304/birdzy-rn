@@ -1,5 +1,5 @@
 /**
- * Record a bird sound and submit to identify-sound API.
+ * Identify by sound — entry (Figma 8890:125339) then live recording (8890:125340 / 8890:125341).
  */
 
 import { AppImage } from "@/components/AppImage";
@@ -8,59 +8,84 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  Animated,
+  Easing,
   ActivityIndicator,
 } from "react-native";
 import { Images } from "../../../assets";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme } from "../../../hooks/useTheme";
-import { Text, NavBackIcon, Button } from "../../../atoms";
+import { Text, NavBackIcon, Toggle } from "../../../atoms";
 import { CameraStackParamList } from "../../../navigation/types";
 import { soundRecordingService } from "../../../services/audio/soundRecording.service";
 import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
-import { spacing } from "../../../design-system/spacing";
-import { Radius } from "../../../design";
+import { FONTS } from "../../../common/typography";
+import { FindYourBirdBackground } from "../../bird-personality/components/FindYourMushroomBackground";
+import { SoundSpectrogramView } from "../components/SoundSpectrogramView";
+import { useLocationToggleFlow } from "../useLocationToggleFlow";
+import { shouldShowLocationBannerAsGranted } from "../locationToggle.helpers";
+import { formatSoundHms, formatSoundStamp } from "../utils/soundCrop";
 import {
-  useSubscriptionStore,
-  selectIsPremium,
-} from "../../../features/subscription/subscription.store";
-import { canIdentifySound } from "../../../services/session/usageLimit.service";
-import { canAddAudioGalleryClip } from "../../../services/session/audioGalleryLimit.service";
-import { LimitReachedBottomSheet } from "../../../molecules/Modal";
-import { navigateToSubscriptionMain } from "../../../utils/navigation";
-import { analyticsService } from "../../../services/analytics/analytics.service";
-import { EVENTS } from "../../../services/analytics/analytics.events";
-import { SoundWaveformBars } from "../components/SoundWaveformBars";
-import {
-  NoBirdDetectedModal,
-  NoiseTooHighModal,
-} from "../components/BirdSoundErrorModals";
-import { showPermissionAlert, openDeviceSettings } from "../../../services/permissions";
+  checkMicrophonePermission,
+  openDeviceSettings,
+  requestMicrophonePermission,
+  showPermissionAlert,
+} from "../../../services/permissions";
+import { shouldSkipMicrophonePermissionPrompt } from "../../../services/permissions/permissionPromptSkip";
+import { MicrophonePermissionPopup } from "../../../molecules/Modal";
 
 type Nav = NativeStackNavigationProp<CameraStackParamList, "SoundIdentify">;
+
+type LiveStatus = "listening" | "searching" | "noise" | "noMatch";
+type Phase = "entry" | "recording";
+
+const copy = CAMERA_STRINGS.sound;
+
+function statusCopy(status: LiveStatus): string {
+  switch (status) {
+    case "noise":
+      return copy.statusNoise;
+    case "noMatch":
+      return copy.statusNoMatch;
+    case "searching":
+      return copy.statusSearching;
+    default:
+      return copy.statusListening;
+  }
+}
 
 export const SoundIdentifyScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
-  const isPremium = useSubscriptionStore(selectIsPremium);
+  const {
+    location,
+    locationLabel,
+    permissionGranted,
+    handleToggleOn,
+    openCustomLocationSheet,
+  } = useLocationToggleFlow();
+  const locationOn = shouldShowLocationBannerAsGranted(
+    permissionGranted,
+    location
+  );
 
+  const [phase, setPhase] = useState<Phase>("entry");
+  const [showMicPopup, setShowMicPopup] = useState(false);
+  const [micLoading, setMicLoading] = useState(false);
+  const [micBlocked, setMicBlocked] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
-  const [recordedUri, setRecordedUri] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [showUpgradeSheet, setShowUpgradeSheet] = useState(false);
-  const [showGalleryLimitSheet, setShowGalleryLimitSheet] = useState(false);
-  const [showNoBirdModal, setShowNoBirdModal] = useState(false);
-  const [showNoiseModal, setShowNoiseModal] = useState(false);
-  const [liveSuggestions, setLiveSuggestions] = useState<string[]>([]);
+  const [metering, setMetering] = useState(0);
+  const [recordedAt] = useState(() => Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stoppingRef = useRef(false);
+  const spin = useRef(new Animated.Value(0)).current;
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -69,40 +94,54 @@ export const SoundIdentifyScreen: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => () => clearTimer(), [clearTimer]);
+  const goToCrop = useCallback(
+    (uri: string, durationSec: number) => {
+      navigation.replace("SoundCrop", {
+        audioUri: uri,
+        durationSec: Math.max(1, Math.round(durationSec)),
+        recordedAt,
+      });
+    },
+    [navigation, recordedAt]
+  );
 
-  const handleBack = () => {
-    if (isRecording) {
-      void soundRecordingService.stopRecording().catch(() => undefined);
-    }
+  const stopAndCrop = useCallback(async () => {
+    if (stoppingRef.current) return;
+    stoppingRef.current = true;
     clearTimer();
-    navigation.goBack();
-  };
-
-  const startRecording = async () => {
+    setIsRecording(false);
+    setIsPaused(false);
     try {
       setBusy(true);
-      setRecordedUri(null);
+      const duration = soundRecordingService.elapsedRecordingSeconds();
+      const uri = await soundRecordingService.stopRecording();
+      goToCrop(uri, duration || elapsedSec);
+    } catch {
+      stoppingRef.current = false;
+    } finally {
+      setBusy(false);
+    }
+  }, [clearTimer, elapsedSec, goToCrop]);
+
+  const startTimer = useCallback(() => {
+    clearTimer();
+    timerRef.current = setInterval(() => {
+      const next = Math.floor(soundRecordingService.elapsedRecordingSeconds());
+      setElapsedSec(next);
+      if (next >= soundRecordingService.maxRecordingSeconds) {
+        void stopAndCrop();
+      }
+    }, 250);
+  }, [clearTimer, stopAndCrop]);
+
+  const beginRecording = useCallback(async () => {
+    try {
+      setBusy(true);
       setElapsedSec(0);
-      setLiveSuggestions([]);
-      await soundRecordingService.startRecording();
+      await soundRecordingService.startRecording((db) => setMetering(db));
       setIsRecording(true);
-      timerRef.current = setInterval(() => {
-        setElapsedSec((s) => {
-          const next = s + 1;
-          if (next >= 4) {
-            setLiveSuggestions((prev) =>
-              prev.length
-                ? prev
-                : ["American Robin", "Northern Cardinal", "Song Sparrow"]
-            );
-          }
-          if (next >= soundRecordingService.maxRecordingSeconds) {
-            void stopRecording();
-          }
-          return next;
-        });
-      }, 1000);
+      setIsPaused(false);
+      startTimer();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Could not start recording.";
@@ -113,206 +152,331 @@ export const SoundIdentifyScreen: React.FC = () => {
           openDeviceSettings
         );
       }
+      setPhase("entry");
     } finally {
       setBusy(false);
     }
-  };
+  }, [startTimer]);
 
-  const stopRecording = async () => {
-    if (!isRecording) return;
+  const tryStartRecording = useCallback(async () => {
+    if (busy || isRecording) return;
+
+    if (await shouldSkipMicrophonePermissionPrompt()) {
+      await beginRecording();
+      return;
+    }
+
+    const microphone = await checkMicrophonePermission();
+    if (microphone.granted) {
+      await beginRecording();
+      return;
+    }
+
+    setMicBlocked(!!microphone.blocked);
+    setShowMicPopup(true);
+  }, [beginRecording, busy, isRecording]);
+
+  const handleEntryRecordPress = useCallback(() => {
+    setPhase("recording");
+  }, []);
+
+  const handleMicPopupClose = useCallback(() => {
+    setShowMicPopup(false);
+    if (!isRecording) {
+      setPhase("entry");
+    }
+  }, [isRecording]);
+
+  const handleAllowMicrophone = useCallback(() => {
+    if (micBlocked) {
+      void openDeviceSettings();
+      return;
+    }
+
+    setMicLoading(true);
+    void (async () => {
+      try {
+        const result = await requestMicrophonePermission();
+        setMicBlocked(!!result.blocked);
+        if (result.granted) {
+          setShowMicPopup(false);
+          await beginRecording();
+        }
+      } finally {
+        setMicLoading(false);
+      }
+    })();
+  }, [beginRecording, micBlocked]);
+
+  const recordingInitRef = useRef(false);
+
+  useEffect(() => {
+    if (phase !== "recording") {
+      recordingInitRef.current = false;
+      return;
+    }
+    if (recordingInitRef.current || isRecording) return;
+    recordingInitRef.current = true;
+    void tryStartRecording();
+  }, [phase, isRecording, tryStartRecording]);
+
+  useEffect(() => {
+    return () => {
+      clearTimer();
+      void soundRecordingService.stopRecording().catch(() => undefined);
+    };
+  }, [clearTimer]);
+
+  useEffect(() => {
+    if (phase !== "recording") return undefined;
+
+    const loop = Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 1200,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [phase, spin]);
+
+  const handleBack = () => {
+    void soundRecordingService.stopRecording().catch(() => undefined);
     clearTimer();
-    setIsRecording(false);
+    if (phase === "recording" && !isRecording) {
+      setPhase("entry");
+      return;
+    }
+    navigation.goBack();
+  };
+
+  const togglePause = async () => {
+    if (!isRecording || busy) return;
     try {
-      setBusy(true);
-      const uri = await soundRecordingService.stopRecording();
-      setRecordedUri(uri);
+      if (isPaused) {
+        await soundRecordingService.resumeRecording();
+        setIsPaused(false);
+        startTimer();
+      } else {
+        await soundRecordingService.pauseRecording();
+        clearTimer();
+        setIsPaused(true);
+      }
     } catch {
-      setRecordedUri(null);
-    } finally {
-      setBusy(false);
+      void stopAndCrop();
     }
   };
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      void stopRecording();
-    } else {
-      void startRecording();
-    }
-  };
+  const liveStatus: LiveStatus = (() => {
+    if (metering > -12) return "noise";
+    if (elapsedSec >= 10 && metering < -45) return "noMatch";
+    if (elapsedSec >= 5) return "searching";
+    return "listening";
+  })();
 
-  const submitRecording = async () => {
-    if (!recordedUri) return;
+  const stamp = formatSoundStamp(new Date(recordedAt));
+  const place =
+    locationOn && locationLabel?.trim()
+      ? locationLabel.trim()
+      : copy.noLocation;
+  const rotate = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
 
-    if (!isPremium) {
-      const [allowedId, allowedGallery] = await Promise.all([
-        canIdentifySound(),
-        canAddAudioGalleryClip(),
-      ]);
-      if (!allowedId) {
-        setShowUpgradeSheet(true);
-        return;
-      }
-      if (!allowedGallery) {
-        setShowGalleryLimitSheet(true);
-        return;
-      }
-    }
-
-    analyticsService.logEvent(EVENTS.photo_submitted, { source: "sound_identify" });
-    navigation.replace("DiagnosisLoading", {
-      identifyMode: "sound",
-      audioUri: recordedUri,
-    });
-  };
-
-  const timerLabel = soundRecordingService.mmss(elapsedSec);
-  const maxLabel = soundRecordingService.mmss(
-    soundRecordingService.maxRecordingSeconds
+  const locationCard = !locationOn ? (
+    <View
+      style={[styles.locationCard, { backgroundColor: colors.surfaceSecondary }]}
+    >
+      <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
+        {copy.enableLocation}
+      </Text>
+      <Toggle
+        value={false}
+        onToggle={(on) => {
+          if (on) handleToggleOn();
+        }}
+      />
+    </View>
+  ) : (
+    <TouchableOpacity
+      style={[styles.locationCard, { backgroundColor: colors.surfaceSecondary }]}
+      onPress={() => openCustomLocationSheet()}
+      activeOpacity={0.85}
+    >
+      <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
+        {copy.locationSpottedPrefix}
+        <Text style={styles.locationLink}>{place}</Text>
+      </Text>
+    </TouchableOpacity>
   );
+
+  if (phase === "entry") {
+    return (
+      <View style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
+        <FindYourBirdBackground />
+        <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={handleBack}
+              style={styles.headerBtn}
+              hitSlop={HIT_SLOP.CLOSE}
+            >
+              <NavBackIcon color={colors.textPrimary} size={24} />
+            </TouchableOpacity>
+            <View style={styles.headerBtn} />
+          </View>
+
+          <View style={styles.entryBody}>
+            <View style={styles.entryMiddle}>
+              <AppImage
+                source={Images.soundIdentifyHero}
+                style={styles.hero}
+                resizeMode="contain"
+              />
+              <View style={styles.entryCopy}>
+                <Text style={[styles.entryTitle, { color: colors.textPrimary }]}>
+                  {copy.title}
+                </Text>
+                <Text
+                  style={[styles.entrySubtitle, { color: colors.textSecondary }]}
+                >
+                  {copy.subtitle}
+                </Text>
+              </View>
+              {locationCard}
+            </View>
+
+            <View style={styles.entryControls}>
+              <TouchableOpacity
+                onPress={handleEntryRecordPress}
+                style={styles.entryRecordBtn}
+                accessibilityLabel={copy.startRecording}
+                activeOpacity={0.85}
+              >
+                <AppImage
+                  source={Images.soundRecord}
+                  style={styles.entryRecordImage}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+
+        <MicrophonePermissionPopup
+          visible={showMicPopup}
+          onClose={handleMicPopupClose}
+          onAllowMicrophone={handleAllowMicrophone}
+          loading={micLoading}
+          openSettings={micBlocked}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
+      <FindYourBirdBackground />
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={[styles.backBtn, { top: insets.top + 12 }]}
-          hitSlop={HIT_SLOP.CLOSE}
-        >
-          <NavBackIcon color={colors.textPrimary} size={24} />
-        </TouchableOpacity>
-
-        <View style={styles.content}>
-          <Text variant="headline" size="large" weight="bold" style={styles.title}>
-            {CAMERA_STRINGS.sound.title}
-          </Text>
-          <Text variant="body" size="medium" color="textSecondary" style={styles.subtitle}>
-            {CAMERA_STRINGS.sound.subtitle}
-          </Text>
-
-          <SoundWaveformBars
-            active={isRecording}
-            color={colors.primary}
-            height={40}
-          />
-
-          {isRecording && liveSuggestions.length > 0 ? (
-            <View style={styles.suggestionsWrap}>
-              <Text variant="caption" size="small" color="textSecondary">
-                {CAMERA_STRINGS.sound.liveSuggestions}
-              </Text>
-              <View style={styles.suggestionRow}>
-                {liveSuggestions.map((name) => (
-                  <View
-                    key={name}
-                    style={[
-                      styles.suggestionChip,
-                      { backgroundColor: colors.surfaceSecondary },
-                    ]}
-                  >
-                    <Text variant="caption" size="small" weight="medium">
-                      {name}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ) : null}
-
-          <View
-            style={[
-              styles.recordCircle,
-              {
-                borderColor: isRecording ? colors.error : colors.primary,
-                backgroundColor: `${colors.primary}14`,
-              },
-            ]}
-          >
-            {busy && !isRecording ? (
-              <ActivityIndicator size="large" color={colors.primary} />
-            ) : (
-              <AppImage
-                source={
-                  isRecording ? Images.soundRecordStop : Images.soundRecord
-                }
-                style={styles.recordIcon}
-                resizeMode="contain"
-              />
-            )}
-          </View>
-
-          <Text variant="body" size="medium" weight="semibold">
-            {isRecording ? CAMERA_STRINGS.sound.recording : CAMERA_STRINGS.sound.tapToRecord}
-          </Text>
-          <Text variant="caption" size="small" color="textSecondary">
-            {timerLabel} / {maxLabel}
-          </Text>
-
+        <View style={styles.header}>
           <TouchableOpacity
-            onPress={toggleRecording}
-            disabled={busy}
-            style={[
-              styles.recordBtn,
-              {
-                backgroundColor: isRecording ? colors.error : colors.primary,
-                opacity: busy ? 0.6 : 1,
-              },
-            ]}
-            activeOpacity={0.85}
+            onPress={handleBack}
+            style={styles.headerBtn}
+            hitSlop={HIT_SLOP.CLOSE}
           >
-            <Text variant="body" size="medium" weight="semibold" color="surface">
-              {isRecording
-                ? CAMERA_STRINGS.sound.stopRecording
-                : CAMERA_STRINGS.sound.startRecording}
-            </Text>
+            <NavBackIcon color={colors.textPrimary} size={24} />
           </TouchableOpacity>
+          <View style={styles.headerBtn} />
         </View>
 
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-          <Button
-            title={CAMERA_STRINGS.sound.identifySound}
-            variant="primary"
-            size="large"
-            fullWidth
-            disabled={!recordedUri || isRecording || busy}
-            onPress={() => void submitRecording()}
-          />
+        <View style={styles.body}>
+          <View style={styles.topBlock}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>
+              {copy.recording}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {copy.minLength}
+            </Text>
+            <View
+              style={[styles.timerPill, { backgroundColor: colors.primaryCTA }]}
+            >
+              <Text style={styles.timerText}>{formatSoundHms(elapsedSec)}</Text>
+            </View>
+
+            <SoundSpectrogramView
+              live={isRecording && !isPaused}
+              liveColor={colors.primaryCTA}
+              playheadRatio={0.5}
+            />
+
+            <Text style={[styles.meta, { color: colors.textSecondary }]}>
+              {stamp}  •  {place}
+            </Text>
+
+            {locationCard}
+          </View>
+
+          <View style={styles.statusBlock}>
+            <Animated.View style={{ transform: [{ rotate }] }}>
+              <AppImage
+                source={Images.soundListeningSpinner}
+                style={styles.spinner}
+                resizeMode="contain"
+              />
+            </Animated.View>
+            <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+              {statusCopy(liveStatus)}
+            </Text>
+          </View>
+
+          <View style={styles.controls}>
+            <View style={styles.recordHalo}>
+              <TouchableOpacity
+                onPress={() => void stopAndCrop()}
+                disabled={busy}
+                style={[styles.stopBtn, { opacity: busy ? 0.6 : 1 }]}
+                accessibilityLabel={copy.stopRecording}
+              >
+                {busy ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <View style={styles.stopSquare} />
+                )}
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              onPress={() => void togglePause()}
+              disabled={busy || !isRecording}
+              style={[
+                styles.pauseBtn,
+                {
+                  borderColor: colors.border0,
+                  backgroundColor: colors.surfacePrimary,
+                },
+              ]}
+              accessibilityLabel={
+                isPaused ? copy.resumeRecording : copy.pauseRecording
+              }
+            >
+              <AppImage
+                source={isPaused ? Images.soundPlay : Images.soundPause}
+                style={styles.pauseIcon}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
 
-      <LimitReachedBottomSheet
-        visible={showUpgradeSheet}
-        onClose={() => setShowUpgradeSheet(false)}
-        onUpgrade={() => {
-          setShowUpgradeSheet(false);
-          navigateToSubscriptionMain();
-        }}
-        limitType="soundIdentification"
-      />
-      <LimitReachedBottomSheet
-        visible={showGalleryLimitSheet}
-        onClose={() => setShowGalleryLimitSheet(false)}
-        onUpgrade={() => {
-          setShowGalleryLimitSheet(false);
-          navigateToSubscriptionMain();
-        }}
-        limitType="soundGallery"
-      />
-      <NoBirdDetectedModal
-        visible={showNoBirdModal}
-        onClose={() => setShowNoBirdModal(false)}
-        onRetry={() => {
-          setShowNoBirdModal(false);
-          setRecordedUri(null);
-        }}
-      />
-      <NoiseTooHighModal
-        visible={showNoiseModal}
-        onClose={() => setShowNoiseModal(false)}
-        onRetry={() => {
-          setShowNoiseModal(false);
-          setRecordedUri(null);
-        }}
+      <MicrophonePermissionPopup
+        visible={showMicPopup}
+        onClose={handleMicPopupClose}
+        onAllowMicrophone={handleAllowMicrophone}
+        loading={micLoading}
+        openSettings={micBlocked}
       />
     </View>
   );
@@ -321,60 +485,174 @@ export const SoundIdentifyScreen: React.FC = () => {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   safe: { flex: 1 },
-  backBtn: {
-    position: "absolute",
-    left: spacing[4],
-    zIndex: 2,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    minHeight: 52,
+  },
+  headerBtn: {
     width: 44,
     height: 44,
     alignItems: "center",
     justifyContent: "center",
   },
-  content: {
+  entryBody: {
     flex: 1,
+    paddingHorizontal: 20,
+    justifyContent: "space-between",
+    paddingBottom: 12,
+  },
+  entryMiddle: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 24,
+    width: "100%",
+  },
+  hero: {
+    width: 219,
+    height: 168,
+  },
+  entryCopy: {
+    gap: 8,
+    width: "100%",
+    alignItems: "center",
+  },
+  entryTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 20,
+    lineHeight: 28,
+    textAlign: "center",
+  },
+  entrySubtitle: {
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
+    textAlign: "center",
+  },
+  entryControls: {
+    alignItems: "center",
+    paddingBottom: 8,
+  },
+  entryRecordBtn: {
+    width: 72,
+    height: 72,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing[6],
-    gap: spacing[2],
   },
-  title: { textAlign: "center", marginBottom: spacing[1] },
-  subtitle: { textAlign: "center", marginBottom: spacing[6] },
-  recordCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 3,
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: spacing[6],
-  },
-  recordIcon: {
+  entryRecordImage: {
     width: 72,
     height: 72,
   },
-  recordBtn: {
-    marginTop: spacing[4],
-    paddingHorizontal: spacing[8],
-    paddingVertical: spacing[2],
-    borderRadius: Radius.full,
+  body: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    justifyContent: "space-between",
+    paddingBottom: 12,
   },
-  suggestionsWrap: {
+  topBlock: {
+    gap: 16,
+    alignItems: "center",
+  },
+  title: {
+    fontFamily: FONTS.bold,
+    fontSize: 20,
+    lineHeight: 28,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
+    textAlign: "center",
+  },
+  timerPill: {
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  timerText: {
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#FFFFFF",
+  },
+  meta: {
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
+  },
+  locationCard: {
     width: "100%",
-    gap: spacing[2],
-    marginTop: spacing[2],
-  },
-  suggestionRow: {
+    minHeight: 48,
+    borderRadius: 12,
+    padding: 12,
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing[1],
+    alignItems: "center",
+    gap: 8,
+  },
+  locationCopy: {
+    flex: 1,
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  locationLink: {
+    color: "#007AFF",
+    textDecorationLine: "underline",
+  },
+  statusBlock: {
+    alignItems: "center",
+    gap: 8,
+  },
+  spinner: { width: 40, height: 40 },
+  statusText: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    maxWidth: 224,
+  },
+  controls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingLeft: 60,
+    gap: 12,
+    paddingBottom: 8,
+  },
+  recordHalo: {
+    padding: 12,
+    borderRadius: 999,
+    backgroundColor: "rgba(17,17,17,0.05)",
+  },
+  stopBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#EF4444",
+    alignItems: "center",
     justifyContent: "center",
   },
-  suggestionChip: {
-    paddingHorizontal: spacing[2],
-    paddingVertical: 4,
-    borderRadius: 999,
+  stopSquare: {
+    width: 16,
+    height: 16,
+    borderRadius: 2,
+    backgroundColor: "#FFFFFF",
   },
-  footer: {
-    paddingHorizontal: spacing[6],
+  pauseBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
+  pauseIcon: { width: 24, height: 24 },
 });

@@ -17,8 +17,8 @@ import { useToast } from "../../../hooks/useToast";
 import { useStrings } from "../../../hooks/useStrings";
 import { Text, NavBackIcon } from "../../../atoms";
 import { CameraStackParamList } from "../../../navigation/types";
-import { Images } from "../../../assets";
-import { getDisplayName } from "../../../utils/mushroomDisplayUtils";
+import { Images, SoundLibraryEditIcon } from "../../../assets";
+import { getDisplayName, getMushroomDisplayScientificFromFields } from "../../../utils/mushroomDisplayUtils";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
 import {
@@ -32,10 +32,29 @@ import { APP_COLORS } from "../../../config/colors";
 import { Radius } from "../../../design";
 import { useIdentificationResultsStore } from "../identificationResults.store";
 import { IdentificationLocationBanner } from "../components/IdentificationLocationBanner";
+import { SoundSampleCard } from "../components/SoundSampleCard";
+import { SoundMatchesFooter } from "../components/SoundMatchesFooter";
+import { SoundPlayButton } from "../components/SoundPlayButton";
 import { useLocationToggleFlow } from "../useLocationToggleFlow";
 import { shouldShowLocationBannerAsGranted } from "../locationToggle.helpers";
 import { useBirdsStore } from "../../../features/catalogue/birds.store";
 import { RemoveFromWishlistConfirmation } from "../../../components/RemoveFromWishlistConfirmation";
+import { WizardAnswersFooter } from "../../discovery/components/WizardAnswersFooter";
+import { useStepByStepStore } from "../../discovery/stepByStep.store";
+import { buildWizardAnswerRows } from "../../discovery/utils/stepByStepAnswers";
+import type { WizardQuestion } from "../../discovery/stepByStep.types";
+import { ReportModal } from "../../../molecules/ReportModal";
+import { AddSoundNotePopup } from "../../../molecules/Modal";
+import { HOME_STRINGS } from "../../../config/strings/home.strings";
+import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
+import { useIdentificationEntryStore } from "../identificationEntry.store";
+import { FindYourBirdBackground } from "../../bird-personality/components/FindYourMushroomBackground";
+import { useCatalogueCardSound } from "../../catalogue/hooks/useCatalogueCardSound";
+import { formatSoundStamp } from "../utils/soundCrop";
+import { canAddAudioGalleryClip } from "../../../services/session/audioGalleryLimit.service";
+import { navigateToSubscriptionMain } from "../../../utils/navigation";
+import { HIT_SLOP } from "../../../constants/uiConstants";
+import { saveUnknownSoundRecording } from "../utils/saveSoundRecording";
 
 const CARD_IMAGE_WIDTH = POSSIBLE_MATCH_THUMBNAIL_WIDTH;
 const CARD_IMAGE_HEIGHT = POSSIBLE_MATCH_THUMBNAIL_HEIGHT;
@@ -76,8 +95,28 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
   const storedIdentificationImage = useIdentificationResultsStore(
     (s) => s.identificationImage
   );
+  const uploadedSoundUrls = useIdentificationResultsStore(
+    (s) => s.uploadedSoundUrls
+  );
   // Prefer in-memory store (set on analyze screen) for instant paint after navigation.
   const matches = storedMatches.length > 0 ? storedMatches : routeMatches;
+  const fromStepByStep = route.params?.fromStepByStep === true;
+  const fromSound = route.params?.fromSound === true;
+  const audioUri = route.params?.audioUri;
+  const audioDurationSec = route.params?.audioDurationSec ?? 0;
+  const recordedAt = route.params?.recordedAt ?? Date.now();
+  const soundCopy = CAMERA_STRINGS.sound;
+  const wizardAnswers = useStepByStepStore((s) => s.answers);
+  const wizardAnswerRows = fromStepByStep
+    ? buildWizardAnswerRows(wizardAnswers)
+    : [];
+  const wizardCopy = HOME_STRINGS.discovery.stepByStep;
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [recordingNote, setRecordingNote] = useState("");
+  const [savedToUnknown, setSavedToUnknown] = useState(false);
+  const [savingRecording, setSavingRecording] = useState(false);
+  const { playingId, toggleSound } = useCatalogueCardSound();
   const screenTitle =
     route.params?.title ?? strings.camera.results.possibleMatchesHeading;
   const returnTo = route.params?.returnTo;
@@ -90,7 +129,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
     openCustomLocationSheet,
     syncPermission,
   } = useLocationToggleFlow();
-  const showLocationBanner = returnTo?.tab !== "Catalogue";
+  const showLocationBanner = returnTo?.tab !== "Catalogue" && !fromSound;
   const showLocationAsGranted = shouldShowLocationBannerAsGranted(
     locationPermissionGranted,
     location
@@ -191,8 +230,13 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
       });
       return;
     }
+    if (fromStepByStep) {
+      useIdentificationEntryStore.getState().setSuppressFtueAutoNavigation(true);
+      navigation.getParent()?.navigate("Home", { screen: "HomeMain" });
+      return;
+    }
     exitToCameraMain();
-  }, [navigation, returnTo, exitToCameraMain]);
+  }, [navigation, returnTo, fromStepByStep, exitToCameraMain]);
 
   useBackHandler({
     enabled: true,
@@ -265,6 +309,92 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
     [navigateToMatchDetails]
   );
 
+  const handleEditAnswer = useCallback(
+    (question: WizardQuestion) => {
+      useStepByStepStore.getState().setEditQuestion(question);
+      navigation.getParent()?.navigate("Home", {
+        screen: "StepByStep",
+        params: { editQuestion: question },
+      });
+    },
+    [navigation]
+  );
+
+  const handleAddManually = useCallback(() => {
+    navigation.getParent()?.navigate("Catalogue", {
+      screen: "SearchFilter",
+    });
+  }, [navigation]);
+
+  const soundStamp = formatSoundStamp(new Date(recordedAt));
+  const soundPlace =
+    showLocationAsGranted && locationLabel?.trim()
+      ? locationLabel.trim()
+      : soundCopy.noLocation;
+
+  const handleSaveRecording = useCallback(async () => {
+    if (savingRecording) return;
+    const allowed = await canAddAudioGalleryClip();
+    if (!allowed) {
+      navigateToSubscriptionMain();
+      return;
+    }
+    const uploaded =
+      uploadedSoundUrls?.find(
+        (uri) => typeof uri === "string" && /^https?:\/\//i.test(uri.trim())
+      ) ?? "";
+    if (!uploaded) {
+      showToast(
+        "The recording could not be saved. Please identify again.",
+        "error"
+      );
+      return;
+    }
+    const hasRemoteImage = matches.some((item) => {
+      const uri = getPossibleMatchThumbnailUri(item);
+      return !!uri && /^https?:\/\//i.test(uri);
+    });
+    if (!hasRemoteImage) {
+      showToast("A sample image is required to save this recording.", "error");
+      return;
+    }
+    setShowAddNote(true);
+  }, [savingRecording, uploadedSoundUrls, matches, showToast]);
+
+  const handleNoteContinue = useCallback(
+    async (note: string) => {
+      if (savingRecording) return;
+      const uploaded =
+        uploadedSoundUrls?.find(
+          (uri) => typeof uri === "string" && /^https?:\/\//i.test(uri.trim())
+        ) ?? "";
+      const imageUrls = matches
+        .map((item) => getPossibleMatchThumbnailUri(item))
+        .filter((uri): uri is string => !!uri && /^https?:\/\//i.test(uri));
+      try {
+        setSavingRecording(true);
+        await saveUnknownSoundRecording({
+          uploadedSoundUrl: uploaded,
+          note,
+          imageUrls,
+        });
+        setRecordingNote(note);
+        setShowAddNote(false);
+        setSavedToUnknown(true);
+      } catch (error) {
+        showToast(
+          error instanceof Error
+            ? error.message
+            : "Could not save this recording.",
+          "error"
+        );
+      } finally {
+        setSavingRecording(false);
+      }
+    },
+    [savingRecording, uploadedSoundUrls, matches, showToast]
+  );
+
   const getMatchImageUri = (item: any): string | undefined =>
     getPossibleMatchThumbnailUri(item);
 
@@ -325,6 +455,102 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
     strings.collection.favorite,
     toggleFavorite,
   ]);
+
+  const renderSoundMatchItem = ({ item, index }: { item: any; index: number }) => {
+    const displayName = getMatchDisplayName(item);
+    const nested = item?.match ?? {};
+    const scientific = getMushroomDisplayScientificFromFields({
+      commonNames: item?.commonNames ?? nested.commonNames,
+      genusCommonNames: item?.genusCommonNames ?? nested.genusCommonNames,
+      commonName: item?.commonName ?? nested.commonName,
+      name: item?.name ?? nested.name,
+      scientificName:
+        item?.scientificName ??
+        nested.scientificName ??
+        nested.verbatimScientificName,
+      verbatimScientificName: nested.verbatimScientificName,
+    });
+    const imageUri = getMatchImageUri(item);
+    const itemKey = String(item.id ?? item._id ?? `match-${index}`);
+    const thumbnailError = imageErrorKeys.has(itemKey);
+    const cardBg = isDark ? colors.surfacePrimary : APP_COLORS.surfaceWhite;
+    const cardBorder = isDark ? colors.border0 : APP_COLORS.borderLight;
+    const soundUrls: string[] | undefined =
+      item?.match?.soundUrls ?? item?.soundUrls;
+    const isPlaying = playingId === itemKey;
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => handleMatchPress(item, index ?? 0)}
+        style={styles.matchCardWrap}
+      >
+        <View
+          style={[
+            styles.soundMatchCard,
+            { borderColor: cardBorder, backgroundColor: cardBg },
+          ]}
+        >
+          <View
+            style={[
+              styles.soundThumbWrap,
+              { backgroundColor: colors.surfaceVariant },
+            ]}
+          >
+            {imageUri && !thumbnailError ? (
+              <CachedRemoteImage
+                uri={imageUri}
+                style={styles.soundThumb}
+                resizeMode="cover"
+                priority="high"
+                onError={() =>
+                  setImageErrorKeys((prev) => new Set(prev).add(itemKey))
+                }
+              />
+            ) : (
+              <AppImage
+                source={Images.card_image_placeholder}
+                style={styles.soundThumb}
+                resizeMode="cover"
+              />
+            )}
+          </View>
+          <View style={styles.soundMatchCopy}>
+            <Text
+              numberOfLines={1}
+              style={[styles.matchName, { color: colors.textPrimary }]}
+            >
+              {displayName}
+            </Text>
+            {scientific ? (
+              <Text
+                numberOfLines={1}
+                style={[styles.soundScientific, { color: colors.textSecondary }]}
+              >
+                {scientific}
+              </Text>
+            ) : null}
+            <Text
+              numberOfLines={1}
+              style={[styles.soundMeta, { color: colors.textSecondary }]}
+            >
+              {soundStamp}  •  {soundPlace}
+            </Text>
+          </View>
+          {soundUrls?.length ? (
+            <SoundPlayButton
+              isPlaying={isPlaying}
+              onPress={() => {
+                void toggleSound(itemKey, soundUrls);
+              }}
+            />
+          ) : (
+            <View style={styles.soundPlaySpacer} />
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderMatchItem = ({ item, index }: { item: any; index: number }) => {
     const displayName = getMatchDisplayName(item);
@@ -450,8 +676,10 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
 
   return (
     <>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {fromSound ? <FindYourBirdBackground /> : null}
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={styles.safe}
       edges={["top", "bottom"]}
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
@@ -464,14 +692,18 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
         >
           <NavBackIcon color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text
-          variant="title"
-          size="medium"
-          weight="bold"
-          style={[styles.headerTitle, { color: colors.textPrimary }]}
-        >
-          {screenTitle}
-        </Text>
+        {fromSound ? (
+          <View style={styles.headerSpacer} />
+        ) : (
+          <Text
+            variant="title"
+            size="medium"
+            weight="bold"
+            style={[styles.headerTitle, { color: colors.textPrimary }]}
+          >
+            {screenTitle}
+          </Text>
+        )}
         <View style={styles.headerSpacer} />
       </View>
 
@@ -489,9 +721,9 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
 
       <FlatList
         data={matches}
-        extraData={favorites}
+        extraData={[favorites, wizardAnswerRows, playingId, recordingNote]}
         keyExtractor={(item, index) => item.id ?? item._id ?? `match-${index}`}
-        renderItem={renderMatchItem}
+        renderItem={fromSound ? renderSoundMatchItem : renderMatchItem}
         contentContainerStyle={styles.list}
         style={styles.listFlex}
         showsVerticalScrollIndicator={false}
@@ -499,9 +731,133 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
         maxToRenderPerBatch={8}
         windowSize={8}
         removeClippedSubviews={false}
+        ListHeaderComponent={
+          fromSound ? (
+            <View style={styles.soundHeader}>
+              {audioUri ? (
+                <SoundSampleCard
+                  durationSec={audioDurationSec}
+                  stamp={soundStamp}
+                  place={soundPlace}
+                  birdCount={matches.length}
+                  isPlaying={playingId === "user-recording"}
+                  onTogglePlay={() => {
+                    void toggleSound("user-recording", [audioUri]);
+                  }}
+                />
+              ) : null}
+              <IdentificationLocationBanner
+                variant="results"
+                permissionGranted={showLocationAsGranted}
+                locationLabel={locationLabel}
+                prompt={soundCopy.enableLocation}
+                onToggleLocation={handleLocationToggle}
+                onPressLocation={handlePressSetLocation}
+              />
+              {recordingNote ? (
+                <View
+                  style={[
+                    styles.noteCard,
+                    { backgroundColor: `${colors.primaryCTA}14` },
+                  ]}
+                >
+                  <View style={styles.noteHeader}>
+                    <Text
+                      style={[styles.noteLabel, { color: colors.textPrimary }]}
+                    >
+                      {soundCopy.noteLabel}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => setShowAddNote(true)}
+                      hitSlop={HIT_SLOP.SMALL}
+                    >
+                      <SoundLibraryEditIcon
+                        width={16}
+                        height={16}
+                        color={colors.primaryCTA}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <Text
+                    style={[styles.noteBody, { color: colors.textPrimary }]}
+                  >
+                    {recordingNote}
+                  </Text>
+                </View>
+              ) : null}
+              <Text
+                style={[styles.soundSectionTitle, { color: colors.textPrimary }]}
+              >
+                {soundCopy.possibleMatches.replace(
+                  "{count}",
+                  String(matches.length)
+                )}
+              </Text>
+            </View>
+          ) : null
+        }
+        ListFooterComponent={
+          fromStepByStep ? (
+            <WizardAnswersFooter
+              rows={wizardAnswerRows}
+              answersTitle={wizardCopy.yourAnswers}
+              answersSubtitle={wizardCopy.yourAnswersSubtitle}
+              editLabel={wizardCopy.edit}
+              cantFindTitle={wizardCopy.cantFindTitle}
+              cantFindBody={wizardCopy.cantFindBody}
+              addManuallyLabel={wizardCopy.addManually}
+              reportLabel={wizardCopy.reportNoMatches}
+              onEdit={handleEditAnswer}
+              onAddManually={handleAddManually}
+              onReport={() => setShowReportModal(true)}
+            />
+          ) : fromSound ? (
+            <SoundMatchesFooter
+              onSave={() => {
+                void handleSaveRecording();
+              }}
+              onReport={() => setShowReportModal(true)}
+            />
+          ) : null
+        }
       />
 
     </SafeAreaView>
+    {fromSound && savedToUnknown ? (
+      <View
+        style={[
+          styles.savedBanner,
+          {
+            borderColor: colors.success,
+            backgroundColor: colors.surfaceSuccess,
+          },
+        ]}
+      >
+        <Text style={[styles.savedText, { color: colors.success }]}>
+          {soundCopy.savedToUnknown}
+        </Text>
+        <TouchableOpacity
+          onPress={() => {
+            setSavedToUnknown(false);
+            setRecordingNote("");
+          }}
+          hitSlop={HIT_SLOP.SMALL}
+        >
+          <Text style={[styles.savedUndo, { color: colors.success }]}>
+            {soundCopy.undo}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setSavedToUnknown(false)}
+          hitSlop={HIT_SLOP.SMALL}
+        >
+          <Text style={[styles.savedClose, { color: colors.success }]}>
+            ×
+          </Text>
+        </TouchableOpacity>
+      </View>
+    ) : null}
+    </View>
 
     <RemoveFromWishlistConfirmation
       visible={showRemoveWishlistConfirm}
@@ -512,6 +868,34 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
       onConfirm={handleConfirmWishlistRemove}
       mushroomName={pendingWishlistRemove?.name}
     />
+    <ReportModal
+      visible={showReportModal}
+      variant="mushroom"
+      title={fromSound ? soundCopy.reportTitle : wizardCopy.reportTitle}
+      description={
+        fromSound ? soundCopy.reportDescription : wizardCopy.reportDescription
+      }
+      onClose={() => setShowReportModal(false)}
+      onSubmit={async () => {
+        setShowReportModal(false);
+        showToast(
+          fromSound ? soundCopy.reportSent : wizardCopy.reportSent,
+          "success"
+        );
+      }}
+    />
+    <AddSoundNotePopup
+      visible={showAddNote}
+      initialNote={recordingNote}
+      busy={savingRecording}
+      onClose={() => {
+        if (savingRecording) return;
+        setShowAddNote(false);
+      }}
+      onContinue={(note) => {
+        void handleNoteContinue(note);
+      }}
+    />
     </>
   );
 };
@@ -520,6 +904,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: "hidden",
+  },
+  safe: {
+    flex: 1,
   },
   header: {
     flexDirection: "row",
@@ -612,5 +999,106 @@ const styles = StyleSheet.create({
   starIcon: {
     width: 20,
     height: 20,
+  },
+  soundHeader: {
+    gap: 12,
+    paddingBottom: 12,
+  },
+  noteCard: {
+    borderRadius: Radius.md,
+    padding: 12,
+    gap: 4,
+  },
+  noteHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  noteLabel: {
+    fontFamily: FONTS.bold,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  noteBody: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: "italic",
+  },
+  soundSectionTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    lineHeight: 24,
+    marginTop: 4,
+  },
+  soundMatchCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+  },
+  soundThumbWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.sm,
+    overflow: "hidden",
+  },
+  soundThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.sm,
+  },
+  soundMatchCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  soundScientific: {
+    fontFamily: FONTS.regular,
+    fontSize: 12,
+    lineHeight: 16,
+    fontStyle: "italic",
+  },
+  soundMeta: {
+    fontFamily: FONTS.regular,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  soundPlaySpacer: {
+    width: 40,
+    height: 40,
+  },
+  savedBanner: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    bottom: 24,
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  savedText: {
+    flex: 1,
+    fontFamily: FONTS.medium,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  savedUndo: {
+    fontFamily: FONTS.medium,
+    fontSize: 14,
+    lineHeight: 20,
+    textDecorationLine: "underline",
+  },
+  savedClose: {
+    fontFamily: FONTS.medium,
+    fontSize: 20,
+    lineHeight: 20,
   },
 });

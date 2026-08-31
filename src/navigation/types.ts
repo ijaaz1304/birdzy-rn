@@ -2,7 +2,7 @@
  * Navigation type definitions
  */
 
-import { NavigatorScreenParams } from "@react-navigation/native";
+import type { WizardQuestion } from "../features/discovery/stepByStep.types";
 import type { ImageSourcePropType } from "react-native";
 
 export type AuthStackParamList = {
@@ -36,13 +36,22 @@ export type AuthStackParamList = {
 };
 
 export type MainTabParamList = {
-  Home: undefined;
+  Home: NavigatorScreenParams<HomeStackParamList> | undefined;
   Catalogue: NavigatorScreenParams<CatalogueStackParamList>;
   Camera: NavigatorScreenParams<CameraStackParamList>;
   Collection: NavigatorScreenParams<CollectionStackParamList>;
   Feed: NavigatorScreenParams<FeedStackParamList> | undefined;
   Subscription: undefined;
   Profile: undefined;
+};
+
+export type BirdSoundsScreenParams = {
+  soundUrls: string[];
+  userCapturedSounds?: string[];
+  customLocation?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  durationsSec?: Record<string, number>;
 };
 
 export type HomeStackParamList = {
@@ -69,8 +78,14 @@ export type HomeStackParamList = {
   };
   // Weather removed - not needed for rocks/minerals app
   OtherApps: undefined;
-  StepByStep: undefined;
+  StepByStep:
+    | {
+        editQuestion?: WizardQuestion;
+        startFresh?: boolean;
+      }
+    | undefined;
   AudioGallery: undefined;
+  BirdSounds: BirdSoundsScreenParams;
 };
 
 /** When Other Possible Matches was opened from Catalogue details, back restores this screen. */
@@ -89,6 +104,13 @@ export type OtherPossibleMatchesScreenParams = {
   returnTo?: OtherPossibleMatchesReturnTo;
   /** User photo from identify flow — shown on Mushroom Details hero. */
   identificationImage?: { uri: string };
+  /** Step-by-step wizard results — shows Your Answers + extra CTAs. */
+  fromStepByStep?: boolean;
+  /** Sound identify results — spectrogram card, save recording, add note. */
+  fromSound?: boolean;
+  audioUri?: string;
+  audioDurationSec?: number;
+  recordedAt?: number;
 };
 
 export type CameraStackParamList = {
@@ -123,9 +145,18 @@ export type CameraStackParamList = {
     images?: Array<{ uri: string; width?: number; height?: number }>;
     /** Sound identify — local recording uri (file://). */
     audioUri?: string;
-    identifyMode?: "image" | "sound";
+    audioDurationSec?: number;
+    recordedAt?: number;
+    cropStartSec?: number;
+    cropDurationSec?: number;
+    identifyMode?: "image" | "sound" | "stepByStep";
   };
   SoundIdentify: undefined;
+  SoundCrop: {
+    audioUri: string;
+    durationSec: number;
+    recordedAt: number;
+  };
   IdentifyHub: undefined;
   OtherPossibleMatches: OtherPossibleMatchesScreenParams;
 };
@@ -154,6 +185,7 @@ export type CatalogueStackParamList = {
     initialMushroomData?: any;
   };
   SearchFilter: { initialQuery?: string } | undefined;
+  BirdSounds: BirdSoundsScreenParams;
 };
 
 export type CollectionStackParamList = {
@@ -213,6 +245,7 @@ export type CollectionStackParamList = {
     /** When 'identification': first save uses specimen/add; when 'collection': always specimen/update. */
     source?: "identification" | "collection";
   };
+  BirdSounds: BirdSoundsScreenParams;
 };
 
 export type FeedStackParamList = {
@@ -251,7 +284,13 @@ export type FeedStackParamList = {
 };
 
 export type AskAIStackParamList = {
-  AskAIMain: { initialMessage?: string; selectedImageUri?: string } | undefined;
+  AskAIMain:
+    | {
+        initialMessage?: string;
+        selectedImageUri?: string;
+        assistant?: "chat" | "gotBitten";
+      }
+    | undefined;
   AskAIImageSource: undefined;
 };
 

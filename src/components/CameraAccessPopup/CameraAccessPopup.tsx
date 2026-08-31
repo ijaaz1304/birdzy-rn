@@ -126,7 +126,7 @@ export const CameraAccessPopup: React.FC<CameraAccessPopupProps> = ({
             style={[
               styles.primaryBtn,
               {
-                backgroundColor: theme.colors.primary,
+                backgroundColor: theme.colors.primaryCTA,
                 borderRadius: theme.radius.lg,
               },
             ]}

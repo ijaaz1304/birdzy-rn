@@ -20,6 +20,7 @@ export interface MushroomLike {
   canonicalName?: string | null;
   imageUrls?: unknown[];
   isWishlisted?: boolean;
+  soundUrls?: string[];
 }
 
 /** Catalogue list card item */
@@ -33,6 +34,7 @@ export interface CatalogueCardItem {
   category?: string;
   /** From API / store — used with favorites[] for star UI */
   isWishlisted?: boolean;
+  soundUrls?: string[];
 }
 
 /** Home / simple card item (name + subtitle) */
@@ -159,6 +161,8 @@ export function mapMushroomToCatalogueCard(
     isWishlisted: mushroom.isWishlisted === true,
     ...(imageUrls.length > 0 && { imageUrls }),
     ...(category !== undefined && { category }),
+    ...(Array.isArray(mushroom.soundUrls) &&
+      mushroom.soundUrls.length > 0 && { soundUrls: mushroom.soundUrls }),
   };
 }
 

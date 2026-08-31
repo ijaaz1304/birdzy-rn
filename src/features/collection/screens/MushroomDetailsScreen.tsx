@@ -5,7 +5,7 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform, TextInput, ActivityIndicator, KeyboardAvoidingView, Pressable, InteractionManager } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, Platform, TextInput, ActivityIndicator, KeyboardAvoidingView, Pressable, InteractionManager } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -22,14 +22,7 @@ import {
 import { NavigationService, navigateToSubscriptionMain } from "../../../utils/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
-import { Text, InfoText, InfoRow, NavBackIcon } from "../../../atoms";
-import {
-  SectionCard as BaseSectionCard,
-  ExpandableList,
-  MohsHardnessBar,
-  MapPreview,
-} from "../../../molecules";
-import { Toggle } from "../../../atoms";
+import { Text, NavBackIcon } from "../../../atoms";
 import {
   CollectionStackParamList,
   RootStackParamList,
@@ -37,10 +30,6 @@ import {
 import { ReportModal, REPORT_MODAL_KEYBOARD_COOLDOWN_MS } from "../../../molecules/ReportModal";
 import { MushroomDetail } from "../../../types/mushrooms.types";
 import { mushroomSpecimenService } from "../../../services/specimen/mushroomSpecimen.service";
-import {
-  ENTRY_TYPE_LABELS,
-  METAPHYSICAL_DISCLAIMER,
-} from "../../../constants/mushroomDisplayConstants";
 import { CardSkeleton } from "../../../components/skeleton";
 import { shareMushroom } from "../../../utils/shareUtils";
 import {
@@ -52,19 +41,14 @@ import {
 import {
   getMushroomImageUrls,
 } from "../../../config/mushroomImageUrls.config";
-import { formulaToDisplay } from "../../../utils/formulaUtils";
 import { formatTitleCase } from "../../../utils";
 import { resolveMushroomImageUrlsForDisplay } from "../../../utils/mushroomCardUtils";
 import { getSpecimenDisplayImageUrls } from "../collection.utils";
 import {
   getArchetypeImageUrls,
-  isMushroomRecord,
   normalizeMushroomDetail,
 } from "../../../utils/mushroomApiMappers";
-import { isBirdRecord } from "../../../utils/birdApiMappers";
 import { COLLECTION_STRINGS } from "../../../config/strings/collection.strings";
-import { MushroomStatusChips } from "../../../components/mushroom/MushroomStatusChips";
-import { MushroomWarningBanner } from "../../../components/mushroom/MushroomWarningBanner";
 import {
   LimitReachedBottomSheet,
   RemoveFromCollectionModal,
@@ -113,9 +97,11 @@ import {
   DetailsMoreReportDark,
   DetailsMoreRemoveLight,
   DetailsMoreRemoveDark,
+  CatalogueVolumeIcon,
 } from "../../../assets";
 import { coreApi } from "../../../services/api/features/core.api";
 import { archetypeService } from "../../../services/archetype/archetype.service";
+import { soundRecordingService } from "../../../services/audio/soundRecording.service";
 import { useBirdsStore } from "../../../features/catalogue/birds.store";
 import {
   MUSHROOM_DETAILS_EXTRA,
@@ -128,7 +114,6 @@ import {
 } from "../../../constants/colorConstants";
 import { typography } from "../../../design-system/typography";
 import { CatalogueDetailCarousel } from "../components/CatalogueDetailCarousel";
-import { SubscribeToPremiumCard } from "../components/SubscribeToPremiumCard";
 import {
   MushroomDetailsScrollSections,
   useCustomLocationSectionFlow,
@@ -146,11 +131,7 @@ import {
   normalizeCollectionIds,
   resolveArchetypeIdFromSpecimen,
 } from "../collection.utils";
-import {
-  findFirstCountryWithCoordinates,
-  COUNTRY_MAP_ZOOM_LEVEL,
-} from "../../../utils/countryCoordinates";
-import { BlurOverlay } from "../../../components/BlurOverlay";
+import { findFirstCountryWithCoordinates } from "../../../utils/countryCoordinates";
 import { prefetchRemoteImages } from "../../../utils/prefetchImages";
 import { MODAL_STRINGS } from "../../../config/strings/modals.strings";
 import { sendRatingFeedback } from "../../../services/rating/ratingFeedback.service";
@@ -215,19 +196,6 @@ async function addMushroomSpecimenFromDetail(
   return String(sid);
 }
 
-/** CamelCase to "Title Case With Spaces" e.g. lightStability → Light Stability */
-function formatStabilityLabel(camelKey: string): string {
-  const withSpaces = camelKey.replace(/([A-Z])/g, " $1").trim();
-  return withSpaces.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-/** Value: first letter caps, rest lowercase e.g. MODERATELY_STABLE → Moderately stable */
-function formatStabilityValue(value: string): string {
-  const withSpaces = value.replace(/_/g, " ").trim();
-  if (!withSpaces) return "Unknown";
-  return withSpaces.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
-}
-
 /** Shorten image URLs for app logs (avoid huge strings). */
 function summarizeImageUrlsForLog(urls: unknown[] | undefined): string[] {
   if (!urls?.length) return [];
@@ -235,18 +203,6 @@ function summarizeImageUrlsForLog(urls: unknown[] | undefined): string[] {
     const s = typeof u === "string" ? u : String(u);
     return s.length > 96 ? `${s.slice(0, 96)}…` : s;
   });
-}
-
-/** Derive Gem Care Yes/No from stability: light → Avoid direct sunlight, heat → Temperature control, waterOrHumidity → Humidity control. Yes when MODERATELY_STABLE or UNSTABLE. */
-function deriveGemCareFromStability(
-  stability: Record<string, unknown> | null | undefined,
-  key: "lightStability" | "heatStability" | "waterOrHumidityStability"
-): "Yes" | "No" {
-  if (!stability || typeof stability !== "object") return "No";
-  const raw = stability[key];
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  const s = typeof value === "string" ? value.toUpperCase() : "";
-  return s === "UNSTABLE" || s === "MODERATELY_STABLE" ? "Yes" : "No";
 }
 
 export const MushroomDetailsScreen: React.FC = () => {
@@ -370,73 +326,9 @@ export const MushroomDetailsScreen: React.FC = () => {
     color: isDark ? spec.SECONDARY_TEXT : APP_COLORS.textSecondaryGray,
   };
 
-  /** Flat layout (Figma): section title, property label above value, no cards — Satoshi */
-  const SECTION_TITLE_FLAT = {
-    ...typography.title.xsmallBold,
-    fontSize: 18,
-    color: isDark ? spec.PRIMARY_TEXT : APP_COLORS.surfaceDark,
-    marginBottom: 12,
-  };
-  const PROP_LABEL_FLAT = {
-    ...typography.body.largeSemibold,
-    color: isDark ? spec.PRIMARY_TEXT : APP_COLORS.surfaceDark,
-    marginBottom: 12,
-  };
-  /** Gem care / cleaning tips: labels normal weight */
-  const PROP_LABEL_NORMAL = {
-    ...typography.body.large,
-    color: isDark ? spec.PRIMARY_TEXT : APP_COLORS.surfaceDark,
-    marginBottom: 12,
-  };
-  const PROP_VALUE_FLAT = {
-    ...typography.body.small,
-    fontSize: 14,
-    lineHeight: 24,
-    color: isDark ? spec.SECONDARY_TEXT : APP_COLORS.textSecondaryGray,
-    marginBottom: 10,
-  };
-  /** Maintenance (Stability, Gem Care, Cleaning Tips): Body/16px/Regular — label and value same spec, 12px gap between rows */
-  const MAINTENANCE_ROW_LABEL = {
-    ...typography.body.large,
-    fontFamily: "Satoshi-Regular",
-    fontSize: 16,
-    lineHeight: 24,
-    letterSpacing: -0.16,
-    color: isDark ? spec.SECONDARY_TEXT : APP_COLORS.textSecondaryGray,
-  };
-  const MAINTENANCE_ROW_VALUE = {
-    ...typography.body.large,
-    fontFamily: "Satoshi-Regular",
-    fontSize: 14,
-    lineHeight: 24,
-    letterSpacing: -0.16,
-    color: isDark ? spec.PRIMARY_TEXT : APP_COLORS.surfaceDark,
-  };
-  const MAINTENANCE_ROW_GAP = 12;
-  const SECTION_TOP_GAP = 32;
-  const PROP_BOTTOM_GAP = 10;
-  const LABEL_VALUE_GAP = 12;
-  const ROW_DIVIDER_FLAT = {
-    height: 1,
-    backgroundColor: SCREEN_COLORS.LIGHT.border,
-    marginVertical: 8,
-  };
-
-  /** SectionCard: 100% width, light #FFF / dark #111 */
   const SECTION_CARD_BG = isDark
     ? APP_COLORS.surfaceDark
     : APP_COLORS.modalTextOnPrimary;
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const SectionCard = (props: any) => (
-    <BaseSectionCard
-      {...props}
-      backgroundColor={SECTION_CARD_BG}
-      containerStyle={{
-        width: "100%",
-        alignSelf: "stretch",
-      }}
-    />
-  );
 
   const [mushroomData, setMushroomData] = useState<MushroomDetail | null>(null);
   /** When opened with idType=specimen, this is the resolved archetype ID for wishlist/API calls */
@@ -450,21 +342,20 @@ export const MushroomDetailsScreen: React.FC = () => {
     (typeof resolvedArchetypeId === "string" && resolvedArchetypeId.trim()) ||
     (typeof mushroomId === "string" ? mushroomId : "");
   const [activeTab, setActiveTab] = useState("overview");
-  const [showSpirituality, setShowSpirituality] = useState(false);
+  const [nameSoundPlaying, setNameSoundPlaying] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollContentRef = useRef<View>(null);
-  const sectionRefs = useRef<{ [key: string]: View | null }>({});
   /** Section Y offsets (from onLayout) for tab scroll — avoids measureLayout ref errors on Fabric */
   const sectionYOffsets = useRef<Record<string, number>>({
     overview: 0,
-    physical: 0,
-    chemical: 0,
-    maintenance: 0,
-    spirituality: 0,
-    safety: 0,
     similar: 0,
     morphology: 0,
     habitat: 0,
+    sounds: 0,
+    range: 0,
+    behavior: 0,
+    feeding: 0,
+    breeding: 0,
   });
   const mushroomSectionsOffsetY = useRef(0);
   const [showMenu, setShowMenu] = useState(false);
@@ -542,6 +433,15 @@ export const MushroomDetailsScreen: React.FC = () => {
         cancelled = true;
       };
     }, [isFromIdentification, fromOtherPossibleMatches])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        void soundRecordingService.stopPlayback();
+        setNameSoundPlaying(false);
+      };
+    }, [])
   );
 
   const canAddToAnotherCollection =
@@ -1584,80 +1484,12 @@ export const MushroomDetailsScreen: React.FC = () => {
       ),
       hasDescription: !!mushroomData.description,
     });
-    log("[MushroomDetails] section: physical", {
+    log("[MushroomDetails] section: images", {
       mushroomId: effectiveArchetypeId,
-      hasCrystalSystem: !!mushroomData.crystalSystem?.length,
-      hasColor: !!mushroomData.color?.length,
-      hasMohs: mushroomData.mohsHardness != null || d.mohs_hardness != null,
-      hasLuster: !!mushroomData.lusture?.length,
-      hasTransparency: !!mushroomData.transparency?.length,
-      hasDensity: !!mushroomData.density,
       images: {
         count: imageUrlCount,
         sample: imageUrlsSample,
       },
-    });
-    log("[MushroomDetails] section: chemical", {
-      mushroomId: effectiveArchetypeId,
-      hasFormula: !!mushroomData.formula,
-      hasElements: !!mushroomData.elements?.length,
-    });
-    log("[MushroomDetails] section: maintenance", {
-      mushroomId: effectiveArchetypeId,
-      hasDurability: !!d.durability,
-      hasScratchResistance: !!mushroomData.scratchResistance,
-      hasToughness: !!(
-        mushroomData.toughness && mushroomData.toughness !== "UNKNOWN"
-      ),
-      hasStability: typeof d.stability === "object" && d.stability != null,
-      hasStorage: !!mushroomData.storage,
-      hasCleaningTips: !!(
-        mushroomData.cleaningTips ||
-        (typeof d.cleaningTips === "object" && d.cleaningTips != null)
-      ),
-    });
-    log("[MushroomDetails] section: gem_care (from API)", {
-      mushroomId: effectiveArchetypeId,
-      storage: mushroomData.storage
-        ? {
-            storeSeprately: mushroomData.storage.storeSeprately,
-            reason: mushroomData.storage.reason,
-          }
-        : null,
-      gemCareGuide: d.gemCareGuide
-        ? {
-            avoidDirectSunlight: !!d.gemCareGuide.avoidDirectSunlight,
-            temperatureControl: !!d.gemCareGuide.temperatureControl,
-            humidityControl: !!d.gemCareGuide.humidityControl,
-          }
-        : null,
-    });
-    log("[MushroomDetails] section: cleaning_tips (from API)", {
-      mushroomId: effectiveArchetypeId,
-      cleaningTips:
-        typeof d.cleaningTips === "object" && d.cleaningTips != null
-          ? {
-              cleaningMethods: d.cleaningTips.cleaningMethods
-                ? Object.keys(d.cleaningTips.cleaningMethods)
-                : [],
-              cleaningNotes: !!d.cleaningTips.cleaningNotes,
-            }
-          : null,
-      cleaningTipsString:
-        typeof mushroomData.cleaningTips === "string"
-          ? (mushroomData.cleaningTips as string).length > 80
-            ? (mushroomData.cleaningTips as string).slice(0, 80) + "..."
-            : (mushroomData.cleaningTips as string)
-          : null,
-    });
-    log("[MushroomDetails] section: spirituality", {
-      mushroomId: effectiveArchetypeId,
-      hasHealthRisks: !!mushroomData.healthRisks,
-      hasAmplification: !!mushroomData.amplification,
-      hasRevitalizeCharging: !!mushroomData.revitalizeCharging,
-      hasRevitalizeCleansing: !!mushroomData.revitalizeCleansing,
-      hasWorksWellWith: !!mushroomData.worksWellWith?.length,
-      hasMetaphysicalQualities: !!mushroomData.metaphysicalQualities?.length,
     });
   }, [mushroomData, effectiveArchetypeId]);
 
@@ -1717,31 +1549,11 @@ export const MushroomDetailsScreen: React.FC = () => {
   ]);
 
   /** Free vs premium by source (defined early for scroll effect below). */
-  const isCatalogueFreeUser = source === "catalogue" && !isPremium;
-  const isFromIdentificationFreeUser =
-    source === "identification" && !isPremium;
-  const isFromCollectionFreeUser = source === "collection" && !isPremium;
-  const showGoProForFreeUser =
-    isCatalogueFreeUser ||
-    isFromIdentificationFreeUser ||
-    isFromCollectionFreeUser;
-  /** Identification/collection free: show only Overview up to Commonly found in + Add to collection; tabs stay but no section content after Overview in scroll. */
-  const showSectionsAfterOverview = !(
-    (source === "identification" || source === "collection") &&
-    !isPremium
-  );
-
-  const isMushroomData = isMushroomRecord(
-    mushroomData as unknown as Record<string, unknown>
-  );
-  const isBirdData =
-    isMushroomData &&
-    isBirdRecord(mushroomData as unknown as Record<string, unknown>);
   const birdDetailStrings = COLLECTION_STRINGS.birdDetails;
 
   const mushroomViewLoggedRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!mushroomData || !isMushroomData || !mushroomId) return;
+    if (!mushroomData || !mushroomId) return;
     if (mushroomViewLoggedRef.current === mushroomId) return;
     mushroomViewLoggedRef.current = mushroomId;
     analyticsService.logEvent(EVENTS.bird_view, {
@@ -1749,56 +1561,40 @@ export const MushroomDetailsScreen: React.FC = () => {
       source: toAnalyticsSource(source),
       collection_name: collectionName,
     });
-  }, [collectionName, isMushroomData, mushroomData, mushroomId, source]);
+  }, [collectionName, mushroomData, mushroomId, source]);
 
   // Scroll to section when tab is selected (use onLayout offsets to avoid measureLayout ref errors)
-  // Free user (catalogue, identification, or collection), not rock of the day: do not scroll to Physical/Chemical (they see Go Pro prompt instead)
   useEffect(() => {
-    const scrollTabs = isMushroomData
-      ? isBirdData
-        ? [
-            "overview",
-            "sounds",
-            "range",
-            "similar",
-            "morphology",
-            "habitat",
-          ]
-        : ["overview", "safety", "similar", "morphology", "habitat"]
-      : ["overview", "physical", "chemical", "maintenance", "spirituality"];
+    const scrollTabs = [
+      "sounds",
+      "overview",
+      "similar",
+      "morphology",
+      "behavior",
+      "habitat",
+      "feeding",
+      "breeding",
+      "range",
+    ];
     if (!scrollTabs.includes(activeTab)) return;
-    const skipScrollToSection =
-      !isMushroomOfTheDay &&
-      showGoProForFreeUser &&
-      (activeTab === "physical" ||
-        activeTab === "chemical" ||
-        activeTab === "maintenance" ||
-        activeTab === "spirituality");
-    if (skipScrollToSection) return;
     const timer = setTimeout(() => {
-      if (activeTab === "overview") {
-        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-        return;
-      }
       const y = sectionYOffsets.current[activeTab] ?? 0;
       scrollViewRef.current?.scrollTo({ y, animated: true });
     }, 150);
     return () => clearTimeout(timer);
-  }, [activeTab, source, isPremium, showGoProForFreeUser, isMushroomData, isBirdData]);
-
-  const birdHasSounds = React.useMemo(() => isBirdData, [isBirdData]);
+  }, [activeTab]);
 
   const birdHasRange = React.useMemo(() => {
-    if (!mushroomData || !isBirdData) return false;
+    if (!mushroomData) return false;
     const range = (mushroomData as MushroomDetail).rangeDetails;
     if (!range) return false;
     return Boolean(
       range.yearRound || range.breeding || range.migration || range.nonBreeding
     );
-  }, [isBirdData, mushroomData]);
+  }, [mushroomData]);
 
   const mushroomGpsCoords = React.useMemo(() => {
-    if (!mushroomData || !isMushroomData) return null;
+    if (!mushroomData) return null;
     const mineral = mushroomData as any;
     const loc = mineral.gpsLocation ?? mineral.gps_location;
     const lat = loc?.latitude ?? loc?.lat;
@@ -1810,7 +1606,7 @@ export const MushroomDetailsScreen: React.FC = () => {
       !Number.isNaN(Number(lng));
     if (hasGps) return { lat: Number(lat), lng: Number(lng) };
     return null;
-  }, [isMushroomData, mushroomData]);
+  }, [mushroomData]);
 
   const mushroomMapCoords = React.useMemo(() => {
     if (mushroomGpsCoords) return mushroomGpsCoords;
@@ -1824,90 +1620,27 @@ export const MushroomDetailsScreen: React.FC = () => {
   }, [countryMapCoords, mushroomGpsCoords]);
 
   const detailsLocationFlow = useCustomLocationSectionFlow(
-    isMushroomData ? mushroomMapCoords : null,
+    mushroomMapCoords,
     !!mushroomGpsCoords
   );
 
-  const similarSpeciesCount = React.useMemo(() => {
-    if (!mushroomData || !isMushroomData) return 0;
-    const lookAlikes = (mushroomData as MushroomDetail).lookAlikes;
-    return Array.isArray(lookAlikes) ? lookAlikes.length : 0;
-  }, [isMushroomData, mushroomData]);
-
-  const tabs = isMushroomData
-    ? isBirdData
-      ? [
-          { id: "overview", label: "Overview" },
-          ...(birdHasSounds
-            ? [{ id: "sounds", label: birdDetailStrings.sections.sounds }]
-            : []),
-          ...(birdHasRange
-            ? [{ id: "range", label: birdDetailStrings.sections.range }]
-            : []),
-          {
-            id: "similar",
-            label: birdDetailStrings.sections.similarBirds,
-          },
-          {
-            id: "morphology",
-            label: birdDetailStrings.sections.identification,
-          },
-          { id: "habitat", label: birdDetailStrings.sections.habitat },
-        ]
-      : [
-          { id: "overview", label: "Overview" },
-          { id: "safety", label: "Safety" },
-          { id: "similar", label: "Similar species" },
-          { id: "morphology", label: "Physical Traits" },
-          { id: "habitat", label: "Habitat and distribution" },
-        ]
-    : [
-        { id: "overview", label: "Overview" },
-        { id: "physical", label: "Physical Properties" },
-        { id: "chemical", label: "Chemical Properties" },
-        { id: "maintenance", label: "Maintenance" },
-        { id: "spirituality", label: "Spirituality" },
-      ];
-
-  /** Source behaviour: Catalogue free = AI layout + Go Pro on tabs. Identification/collection free = Overview to Commonly found in + Add to collection; tabs visible, no section content after Overview. Rock of the day = full content. */
-  /** Rock of the day (and any source): show Maintenance tab only when we have maintenance-related data; Spirituality only when we have spirituality-related data. */
-  const hasMaintenanceData =
-    mushroomData &&
-    (!!(mushroomData as any).durability ||
-      !!mushroomData.scratchResistance ||
-      (!!mushroomData.toughness && mushroomData.toughness !== "UNKNOWN") ||
-      (typeof (mushroomData as any).stability === "object" &&
-        (mushroomData as any).stability != null) ||
-      !!mushroomData.storage ||
-      !!mushroomData.cleaningTips ||
-      (typeof (mushroomData as any).cleaningTips === "object" &&
-        (mushroomData as any).cleaningTips != null));
-  const hasSpiritualityData =
-    mushroomData &&
-    (!!mushroomData.healthRisks ||
-      !!mushroomData.amplification ||
-      !!mushroomData.revitalizeCharging ||
-      !!mushroomData.revitalizeCleansing ||
-      (!!mushroomData.worksWellWith && mushroomData.worksWellWith.length > 0) ||
-      (!!mushroomData.metaphysicalQualities &&
-        mushroomData.metaphysicalQualities.length > 0));
-  const tabsToShow = isMushroomData
-    ? tabs.filter((t) => {
-        if (t.id === "similar") return similarSpeciesCount > 0;
-        if (t.id === "sounds") return birdHasSounds;
-        if (t.id === "range") return birdHasRange;
-        return true;
-      })
-    : isMushroomOfTheDay && mushroomData
-    ? tabs.filter(
-        (t) =>
-          t.id === "overview" ||
-          t.id === "physical" ||
-          t.id === "chemical" ||
-          (t.id === "maintenance" && hasMaintenanceData) ||
-          (t.id === "spirituality" && hasSpiritualityData)
-      )
-    : tabs;
+  const tabs = [
+    { id: "sounds", label: birdDetailStrings.sections.sounds },
+    { id: "overview", label: birdDetailStrings.sections.overview },
+    {
+      id: "morphology",
+      label: birdDetailStrings.sections.characteristics,
+    },
+    { id: "behavior", label: birdDetailStrings.sections.behavior },
+    { id: "habitat", label: birdDetailStrings.sections.habitat },
+    { id: "feeding", label: birdDetailStrings.sections.feeding },
+    { id: "breeding", label: birdDetailStrings.sections.breeding },
+    { id: "range", label: birdDetailStrings.sections.migration },
+  ];
+  const tabsToShow = tabs.filter((t) => {
+    if (t.id === "range") return birdHasRange;
+    return true;
+  });
 
   if (loading) {
     return (
@@ -2006,7 +1739,7 @@ export const MushroomDetailsScreen: React.FC = () => {
     "";
 
   const renderIdentificationRateMatch = () => {
-    if (!isFromIdentification || mushroomData?.isGem) return null;
+    if (!isFromIdentification) return null;
     const rateMatchInputBg = isDark
       ? APP_COLORS.surfaceDark
       : APP_COLORS.modalTextOnPrimary;
@@ -2212,1747 +1945,113 @@ export const MushroomDetailsScreen: React.FC = () => {
     );
   };
 
-  /** Flat property block: label above value — shared by overview taxonomy & physical traits */
-  const FlatProp = ({
-    label,
-    value,
-    style,
-    compact,
-  }: {
-    label: string;
-    value: string;
-    style?: object;
-    compact?: boolean;
-  }) => (
-    <View style={[{ marginBottom: PROP_BOTTOM_GAP, width: "100%" }, style]}>
-      <Text style={PROP_LABEL_FLAT}>{label}</Text>
-      <Text style={[PROP_VALUE_FLAT, compact && { marginBottom: 2 }]}>
-        {value}
-      </Text>
-    </View>
-  );
-
   const renderTabContent = () => {
-    // Free user (catalogue, identification, or collection), not rock of the day: on Physical/Chemical/Maintenance/Spirituality tabs show Go Pro. Rock of the day always sees full content.
-    if (
-      !isMushroomOfTheDay &&
-      showGoProForFreeUser &&
-      (activeTab === "physical" ||
-        activeTab === "chemical" ||
-        activeTab === "maintenance" ||
-        activeTab === "spirituality")
-    ) {
-      const unlockMessageByTab: Record<string, string> = {
-        physical: "Unlock Physical properties with Premium",
-        chemical: "Unlock Chemical properties with Premium",
-        maintenance: "Unlock Maintenance with Premium",
-        spirituality: "Unlock Symbolism & Spirituality with Premium",
-      };
-      const unlockMessage =
-        unlockMessageByTab[activeTab] ?? "Unlock with Premium";
-      return (
-        <View
-          style={{
-            marginTop: TABS_TO_CONTENT_GAP,
-            marginHorizontal: LAYOUT_MARGIN,
-            alignItems: "center",
-            paddingVertical: spacing[8],
-            backgroundColor: SECTION_CARD_BG,
-            height: 380,
-          }}
-        >
-          <SubscribeToPremiumCard
-            isDark={isDark}
-            onPress={() => {
-              navigation.getParent()?.navigate("SubscriptionStack", {
-                screen: "SubscriptionMain",
-              });
-            }}
-          />
-          <Text
-            variant="body"
-            size="small"
-            color="textSecondary"
-            style={{ marginTop: spacing[3], textAlign: "center" }}
-          >
-            {unlockMessage}
-          </Text>
-        </View>
-      );
-    }
-    if (isMushroomData && mushroomData) {
-      return (
-        <>
-          <View
-            onLayout={(e) => {
-              mushroomSectionsOffsetY.current = e.nativeEvent.layout.y;
-            }}
-          >
-            <MushroomDetailsScrollSections
-              mushroomData={mushroomData}
-              detailedDescription={detailedDescription}
-              isDark={isDark}
-              isPremium={isPremium}
-              isMushroomOfTheDay={isMushroomOfTheDay}
-              customLocation={
-                (mushroomData as { customLocation?: string }).customLocation
-              }
-              countryMapLoading={countryMapLoading}
-              locationFlow={detailsLocationFlow}
-              textPrimary={isDark ? TEXT_PRIMARY : APP_COLORS.surfaceDark}
-              textSecondary={
-                isDark ? TEXT_SECONDARY : APP_COLORS.textSecondaryGray
-              }
-              surfacePrimary={isDark ? SHEET_COLORS.DARK : SHEET_COLORS.LIGHT}
-              surfaceSecondary={
-                isDark
-                  ? APP_COLORS.surfaceAuthDark
-                  : APP_COLORS.surfaceAuthLight
-              }
-              onNavigatePremium={() =>
-                navigation.getParent()?.navigate("SubscriptionStack", {
-                  screen: "SubscriptionMain",
-                })
-              }
-              onLookAlikePress={(lookAlike) => {
-                if (!lookAlike.speciesId) return;
-                navigation.push("BirdDetails", {
-                  mushroomId: String(lookAlike.speciesId),
-                  source: "catalogue",
-                });
-              }}
-              onSeeAllSimilarPress={() => {
-                const lookAlikes =
-                  (mushroomData as MushroomDetail).lookAlikes ?? [];
-                if (!lookAlikes.length) return;
-                const matches = lookAlikes.map((item) => {
-                  const similarityScore =
-                    item.similarityScore != null
-                      ? item.similarityScore <= 1
-                        ? item.similarityScore
-                        : item.similarityScore / 100
-                      : undefined;
-                  return {
-                    id: item.speciesId ?? "",
-                    _id: item.speciesId,
-                    commonNames: item.commonNames,
-                    genusCommonNames: item.genusCommonNames,
-                    commonName: getPrimaryCommonName(item),
-                    scientificName: item.scientificName,
-                    name: getDisplayName(item) || item.scientificName,
-                    similarityScore,
-                    image: item.imageUrls?.[0],
-                    images: item.imageUrls,
-                    match: item,
-                  };
-                });
-                useIdentificationResultsStore.getState().setResults(
-                  matches as unknown as import("../../../utils/mushroomApiMappers").PossibleMatchListItem[]
-                );
-                analyticsService.logEvent(EVENTS.identification_view_all, {
-                  mushroom_id: String(mushroomId),
-                  source: String(source ?? "unknown"),
-                });
-                navigation
-                  .getParent()
-                  ?.getParent()
-                  ?.navigate("MainTabs", {
-                    screen: "Camera",
-                    params: {
-                      screen: "OtherPossibleMatches",
-                      params: {
-                        matches: [],
-                        title: "Similar species",
-                        ...(source === "catalogue"
-                          ? {
-                              returnTo: {
-                                tab: "Catalogue" as const,
-                                screen: "BirdDetails" as const,
-                                params: {
-                                  mushroomId: String(mushroomId),
-                                  source: "catalogue" as const,
-                                },
-                              },
-                            }
-                          : {}),
-                      },
-                    },
-                  });
-              }}
-              onSectionLayout={(sectionId: MushroomScrollSectionId, y) => {
-                sectionYOffsets.current[sectionId] =
-                  mushroomSectionsOffsetY.current + y;
-              }}
-            />
-          </View>
-          {isFromIdentification ? renderAllContent({ extrasOnly: true }) : null}
-        </>
-      );
-    }
-    // All tabs show the same full content; Physical/Chemical sections hidden for free user in renderAllContent
-    return renderAllContent();
-  };
-
-  /**
-   * PHYSICAL TAB — flat layout (no cards)
-   * Order: Crystal system, Color, Transparency, Luster, Density, Mohs, Tenacity, Radioactivity, Magnetism; then Optical; then Other.
-   */
-  const renderPhysicalTab = () => {
-    const mohsVal =
-      mushroomData.mohsHardness ?? (mushroomData as any).mohs_hardness;
-    const mohsDisplay = mohsVal ?? "—";
-    const physicalRowGap = 12;
-    return (
-      <View style={{ paddingTop: 20 }}>
-        {mushroomData.crystalSystem &&
-          mushroomData.crystalSystem.length > 0 && (
-            <FlatProp
-              label="Crystal system"
-              value={mushroomData.crystalSystem.join(", ")}
-              style={{ marginBottom: physicalRowGap }}
-              compact
-            />
-          )}
-        {mushroomData.color && mushroomData.color.length > 0 && (
-          <FlatProp
-            label="Color"
-            value={mushroomData.color.join(", ")}
-            style={{ marginBottom: physicalRowGap }}
-            compact
-          />
-        )}
-        {mushroomData.transparency && mushroomData.transparency.length > 0 && (
-          <FlatProp
-            label="Transparency"
-            value={mushroomData.transparency.join(", ")}
-            style={{ marginBottom: physicalRowGap }}
-            compact
-          />
-        )}
-        {((mushroomData as any).lusture?.length > 0 ||
-          (mushroomData as any).luster?.length > 0) && (
-          <FlatProp
-            label="Luster"
-            value={(
-              (mushroomData as any).lusture ||
-              (mushroomData as any).luster ||
-              []
-            ).join(", ")}
-            style={{ marginBottom: physicalRowGap }}
-            compact
-          />
-        )}
-        {mushroomData.density && (
-          <FlatProp
-            label="Density"
-            value={`${mushroomData.density} g/cm³`}
-            style={{ marginBottom: physicalRowGap }}
-            compact
-          />
-        )}
-
-        {/* Mohs: label + value text, then bar (value, scale labels, gradient, arrow) */}
-        <View style={{ marginBottom: mohsVal ? 0 : physicalRowGap }}>
-          <Text style={PROP_LABEL_FLAT}>Mohs hardness</Text>
-          {!mohsVal && <Text style={PROP_VALUE_FLAT}>{mohsDisplay}</Text>}
-          {mohsVal && (
-            <MohsHardnessBar
-              value={String(mohsVal)}
-              mhMin={(mushroomData as any).mhMin}
-              mhMax={(mushroomData as any).mhMax}
-              numberColor={
-                isDark ? spec.PRIMARY_TEXT : APP_COLORS.brandLightBlue
-              }
-              indicatorColor={
-                isDark ? spec.PRIMARY_TEXT : APP_COLORS.shadowBlack
-              }
-            />
-          )}
-        </View>
-
-        {mushroomData.tenacity && mushroomData.tenacity.length > 0 && (
-          <FlatProp
-            label="Tenacity"
-            value={mushroomData.tenacity.join(", ")}
-            style={{ marginBottom: physicalRowGap }}
-            compact
-          />
-        )}
-        {mushroomData.radioactivity &&
-          mushroomData.radioactivity !== "UNKNOWN" && (
-            <FlatProp
-              label="Radioactivity"
-              value={formatTitleCase(mushroomData.radioactivity)}
-              style={{ marginBottom: physicalRowGap }}
-              compact
-            />
-          )}
-        {mushroomData.magnetism && mushroomData.magnetism !== "UNKNOWN" && (
-          <FlatProp
-            label="Magnetism"
-            value={formatTitleCase(mushroomData.magnetism)}
-            style={{ marginBottom: physicalRowGap }}
-            compact
-          />
-        )}
-
-        {(mushroomData.rimin || mushroomData.rimax) && (
-          <View style={{ marginTop: 16 }}>
-            <Text style={SECTION_TITLE_FLAT}>Optical Properties</Text>
-            {mushroomData.rimin && mushroomData.rimax && (
-              <FlatProp
-                label="Refractive Index"
-                value={`${mushroomData.rimin} - ${mushroomData.rimax}`}
-                style={{ marginBottom: physicalRowGap }}
-                compact
-              />
-            )}
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  /**
-   * CHEMICAL TAB — flat layout: single "Chemical Properties" section, no cards.
-   */
-  const renderChemicalTab = () => {
-    const classificationParts: string[] = [];
-    if (mushroomData.danaClass)
-      classificationParts.push(`Dana: ${mushroomData.danaClass}`);
-    if (mushroomData.strunzClass)
-      classificationParts.push(`Strunz: ${mushroomData.strunzClass}`);
-    const classificationValue = classificationParts.join("; ");
-    const formulaValue = formulaToDisplay(mushroomData.formula);
-    const commonImpurities =
-      (mushroomData as any).commonImpurities ??
-      (mushroomData as any).common_impurities;
-
-    return (
-      <View style={{ paddingTop: 20 }}>
-        {classificationValue ? (
-          <FlatProp
-            label="Chemical classification"
-            value={classificationValue}
-          />
-        ) : null}
-        {formulaValue ? (
-          <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-            <Text style={PROP_LABEL_FLAT}>Formula</Text>
-            <Text style={[PROP_VALUE_FLAT, { fontFamily: "monospace" }]}>
-              {formulaValue}
-            </Text>
-          </View>
-        ) : null}
-        {mushroomData.elements && mushroomData.elements.length > 0 && (
-          <FlatProp label="Elements" value={mushroomData.elements.join(", ")} />
-        )}
-        {commonImpurities != null &&
-          (Array.isArray(commonImpurities)
-            ? commonImpurities.length > 0
-            : String(commonImpurities)) && (
-            <FlatProp
-              label="Common impurities"
-              value={
-                Array.isArray(commonImpurities)
-                  ? commonImpurities.join(", ")
-                  : String(commonImpurities)
-              }
-            />
-          )}
-
-        {((mushroomData.varieties && mushroomData.varieties.length > 0) ||
-          (mushroomData.synonyms && mushroomData.synonyms.length > 0) ||
-          (mushroomData.confusedWith &&
-            mushroomData.confusedWith.length > 0)) && (
-          <View>
-            <Text style={SECTION_TITLE_FLAT}>Related Information</Text>
-            {mushroomData.varieties && mushroomData.varieties.length > 0 && (
-              <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                <ExpandableList
-                  title="Varieties"
-                  items={(mushroomData.varieties as string[]).map((v) =>
-                    typeof v === "string" ? v : String(v)
-                  )}
-                />
-              </View>
-            )}
-            {mushroomData.synonyms && mushroomData.synonyms.length > 0 && (
-              <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                <ExpandableList
-                  title="Synonyms"
-                  items={mushroomData.synonyms.map((s: any) => {
-                    if (typeof s === "string") return s;
-                    if (
-                      typeof s === "object" &&
-                      s !== null &&
-                      "synonymName" in s
-                    )
-                      return s.synonymName || "";
-                    return String(s);
-                  })}
-                />
-              </View>
-            )}
-            {mushroomData.confusedWith &&
-              mushroomData.confusedWith.length > 0 && (
-                <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                  <ExpandableList
-                    title="Often Confused With"
-                    items={mushroomData.confusedWith.map((c) =>
-                      typeof c === "string" ? c : String(c)
-                    )}
-                  />
-                </View>
-              )}
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  /**
-   * Render ALL content - Overview shows all, other tabs scroll to sections
-   */
-  const renderAllContent = (opts?: { extrasOnly?: boolean }) => {
-    if (opts?.extrasOnly) {
-      return (
-        <>
-          {isFromIdentification && !mushroomData?.isGem
-            ? renderIdentificationRateMatch()
-            : null}
-        </>
-      );
-    }
-
-    if (isMushroomData) {
-      return null;
-    }
-
-    const mineral = mushroomData as any;
-
-    const categoryRows: { label: string; value: string }[] = [];
-    if (isMushroomData) {
-      if (mineral.edibility) {
-        categoryRows.push({
-          label: "Edibility",
-          value: String(mineral.edibility),
-        });
-      }
-      if (mineral.toxicitySeverity && mineral.toxicitySeverity !== "none") {
-        categoryRows.push({
-          label: "Toxicity",
-          value: String(mineral.toxicitySeverity),
-        });
-      }
-      if (mineral.psychoactive) {
-        categoryRows.push({
-          label: "Psychoactive",
-          value: mineral.psychoactive === "yes" ? "Yes" : "No",
-        });
-      }
-      if (mineral.capShape) {
-        categoryRows.push({
-          label: "Cap shape",
-          value: String(mineral.capShape),
-        });
-      }
-      if (mineral.undersideType) {
-        categoryRows.push({
-          label: "Underside",
-          value: String(mineral.undersideType),
-        });
-      }
-    } else {
-      if (mushroomData.entryType != null) {
-        categoryRows.push({
-          label: "Entry Type",
-          value: ENTRY_TYPE_LABELS[mushroomData.entryType] || "Species",
-        });
-      }
-      if (mushroomData.isGem != null) {
-        categoryRows.push({
-          label: "Gem",
-          value: mushroomData.isGem ? "Yes" : "No",
-        });
-      }
-      if ((mushroomData.crystalSystem?.length ?? 0) > 0) {
-        categoryRows.push({
-          label: "Crystal system",
-          value: mushroomData.crystalSystem!.join(", "),
-        });
-      }
-      if ((mushroomData.transparency?.length ?? 0) > 0) {
-        categoryRows.push({
-          label: "Transparency",
-          value: mushroomData.transparency!.join(", "),
-        });
-      }
-      if (mineral.lusture?.length > 0 || mineral.luster?.length > 0) {
-        categoryRows.push({
-          label: "Luster",
-          value: (mineral.lusture || mineral.luster || []).join(", "),
-        });
-      }
-      if ((mushroomData.color?.length ?? 0) > 0) {
-        categoryRows.push({
-          label: "Color",
-          value: mushroomData.color!.slice(0, 2).join(", "),
-        });
-      }
-    }
-    const hasCategoryData = categoryRows.length > 0;
-
-    // Custom Location: show section only when we have location data (text or map)
-    const loc = mineral.gpsLocation ?? mineral.gps_location;
-    const lat = loc?.latitude ?? loc?.lat;
-    const lng = loc?.longitude ?? loc?.lng ?? loc?.lon;
-    const hasGps =
-      lat != null &&
-      lng != null &&
-      !Number.isNaN(Number(lat)) &&
-      !Number.isNaN(Number(lng));
-    const mapCoords = hasGps
-      ? { lat: Number(lat), lng: Number(lng) }
-      : countryMapCoords
-      ? { lat: countryMapCoords.latitude, lng: countryMapCoords.longitude }
-      : null;
-    const hasCustomLocationData =
-      !!mineral.customLocation || (!hasGps && !!mapCoords) || countryMapLoading;
-
-    const hasCommonlyFoundIn = !!mushroomData.commonlyFoundIn?.length;
-
-    const sectionWrapperStyle = {
-      marginBottom: CONTENT_TO_HEADING_GAP,
-      width: "100%" as const,
-    };
-    const firstSectionStyle = {
-      ...sectionWrapperStyle,
-      paddingTop: 0,
-    };
-
+    if (!mushroomData) return null;
     return (
       <>
-        {/* Single section: Hero to Commonly Found in — 100% width */}
         <View
-          ref={(ref) => {
-            sectionRefs.current.overview = ref;
-          }}
           onLayout={(e) => {
-            sectionYOffsets.current.overview = e.nativeEvent.layout.y;
+            mushroomSectionsOffsetY.current = e.nativeEvent.layout.y;
           }}
-          collapsable={false}
-          style={[firstSectionStyle, { width: "100%" }]}
         >
-          <SectionCard
-            title=""
-            showArrow={false}
-            containerStyle={{ marginBottom: 0 }}
-          >
-            <Text style={SECTION_TITLE_FLAT}>Overview</Text>
-            <View
-              style={{
-                gap: ROW_SPACING,
-                backgroundColor: isDark
-                  ? APP_COLORS.surfaceAuthDark
-                  : APP_COLORS.surfaceAuthLight,
-                borderRadius: Radius.md,
-                padding: spacing[4],
-              }}
-            >
-              {detailedDescription ? (
-                <Text
-                  style={{
-                    fontSize: 16,
-                    lineHeight: 24,
-                    fontFamily: FONTS.regular,
-                    color: isDark ? TEXT_PRIMARY : APP_COLORS.surfaceDark,
-                  }}
-                >
-                  {detailedDescription}
-                </Text>
-              ) : null}
-              {(mushroomData.wikipediaUrl ||
-                (mushroomData as { wikipediaLink?: string }).wikipediaLink) && (
-                <TouchableOpacity
-                  onPress={() =>
-                    Linking.openURL(
-                      mushroomData.wikipediaUrl ||
-                        (mushroomData as { wikipediaLink?: string })
-                          .wikipediaLink!
-                    )
-                  }
-                  style={styles.externalLink}
-                >
-                  <Text
-                    variant="body"
-                    size="medium"
-                    style={{
-                      color: APP_COLORS.linkBlue,
-                      textDecorationLine: "underline",
-                      marginLeft: 8,
-                    }}
-                  >
-                    Wikipedia
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-            {hasCategoryData && (
-              <View style={{ marginTop: 20 }}>
-                <Text style={SECTION_TITLE_FLAT}>Category</Text>
-                {categoryRows.map((row, index) => (
-                  <View
-                    key={row.label}
-                    style={
-                      index < categoryRows.length - 1
-                        ? { marginBottom: 12 }
-                        : undefined
-                    }
-                  >
-                    <InfoRow
-                      labelColor={TEXT_SECONDARY}
-                      valueColor={TEXT_PRIMARY}
-                      rowPaddingVertical={2}
-                      labelStyle={{ fontSize: 16, fontFamily: FONTS.regular }}
-                      valueStyle={{
-                        fontSize: 16,
-                        fontFamily: FONTS.regular,
-                        lineHeight: 24,
-                        textAlign: "right",
-                      }}
-                      label={row.label}
-                      value={row.value}
-                    />
-                    {index < categoryRows.length - 1 && (
-                      <View style={ROW_DIVIDER_FLAT} />
-                    )}
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {hasGps && mapCoords && (
-              <View
-                ref={(ref) => {
-                  sectionRefs.current["overview-location"] = ref;
-                }}
-                collapsable={false}
-                style={{ marginTop: 20 }}
-              >
-                <Text style={SECTION_TITLE_FLAT}>Location</Text>
-                <View
-                  style={{
-                    minHeight: 200,
-                    borderRadius: Radius.md,
-                    overflow: "hidden",
-                    backgroundColor: SECTION_CARD_BG,
-                    marginBottom: 0,
-                  }}
-                >
-                  <MapPreview
-                    latitude={mapCoords.lat}
-                    longitude={mapCoords.lng}
-                    hasLocationPermission={true}
-                    isUserPlant={false}
-                  />
-                </View>
-              </View>
-            )}
-
-            {!hasGps && hasCustomLocationData && (
-              <View
-                ref={(ref) => {
-                  sectionRefs.current["overview-location"] = ref;
-                }}
-                collapsable={false}
-                style={{ marginTop: 20 }}
-              >
-                {mineral.customLocation && (
-                  <View style={{ marginBottom: ROW_SPACING }}>
-                    <InfoText text={mineral.customLocation} />
-                  </View>
-                )}
-                {mapCoords &&
-                  (() => {
-                    const isCountryBasedMap = countryMapCoords != null;
-                    return (
-                      <>
-                        <Text style={SECTION_TITLE_FLAT}>Custom Location</Text>
-                        <View
-                          style={{
-                            minHeight: 200,
-                            borderRadius: Radius.md,
-                            overflow: "hidden",
-                            backgroundColor: SECTION_CARD_BG,
-                            marginBottom: 0,
-                          }}
-                        >
-                          <MapPreview
-                            latitude={mapCoords.lat}
-                            longitude={mapCoords.lng}
-                            hasLocationPermission={true}
-                            isUserPlant={false}
-                            zoom={
-                              isCountryBasedMap
-                                ? COUNTRY_MAP_ZOOM_LEVEL
-                                : undefined
-                            }
-                            singleMarkerOnly={isCountryBasedMap}
-                          />
-                        </View>
-                      </>
-                    );
-                  })()}
-                {!mapCoords &&
-                  (countryMapLoading ? (
-                    <View
-                      style={{
-                        minHeight: 200,
-                        borderRadius: Radius.md,
-                        borderWidth: 1,
-                        borderColor: spec.MAP_CARD_BORDER,
-                        backgroundColor: SECTION_CARD_BG,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        padding: spacing[4],
-                        marginBottom: spacing[2],
-                      }}
-                    >
-                      <MaterialIcons
-                        name="location-on"
-                        size={40}
-                        color={spec.SECONDARY_TEXT}
-                        style={{ marginBottom: spacing[2] }}
-                      />
-                      <Text
-                        variant="body"
-                        size="small"
-                        color="textSecondary"
-                        style={{ textAlign: "center" }}
-                      >
-                        Loading location…
-                      </Text>
-                    </View>
-                  ) : null)}
-              </View>
-            )}
-
-            {hasCommonlyFoundIn && (
-              <View style={{ marginTop: 20 }}>
-                <Text style={SECTION_TITLE_FLAT}>Commonly Found in</Text>
-                <View
-                  style={{
-                    position: "relative",
-                    overflow: "hidden",
-                    borderRadius: Radius.sm,
-                    marginTop: 12,
-                    ...(!isPremium && !isMushroomOfTheDay ? { minHeight: 120 } : {}),
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontFamily: FONTS.regular,
-                      lineHeight: 24,
-                      color: isDark
-                        ? TEXT_SECONDARY
-                        : APP_COLORS.textSecondaryGray,
-                    }}
-                  >
-                    {mushroomData.commonlyFoundIn!.join(", ")}
-                  </Text>
-                  {!isPremium && !isMushroomOfTheDay && (
-                    <>
-                      <View
-                        style={[
-                          StyleSheet.absoluteFillObject,
-                          {
-                            borderRadius: Radius.sm,
-                            overflow: "hidden",
-                          },
-                        ]}
-                        pointerEvents="box-none"
-                      >
-                        <BlurOverlay
-                          variant="premiumGate"
-                          pointerEvents="none"
-                          style={StyleSheet.absoluteFill}
-                        />
-                        {!isDark ? (
-                          <View
-                            pointerEvents="none"
-                            style={[
-                              StyleSheet.absoluteFillObject,
-                              {
-                                borderRadius: Radius.sm,
-                                borderWidth: 1,
-                                borderColor: APP_COLORS.blurOverlayBorder,
+          <MushroomDetailsScrollSections
+            mushroomData={mushroomData}
+            detailedDescription={detailedDescription}
+            isDark={isDark}
+            isPremium={isPremium}
+            isMushroomOfTheDay={isMushroomOfTheDay}
+            customLocation={
+              (mushroomData as { customLocation?: string }).customLocation
+            }
+            countryMapLoading={countryMapLoading}
+            locationFlow={detailsLocationFlow}
+            textPrimary={isDark ? TEXT_PRIMARY : APP_COLORS.surfaceDark}
+            textSecondary={
+              isDark ? TEXT_SECONDARY : APP_COLORS.textSecondaryGray
+            }
+            surfacePrimary={isDark ? SHEET_COLORS.DARK : SHEET_COLORS.LIGHT}
+            surfaceSecondary={
+              isDark
+                ? APP_COLORS.surfaceAuthDark
+                : APP_COLORS.surfaceAuthLight
+            }
+            onNavigatePremium={() =>
+              navigation.getParent()?.navigate("SubscriptionStack", {
+                screen: "SubscriptionMain",
+              })
+            }
+            onLookAlikePress={(lookAlike) => {
+              if (!lookAlike.speciesId) return;
+              navigation.push("BirdDetails", {
+                mushroomId: String(lookAlike.speciesId),
+                source: "catalogue",
+              });
+            }}
+            onSeeAllSimilarPress={() => {
+              const lookAlikes =
+                (mushroomData as MushroomDetail).lookAlikes ?? [];
+              if (!lookAlikes.length) return;
+              const matches = lookAlikes.map((item) => {
+                const similarityScore =
+                  item.similarityScore != null
+                    ? item.similarityScore <= 1
+                      ? item.similarityScore
+                      : item.similarityScore / 100
+                    : undefined;
+                return {
+                  id: item.speciesId ?? "",
+                  _id: item.speciesId,
+                  commonNames: item.commonNames,
+                  genusCommonNames: item.genusCommonNames,
+                  commonName: getPrimaryCommonName(item),
+                  scientificName: item.scientificName,
+                  name: getDisplayName(item) || item.scientificName,
+                  similarityScore,
+                  image: item.imageUrls?.[0],
+                  images: item.imageUrls,
+                  match: item,
+                };
+              });
+              useIdentificationResultsStore.getState().setResults(
+                matches as unknown as import("../../../utils/mushroomApiMappers").PossibleMatchListItem[]
+              );
+              analyticsService.logEvent(EVENTS.identification_view_all, {
+                mushroom_id: String(mushroomId),
+                source: String(source ?? "unknown"),
+              });
+              navigation
+                .getParent()
+                ?.getParent()
+                ?.navigate("MainTabs", {
+                  screen: "Camera",
+                  params: {
+                    screen: "OtherPossibleMatches",
+                    params: {
+                      matches: [],
+                      title: "Similar species",
+                      ...(source === "catalogue"
+                        ? {
+                            returnTo: {
+                              tab: "Catalogue" as const,
+                              screen: "BirdDetails" as const,
+                              params: {
+                                mushroomId: String(mushroomId),
+                                source: "catalogue" as const,
                               },
-                            ]}
-                          />
-                        ) : null}
-                      </View>
-                      <View
-                        pointerEvents="box-none"
-                        style={[
-                          StyleSheet.absoluteFillObject,
-                          {
-                            justifyContent: "center",
-                            alignItems: "center",
-                          },
-                        ]}
-                      >
-                        <SubscribeToPremiumCard
-                          isDark={isDark}
-                          onPress={() =>
-                            navigation
-                              .getParent()
-                              ?.navigate("SubscriptionStack", {
-                                screen: "SubscriptionMain",
-                              })
+                            },
                           }
-                        />
-                      </View>
-                    </>
-                  )}
-                </View>
-              </View>
-            )}
-          </SectionCard>
+                        : {}),
+                    },
+                  },
+                });
+            }}
+            onSectionLayout={(sectionId: MushroomScrollSectionId, y) => {
+              sectionYOffsets.current[sectionId] =
+                mushroomSectionsOffsetY.current + y;
+            }}
+          />
         </View>
-
-        {showSectionsAfterOverview &&
-          !isMushroomData &&
-          !isCatalogueFreeUser &&
-          (!isFromIdentification || isPremium || isMushroomOfTheDay) && (
-            <View
-              ref={(ref) => {
-                sectionRefs.current.physical = ref;
-              }}
-              onLayout={(e) => {
-                sectionYOffsets.current.physical = e.nativeEvent.layout.y;
-              }}
-              collapsable={false}
-              style={[sectionWrapperStyle, { width: "100%" }]}
-            >
-              <SectionCard title="Physical Properties" showArrow={false}>
-                {!isPremium && !isMushroomOfTheDay && (
-                  <View
-                    style={{
-                      paddingVertical: spacing[4],
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text variant="body" size="small" color="textTertiary">
-                      Unlock with Premium
-                    </Text>
-                  </View>
-                )}
-                {(isPremium || isMushroomOfTheDay) && renderPhysicalTab()}
-              </SectionCard>
-            </View>
-          )}
-
-        {/* Section: Chemical Properties — alone, 100% width */}
-        {showSectionsAfterOverview &&
-          !isMushroomData &&
-          !isCatalogueFreeUser &&
-          (!isFromIdentification || isPremium || isMushroomOfTheDay) && (
-            <View
-              ref={(ref) => {
-                sectionRefs.current.chemical = ref;
-              }}
-              onLayout={(e) => {
-                sectionYOffsets.current.chemical = e.nativeEvent.layout.y;
-              }}
-              collapsable={false}
-              style={[sectionWrapperStyle, { width: "100%" }]}
-            >
-              <SectionCard title="Chemical Properties" showArrow={false}>
-                {!isPremium && !isMushroomOfTheDay && (
-                  <View
-                    style={{
-                      paddingVertical: spacing[4],
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text variant="body" size="small" color="textTertiary">
-                      Unlock with Premium
-                    </Text>
-                  </View>
-                )}
-                {(isPremium || isMushroomOfTheDay) && renderChemicalTab()}
-              </SectionCard>
-            </View>
-          )}
-
-        {/* Section: Maintenance — includes Stability (sub) and Gem Care Guide (sub); 100% width */}
-        {showSectionsAfterOverview &&
-          (isPremium || isMushroomOfTheDay) &&
-          (mushroomData.isGem ||
-            mushroomData.storage ||
-            isMushroomOfTheDay ||
-            isPremium ||
-            mushroomData.cleaningTips ||
-            (typeof mineral.cleaningTips === "object" &&
-              mineral.cleaningTips)) && (
-            <View
-              ref={(ref) => {
-                sectionRefs.current["overview-care"] = ref;
-                sectionRefs.current.maintenance = ref;
-              }}
-              onLayout={(e) => {
-                sectionYOffsets.current.maintenance = e.nativeEvent.layout.y;
-              }}
-              collapsable={false}
-              style={[sectionWrapperStyle, { width: "100%" }]}
-            >
-              <SectionCard title="Maintenance" showArrow={false}>
-                <View style={{ paddingTop: 20 }}>
-                  {(mushroomData.isGem || isMushroomOfTheDay || isPremium) &&
-                    (mushroomData as any).durability && (
-                      <FlatProp
-                        label="Durability"
-                        value={formatTitleCase(
-                          String((mushroomData as any).durability)
-                        )}
-                      />
-                    )}
-                  {(mushroomData.isGem || isMushroomOfTheDay || isPremium) &&
-                    mushroomData.scratchResistance && (
-                      <FlatProp
-                        label="Scratch Resistance"
-                        value={formatTitleCase(mushroomData.scratchResistance)}
-                      />
-                    )}
-                  {(mushroomData.isGem || isMushroomOfTheDay || isPremium) &&
-                    mushroomData.toughness &&
-                    mushroomData.toughness !== "UNKNOWN" && (
-                      <FlatProp
-                        label="Toughness"
-                        value={formatTitleCase(mushroomData.toughness)}
-                      />
-                    )}
-                  {(mushroomData.isGem || isMushroomOfTheDay || isPremium) &&
-                    (mushroomData as any).stability &&
-                    typeof (mushroomData as any).stability === "object" && (
-                      <View style={{ marginTop: 8 }}>
-                        <Text style={PROP_LABEL_FLAT}>Stability</Text>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            flexWrap: "wrap",
-                            marginHorizontal: -6,
-                          }}
-                        >
-                          {(
-                            [
-                              ["lightStability", "lightStability"],
-                              ["heatStability", "heatStability"],
-                              ["chemicalsStability", "chemicalsStability"],
-                              [
-                                "waterOrHumidityStability",
-                                "waterOrHumidityStability",
-                              ],
-                              [
-                                "thermalShockStability",
-                                "thermalShockStability",
-                              ],
-                            ] as const
-                          ).map(([key, label], index, arr) => {
-                            const raw = (mushroomData as any).stability?.[key];
-                            const value = Array.isArray(raw) ? raw[0] : raw;
-                            const display =
-                              typeof value === "string" && value.length > 0
-                                ? formatStabilityValue(value)
-                                : "Unknown";
-                            return (
-                              <View
-                                key={key}
-                                style={{
-                                  width: "100%",
-                                  paddingHorizontal: 6,
-                                  paddingVertical: 4,
-                                  marginBottom: MAINTENANCE_ROW_GAP,
-                                  borderBottomWidth:
-                                    index === arr.length - 1 ? 0 : 1,
-                                  borderBottomColor:
-                                    colors.border ?? SCREEN_COLORS.LIGHT.border,
-                                }}
-                              >
-                                <View
-                                  style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    alignSelf: "stretch",
-                                  }}
-                                >
-                                  <Text
-                                    style={[
-                                      MAINTENANCE_ROW_LABEL,
-                                      {
-                                        marginBottom: 0,
-                                        flex: 0.6,
-                                        paddingRight: 8,
-                                        textAlign: "left",
-                                      },
-                                    ]}
-                                    numberOfLines={2}
-                                  >
-                                    {formatStabilityLabel(label)}
-                                  </Text>
-                                  <Text
-                                    style={[
-                                      MAINTENANCE_ROW_VALUE,
-                                      {
-                                        marginBottom: 0,
-                                        flex: 0.4,
-                                        textAlign: "right",
-                                      },
-                                    ]}
-                                    numberOfLines={2}
-                                  >
-                                    {display}
-                                  </Text>
-                                </View>
-                              </View>
-                            );
-                          })}
-                        </View>
-                      </View>
-                    )}
-
-                  {/* Gem Care — static labels, values from API (storage); rest No for now */}
-                  {(mushroomData.isGem || isMushroomOfTheDay || isPremium) && (
-                    <View style={{ marginTop: 20 }}>
-                      <Text
-                        style={[
-                          PROP_LABEL_FLAT,
-                          { marginBottom: 12, fontSize: 14 },
-                        ]}
-                      >
-                        Gem Care Guide
-                      </Text>
-                      <View style={{ gap: 0 }}>
-                        <View
-                          style={{
-                            paddingVertical: 6,
-                            marginBottom: MAINTENANCE_ROW_GAP,
-                            borderBottomWidth: 1,
-                            borderBottomColor:
-                              colors.border ?? SCREEN_COLORS.LIGHT.border,
-                          }}
-                        >
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              alignSelf: "stretch",
-                            }}
-                          >
-                            <Text
-                              style={[
-                                MAINTENANCE_ROW_LABEL,
-                                {
-                                  marginBottom: 0,
-                                  flex: 0.6,
-                                  paddingRight: 8,
-                                  textAlign: "left",
-                                },
-                              ]}
-                              numberOfLines={2}
-                            >
-                              Separate storage
-                            </Text>
-                            <Text
-                              style={[
-                                MAINTENANCE_ROW_VALUE,
-                                {
-                                  marginBottom: 0,
-                                  flex: 0.4,
-                                  textAlign: "right",
-                                },
-                              ]}
-                              numberOfLines={2}
-                            >
-                              {mushroomData.storage?.storeSeprately === "YES"
-                                ? "Yes"
-                                : "No"}
-                            </Text>
-                          </View>
-                          {mushroomData.storage?.reason &&
-                            mushroomData.storage.reason.length > 0 &&
-                            mushroomData.storage.reason.map((reason, index) => (
-                              <Text
-                                key={index}
-                                style={[
-                                  MAINTENANCE_ROW_VALUE,
-                                  { marginLeft: 8 },
-                                ]}
-                              >
-                                • {formatTitleCase(reason)}
-                              </Text>
-                            ))}
-                        </View>
-                        {(
-                          [
-                            ["Avoid direct sunlight", "lightStability"],
-                            ["Temperature control", "heatStability"],
-                            ["Humidity control", "waterOrHumidityStability"],
-                          ] as const
-                        ).map(([label, key], index, arr) => (
-                          <View
-                            key={key}
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              alignSelf: "stretch",
-                              paddingVertical: 6,
-                              marginBottom: MAINTENANCE_ROW_GAP,
-                              borderBottomWidth:
-                                index === arr.length - 1 ? 0 : 1,
-                              borderBottomColor:
-                                colors.border ?? SCREEN_COLORS.LIGHT.border,
-                            }}
-                          >
-                            <Text
-                              style={[
-                                MAINTENANCE_ROW_LABEL,
-                                {
-                                  marginBottom: 0,
-                                  flex: 0.6,
-                                  paddingRight: 8,
-                                  textAlign: "left",
-                                },
-                              ]}
-                              numberOfLines={2}
-                            >
-                              {label}
-                            </Text>
-                            <Text
-                              style={[
-                                MAINTENANCE_ROW_VALUE,
-                                {
-                                  marginBottom: 0,
-                                  flex: 0.4,
-                                  textAlign: "right",
-                                },
-                              ]}
-                              numberOfLines={2}
-                            >
-                              {deriveGemCareFromStability(
-                                (mushroomData as any).stability,
-                                key
-                              )}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Cleaning Tips — 60-40 width, 2-column layout */}
-                  {(mushroomData.cleaningTips ||
-                    (typeof mineral.cleaningTips === "object" &&
-                      mineral.cleaningTips)) && (
-                    <View style={{ marginTop: 20 }}>
-                      <Text
-                        style={[
-                          PROP_LABEL_FLAT,
-                          { marginBottom: 12, fontSize: 14 },
-                        ]}
-                      >
-                        Cleaning Tips
-                      </Text>
-                      {!isPremium && !isMushroomOfTheDay && (
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            justifyContent: "flex-end",
-                            marginBottom: spacing[2],
-                          }}
-                        >
-                          <TouchableOpacity
-                            onPress={() => {
-                              navigation
-                                .getParent()
-                                ?.navigate("SubscriptionStack", {
-                                  screen: "SubscriptionMain",
-                                });
-                            }}
-                            style={{ padding: spacing[1] }}
-                          />
-                        </View>
-                      )}
-                      {typeof mushroomData.cleaningTips === "string" ? (
-                        <InfoText text={mushroomData.cleaningTips} />
-                      ) : (typeof mineral.cleaningTips === "object" &&
-                          mineral.cleaningTips?.cleaningMethods) ||
-                        (typeof mushroomData.cleaningTips === "object" &&
-                          (mushroomData.cleaningTips as any)
-                            ?.cleaningMethods) ? (
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            flexWrap: "wrap",
-                            marginHorizontal: -6,
-                          }}
-                        >
-                          {Object.entries(
-                            mineral.cleaningTips?.cleaningMethods ??
-                              (mushroomData.cleaningTips as any)
-                                ?.cleaningMethods ??
-                              {}
-                          ).map(
-                            ([method, details]: [string, any], index, arr) => (
-                              <View
-                                key={method}
-                                style={{
-                                  width: "100%",
-                                  paddingHorizontal: 6,
-                                  paddingVertical: 4,
-                                  marginBottom: MAINTENANCE_ROW_GAP,
-                                  borderBottomWidth:
-                                    index === arr.length - 1 ? 0 : 1,
-                                  borderBottomColor:
-                                    colors.border ?? SCREEN_COLORS.LIGHT.border,
-                                }}
-                              >
-                                <View
-                                  style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    alignSelf: "stretch",
-                                  }}
-                                >
-                                  <Text
-                                    style={[
-                                      MAINTENANCE_ROW_LABEL,
-                                      {
-                                        marginBottom: 0,
-                                        flex: 0.6,
-                                        paddingRight: 8,
-                                        textAlign: "left",
-                                      },
-                                    ]}
-                                    numberOfLines={2}
-                                  >
-                                    {formatTitleCase(method)}
-                                  </Text>
-                                  <Text
-                                    style={[
-                                      MAINTENANCE_ROW_VALUE,
-                                      {
-                                        marginBottom: 0,
-                                        flex: 0.4,
-                                        textAlign: "right",
-                                      },
-                                    ]}
-                                    numberOfLines={2}
-                                  >
-                                    {details.status
-                                      ? formatTitleCase(details.status)
-                                      : "Unknown"}
-                                  </Text>
-                                </View>
-                                {details.note && (
-                                  <Text
-                                    variant="body"
-                                    size="small"
-                                    color="textTertiary"
-                                    style={{
-                                      fontStyle: "italic",
-                                      marginLeft: 0,
-                                      marginTop: spacing[1],
-                                    }}
-                                    numberOfLines={2}
-                                  >
-                                    Note: {details.note}
-                                  </Text>
-                                )}
-                              </View>
-                            )
-                          )}
-                        </View>
-                      ) : null}
-                    </View>
-                  )}
-                </View>
-              </SectionCard>
-            </View>
-          )}
-
-        {/* Section: Pricing & Rarity (Gem only) — premium or Rock of the Day only */}
-        {showSectionsAfterOverview &&
-          (isPremium || isMushroomOfTheDay) &&
-          mushroomData.isGem &&
-          (mushroomData.avgPricePerCarat ||
-            mushroomData.rarityScore !== undefined) && (
-            <View
-              ref={(ref) => {
-                sectionRefs.current["overview-pricing"] = ref;
-              }}
-              style={sectionWrapperStyle}
-            >
-              <SectionCard title="Pricing & Rarity" showArrow={false}>
-                <View style={{ gap: 4 }}>
-                  {mushroomData.avgPricePerCarat && (
-                    <InfoRow
-                      labelColor={TEXT_SECONDARY}
-                      valueColor={TEXT_SECONDARY}
-                      rowPaddingVertical={ROW_PADDING_VERTICAL}
-                      label="Average Price per Carat"
-                      value={mushroomData.avgPricePerCarat}
-                    />
-                  )}
-                  {mushroomData.rarityScore !== undefined && (
-                    <InfoRow
-                      labelColor={TEXT_SECONDARY}
-                      valueColor={TEXT_SECONDARY}
-                      rowPaddingVertical={ROW_PADDING_VERTICAL}
-                      label="Rarity Score"
-                      value={`${mushroomData.rarityScore}/10`}
-                    />
-                  )}
-                </View>
-              </SectionCard>
-            </View>
-          )}
-
-        {/* Section: Gem Treatment (Gem only) — premium or Rock of the Day only */}
-        {showSectionsAfterOverview &&
-          (isPremium || isMushroomOfTheDay) &&
-          mushroomData.isGem &&
-          mushroomData.gemTreatment && (
-            <View
-              ref={(ref) => {
-                sectionRefs.current["overview-treatment"] = ref;
-              }}
-              style={sectionWrapperStyle}
-            >
-              <SectionCard title="Gem Treatment" showArrow={false}>
-                <View style={{ gap: 4 }}>
-                  {mushroomData.gemTreatment.notes && (
-                    <InfoText text={mushroomData.gemTreatment.notes} />
-                  )}
-                  {mushroomData.gemTreatment.common_treatments?.length > 0 &&
-                    mushroomData.gemTreatment.common_treatments.map(
-                      (treatment, index) => (
-                        <Text
-                          key={index}
-                          variant="body"
-                          size="small"
-                          style={{ color: TEXT_SECONDARY, marginLeft: 8 }}
-                        >
-                          • {treatment}
-                        </Text>
-                      )
-                    )}
-                </View>
-              </SectionCard>
-            </View>
-          )}
-
-        {/* Section: Symbolism & Spirituality — premium or Rock of the Day only (free catalogue/collection/identification cannot see) */}
-        {showSectionsAfterOverview &&
-          (isPremium || isMushroomOfTheDay) &&
-          (mushroomData.isGem || isMushroomOfTheDay || isPremium) && (
-            <View
-              ref={(ref) => {
-                sectionRefs.current.symbolism = ref;
-                sectionRefs.current.spirituality = ref;
-              }}
-              onLayout={(e) => {
-                sectionYOffsets.current.spirituality = e.nativeEvent.layout.y;
-              }}
-              collapsable={false}
-              style={[sectionWrapperStyle, { width: "100%" }]}
-            >
-              <SectionCard title="" showArrow={false}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 20,
-                  }}
-                >
-                  <Text
-                    variant="title"
-                    size="medium"
-                    weight="semibold"
-                    style={{
-                      color: isDark
-                        ? spec.PRIMARY_TEXT
-                        : APP_COLORS.surfaceDark,
-                    }}
-                  >
-                    Symbolism & Spirituality
-                  </Text>
-                  <Toggle
-                    value={showSpirituality}
-                    onToggle={setShowSpirituality}
-                    trackColor={{ active: colors.primary }}
-                  />
-                </View>
-
-                {/* Disclaimer */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "flex-start",
-                    padding: 12,
-                    borderRadius: Radius.md,
-                    backgroundColor: APP_COLORS.errorBgAlpha,
-                    marginBottom: 20,
-                    gap: 8,
-                  }}
-                >
-                  <AppImage
-                    source={Images.informationCircle}
-                    style={{ width: 16, height: 16, marginTop: 2 }}
-                    resizeMode="contain"
-                  />
-                  <Text
-                    variant="body"
-                    size="small"
-                    style={{
-                      color: isDark
-                        ? spec.DISCLAIMER_TEXT
-                        : APP_COLORS.errorDark,
-                      flex: 1,
-                      lineHeight: 20,
-                    }}
-                  >
-                    {METAPHYSICAL_DISCLAIMER}
-                  </Text>
-                </View>
-
-                {/* Properties: label + value, no dividers, no inner cards */}
-                {showSpirituality && (
-                  <>
-                    {mushroomData.healthRisks &&
-                      mushroomData.healthRisks !== "NONE" && (
-                        <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                          <Text style={PROP_LABEL_FLAT}>Health risks</Text>
-                          <View
-                            style={{
-                              marginTop: LABEL_VALUE_GAP,
-                              marginBottom: 20,
-                            }}
-                          >
-                            <InfoText
-                              text={formatTitleCase(mushroomData.healthRisks)}
-                            />
-                          </View>
-                        </View>
-                      )}
-
-                    {mushroomData.amplification && (
-                      <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                        <Text style={PROP_LABEL_FLAT}>Amplification</Text>
-                        <View style={{ marginTop: LABEL_VALUE_GAP }}>
-                          <InfoText text={mushroomData.amplification} />
-                        </View>
-                      </View>
-                    )}
-
-                    {mushroomData.revitalizeCharging && (
-                      <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                        <Text style={PROP_LABEL_FLAT}>
-                          Revitalize - Charging
-                        </Text>
-                        <View style={{ marginTop: LABEL_VALUE_GAP }}>
-                          <InfoText
-                            text={mushroomData.revitalizeCharging}
-                            variant="primary"
-                          />
-                        </View>
-                      </View>
-                    )}
-
-                    {mushroomData.revitalizeCleansing && (
-                      <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                        <Text style={PROP_LABEL_FLAT}>
-                          Revitalize - Cleansing
-                        </Text>
-                        <View style={{ marginTop: LABEL_VALUE_GAP }}>
-                          <InfoText
-                            text={mushroomData.revitalizeCleansing}
-                            variant="primary"
-                          />
-                        </View>
-                      </View>
-                    )}
-
-                    {mushroomData.worksWellWith &&
-                      mushroomData.worksWellWith.length > 0 && (
-                        <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                          <Text style={PROP_LABEL_FLAT}>Works Well With</Text>
-                          <Text
-                            style={[
-                              PROP_VALUE_FLAT,
-                              { marginTop: LABEL_VALUE_GAP },
-                            ]}
-                          >
-                            {mushroomData.worksWellWith.join(", ")}
-                          </Text>
-                        </View>
-                      )}
-
-                    {mushroomData.metaphysicalQualities &&
-                      mushroomData.metaphysicalQualities.length > 0 && (
-                        <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                          <Text style={PROP_LABEL_FLAT}>
-                            Metaphysical Qualities
-                          </Text>
-                          <Text
-                            style={[
-                              PROP_VALUE_FLAT,
-                              { marginTop: LABEL_VALUE_GAP },
-                            ]}
-                          >
-                            {mushroomData.metaphysicalQualities.join(", ")}
-                          </Text>
-                        </View>
-                      )}
-
-                    {mushroomData.chakra && mushroomData.chakra.length > 0 && (
-                      <View style={{ marginBottom: PROP_BOTTOM_GAP }}>
-                        <Text style={PROP_LABEL_FLAT}>Chakra</Text>
-                        <Text
-                          style={[
-                            PROP_VALUE_FLAT,
-                            { marginTop: LABEL_VALUE_GAP },
-                          ]}
-                        >
-                          {mushroomData.chakra.join(", ")}
-                        </Text>
-                      </View>
-                    )}
-                  </>
-                )}
-
-                {/* Rate this match — inside Symbolism when identification + gem; non-gem uses standalone block below to avoid duplicate */}
-                {isFromIdentification && mushroomData.isGem && (
-                  <View
-                    style={[
-                      styles.rateMatchSection,
-                      {
-                        marginTop: 24,
-                        borderRadius: RATE_MATCH_CARD_RADIUS,
-                        backgroundColor: RATE_MATCH_CARD_BG,
-                        width: RATE_MATCH_CARD_WIDTH,
-                        alignSelf: "stretch",
-                      },
-                    ]}
-                  >
-                    {rateMatchSent ? (
-                      <View style={styles.rateMatchSuccess}>
-                        <View
-                          style={[
-                            styles.rateMatchSuccessIconWrap,
-                            { backgroundColor: colors.success },
-                          ]}
-                        >
-                          <AppImage
-                            source={Images.rateUsSent}
-                            style={{ width: 40, height: 40 }}
-                            resizeMode="contain"
-                          />
-                        </View>
-                        <Text
-                          variant="headline"
-                          size="medium"
-                          weight="bold"
-                          style={[
-                            styles.rateMatchSuccessTitle,
-                            { color: TEXT_PRIMARY },
-                          ]}
-                        >
-                          {
-                            MODAL_STRINGS.identificationFeedback
-                              .confirmationTitle
-                          }
-                        </Text>
-                      </View>
-                    ) : (
-                      <>
-                        <Text
-                          variant="headline"
-                          size="medium"
-                          weight="bold"
-                          style={[
-                            styles.rateMatchTitle,
-                            { color: TEXT_PRIMARY },
-                          ]}
-                        >
-                          {MODAL_STRINGS.identificationFeedback.title}
-                        </Text>
-                        <Text
-                          variant="body"
-                          size="medium"
-                          color="textSecondary"
-                          style={[
-                            styles.rateMatchSubtitle,
-                            { color: TEXT_SECONDARY },
-                          ]}
-                        >
-                          {MODAL_STRINGS.identificationFeedback.subtitle}
-                        </Text>
-                        <View style={styles.rateMatchEmojiRow}>
-                          {[1, 2, 3, 4, 5].map((value, i) => {
-                            const Icon = isDark
-                              ? [
-                                  RateMatchSad01Dark,
-                                  RateMatchSad02Dark,
-                                  RateMatchFlushedDark,
-                                  RateMatchHappyDark,
-                                  RateMatchStarFaceDark,
-                                ][i]
-                              : [
-                                  RateMatchSad01Light,
-                                  RateMatchSad02Light,
-                                  RateMatchFlushedLight,
-                                  RateMatchHappyLight,
-                                  RateMatchStarFaceLight,
-                                ][i];
-                            return (
-                              <TouchableOpacity
-                                key={value}
-                                style={[
-                                  styles.rateMatchEmojiBtn,
-                                  rateMatchRating === value && {
-                                    backgroundColor: isDark
-                                      ? APP_COLORS.blurOverlayWhite15
-                                      : APP_COLORS.overlayBlack06,
-                                    borderRadius: theme.radius.full,
-                                  },
-                                ]}
-                                onPress={() => setRateMatchRating(value)}
-                                activeOpacity={0.7}
-                              >
-                                <Icon width={24} height={24} />
-                              </TouchableOpacity>
-                            );
-                          })}
-                        </View>
-                        <Text
-                          variant="body"
-                          size="small"
-                          weight="medium"
-                          style={[
-                            styles.rateMatchMessageLabel,
-                            { color: TEXT_SECONDARY },
-                          ]}
-                        >
-                          {MODAL_STRINGS.identificationFeedback.messageLabel}
-                        </Text>
-                        <TextInput
-                          value={rateMatchMessage}
-                          onChangeText={setRateMatchMessage}
-                          placeholder={
-                            MODAL_STRINGS.identificationFeedback
-                              .messagePlaceholder
-                          }
-                          placeholderTextColor={colors.textTertiary}
-                          multiline
-                          style={[
-                            styles.rateMatchInput,
-                            {
-                              backgroundColor: isDark
-                                ? APP_COLORS.surfaceDark
-                                : APP_COLORS.modalTextOnPrimary,
-                              borderColor: isDark
-                                ? APP_COLORS.borderBrown
-                                : SCREEN_COLORS.LIGHT.border,
-                              color: TEXT_PRIMARY,
-                              borderRadius: theme.radius.md,
-                            },
-                          ]}
-                        />
-                        <TouchableOpacity
-                          style={[
-                            styles.rateMatchSendBtn,
-                            {
-                              backgroundColor: isDark
-                                ? SUBSCRIPTION_COLORS.CTA_PRIMARY_DARK
-                                : SUBSCRIPTION_COLORS.CTA_PRIMARY_LIGHT,
-                              borderWidth: 0,
-                              borderRadius: theme.radius["2xl"],
-                              opacity:
-                                rateMatchRating !== null && !rateMatchSubmitting
-                                  ? 1
-                                  : 0.5,
-                            },
-                          ]}
-                          onPress={async () => {
-                            if (rateMatchRating === null || rateMatchSubmitting)
-                              return;
-                            setRateMatchSubmitting(true);
-                            try {
-                              await sendRatingFeedback({
-                                domain: "Mushrooms",
-                                message:
-                                  rateMatchMessage.trim() ||
-                                  `Rating: ${rateMatchRating}/5`,
-                                rating: rateMatchRating,
-                                source: "rate_us",
-                              });
-                              setRateMatchSent(true);
-                              setRateMatchRating(null);
-                              setRateMatchMessage("");
-                            } catch (e: any) {
-                              showToast(
-                                e?.message ||
-                                  "Failed to send feedback. Please try again.",
-                                "error"
-                              );
-                            } finally {
-                              setRateMatchSubmitting(false);
-                            }
-                          }}
-                          disabled={
-                            rateMatchRating === null || rateMatchSubmitting
-                          }
-                          activeOpacity={0.8}
-                        >
-                          {rateMatchSubmitting ? (
-                            <ActivityIndicator
-                              size="small"
-                              color={RATE_MATCH_SUBMIT_TEXT}
-                              style={styles.rateMatchSpinner}
-                            />
-                          ) : null}
-                          <Text
-                            variant="label"
-                            size="medium"
-                            weight="medium"
-                            style={[
-                              styles.rateMatchSendText,
-                              { color: RATE_MATCH_SUBMIT_TEXT },
-                              rateMatchSubmitting && { marginLeft: 8 },
-                            ]}
-                          >
-                            {rateMatchSubmitting
-                              ? MODAL_STRINGS.identificationFeedback.sending
-                              : MODAL_STRINGS.identificationFeedback.submit}
-                          </Text>
-                        </TouchableOpacity>
-                      </>
-                    )}
-                  </View>
-                )}
-              </SectionCard>
-            </View>
-          )}
-
-        {renderIdentificationRateMatch()}
+        {isFromIdentification ? renderIdentificationRateMatch() : null}
       </>
     );
   };
@@ -4360,8 +2459,7 @@ export const MushroomDetailsScreen: React.FC = () => {
           }}
         />
 
-        {isMushroomData ? (
-          <>
+        <>
             <LocationPermissionPopup
               visible={detailsLocationFlow.showLocationPopup}
               onClose={detailsLocationFlow.closeLocationPopups}
@@ -4434,8 +2532,7 @@ export const MushroomDetailsScreen: React.FC = () => {
                 }
               }}
             />
-          </>
-        ) : null}
+        </>
 
         {/* Report Modal */}
         <ReportModal
@@ -5052,74 +3149,89 @@ export const MushroomDetailsScreen: React.FC = () => {
                   <View
                     style={[styles.aiRockTitleContainer, { marginTop: 16 }]}
                   >
-                    {isMushroomData ? (
-                      <Text
-                        style={{
-                          ...NAME_HEADING,
-                          color: isDark ? TEXT_PRIMARY : NAME_HEADING.color,
-                        }}
-                      >
-                        {formatTitleCase(getDisplayName(mushroomData))}
-                        {getMushroomDisplayScientificFromFields(mushroomData) ? (
+                      <View style={styles.birdNameRow}>
+                        <View style={styles.birdNameCopy}>
                           <Text
                             style={{
-                              fontFamily: FONTS.regular,
-                              fontStyle: "italic",
-                              fontSize: NAME_HEADING.fontSize,
-                              lineHeight: NAME_HEADING.lineHeight,
-                              color: isDark ? TEXT_PRIMARY : NAME_HEADING.color,
+                              ...NAME_HEADING,
+                              fontSize: 24,
+                              color: isDark
+                                ? TEXT_PRIMARY
+                                : NAME_HEADING.color,
                             }}
                           >
-                            {" "}
-                            (
-                            {formatTitleCase(
-                              getMushroomDisplayScientificFromFields(
-                                mushroomData
-                              )!
-                            )}
-                            )
+                            {formatTitleCase(getDisplayName(mushroomData))}
                           </Text>
+                          {getMushroomDisplayScientificFromFields(
+                            mushroomData
+                          ) ? (
+                            <Text
+                              style={[
+                                styles.aiSynonym,
+                                {
+                                  ...SYNONYM_AND_UNIT,
+                                  fontSize: 16,
+                                  lineHeight: 24,
+                                  marginTop: 4,
+                                },
+                              ]}
+                            >
+                              (
+                              {formatTitleCase(
+                                getMushroomDisplayScientificFromFields(
+                                  mushroomData
+                                )!
+                              )}
+                              )
+                            </Text>
+                          ) : null}
+                        </View>
+                        {(mushroomData.soundUrls?.length ?? 0) > 0 ? (
+                          <TouchableOpacity
+                            style={styles.birdNameSoundButton}
+                            onPress={() => {
+                              const url = mushroomData.soundUrls?.find(
+                                (item) =>
+                                  typeof item === "string" && item.trim()
+                              );
+                              if (!url) return;
+                              void (async () => {
+                                if (nameSoundPlaying) {
+                                  await soundRecordingService.stopPlayback();
+                                  setNameSoundPlaying(false);
+                                  return;
+                                }
+                                try {
+                                  await soundRecordingService.stopPlayback();
+                                  await soundRecordingService.play(url);
+                                  setNameSoundPlaying(true);
+                                } catch {
+                                  setNameSoundPlaying(false);
+                                }
+                              })();
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel={
+                              nameSoundPlaying
+                                ? COLLECTION_STRINGS.birdDetails
+                                    .nameSoundStopA11y
+                                : COLLECTION_STRINGS.birdDetails.nameSoundA11y
+                            }
+                          >
+                            <CatalogueVolumeIcon
+                              width={24}
+                              height={24}
+                              color={
+                                nameSoundPlaying
+                                  ? theme.colors.primaryCTA
+                                  : isDark
+                                    ? TEXT_PRIMARY
+                                    : APP_COLORS.surfaceDark
+                              }
+                            />
+                          </TouchableOpacity>
                         ) : null}
-                      </Text>
-                    ) : (
-                      <>
-                        <Text
-                          style={{
-                            ...NAME_HEADING,
-                            color: isDark ? TEXT_PRIMARY : NAME_HEADING.color,
-                          }}
-                        >
-                          {formatTitleCase(getDisplayName(mushroomData))}
-                        </Text>
-                        {getMushroomDisplayScientificFromFields(mushroomData) ? (
-                          <Text style={[styles.aiSynonym, SYNONYM_AND_UNIT]}>
-                            {formatTitleCase(
-                              getMushroomDisplayScientificFromFields(
-                                mushroomData
-                              )!
-                            )}
-                          </Text>
-                        ) : null}
-                      </>
-                    )}
-                    {mushroomData.avgPricePerCarat ? (
-                      <View style={styles.aiPriceRow}>
-                        <Text
-                          style={{
-                            fontSize: 26,
-                            fontFamily: FONTS.bold,
-                            color: isDark
-                              ? colors.primaryCTA
-                              : APP_COLORS.surfaceDark,
-                          }}
-                        >
-                          {mushroomData.avgPricePerCarat}
-                        </Text>
-                        <Text style={[styles.aiUnit, SYNONYM_AND_UNIT]}>
-                          /Carat
-                        </Text>
                       </View>
-                    ) : null}
                     {nameOrigin ? (
                       <View style={styles.aiNameOriginWrapper}>
                         <View
@@ -5137,26 +3249,6 @@ export const MushroomDetailsScreen: React.FC = () => {
                         </View>
                       </View>
                     ) : null}
-                    {isMushroomData && (
-                      <>
-                        <MushroomStatusChips
-                          edibility={(mushroomData as any).edibility}
-                          toxicitySeverity={
-                            (mushroomData as any).toxicitySeverity
-                          }
-                          psychoactive={(mushroomData as any).psychoactive}
-                        />
-                        <MushroomWarningBanner
-                          edibility={(mushroomData as any).edibility}
-                          toxicitySeverity={
-                            (mushroomData as any).toxicitySeverity
-                          }
-                          psychoactive={(mushroomData as any).psychoactive}
-                          warningBanner={(mushroomData as any).warningBanner}
-                          isDark={isDark}
-                        />
-                      </>
-                    )}
                   </View>
                 </View>
 
@@ -5229,18 +3321,20 @@ export const MushroomDetailsScreen: React.FC = () => {
                           {tab.label}
                         </Text>
                         {(() => {
-                          const mushroomPremiumTabs = [
-                            "safety",
-                            "similar",
+                          const birdPremiumTabs = [
                             "morphology",
+                            "behavior",
                             "habitat",
+                            "feeding",
+                            "breeding",
+                            "range",
                           ];
                           const showLock =
                             !isPremium &&
                             !isMushroomOfTheDay &&
                             tab.id !== "overview" &&
-                            (!isMushroomData ||
-                              mushroomPremiumTabs.includes(tab.id));
+                            tab.id !== "sounds" &&
+                            birdPremiumTabs.includes(tab.id);
                           return showLock ? (
                             <AppImage
                               source={Images.mushroomGoPro}
@@ -5809,6 +3903,27 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 0,
     alignItems: "flex-start",
+  },
+  birdNameRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 16,
+    width: "100%",
+  },
+  birdNameCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  birdNameSoundButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#E7E7E7",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
   },
   aiSynonym: {
     marginTop: 8,

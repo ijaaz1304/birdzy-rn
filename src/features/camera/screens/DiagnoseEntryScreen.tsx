@@ -1,6 +1,6 @@
 /**
  * Diagnose Entry Screen
- * Entry point for identification flow
+ * Unused leftover from Home; retargeted to the got-bitten Ask AI assistant.
  */
 
 import React from "react";
@@ -13,9 +13,10 @@ import { useTheme } from "../../../hooks/useTheme";
 import { Text, Button, NavBackIcon } from "../../../atoms";
 import { Card } from "../../../molecules";
 import { CameraStackParamList } from "../../../navigation/types";
-import { useFeatureConfig } from "../../../config/context";
+import { ASK_AI_STRINGS } from "../../../config/strings/ask-ai.strings";
 import { screenStyles } from "../../../styles/common";
 import { SCREEN_COLORS } from "../../../constants/colorConstants";
+import { NavigationService } from "../../../utils/navigation";
 
 import { FONTS } from "../../../common/typography";
 
@@ -32,20 +33,19 @@ export const DiagnoseEntryScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
   const spacing = theme.spacing;
-  const _radius = theme.radius;
   const navigation = useNavigation<DiagnoseEntryScreenNavigationProp>();
-  const _cameraConfig = useFeatureConfig("camera");
 
-  const handleStartDiagnosis = () => {
-    // Navigate to camera permission gate, which will then go to camera capture
-    navigation.navigate("CameraPermissionGate", { mode: "diagnose" });
+  const handleAskAboutBite = () => {
+    NavigationService.navigateNested("AskAIStack", "AskAIMain", {
+      assistant: "gotBitten",
+      initialMessage: ASK_AI_STRINGS.gotBittenPrompt,
+    });
   };
 
   return (
     <SafeAreaView
       style={[screenStyles.safeArea, { backgroundColor: colors.background }]}
     >
-      {/* Header */}
       <View style={[screenStyles.header, { paddingHorizontal: spacing[6] }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -54,13 +54,12 @@ export const DiagnoseEntryScreen: React.FC = () => {
           <NavBackIcon color={colors.textPrimary} />
         </TouchableOpacity>
         <Text variant="title" size="large" weight="bold">
-          Identify with a photo
+          Bird bite help
         </Text>
         <View style={{ width: 36 }} />
       </View>
 
       <View style={[styles.content, { paddingHorizontal: spacing[6] }]}>
-        {/* Info Card */}
         <Card variant="elevated" padding="large" style={styles.infoCard}>
           <View style={styles.iconContainer}>
             <View
@@ -69,7 +68,7 @@ export const DiagnoseEntryScreen: React.FC = () => {
                 { backgroundColor: colors.primary + "20" },
               ]}
             >
-              <Icon name="medical" size={48} color={colors.primary} />
+              <Icon name="medkit" size={48} color={colors.primary} />
             </View>
           </View>
 
@@ -79,7 +78,7 @@ export const DiagnoseEntryScreen: React.FC = () => {
             weight="bold"
             style={styles.title}
           >
-            Identify mushrooms
+            Think a bird bit you?
           </Text>
           <Text
             variant="body"
@@ -87,8 +86,8 @@ export const DiagnoseEntryScreen: React.FC = () => {
             color="textSecondary"
             style={styles.description}
           >
-            Take a clear photo to get instant AI-powered identification and
-            learn more about what you found.
+            Describe what happened or share a photo. The bite assistant can help
+            you figure out next steps.
           </Text>
 
           <View style={styles.featuresList}>
@@ -100,7 +99,7 @@ export const DiagnoseEntryScreen: React.FC = () => {
                 color="textSecondary"
                 style={styles.featureText}
               >
-                Fast identification
+                Photo analysis
               </Text>
             </View>
             <View style={styles.featureItem}>
@@ -111,7 +110,7 @@ export const DiagnoseEntryScreen: React.FC = () => {
                 color="textSecondary"
                 style={styles.featureText}
               >
-                Detailed information
+                Likely species
               </Text>
             </View>
             <View style={styles.featureItem}>
@@ -122,23 +121,21 @@ export const DiagnoseEntryScreen: React.FC = () => {
                 color="textSecondary"
                 style={styles.featureText}
               >
-                Similar matches
+                What to do next
               </Text>
             </View>
           </View>
         </Card>
 
-        {/* CTA Button */}
         <Button
-          title="Start identification"
+          title="Ask about a bite"
           variant="primary"
           size="large"
-          onPress={handleStartDiagnosis}
+          onPress={handleAskAboutBite}
           fullWidth
           style={styles.ctaButton}
         />
 
-        {/* Tips */}
         <View style={styles.tipsContainer}>
           <Text
             variant="body"
@@ -154,7 +151,7 @@ export const DiagnoseEntryScreen: React.FC = () => {
             color="textTertiary"
             style={styles.tip}
           >
-            • Take photos in good lighting
+            • Share a clear photo of the bite if you can
           </Text>
           <Text
             variant="body"
@@ -162,7 +159,7 @@ export const DiagnoseEntryScreen: React.FC = () => {
             color="textTertiary"
             style={styles.tip}
           >
-            • Keep the mushroom centered and in focus
+            • Mention when and where it happened
           </Text>
           <Text
             variant="body"
@@ -170,7 +167,7 @@ export const DiagnoseEntryScreen: React.FC = () => {
             color="textTertiary"
             style={styles.tip}
           >
-            • Include multiple angles if possible
+            • Note the bird’s size, color, or behavior
           </Text>
         </View>
       </View>

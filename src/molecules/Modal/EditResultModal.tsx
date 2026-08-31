@@ -12,7 +12,7 @@ import { ModalBackgroundSvg } from "./ModalBackgroundSvg";
 import { Card } from "../Card";
 import { useStrings } from "../../hooks/useStrings";
 import { APP_COLORS } from "../../config/colors";
-import { getDarkPopupBorderStyle } from "../../design-system/modalTokens";
+import { getDarkPopupBorderStyle, getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 
 export interface EditResultModalProps {
   visible: boolean;
@@ -206,7 +206,7 @@ export const EditResultModal: React.FC<EditResultModalProps> = ({
               variant="primary"
               size="large"
               onPress={handleSave}
-              style={styles.saveButton}
+              style={[styles.saveButton, getPopupPrimaryCtaStyle(theme)]}
             />
           </View>
         </Card>

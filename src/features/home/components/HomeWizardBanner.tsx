@@ -9,7 +9,8 @@ import { FONTS } from "../../../common/typography";
 import { useTheme } from "../../../hooks/useTheme";
 import { Radius } from "../../../design";
 
-const BANNER_BG = "#E9EFD2";
+/** Have no photos banner — rgba(222, 229, 230, 1) */
+const BANNER_BG = "#DEE5E6";
 
 type Props = {
   onPress: () => void;
@@ -50,18 +51,21 @@ export const HomeWizardBanner: React.FC<Props> = ({ onPress }) => {
 
 const styles = StyleSheet.create({
   banner: {
-    minHeight: 64,
+    height: 64,
     borderRadius: Radius.sm,
     overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    justifyContent: "flex-end",
+    paddingRight: 16,
+    paddingLeft: 72,
   },
   wizardArt: {
+    position: "absolute",
+    left: 0,
+    bottom: 0,
     width: 72,
     height: 56,
-    marginRight: 8,
   },
   copyRow: {
     flex: 1,

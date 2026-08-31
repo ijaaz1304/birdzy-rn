@@ -36,6 +36,23 @@ export { default as Banner2Svg } from "./home/images/banner/light/identify_banne
 export { default as Banner2DarkSvg } from "./home/images/banner/dark/discount_banner.png";
 
 export { IDENTIFICATION_TIP_LIGHT_IMAGES, IDENTIFICATION_TIP_LIGHT_IMAGE_LIST } from "./identificationTipImages";
+export { default as CatalogueVolumeIcon } from "./catalogue/icons/volume_high.svg";
+export { default as BirdSizeScaleGraphic } from "./collection/details/bird/size_scale.svg";
+export { default as IdentifyTabIcon } from "./common/bottomTab/identification.svg";
+export { default as HomeTabIcon } from "./common/bottomTab/home.svg";
+export { default as CatalogueTabIcon } from "./common/bottomTab/catalogue.svg";
+export { default as FeedTabIcon } from "./common/bottomTab/feed.svg";
+export { default as CollectionTabIcon } from "./common/bottomTab/collection.svg";
+export { default as ExploreHotspotIcon } from "./home/explore_hotspot.svg";
+export { default as ExplorePinIcon } from "./home/explore_pin.svg";
+export { default as SoundLibraryFilterIcon } from "./discovery/icons/filter.svg";
+export { default as SoundLibraryPlayIcon } from "./discovery/icons/play.svg";
+export { default as SoundLibraryEditIcon } from "./discovery/icons/edit.svg";
+export { default as SoundLibraryDeleteIcon } from "./discovery/icons/delete.svg";
+export { default as WizardMapPinIcon } from "./discovery/wizard/map_pin.svg";
+export { default as WizardCurrentLocationIcon } from "./discovery/wizard/current_location.svg";
+export { default as WizardClockIcon } from "./discovery/wizard/clock.svg";
+export { default as CreatePlusIcon } from "./common/icons/create_plus.svg";
 export { default as UploadIconSvg } from "./common/icons/upload.svg";
 export { default as AskAiCameraIconSvg } from "./askai/icons/camera.svg";
 export { default as AskAiSendIconSvg } from "./askai/icons/send.svg";
@@ -108,8 +125,8 @@ export const Images = {
   subscriptionBackgroundDark: require("./subscription/background/dark/subscription_bg.png"),
   subscriptionFailed: require("./catalogue/icons/species/subscription_failed.webp"),
   subscriptionFailedDark: require("./catalogue/icons/species/dark/subscription_failed.png"),
-  subscriptionDiscountBox: require("./subscription/gift_box.webp"),
-  giftBox: require("./subscription/discount/gift_box.png"),
+  subscriptionDiscountBox: require("./subscription/discount/subscription_gift_icon.png"),
+  giftBox: require("./subscription/discount/subscription_gift_icon.png"),
   subscriptionIconIdentification: require("./subscription/carousel/light/identify.webp"),
   subscriptionIconCollection: require("./subscription/carousel/light/collection.webp"),
   subscriptionIconDetails: require("./subscription/carousel/light/detail.webp"),
@@ -156,6 +173,8 @@ export const Images = {
   mushroomLocationDark: require("./catalogue/icons/species/dark/location.webp"),
   locationPost: require("./catalogue/icons/species/location_post.webp"),
   mushroomCapturePopup: require("./catalogue/icons/species/capture_popup.webp"),
+  microphonePopup: require("./common/icons/microphone.png"),
+  identifyMethodPopup: require("./common/icons/identify_option_icon.png"),
   askAiScan: require("./askai/scan.webp"),
   mushroomLocationLock: require("./catalogue/icons/species/location_lock.webp"),
   mushroomSetting: require("./catalogue/icons/species/setting.webp"),
@@ -268,7 +287,11 @@ export const Images = {
 
   mushroomGift: require("./home/species_of_day.webp"),
   mushroomGiftDark: require("./home/species_of_day.webp"),
-  homeGiftBox: require("./home/discount_sticky_banner_gift_icon.webp"),
+  homeGiftBox: require("./subscription/discount/subscription_gift_icon.png"),
+  homeDiscountStickyNest: require("./home/discount_sticky_banner_nest.png"),
+  homeDiscountBannerBird: require("./home/discount_banner_bird.png"),
+  /** Figma 8975:41033 — full light banner (gradient + bird), 335×160 */
+  homeDiscountBannerLight: require("./home/images/banner/light/discount_banner_figma.png"),
 
   trashLight: require("./catalogue/icons/species/trash.webp"),
   trashDark: require("./catalogue/icons/species/dark/trash.webp"),
@@ -280,8 +303,14 @@ export const Images = {
   tabBatch: require("./collection/details/overview.png"),
   card_image_placeholder: require("./collection/details/card_image_placeholder.webp"),
 
-  goPro: require("./home/go_pro.webp"),
-  goProDark: require("./home/dark/go_pro.png"),
+  goPro: require("./home/go_pro_home.png"),
+  goProDark: require("./home/go_pro_home.png"),
+  youArePro: require("./home/you_are_pro.png"),
+  fullSubsBanner: require("./home/images/banner/light/full_subs_banner.png"),
+  recordingLimitReachedBanner: require("./home/popup/recording_limit_reached_banner.png"),
+  splashBird: require("./branding/splash/splash_bird.png"),
+  noSound: require("./catalogue/icons/no_sound.png"),
+  soundLibraryEmptyBird: require("./discovery/sound_library_empty_bird.png"),
   /** Shared full-screen background — subs, feed, post-auth onboarding, Ask AI, Find Your Bird */
   commonBg: require("./home/common_bg.webp"),
 
@@ -371,7 +400,10 @@ export const Images = {
   iconSave: require("./common/iconfix/save.webp"),
   iconMove: require("./common/iconfix/move.webp"),
   soundPlay: require("./common/iconfix/sound/play.webp"),
-  soundPause: require("./common/iconfix/sound/pause.webp"),
+  soundSpectrogram: require("./camera/sound/spectrogram.png"),
+  soundListeningSpinner: require("./camera/sound/listening_spinner.png"),
+  soundIdentifyHero: require("./camera/sound/identify_by_sound_hero.png"),
+  soundPause: require("./common/icons/pause_sound.png"),
   soundRecord: require("./common/iconfix/sound/record.webp"),
   soundRecordStop: require("./common/iconfix/sound/record_stop.webp"),
   soundVolumeHigh: require("./common/iconfix/sound/volume_high.webp"),
@@ -397,7 +429,7 @@ export const Images = {
   mushroomGoPro: require("./collection/details/mushroom/go_pro.webp"),
   mushroomSubsToPremium: require("./collection/details/mushroom/subs_to_premium.webp"),
   mushroomBlurredLocation: require("./collection/details/mushroom/blurred_location.webp"),
-  mushroomToday: require("./home/today_mushroom.webp"),
+  mushroomToday: require("./home/popup/mushroom/light/bird_of_the_day_popup.webp"),
   mushroomTodayDark: require("./home/popup/mushroom/dark/mushroom_of_the_day_header.webp"),
   mushroomOfTheDayPopupBg: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
   mushroomOfTheDayPopupBgDark: require("./home/popup/mushroom/dark/mushroom_of_the_day.webp"),
@@ -411,10 +443,12 @@ export const Images = {
   homeMushroomOfDayDark: require("./home/dark/species_of_day.png"),
   homeIdentifyBanner: require("./home/images/banner/light/identify_banner.webp"),
   homeIdentifyBannerDark: require("./home/images/banner/dark/identify_banner.png"),
-  homeIdentifyBySound: require("./home/bird_sound_home.webp"),
-  homeIdentifyByPhoto: require("./home/identify_by_photo_home.webp"),
-  homeWizardBanner: require("./home/wizard_banner.webp"),
+  homeIdentifyBySound: require("./home/identify_by_sound_inner.png"),
+  homeIdentifyByPhoto: require("./home/identify_by_photo_inner.png"),
+  homeWizardBanner: require("./home/wizard_banner.png"),
+  wizardFindYourBird: require("./discovery/wizard/find_your_bird.png"),
   homeExploreNearYouMap: require("./home/explore_near_you_map.png"),
+  homeExploreNearYouBanner: require("./home/explore_near_you_banner.png"),
   homeBirdOfDayCard: require("./home/bird_of_the_day_home.webp"),
   homeAskAiCardIcon: require("./home/ask_ai_home.webp"),
   homeBirdSoundLibrary: require("./home/bird_sound_home.webp"),

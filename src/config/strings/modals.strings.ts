@@ -26,6 +26,24 @@ export const MODAL_STRINGS = {
       deniedSubtitle:
         "Camera access was previously turned off. Open Settings to enable the camera for bird identification.",
     },
+    microphonePermission: {
+      title: "Enable Microphone Access",
+      subtitle:
+        "Turn on microphone access to record bird sound and help AI identify nearby species.",
+      enableButton: "Allow",
+      notNowButton: "Not Now",
+      openSettings: "Open Settings",
+      deniedTitle: "Manage Microphone Access",
+      deniedSubtitle:
+        "Microphone access was previously turned off. Open Settings to enable the microphone for bird sound identification.",
+    },
+    chooseMethod: {
+      title: "Choose a Method",
+      subtitle: "Select how you'd like to identify the bird.",
+      sound: "Identify by Sound",
+      photo: "Identify by Photo",
+      stepByStep: "Step-by-step Identify",
+    },
     locationManageAccess: {
       title: "Manage Location Access",
       subtitle:

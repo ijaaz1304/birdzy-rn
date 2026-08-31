@@ -143,7 +143,7 @@ export const IconPopupModal: React.FC<
               <TouchableOpacity
                 style={[
                   styles.primaryButton,
-                  { backgroundColor: colors.primary, borderRadius: radius.xl },
+                  { backgroundColor: colors.primaryCTA, borderRadius: radius.xl },
                   (primaryAction.disabled || primaryAction.loading) && {
                     opacity: 0.75,
                   },

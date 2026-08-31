@@ -75,14 +75,18 @@ export function useIdentifyImagePipeline(params: {
 
   const submitProcessed = useCallback(
     async (
-      image: CroppedImageObject,
+      images: CroppedImageObject | CroppedImageObject[],
       options?: { returnImageToAskAI?: boolean }
     ) => {
+      const list = Array.isArray(images) ? images : [images];
+      const primary = list[0];
+      if (!primary) return;
+
       setIsProcessing(true);
       try {
         if (options?.returnImageToAskAI) {
           await submitProcessedImageForIdentify({
-            image,
+            image: primary,
             navigation,
             isPremium,
             onLimitReached,
@@ -92,8 +96,9 @@ export function useIdentifyImagePipeline(params: {
         }
 
         await submitProcessedImageForIdentify({
-          image,
-          displayImage: image,
+          image: primary,
+          extraImages: list.slice(1),
+          displayImage: primary,
           navigation,
           isPremium,
           onLimitReached,

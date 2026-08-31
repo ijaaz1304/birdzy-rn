@@ -77,6 +77,7 @@ export function birdListItemToMushroomListItem(
     isIdentified: bird.isIdentified,
     isWishlisted: bird.isWishlisted,
     isOwned: bird.isOwned,
+    soundUrls: bird.soundUrls,
   } as MushroomListItem;
 }
 
@@ -91,6 +92,18 @@ export function normalizeMushroomDetail(
 ): MushroomDetail {
   const bird = normalizeBirdDetail(raw);
   const habitat = bird.habitat ?? [];
+  const fromSimilar =
+    bird.similarBirds?.map((item) => ({
+      speciesId: item.speciesId,
+      scientificName: item.scientificName ?? "",
+      commonNames: item.commonName ? [item.commonName] : [],
+      keyDifferences: item.keyDifferences,
+      imageUrls: item.imageUrls,
+      similarityScore: item.similarityScore,
+    })) ?? [];
+  const fromLookAlikes = Array.isArray(raw.lookAlikes)
+    ? (raw.lookAlikes as MushroomDetail["lookAlikes"])
+    : [];
   return {
     ...bird,
     _id: bird._id ?? bird.archetypeId,
@@ -99,6 +112,7 @@ export function normalizeMushroomDetail(
     geographicDistribution: habitat,
     birdsLifeId: bird.birdsLifeId,
     distributionHotspots: habitat,
+    lookAlikes: fromSimilar.length ? fromSimilar : fromLookAlikes,
   } as unknown as MushroomDetail;
 }
 

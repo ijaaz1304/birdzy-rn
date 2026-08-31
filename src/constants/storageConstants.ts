@@ -28,6 +28,8 @@ export const SCREEN_STORAGE_KEYS = {
   CAMERA_PERMISSION_ATTEMPT_COUNT: "cameraPermissionAttemptCount",
   /** Location permission native-dialog denial count */
   LOCATION_PERMISSION_DENIAL_COUNT: "locationPermissionDenialCount",
+  /** Native notification dialog already shown (Allow or Don't Allow) */
+  NOTIFICATION_PERMISSION_PROMPTED: "notificationPermissionPrompted",
 } as const;
 
 /** Session and analytics tracking */

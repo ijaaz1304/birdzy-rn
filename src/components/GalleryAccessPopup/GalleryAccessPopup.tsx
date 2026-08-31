@@ -104,7 +104,7 @@ export const GalleryAccessPopup: React.FC<GalleryAccessPopupProps> = ({
             style={[
               styles.primaryBtn,
               {
-                backgroundColor: theme.colors.primary,
+                backgroundColor: theme.colors.primaryCTA,
                 borderRadius: theme.radius.lg,
               },
             ]}

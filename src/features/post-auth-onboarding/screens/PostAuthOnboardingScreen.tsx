@@ -1,5 +1,6 @@
 /**
  * Post-auth onboarding: location → notifications → subscription → surprise → 50% offer.
+ * Skips permission slides when already granted/blocked; premium skips subscription promos.
  * Five slides advanced only via CTAs (no swipe paging).
  */
 
@@ -27,10 +28,10 @@ import {
 } from "../../../constants/legalUrls";
 import { RootStackParamList } from "../../../navigation/types";
 import { requestNotificationPermission } from "../../../services/permissions/permission.service";
+import { markNotificationPermissionPrompted } from "../../../services/permissions/permissionPromptSkip";
 import { checkLocationPermission } from "../../../services/permissions";
 import {
   requestNativeLocationPermission,
-  getLocationPermissionEntryAction,
 } from "../../../services/permissions/locationPermissionFlow.service";
 import { useIdentificationLocation } from "../../camera/useIdentificationLocation";
 import { usePushNotifications } from "../../../hooks/usePushNotifications";
@@ -72,6 +73,11 @@ import {
   useSubscriptionStore,
   selectIsPremium,
 } from "../../subscription/subscription.store";
+import {
+  isPostAuthPromoSlide,
+  shouldSkipPostAuthPromoSlides,
+} from "../utils/skipPromoSlides";
+import { resolvePostAuthOnboardingSlide } from "../utils/postAuthSlideResolution";
 
 type NavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -88,6 +94,14 @@ function pickDefaultYearlyPlanId(
 export const PostAuthOnboardingScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const token = useAuthStore((s) => s.token);
+  const userIsSubscribed = useAuthStore((s) => s.user?.isSubscribed === true);
+  const isPremium = useSubscriptionStore(selectIsPremium);
+  const syncFromAuthStore = useSubscriptionStore((s) => s.syncFromAuthStore);
+  const skipPromoSlides = shouldSkipPostAuthPromoSlides(
+    isPremium,
+    userIsSubscribed
+  );
+  const purchasedThisSessionRef = useRef(false);
   const { registerDevice } = usePushNotifications();
   const isDark = usePostAuthOnboardingIsDark();
   const { width: windowWidth } = useWindowDimensions();
@@ -112,6 +126,8 @@ export const PostAuthOnboardingScreen: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState<number>(
     POST_AUTH_ONBOARDING_STEPS.LOCATION
   );
+  const currentSlideRef = useRef(currentSlide);
+  currentSlideRef.current = currentSlide;
   const hasRestoredSlideRef = useRef(false);
   const [locationAllowLoading, setLocationAllowLoading] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<PlanId | null>(null);
@@ -145,6 +161,10 @@ export const PostAuthOnboardingScreen: React.FC = () => {
   );
 
   const isDiscountSlide = currentSlide === POST_AUTH_ONBOARDING_STEPS.DISCOUNT;
+
+  useEffect(() => {
+    syncFromAuthStore();
+  }, [syncFromAuthStore]);
 
   useEffect(() => {
     if (
@@ -219,22 +239,45 @@ export const PostAuthOnboardingScreen: React.FC = () => {
     [persistCurrentSlide]
   );
 
+  const applyResolvedSlide = useCallback(
+    async (startSlide: number) => {
+      const resolved = await resolvePostAuthOnboardingSlide(
+        startSlide,
+        skipPromoSlides
+      );
+      if (resolved.kind === "complete") {
+        finishToMainApp();
+        return;
+      }
+      // Don't pull the user back after Don't Allow / Continue already advanced.
+      if (resolved.slide < currentSlideRef.current) {
+        return;
+      }
+      if (resolved.slide !== startSlide) {
+        goToSlide(resolved.slide, false);
+      } else if (resolved.slide !== currentSlideRef.current) {
+        setCurrentSlide(resolved.slide);
+      }
+    },
+    [finishToMainApp, goToSlide, skipPromoSlides]
+  );
+
   useEffect(() => {
-    if (currentSlide !== POST_AUTH_ONBOARDING_STEPS.LOCATION) return;
+    if (
+      currentSlide !== POST_AUTH_ONBOARDING_STEPS.LOCATION &&
+      currentSlide !== POST_AUTH_ONBOARDING_STEPS.NOTIFICATIONS
+    ) {
+      return;
+    }
     let mounted = true;
     void (async () => {
-      const entry = await getLocationPermissionEntryAction();
+      await applyResolvedSlide(currentSlide);
       if (!mounted) return;
-      // Skip location when already granted, or when OS blocked / 2+ denials
-      // (no "Manage Location Access" screen in post-auth onboarding).
-      if (entry === "granted" || entry === "manage_settings") {
-        goToSlide(POST_AUTH_ONBOARDING_STEPS.NOTIFICATIONS);
-      }
     })();
     return () => {
       mounted = false;
     };
-  }, [currentSlide, goToSlide]);
+  }, [applyResolvedSlide, currentSlide]);
 
   useEffect(() => {
     if (!postAuthHydrated || hasRestoredSlideRef.current) return;
@@ -243,8 +286,15 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       0,
       Math.min(persistedSlide, POST_AUTH_ONBOARDING_SLIDE_COUNT - 1)
     );
-    setCurrentSlide(slide);
-  }, [postAuthHydrated, persistedSlide]);
+    void applyResolvedSlide(slide);
+  }, [applyResolvedSlide, persistedSlide, postAuthHydrated]);
+
+  useEffect(() => {
+    if (!skipPromoSlides || purchasedThisSessionRef.current) return;
+    if (showWelcomeModal) return;
+    if (!isPostAuthPromoSlide(currentSlide)) return;
+    finishToMainApp();
+  }, [currentSlide, finishToMainApp, showWelcomeModal, skipPromoSlides]);
 
   const openLegal = useCallback((url: string, title: string) => {
     setLegalModal({ url, title });
@@ -268,6 +318,9 @@ export const PostAuthOnboardingScreen: React.FC = () => {
 
   const handleRestore = useCallback(async () => {
     const synced = await restorePurchases();
+    if (synced) {
+      purchasedThisSessionRef.current = true;
+    }
     if (synced && showWelcomeIfPurchaseSucceeded()) {
       return;
     }
@@ -289,6 +342,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         source: "post_auth_cta",
       });
       await purchasePlan(effectiveSelectedPlanId);
+      purchasedThisSessionRef.current = true;
       if (!showWelcomeIfPurchaseSucceeded()) {
         finishToMainApp();
       }
@@ -326,8 +380,13 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       analyticsService.logEvent(EVENTS.notification_permission_dismissed);
       analyticsService.logEvent(EVENTS.native_permission_closed);
     }
+    await markNotificationPermissionPrompted();
+    if (skipPromoSlides) {
+      finishToMainApp();
+      return;
+    }
     goToSlide(POST_AUTH_ONBOARDING_STEPS.SUBSCRIPTION);
-  }, [goToSlide, registerDevice, token]);
+  }, [finishToMainApp, goToSlide, registerDevice, skipPromoSlides, token]);
 
   const handleLocationContinue = useCallback(async () => {
     if (locationAllowLoading) return;
@@ -348,8 +407,8 @@ export const PostAuthOnboardingScreen: React.FC = () => {
     } finally {
       setLocationAllowLoading(false);
     }
-    goToSlide(POST_AUTH_ONBOARDING_STEPS.NOTIFICATIONS);
-  }, [goToSlide, locationAllowLoading, syncPermission]);
+    void applyResolvedSlide(POST_AUTH_ONBOARDING_STEPS.NOTIFICATIONS);
+  }, [applyResolvedSlide, locationAllowLoading, syncPermission]);
 
   const renderSkip = (onPress: () => void) => (
     <TouchableOpacity

@@ -13,7 +13,6 @@ import React, {
 import { InteractionManager, Platform, Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, AppState, AppStateStatus } from "react-native";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -26,11 +25,11 @@ import {
 } from "../../../navigation/types";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { AppText, AppOtherAppCard } from "../../../components/shared";
+import { CloseIcon } from "../../../components/shared/CloseIcon";
 import { Avatar } from "../../../atoms";
 import { Images } from "../../../assets";
 import DiscountBanner from "../../../components/customui/DiscountBanner";
 import DiscountCountdownBanner from "../../../components/customui/DiscountCountdownBanner";
-import LinearGradient from "react-native-linear-gradient";
 import {
   HomeIdentifyCardsSection,
   HomeWizardBanner,
@@ -85,6 +84,8 @@ import { useStrings } from "../../../hooks/useStrings";
 // Weather permissions removed - not needed for rocks/minerals app
 import { archetypeService } from "../../../services/archetype/archetype.service";
 import { getDisplayName } from "../../../utils/mushroomDisplayUtils";
+import { resolveMushroomImageUrlsForDisplay } from "../../../utils/mushroomCardUtils";
+import { sanitizeBirdImageUrl } from "../../../utils/birdApiMappers";
 import { useAuthStore } from "../../auth/auth.store";
 import { isIapPipelineBusy } from "../../subscription/hooks/useIapPurchase";
 import { hasPendingMarketingDeepLink } from "../../../navigation/deepLinking/deepLinkManager";
@@ -103,7 +104,6 @@ import { usePublishedAppsStore } from "../publishedApps.store";
 import { filterPublishedAppsForCrossPromo } from "../publishedAppsFilter";
 import { getRandomizedCatalogueListing } from "../../../utils/catalogueUtils";
 import {
-  useTooltipVisibility,
   useRunAfterTooltipComplete,
 } from "../../../contexts/TooltipVisibilityContext";
 import { isTooltipPending } from "../../../components/AppLogsTooltip/AppLogsTooltip";
@@ -138,7 +138,8 @@ const getHomeDisplayName = (rawName?: string): string => {
 export const HomeScreen = () => {
   const rootNavigation = useNavigation<RootNavigationProp>();
   const homeStackNavigation = useNavigation<HomeStackNavigationProp>();
-  const { startIdentificationEntry } = useIdentificationEntry();
+  const { startIdentificationEntry, startSoundIdentificationEntry } =
+    useIdentificationEntry();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const colors = theme.colors;
@@ -252,7 +253,6 @@ export const HomeScreen = () => {
   const [showDiscountBanner, setShowDiscountBanner] = useState(true);
   const [showInlineDiscountBanner, setShowInlineDiscountBanner] =
     useState(true);
-  const tooltipVisible = useTooltipVisibility();
   const registerRunAfterTooltipComplete = useRunAfterTooltipComplete();
   const discountOffer = useDiscountOfferCountdown();
   const countdown = {
@@ -302,22 +302,36 @@ export const HomeScreen = () => {
 
   // Build rock-of-the-day object from a specimen (optional price if API provides it)
   const buildMushroomOfTheDayFromSpecimen = useCallback(
-    (specimen: any) => ({
-      id: specimen?.archetypeId ?? "default",
-      name:
-        getDisplayName(specimen) ||
-        strings.home.birdOfTheDay.featuredBird,
-      scientificName:
-        specimen?.scientificName ||
-        strings.home.birdOfTheDay.birdSpecimen,
-      image: specimen?.imageUrls?.[0] ||
-        Images.mineralSample || { uri: PLACEHOLDERS.PICSUM_URI },
-      imageUrls: specimen?.imageUrls?.length ? specimen.imageUrls : undefined,
-      description:
-        specimen?.detailedDescription ||
-        strings.home.birdOfTheDay.discoverDescription,
-      price: (specimen as any)?.price ?? undefined,
-    }),
+    (specimen: any) => {
+      const resolvedUrls = resolveMushroomImageUrlsForDisplay(
+        specimen?.canonicalName ?? specimen?.scientificName,
+        specimen?.imageUrls,
+        specimen?.scientificName
+      );
+      const defaultUrl = sanitizeBirdImageUrl(specimen?.defaultImageUrl);
+      const imageUrl = resolvedUrls[0] ?? defaultUrl;
+
+      return {
+        id: specimen?.archetypeId ?? "default",
+        name:
+          getDisplayName(specimen) ||
+          strings.home.birdOfTheDay.featuredBird,
+        scientificName:
+          specimen?.scientificName ||
+          strings.home.birdOfTheDay.birdSpecimen,
+        image: imageUrl,
+        imageUrls:
+          resolvedUrls.length > 0
+            ? resolvedUrls
+            : defaultUrl
+              ? [defaultUrl]
+              : undefined,
+        description:
+          specimen?.detailedDescription ||
+          strings.home.birdOfTheDay.discoverDescription,
+        price: (specimen as any)?.price ?? undefined,
+      };
+    },
     [strings]
   );
 
@@ -328,8 +342,11 @@ export const HomeScreen = () => {
       const built = buildMushroomOfTheDayFromSpecimen(specimen);
       setMushroomOfTheDay(built);
       const imageUrl =
-        specimen?.imageUrls?.[0] ??
-        (typeof built.image === "string" ? built.image : built.image?.uri);
+        typeof built.image === "string"
+          ? built.image
+          : built.image && typeof built.image === "object" && "uri" in built.image
+            ? built.image.uri
+            : specimen?.imageUrls?.[0];
       prefetchRemoteImages([imageUrl], 1);
       void prefetchRemoteImage(imageUrl);
     },
@@ -599,14 +616,10 @@ export const HomeScreen = () => {
     user?.name || user?.firstName || "Guest"
   );
 
-  const stickyDiscountBannerVisible =
-    !isPremium &&
-    showDiscountBanner &&
-    !tooltipVisible &&
-    discountOffer.remainingMs > 0;
+  const stickyDiscountBannerVisible = !isPremium && showDiscountBanner;
 
   const stickyDiscountScrollPadding = stickyDiscountBannerVisible
-    ? STICKY_DISCOUNT_BANNER_HEIGHT + STICKY_DISCOUNT_BANNER_GAP
+    ? 8
     : HOME_SCROLL_BOTTOM_PADDING;
 
   const handleOpenMushroomOfDay = useCallback(async () => {
@@ -656,12 +669,16 @@ export const HomeScreen = () => {
       ]}
       edges={["top"]}
     >
+      <View style={styles.homeBody}>
       <ScrollView
+        style={styles.homeScroll}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingBottom: stickyDiscountScrollPadding,
+          width: "100%",
+          alignItems: "stretch",
         }}
         refreshControl={
           <RefreshControl
@@ -726,18 +743,12 @@ export const HomeScreen = () => {
           </View>
           <View style={[screenStyles.headerRight, styles.headerRightActions]}>
             {isPremium ? (
-              <View style={styles.proBadgeOuter}>
-                <LinearGradient
-                  colors={["#41EDE9", "#219699", "#0F7A81", "#9E70B6"]}
-                  start={{ x: 0.1, y: 0 }}
-                  end={{ x: 0.95, y: 1 }}
-                  style={styles.proBadgeGradient}
-                >
-                  <AppText variant="body14" style={styles.proBadgeText}>
-                    {strings.home.header.proBadge}
-                  </AppText>
-                  <MaterialIcons name="workspace-premium" size={18} color="#FFFFFF" />
-                </LinearGradient>
+              <View style={styles.youAreProWrap} pointerEvents="none">
+                <AppImage
+                  source={Images.youArePro}
+                  style={styles.youAreProImage}
+                  resizeMode="contain"
+                />
               </View>
             ) : (
               <TouchableOpacity
@@ -787,10 +798,7 @@ export const HomeScreen = () => {
         <View style={[styles.sectionBlock, styles.identifyBannerSection]}>
           <HomeIdentifyCardsSection
             onSoundPress={() => {
-              rootNavigation.navigate("MainTabs", {
-                screen: "Camera",
-                params: { screen: "SoundIdentify" },
-              });
+              startSoundIdentificationEntry();
             }}
             onPhotoPress={() => {
               analyticsService.logEvent(EVENTS.identify_banner);
@@ -802,10 +810,66 @@ export const HomeScreen = () => {
         <View style={styles.sectionBlock}>
           <HomeWizardBanner
             onPress={() => {
-              homeStackNavigation.navigate("StepByStep");
+              homeStackNavigation.navigate("StepByStep", { startFresh: true });
             }}
           />
         </View>
+
+        {!isPremium && showInlineDiscountBanner && (
+          <View style={[styles.sectionBlock, styles.discountBannerSection]}>
+            {discountOffer.isActive ? (
+              <DiscountBanner
+                dynamicHeight
+                discountPercent={DISCOUNT.DEFAULT_PERCENTAGE}
+                hours={countdown.hours}
+                minutes={countdown.minutes}
+                seconds={countdown.seconds}
+                timerRunning
+                isDiscountActive
+                onClose={() => setShowInlineDiscountBanner(false)}
+                onSubscribe={() => {
+                  analyticsService.logEvent(EVENTS.subs_discount_banner);
+                  rootNavigation.navigate("SubscriptionStack", {
+                    screen: "SubscriptionMain",
+                    params: {
+                      openPlanModal: true,
+                      discount50: discountOffer.isActive,
+                    },
+                  });
+                }}
+              />
+            ) : (
+              <View style={styles.fullSubsWrap}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => {
+                    analyticsService.logEvent(EVENTS.subs_discount_banner);
+                    rootNavigation.navigate("SubscriptionStack", {
+                      screen: "SubscriptionMain",
+                      params: {
+                        openPlanModal: true,
+                        discount50: false,
+                      },
+                    });
+                  }}
+                >
+                  <AppImage
+                    source={Images.fullSubsBanner}
+                    style={styles.fullSubsBanner}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.fullSubsClose}
+                  onPress={() => setShowInlineDiscountBanner(false)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <CloseIcon isDark={isDark} style={styles.fullSubsCloseIcon} />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
 
         <View style={styles.sectionBlock}>
           <HomeExploreNearYouSection
@@ -838,35 +902,6 @@ export const HomeScreen = () => {
             }}
           />
         </View>
-
-        {!isPremium &&
-        showInlineDiscountBanner &&
-        discountOffer.isActive &&
-        discountOffer.remainingMs > 0 && (
-          <View style={[styles.sectionBlock, styles.discountBannerSection]}>
-            <DiscountBanner
-              dynamicHeight
-              horizontalMargin={HORIZONTAL_MARGIN}
-              discountPercent={DISCOUNT.DEFAULT_PERCENTAGE}
-              hours={countdown.hours}
-              minutes={countdown.minutes}
-              seconds={countdown.seconds}
-              timerRunning={discountOffer.isActive}
-              isDiscountActive={discountOffer.isActive}
-              onClose={() => setShowInlineDiscountBanner(false)}
-              onSubscribe={() => {
-                analyticsService.logEvent(EVENTS.subs_discount_banner);
-                rootNavigation.navigate("SubscriptionStack", {
-                  screen: "SubscriptionMain",
-                  params: {
-                    openPlanModal: true,
-                    discount50: discountOffer.isActive,
-                  },
-                });
-              }}
-            />
-          </View>
-        )}
 
         <View style={styles.sectionBlock}>
           <HomeMushroomCornerSection
@@ -940,28 +975,13 @@ export const HomeScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Sticky countdown — visible both when discount is active (ends in) and when waiting for next discount (in) */}
-      {!isPremium &&
-        showDiscountBanner &&
-        !tooltipVisible &&
-        discountOffer.remainingMs > 0 && (
-          <View
-            style={[
-              styles.stickyDiscountBanner,
-              {
-                bottom: -STICKY_DISCOUNT_BANNER_BOTTOM_NUDGE,
-                paddingBottom: Math.max(insets.bottom, 4),
-                paddingTop: 0,
-                backgroundColor: "transparent",
-                zIndex: 10,
-              },
-            ]}
-          >
+      {!isPremium && showDiscountBanner ? (
+          <View style={styles.stickyDiscountBanner}>
             <DiscountCountdownBanner
               hours={countdown.hours}
               minutes={countdown.minutes}
               seconds={countdown.seconds}
-              isDiscountActive={discountOffer.isActive}
+              isDiscountActive
               onClose={async () => {
                 const sessionCount = await getSessionCount();
                 markDiscountBannerClosed(sessionCount);
@@ -978,9 +998,8 @@ export const HomeScreen = () => {
               }}
             />
           </View>
-        )}
-
-      {/* Bottom Navigation */}
+        ) : null}
+      </View>
 
       {/* Mushroom of the Day Modal: View details + Refresh (premium cycles; free shows upgrade). */}
       <MushroomOfTheDayModal
@@ -989,7 +1008,7 @@ export const HomeScreen = () => {
         mushroomName={mushroomOfTheDay?.name || ""}
         scientificName={mushroomOfTheDay?.scientificName}
         price={mushroomOfTheDay?.price}
-        mushroomImage={mushroomOfTheDay?.image || ""}
+        mushroomImage={mushroomOfTheDay?.image}
         showRefreshButton={true}
         isPremium={isPremium}
         isRefreshing={loadingMushroomOfTheDay}
@@ -1067,13 +1086,14 @@ const HORIZONTAL_MARGIN = 20;
 const SECTION_GAP = 24;
 /** Breathing room below last home section (tab bar already occupies bottom inset). */
 const HOME_SCROLL_BOTTOM_PADDING = 2;
-/** Sticky discount banner content height (pill + gift icon overflow) */
-const STICKY_DISCOUNT_BANNER_HEIGHT = 122;
-const STICKY_DISCOUNT_BANNER_GAP = 26;
-/** Nudge sticky banner toward the tab bar */
-const STICKY_DISCOUNT_BANNER_BOTTOM_NUDGE = 10;
 
 const styles = StyleSheet.create({
+  homeBody: {
+    flex: 1,
+  },
+  homeScroll: {
+    flex: 1,
+  },
   headerRightActions: {
     gap: 4,
   },
@@ -1088,25 +1108,43 @@ const styles = StyleSheet.create({
     width: HOME_LAYOUT.GO_PRO_IMAGE_WIDTH,
     height: HOME_LAYOUT.GO_PRO_IMAGE_HEIGHT,
   },
-  proBadgeOuter: {
-    borderWidth: 1.5,
-    borderColor: "#01474F",
-    borderRadius: 360,
-    padding: 4,
-  },
-  proBadgeGradient: {
-    flexDirection: "row",
+  youAreProWrap: {
+    width: HOME_LAYOUT.YOU_ARE_PRO_IMAGE_WIDTH,
+    height: HOME_LAYOUT.YOU_ARE_PRO_IMAGE_HEIGHT,
+    justifyContent: "center",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 24,
-    minHeight: 32,
   },
-  proBadgeText: {
-    fontFamily: FONTS.medium,
-    color: "#FFFFFF",
-    lineHeight: 20,
+  youAreProImage: {
+    width: HOME_LAYOUT.YOU_ARE_PRO_IMAGE_WIDTH,
+    height: HOME_LAYOUT.YOU_ARE_PRO_IMAGE_HEIGHT,
+  },
+  fullSubsWrap: {
+    width: "100%",
+    alignSelf: "stretch",
+    borderRadius: 20,
+    overflow: "visible",
+  },
+  fullSubsBanner: {
+    width: "100%",
+    alignSelf: "stretch",
+    aspectRatio:
+      HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH /
+      HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_HEIGHT,
+    borderRadius: 20,
+  },
+  fullSubsClose: {
+    position: "absolute",
+    top: -12,
+    right: -8,
+    zIndex: 2,
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fullSubsCloseIcon: {
+    width: 24,
+    height: 24,
   },
   avatarWithCoverTouchable: {
     alignSelf: "flex-start",
@@ -1137,6 +1175,8 @@ const styles = StyleSheet.create({
     height: 32,
   },
   sectionBlock: {
+    width: "100%",
+    alignSelf: "stretch",
     paddingHorizontal: HORIZONTAL_MARGIN,
     marginTop: SECTION_GAP,
   },
@@ -1144,8 +1184,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   discountBannerSection: {
+    width: "100%",
+    alignSelf: "stretch",
     overflow: "visible",
-    paddingTop: 16,
+    paddingHorizontal: HORIZONTAL_MARGIN,
+    paddingTop: 8,
     marginTop: SECTION_GAP,
   },
   sectionHeading: {
@@ -1153,10 +1196,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   stickyDiscountBanner: {
-    position: "absolute",
-    left: "5%",
-    right: "5%",
-    alignItems: "center",
+    width: "100%",
+    alignSelf: "stretch",
+    paddingHorizontal: HORIZONTAL_MARGIN,
+    paddingBottom: 6,
+    paddingTop: 14,
+    zIndex: 30,
+    elevation: 30,
+    overflow: "visible",
   },
   premiumBadge: {
     paddingHorizontal: 10,

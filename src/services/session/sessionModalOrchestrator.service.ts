@@ -177,7 +177,7 @@ export const getSubscriptionDiscountPercentage = async (): Promise<number> => {
 export const shouldShowNotificationModal = async (): Promise<boolean> => {
   try {
     const permissionResult = await checkNotificationPermission();
-    if (permissionResult.granted) {
+    if (permissionResult.granted || permissionResult.blocked) {
       return false;
     }
 
@@ -434,7 +434,7 @@ export const markMushroomOfTheDayPopupShown = async (): Promise<void> => {
 export const shouldShowLocationModal = async (): Promise<boolean> => {
   try {
     const permissionResult = await checkLocationPermission();
-    if (permissionResult.granted) {
+    if (permissionResult.granted || permissionResult.blocked) {
       return false;
     }
 

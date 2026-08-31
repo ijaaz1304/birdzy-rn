@@ -13,7 +13,7 @@ import { Radius } from "../design";
 import { spacing } from "../design-system/spacing";
 
 import {
-  searchMushroomsHybrid,
+  searchBirdsHybrid,
   getSearchSuggestionLabel,
   getSearchSuggestionSubtitle,
   type SearchDataItem,
@@ -38,7 +38,7 @@ export const SearchSuggestions = React.memo<SearchSuggestionsProps>(
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         debounceRef.current = null;
-        const results = searchMushroomsHybrid(query.trim(), 15);
+        const results = searchBirdsHybrid(query.trim(), 15);
         setSuggestions(Array.isArray(results) ? results : []);
       }, DEBOUNCE_MS);
       return () => {

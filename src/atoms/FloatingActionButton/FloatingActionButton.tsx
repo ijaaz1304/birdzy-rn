@@ -5,6 +5,8 @@
 
 import React from "react";
 import { TouchableOpacity, TouchableOpacityProps, StyleSheet, ViewStyle } from "react-native";
+import { CreatePlusIcon } from "../../assets";
+import { FONTS } from "../../common/typography";
 import { useTheme } from "../../hooks/useTheme";
 import { FEED_COLORS, UI_COLORS } from "../../constants/colorConstants";
 import { Icon } from "../Icon";
@@ -35,6 +37,17 @@ const SIZE_MAP = {
   large: { icon: 26, padding: 20, fontSize: 16, height: 52 },
 } as const;
 
+/** Figma 8035:46238 — Create chip */
+const FEED_CREATE = {
+  icon: 24,
+  fontSize: 16,
+  lineHeight: 24,
+  paddingHorizontal: 16,
+  paddingVertical: 10,
+  gap: 8,
+  height: 44,
+} as const;
+
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   icon,
   label,
@@ -53,6 +66,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 }) => {
   const theme = useTheme();
   const { icon: iconSize, padding, fontSize, height } = SIZE_MAP[size];
+  const isFeedCreate = variant === "feed";
 
   const getColors = () => {
     if (backgroundColor) {
@@ -72,8 +86,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           backgroundColor: isDark
             ? FEED_COLORS.FAB.DARK.BACKGROUND
             : FEED_COLORS.FAB.LIGHT.BACKGROUND,
-          borderColor: isDark ? FEED_COLORS.FAB.DARK.BORDER : undefined,
-          borderWidth: isDark ? 1 : 0,
+          borderColor: undefined as string | undefined,
+          borderWidth: 0,
           iconColor:
             iconColor ||
             (isDark
@@ -137,7 +151,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       position: "absolute",
       // Stay above full-screen siblings (e.g. Feed content layer with zIndex: 1).
       zIndex: 10,
-      elevation: 8,
+      elevation: isFeedCreate ? 0 : 8,
     };
 
     switch (position) {
@@ -174,6 +188,9 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     }
   };
 
+  const resolvedIconSize = isFeedCreate ? FEED_CREATE.icon : iconSize;
+  const resolvedFontSize = isFeedCreate ? FEED_CREATE.fontSize : fontSize;
+
   return (
     <TouchableOpacity
       onPress={props.onPress}
@@ -181,33 +198,61 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       disabled={props.disabled}
       style={[
         styles.fab,
+        isFeedCreate && styles.fabFeed,
         {
           backgroundColor: bgColor,
           borderColor,
           borderWidth,
-          paddingHorizontal: label ? 16 : padding,
-          paddingVertical: label ? 0 : padding,
-          height: label ? height : undefined,
-          minHeight: label ? height : undefined,
+          paddingHorizontal: isFeedCreate
+            ? FEED_CREATE.paddingHorizontal
+            : label
+              ? 16
+              : padding,
+          paddingVertical: isFeedCreate
+            ? FEED_CREATE.paddingVertical
+            : label
+              ? 0
+              : padding,
+          height: isFeedCreate
+            ? FEED_CREATE.height
+            : label
+              ? height
+              : undefined,
+          minHeight: isFeedCreate
+            ? FEED_CREATE.height
+            : label
+              ? height
+              : undefined,
           borderRadius: feedBorderRadius,
+          gap: isFeedCreate && icon && label ? FEED_CREATE.gap : 0,
           ...getPositionStyle(),
         },
         style,
       ]}
       {...props}
     >
-      {icon && <Icon name={icon} size={iconSize} color={finalIconColor} />}
+      {icon === "plus" && isFeedCreate ? (
+        <CreatePlusIcon
+          width={resolvedIconSize}
+          height={resolvedIconSize}
+          color={finalIconColor}
+        />
+      ) : icon ? (
+        <Icon name={icon} size={resolvedIconSize} color={finalIconColor} />
+      ) : null}
       {label && (
         <Text
           variant="body"
           size="small"
-          weight="semibold"
+          weight={isFeedCreate ? "medium" : "semibold"}
           allowFontScaling={false}
           style={[
             styles.label,
             {
-              marginLeft: icon ? 8 : 0,
-              fontSize,
+              marginLeft: isFeedCreate ? 0 : icon ? 8 : 0,
+              fontSize: resolvedFontSize,
+              lineHeight: isFeedCreate ? FEED_CREATE.lineHeight : undefined,
+              fontFamily: isFeedCreate ? FONTS.medium : undefined,
               color: finalLabelColor,
             },
           ]}
@@ -229,6 +274,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 5,
+  },
+  fabFeed: {
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 0,
   },
   label: {
     // Label styles are applied inline for dynamic fontSize

@@ -1,31 +1,32 @@
 import { AppImageBackground } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
-import React, { useState, useEffect, useMemo } from "react";
-import { View, StyleSheet, TouchableOpacity, Text, useWindowDimensions } from "react-native";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { View, StyleSheet, TouchableOpacity, Text, LayoutChangeEvent } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useIsDark, useTheme } from "../../hooks/useTheme";
-import { DiscountBannerSvg, DiscountBannerDarkSvg } from "../../assets";
+import { DiscountBannerDarkSvg, Images } from "../../assets";
 import { HOME_COLORS, HOME_LAYOUT } from "../../constants/colorConstants";
 import { useStrings } from "../../hooks/useStrings";
 import { formatCountdownSegment } from "../../utils";
 
 import { FONTS } from "../../common/typography";
 
-import { APP_COLORS } from "../../config/colors";
-
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
 const scaleSize = (size: number, scale: number) => Math.round(size * scale);
 
-/** Base typography for discount banner (scaled down slightly for tighter layout). */
+/** Figma 8975:41033 — 335×160 banner; slightly shorter than full design height. */
+const BANNER_HEIGHT_SCALE = 0.88;
+
+/** Base typography for discount banner (Figma 8598:66213). */
 const BANNER_TYPE = {
-  bigPercent: { size: 32, line: 36 },
-  off: { size: 22, line: 26, marginBottom: 8 },
-  subscription: { size: 9, line: 13 },
-  endsLabel: { size: 11, line: 15 },
-  timer: { size: 13, line: 18 },
-  cta: { size: 13, line: 18, paddingH: 16, paddingV: 8, radius: 20 },
+  bigPercent: { size: 28, line: 36 },
+  off: { size: 20, line: 24, marginBottom: 6 },
+  subscription: { size: 11, line: 14 },
+  endsLabel: { size: 12, line: 16 },
+  timer: { size: 12, line: 16 },
+  cta: { size: 13, line: 16, paddingH: 14, paddingV: 6, radius: 20 },
 } as const;
 
 function renderTimerDigits(
@@ -56,19 +57,13 @@ interface DiscountBannerProps {
   onClose?: () => void;
   discountPercent?: number;
   endTime?: Date;
-  /** When provided, use this countdown (same as sticky banner) instead of computing from endTime. Keeps both timers in sync. */
   hours?: number;
   minutes?: number;
   seconds?: number;
-  /** When false, show wait-phase countdown ("Discount in") or fallback copy instead of 50% OFF. */
   isDiscountActive?: boolean;
-  /** @deprecated Use isDiscountActive */
   timerRunning?: boolean;
-  /** Fixed banner height (overrides aspect ratio when set). */
   bannerHeight?: number;
-  /** Scale height from screen width using design dimensions (335×148 by default). */
   dynamicHeight?: boolean;
-  /** Horizontal inset on each side when computing dynamic height (e.g. home screen margin). */
   horizontalMargin?: number;
 }
 
@@ -80,24 +75,27 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
   hours: hoursProp,
   minutes: minutesProp,
   seconds: secondsProp,
-  isDiscountActive: isDiscountActiveProp,
+  isDiscountActive: _isDiscountActive,
   timerRunning,
   bannerHeight,
   dynamicHeight = false,
-  horizontalMargin = 0,
 }) => {
-  const { width: windowWidth } = useWindowDimensions();
-  const isDiscountActive = isDiscountActiveProp ?? timerRunning ?? true;
   const strings = useStrings();
+  const [bannerWidth, setBannerWidth] = useState(0);
+  const onBannerLayout = useCallback((event: LayoutChangeEvent) => {
+    const nextWidth = Math.round(event.nativeEvent.layout.width);
+    setBannerWidth((prev) => (prev === nextWidth ? prev : nextWidth));
+  }, []);
   const theme = useTheme();
   const isDark = useIsDark();
   const db = HOME_COLORS.DISCOUNT_BANNER;
   const headlineColor = isDark ? db.HEADLINE_DARK : db.HEADLINE_LIGHT;
-  const timerColor = isDark ? db.TIMER_BOX_TEXT_DARK : APP_COLORS.brandPrimaryDark;
-  const ctaBg = isDark ? db.CTA_BG_DARK : APP_COLORS.surfaceWhite;
-  const ctaTextColor = isDark ? db.CTA_TEXT_DARK : APP_COLORS.textPrimaryDark;
+  const endsLabelColor = isDark ? headlineColor : db.ENDS_LABEL_LIGHT;
+  const timerColor = isDark ? db.TIMER_BOX_TEXT_DARK : db.TIMER_BOX_TEXT_LIGHT;
+  const ctaBg = isDark ? db.CTA_BG_DARK : db.CTA_BG_LIGHT;
+  const ctaTextColor = isDark ? db.CTA_TEXT_DARK : db.CTA_TEXT_LIGHT;
   const bannerBorderColor = isDark ? theme.colors.surfaceBrand2Accent : "transparent";
-  const lightTimerBg = APP_COLORS.errorLightBg;
+  const lightTimerBg = db.TIMER_BOX_BG_LIGHT;
   const useExternalCountdown =
     hoursProp !== undefined &&
     minutesProp !== undefined &&
@@ -145,61 +143,52 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
     timeLeftDisplay.minutes > 0 ||
     timeLeftDisplay.seconds > 0;
 
+  const bannerAspect =
+    HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH /
+    HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_HEIGHT;
+
   const layout = useMemo(() => {
-    if (bannerHeight != null) {
-      return { height: bannerHeight, scale: 1, contentPadding: HOME_LAYOUT.DISCOUNT_BANNER_PADDING };
-    }
-    if (!dynamicHeight) {
-      return { height: null as number | null, scale: 1, contentPadding: HOME_LAYOUT.DISCOUNT_BANNER_PADDING };
-    }
-
-    const contentWidth = Math.max(windowWidth - horizontalMargin * 2, 0);
+    const widthForLayout =
+      bannerWidth > 0 ? bannerWidth : HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH;
     const scale = clamp(
-      contentWidth / HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH,
+      widthForLayout / HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH,
       0.82,
-      1
+      1.2
     );
+    const contentPadding = scaleSize(HOME_LAYOUT.DISCOUNT_BANNER_PADDING, scale);
+
+    if (bannerHeight != null) {
+      return { height: bannerHeight, scale, contentPadding };
+    }
+
     const rawHeight =
-      contentWidth *
-      (HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_HEIGHT /
-        HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH);
-    const height = Math.round(
-      clamp(
-        rawHeight,
-        HOME_LAYOUT.DISCOUNT_BANNER_MIN_HEIGHT,
-        HOME_LAYOUT.DISCOUNT_BANNER_MAX_HEIGHT
-      )
-    );
+      (widthForLayout / bannerAspect) * BANNER_HEIGHT_SCALE;
+    const height = dynamicHeight
+      ? Math.round(
+          clamp(
+            rawHeight,
+            HOME_LAYOUT.DISCOUNT_BANNER_MIN_HEIGHT,
+            HOME_LAYOUT.DISCOUNT_BANNER_MAX_HEIGHT
+          )
+        )
+      : Math.round(rawHeight);
 
-    return {
-      height,
-      scale,
-      contentPadding: scaleSize(HOME_LAYOUT.DISCOUNT_BANNER_PADDING, scale),
-    };
-  }, [bannerHeight, dynamicHeight, horizontalMargin, windowWidth]);
+    return { height, scale, contentPadding };
+  }, [bannerAspect, bannerHeight, bannerWidth, dynamicHeight]);
 
-  const resolvedHeight = layout.height;
-
-  // 50% OFF promo only during the active discount phase (first 24h of each cycle).
-  if (!isDiscountActive) {
-    return null;
-  }
-
-  const DISCOUNT_BANNER_ASPECT = 1340 / 640;
-  const usesFixedHeight = resolvedHeight != null;
-  const { scale, contentPadding } = layout;
+  const scale = layout.scale;
+  const contentPadding = layout.contentPadding;
 
   return (
     <View
+      onLayout={onBannerLayout}
       style={[
         styles.bannerWrapper,
         {
+          height: layout.height,
           borderRadius: HOME_LAYOUT.DISCOUNT_BANNER_RADIUS,
           borderWidth: isDark ? 1 : 0,
           borderColor: bannerBorderColor,
-          ...(usesFixedHeight
-            ? { height: resolvedHeight }
-            : { aspectRatio: DISCOUNT_BANNER_ASPECT }),
         },
       ]}
     >
@@ -210,31 +199,48 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
         style={styles.bannerTouchable}
         accessibilityRole="button"
       >
-        <AppImageBackground
-          source={isDark ? DiscountBannerDarkSvg : DiscountBannerSvg}
-          resizeMode={usesFixedHeight ? "cover" : "contain"}
-          style={styles.bannerImage}
-          imageStyle={{ borderRadius: HOME_LAYOUT.DISCOUNT_BANNER_RADIUS }}
-        >
-        <LinearGradient
-          colors={
-            isDark
-              ? [...db.GRADIENT_DARK]
-              : (["transparent", "transparent"] as const)
-          }
-          style={StyleSheet.absoluteFill}
-        />
+        <View style={styles.bannerImage}>
+          {isDark ? (
+            <AppImageBackground
+              source={DiscountBannerDarkSvg}
+              resizeMode="cover"
+              style={styles.bannerFill}
+              imageStyle={styles.bannerFillImage}
+            >
+              <LinearGradient
+                colors={[...db.GRADIENT_DARK]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={styles.bannerFill}
+              />
+            </AppImageBackground>
+          ) : (
+            <AppImageBackground
+              source={Images.homeDiscountBannerLight}
+              resizeMode="cover"
+              preferRNImage
+              style={styles.bannerFill}
+              imageStyle={styles.bannerFillImage}
+            />
+          )}
 
         <View
           style={[
             styles.bannerContent,
-            { padding: contentPadding, paddingLeft: "32%" },
+            {
+              padding: contentPadding,
+              paddingLeft: isDark ? "32%" : 20,
+              paddingRight: isDark ? contentPadding : 8,
+              alignItems: isDark ? "center" : "flex-start",
+            },
           ]}
         >
-          <View style={styles.contentStack}>
+          <View style={[styles.contentStack, !isDark && styles.contentStackLight]}>
             <View
               style={[
                 styles.headlineRow,
+                isDark && styles.headlineRowDark,
+                !isDark && styles.headlineRowLight,
                 { marginBottom: scaleSize(4, scale) },
               ]}
             >
@@ -314,7 +320,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                     styles.discountEndsLabel,
                     isDark ? styles.discountEndsLabelDark : styles.discountEndsLabelLight,
                     {
-                      color: headlineColor,
+                      color: endsLabelColor,
                       fontSize: scaleSize(BANNER_TYPE.endsLabel.size, scale),
                       lineHeight: scaleSize(BANNER_TYPE.endsLabel.line, scale),
                     },
@@ -355,8 +361,9 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                       styles.timerSingleView,
                       {
                         backgroundColor: lightTimerBg,
-                        paddingHorizontal: scaleSize(10, scale),
-                        paddingVertical: scaleSize(6, scale),
+                        paddingHorizontal: scaleSize(8, scale),
+                        paddingVertical: 0,
+                        height: scaleSize(20, scale),
                         borderRadius: scaleSize(6, scale),
                       },
                     ]}
@@ -367,18 +374,21 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
               </View>
             ) : null}
 
-            <View
-              style={[
-                styles.ctaButton,
-                {
-                  backgroundColor: ctaBg,
-                  marginTop: hasActiveCountdown ? 0 : scaleSize(8, scale),
-                  paddingHorizontal: scaleSize(BANNER_TYPE.cta.paddingH, scale),
-                  paddingVertical: scaleSize(BANNER_TYPE.cta.paddingV, scale),
-                  borderRadius: scaleSize(BANNER_TYPE.cta.radius, scale),
-                },
-              ]}
-            >
+              <View
+                style={[
+                  styles.ctaButton,
+                  {
+                    backgroundColor: ctaBg,
+                    marginTop: hasActiveCountdown ? 0 : scaleSize(8, scale),
+                    paddingHorizontal: scaleSize(BANNER_TYPE.cta.paddingH, scale),
+                    paddingVertical: scaleSize(BANNER_TYPE.cta.paddingV, scale),
+                    borderRadius: scaleSize(BANNER_TYPE.cta.radius, scale),
+                    alignSelf: isDark ? "center" : "flex-start",
+                    height: scaleSize(28, scale),
+                    minHeight: scaleSize(28, scale),
+                  },
+                ]}
+              >
               <Text
                 style={[
                   styles.ctaText,
@@ -396,7 +406,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
             </View>
           </View>
         </View>
-        </AppImageBackground>
+        </View>
       </TouchableOpacity>
 
       {typeof onClose === "function" && (
@@ -423,7 +433,6 @@ export default DiscountBanner;
 const styles = StyleSheet.create({
   bannerWrapper: {
     width: "100%",
-    maxWidth: "100%",
     alignSelf: "stretch",
     overflow: "visible",
     position: "relative",
@@ -431,13 +440,20 @@ const styles = StyleSheet.create({
   bannerTouchable: {
     flex: 1,
     width: "100%",
-    alignSelf: "stretch",
+    height: "100%",
   },
   bannerImage: {
     flex: 1,
     width: "100%",
     height: "100%",
     overflow: "hidden",
+    borderRadius: HOME_LAYOUT.DISCOUNT_BANNER_RADIUS,
+    backgroundColor: HOME_COLORS.DISCOUNT_BANNER.FILL_GRADIENT_LIGHT[0],
+  },
+  bannerFill: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  bannerFillImage: {
     borderRadius: HOME_LAYOUT.DISCOUNT_BANNER_RADIUS,
   },
   bannerContent: {
@@ -451,11 +467,22 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
     width: "100%",
   },
+  contentStackLight: {
+    alignItems: "flex-start",
+    maxWidth: "68%",
+  },
   headlineRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "center",
     marginBottom: 8,
+  },
+  headlineRowLight: {
+    justifyContent: "flex-start",
+  },
+  headlineRowDark: {
+    justifyContent: "center",
+    flexWrap: "nowrap",
   },
   headlineSub1: {
     justifyContent: "flex-start",
@@ -469,11 +496,10 @@ const styles = StyleSheet.create({
   percentOffRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    flexWrap: "wrap",
+    flexWrap: "nowrap",
   },
   bigPercent: {
     fontFamily: FONTS.bold,
-    paddingBottom: 2,
   },
   offTextInline: {
     fontFamily: FONTS.bold,
@@ -494,18 +520,12 @@ const styles = StyleSheet.create({
   },
   timerBlockLight: {
     width: "100%",
-    alignSelf: "stretch",
+    alignSelf: "flex-start",
+    justifyContent: "flex-start",
   },
   timerBlockDark: {
     alignSelf: "center",
     maxWidth: "100%",
-  },
-  timerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    gap: 4,
   },
   timerPillInner: {
     alignItems: "center",
@@ -517,10 +537,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     flexShrink: 0,
     alignSelf: "center",
-  },
-  timerBracket: {
-    fontSize: 12,
-    fontFamily: FONTS.bold,
   },
   discountEndsLabel: {
     fontFamily: FONTS.medium,
@@ -534,20 +550,10 @@ const styles = StyleSheet.create({
   timerSingleView: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 0,
+    justifyContent: "center",
     flexShrink: 0,
   },
-  timerBox: {
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 6,
-    minWidth: 28,
-    alignItems: "center",
-  },
   timerBoxText: {
-    fontFamily: FONTS.bold,
-  },
-  timerColon: {
     fontFamily: FONTS.bold,
   },
   ctaButton: {

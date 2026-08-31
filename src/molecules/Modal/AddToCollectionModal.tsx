@@ -14,6 +14,7 @@ import { ModalCard } from "./ModalCard";
 import { useStrings } from "../../hooks/useStrings";
 
 import { APP_COLORS } from "../../config/colors";
+import { getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 
 export interface Collection {
   id: string;
@@ -161,7 +162,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
           size="large"
           onPress={handleDone}
           disabled={!selectedId}
-          style={[styles.doneButton, { opacity: selectedId ? 1 : 0.5 }]}
+          style={[styles.doneButton, getPopupPrimaryCtaStyle(theme), { opacity: selectedId ? 1 : 0.5 }]}
         />
       </ModalCard>
     </Modal>

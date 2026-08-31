@@ -52,9 +52,7 @@ const AppOtherAppCard: React.FC<Props> = ({
   const getButtonBg = isDark ? otherCard.BG_DARK : "#FFFFFF";
   const getButtonTextColor = isDark ? otherCard.GET_TEXT_DARK : colors.textPrimary;
   const getAppButtonBg = colors.primaryCTA;
-  const getAppButtonTextColor = isDark
-    ? otherCard.GET_APP_CTA_TEXT
-    : APP_COLORS.modalTextOnPrimary;
+  const getAppButtonTextColor = otherCard.GET_APP_CTA_TEXT;
   const getAppButtonRadius = isDark ? otherCard.GET_APP_CTA_RADIUS : 20;
   const shadowOpacity = isDark ? 0.2 : 0.08;
 

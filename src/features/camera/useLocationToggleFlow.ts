@@ -77,7 +77,6 @@ export function useLocationToggleFlow() {
       return;
     }
     if (entry === "manage_settings") {
-      setShowManagePopup(true);
       return;
     }
     setShowCustomPopup(true);
@@ -116,7 +115,7 @@ export function useLocationToggleFlow() {
         return;
       }
       if (outcome.showManageSettings) {
-        setShowManagePopup(true);
+        return;
       }
     } finally {
       setAwaitingNative(false);

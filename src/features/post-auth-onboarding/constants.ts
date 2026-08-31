@@ -31,8 +31,8 @@ export const POST_AUTH_ONBOARDING_COLORS_LIGHT: PostAuthOnboardingColors = {
   textDisabled: "#888888",
   ctaTextDark: "#FFFFFF",
   discountRed: "#EF4444",
-  planBorderSelected: "#DCA50D",
-  planBorderUnselected: "#FFFFFF",
+  planBorderSelected: SUBSCRIPTION_CTA_COLOR,
+  planBorderUnselected: "rgba(114, 84, 129, 0.12)",
   planCardBackground: "rgba(255, 255, 255, 0.15)",
   planCardBackgroundSelected: "rgba(255, 255, 255, 0.24)",
   ctaGradient: [
@@ -47,7 +47,7 @@ export const POST_AUTH_ONBOARDING_COLORS_LIGHT: PostAuthOnboardingColors = {
     SUBSCRIPTION_CTA_COLOR,
     SUBSCRIPTION_CTA_COLOR,
   ],
-  popularBadgeBg: "#C7630C",
+  popularBadgeBg: SUBSCRIPTION_CTA_COLOR,
   popularBadgeText: "#FFFFFF",
 };
 
@@ -60,20 +60,20 @@ export const POST_AUTH_ONBOARDING_COLORS_DARK: PostAuthOnboardingColors = {
   textDisabled: FIGMA_TOKENS.dark.text.disabled,
   ctaTextDark: "#111111",
   discountRed: "#EF4444",
-  planBorderSelected: "#DCA50D",
-  planBorderUnselected: "#B0B0B0",
-  planCardBackground: "rgba(0, 0, 0, 0.15)",
-  planCardBackgroundSelected: "rgba(0, 0, 0, 0.24)",
+  planBorderSelected: SUBSCRIPTION_CTA_COLOR,
+  planBorderUnselected: "rgba(114, 84, 129, 0.12)",
+  planCardBackground: "rgba(255, 255, 255, 0.15)",
+  planCardBackgroundSelected: "rgba(255, 255, 255, 0.24)",
   ctaGradient: ["#FFC27D", "#FFE5AA", "#FFBF76"],
   ctaSolidBackground: DARK_SURFACE_BRAND_1,
   useSolidCta: true,
   popularBadgeGradient: [
-    DARK_SURFACE_BRAND_1,
-    DARK_SURFACE_BRAND_1,
-    DARK_SURFACE_BRAND_1,
+    SUBSCRIPTION_CTA_COLOR,
+    SUBSCRIPTION_CTA_COLOR,
+    SUBSCRIPTION_CTA_COLOR,
   ],
-  popularBadgeBg: DARK_SURFACE_BRAND_1,
-  popularBadgeText: "#111111",
+  popularBadgeBg: SUBSCRIPTION_CTA_COLOR,
+  popularBadgeText: "#FFFFFF",
 };
 
 /** @deprecated Prefer getPostAuthOnboardingColors(isDark) */

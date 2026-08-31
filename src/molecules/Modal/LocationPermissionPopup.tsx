@@ -115,7 +115,7 @@ export const LocationPermissionPopup: React.FC<
             style={[
               styles.primaryButton,
               {
-                backgroundColor: colors.primary,
+                backgroundColor: colors.primaryCTA,
                 borderRadius: radius.xl,
                 marginTop: spacing[4],
               },

@@ -24,6 +24,29 @@ export interface BirdRangeDetails {
   nonBreeding?: string;
 }
 
+/** Optional extra species-profile fields when the API provides them. */
+export interface BirdProfileDetails {
+  size?: string;
+  familyDescription?: string;
+  shape?: string;
+  beak?: string;
+  tailShape?: string;
+  legCharacteristics?: string;
+  feedingBehavior?: string;
+  vocalBehavior?: string;
+  territoriality?: string;
+  socialBehavior?: string;
+  dietType?: string;
+  feedingStyle?: string;
+  breedingSeason?: string;
+  nestType?: string;
+  nestingMaterial?: string;
+  parentalCare?: string;
+  residentStatus?: string;
+  migrationPath?: string;
+  seasonalPresence?: string;
+}
+
 export interface BirdPotentialHazards {
   toHumans?: string;
   toPets?: string;
@@ -98,6 +121,7 @@ export interface BirdMatch {
   dominantColors?: string[];
   sexDifferences?: string;
   rangeDetails?: BirdRangeDetails;
+  profile?: BirdProfileDetails;
   lengthRange?: string;
   wingspanRange?: string;
   weightRange?: string;
@@ -434,6 +458,8 @@ export interface BirdGalleryAudioFile {
   fileId: string;
   url: string;
   filetype: "audio";
+  createdAt?: string;
+  capturedAt?: string;
   resultsCount?: number;
   locationString?: string | null;
   specimen?: {

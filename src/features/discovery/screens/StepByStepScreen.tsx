@@ -1,172 +1,68 @@
 /**
- * Merlin-style step-by-step bird finder (POST /core/archetypes/step-by-step).
+ * Step-by-step Identify wizard — Figma 8890:124531 / 124249 / 124480 / 124443 / 124410.
+ * After the last question (or an Edit from Possible Matches), runs the same
+ * analyze → Possible Matches flow as photo identification.
  */
 
+import { AppImage } from "@/components/AppImage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  View,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useTheme } from "../../../hooks/useTheme";
-import { Text, NavBackIcon, Button } from "../../../atoms";
-import { HomeStackParamList } from "../../../navigation/types";
-import { archetypeService } from "../../../services/archetype/archetype.service";
-import { MushroomCard } from "../../../organisms";
 import {
-  mapMushroomToCatalogueCard,
-} from "../../../utils/mushroomCardUtils";
-import type { MushroomArchetypeListItem } from "../../../services/api/features/core.api.types";
-import { resolveBirdDiscoveryLocation } from "../../../utils/birdDiscoveryLocation.helpers";
+  Images,
+  WizardClockIcon,
+  WizardCurrentLocationIcon,
+  WizardMapPinIcon,
+} from "../../../assets";
+import { CloseIcon } from "../../../components/shared/CloseIcon";
+import { Text } from "../../../atoms";
+import { ChangeLocationBottomSheet } from "../../../molecules/Modal";
 import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
-import { spacing } from "../../../design-system/spacing";
+import { FONTS } from "../../../common/typography";
+import { Radius } from "../../../design";
+import { FindYourBirdBackground } from "../../bird-personality/components/FindYourMushroomBackground";
+import { useTheme } from "../../../hooks/useTheme";
+import { HomeStackParamList } from "../../../navigation/types";
+import { getCurrentLocation } from "../../../utils/locationService";
+import { resolveLocationAddress } from "../../camera/resolveLocationAddress";
+import type { IdentificationLocation } from "../../camera/identificationLocation.store";
+import { WIZARD_HABITAT_OPTIONS } from "../stepByStep.constants";
+import { useStepByStepStore } from "../stepByStep.store";
+import { WIZARD_QUESTIONS } from "../stepByStep.types";
+import type { WizardRecentLocation } from "../stepByStep.types";
+import { WizardCalendar } from "../components/WizardCalendar";
+import { WizardColorGrid } from "../components/WizardColorGrid";
+import { WizardProgressHeader } from "../components/WizardProgressHeader";
+import { WizardSizePicker } from "../components/WizardSizePicker";
+import {
+  hasWizardQuestionAnswer,
+  isoDateToday,
+  wizardQuestionTitle,
+} from "../utils/stepByStepAnswers";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "StepByStep">;
+type ScreenRoute = RouteProp<HomeStackParamList, "StepByStep">;
 
-const BIRD_SIZE_OPTIONS = [
-  { id: "all", label: "All sizes" },
-  { id: "small", label: "Sparrow-sized" },
-  { id: "medium", label: "Robin-sized" },
-  { id: "large", label: "Crow-sized" },
-  { id: "xlarge", label: "Goose-sized" },
-  { id: "xxlarge", label: "Eagle-sized" },
-] as const;
-
-const COLOR_OPTIONS = [
-  "Black",
-  "White",
-  "Brown",
-  "Gray",
-  "Red",
-  "Yellow",
-  "Orange",
-  "Blue",
-  "Green",
-] as const;
-
-const BEHAVIOR_OPTIONS = [
-  "Flying",
-  "Perching",
-  "Swimming",
-  "Walking",
-  "Feeding",
-  "Calling",
-] as const;
-
-type WizardStep = "location" | "date" | "size" | "colors" | "behavior" | "results";
-
-const STEP_ORDER: WizardStep[] = [
-  "location",
-  "date",
-  "size",
-  "colors",
-  "behavior",
-  "results",
-];
-
-function isoDateOffset(daysAgo: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - daysAgo);
-  return d.toISOString().slice(0, 10);
-}
-
-function filterWizardResults(
-  items: MushroomArchetypeListItem[],
-  selectedColors: string[],
-  selectedBehaviors: string[]
-): MushroomArchetypeListItem[] {
-  let result = items;
-
-  if (selectedColors.length > 0) {
-    result = result.filter((item) => {
-      const raw = item as MushroomArchetypeListItem & {
-        dominantColors?: string[];
-      };
-      const colors = raw.dominantColors;
-      if (!Array.isArray(colors) || colors.length === 0) return true;
-      return selectedColors.some((pick) =>
-        colors.some((c) => c.toLowerCase().includes(pick.toLowerCase()))
-      );
-    });
-  }
-
-  if (selectedBehaviors.length > 0) {
-    result = result.filter((item) => {
-      const raw = item as MushroomArchetypeListItem & {
-        birdType?: string[];
-        keyIdentificationMarks?: string[];
-        summary?: string;
-      };
-      const haystack = [
-        ...(Array.isArray(raw.birdType) ? raw.birdType : []),
-        ...(Array.isArray(raw.keyIdentificationMarks)
-          ? raw.keyIdentificationMarks
-          : []),
-        raw.summary ?? "",
-      ]
-        .join(" ")
-        .toLowerCase();
-      if (!haystack.trim()) return true;
-      return selectedBehaviors.some((b) =>
-        haystack.includes(b.toLowerCase())
-      );
-    });
-  }
-
-  return result;
-}
-
-function SelectableChips({
-  options,
-  selected,
-  onToggle,
-  colors,
-}: {
-  options: readonly string[];
-  selected: string[];
-  onToggle: (value: string) => void;
-  colors: ReturnType<typeof useTheme>["colors"];
-}) {
-  return (
-    <View style={styles.chipsRow}>
-      {options.map((opt) => {
-        const active = selected.includes(opt);
-        return (
-          <TouchableOpacity
-            key={opt}
-            onPress={() => onToggle(opt)}
-            style={[
-              styles.chip,
-              {
-                backgroundColor: active
-                  ? colors.primary
-                  : colors.surfaceSecondary,
-                borderColor: active ? colors.primary : colors.border,
-              },
-            ]}
-          >
-            <Text
-              variant="caption"
-              size="small"
-              weight="medium"
-              color={active ? "surface" : "textSecondary"}
-            >
-              {opt}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
+function toRecentLocation(
+  location: IdentificationLocation
+): WizardRecentLocation {
+  return {
+    label: location.address,
+    latitude: location.latitude,
+    longitude: location.longitude,
+  };
 }
 
 export const StepByStepScreen: React.FC = () => {
@@ -174,311 +70,312 @@ export const StepByStepScreen: React.FC = () => {
   const colors = theme.colors;
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
+  const route = useRoute<ScreenRoute>();
   const strings = HOME_STRINGS.discovery.stepByStep;
 
-  const [stepIndex, setStepIndex] = useState(0);
-  const step = STEP_ORDER[stepIndex] ?? "location";
+  const answers = useStepByStepStore((s) => s.answers);
+  const recentLocations = useStepByStepStore((s) => s.recentLocations);
+  const setLocation = useStepByStepStore((s) => s.setLocation);
+  const setSeenDate = useStepByStepStore((s) => s.setSeenDate);
+  const setSizeIndex = useStepByStepStore((s) => s.setSizeIndex);
+  const toggleColor = useStepByStepStore((s) => s.toggleColor);
+  const setHabitat = useStepByStepStore((s) => s.setHabitat);
+  const rememberLocation = useStepByStepStore((s) => s.rememberLocation);
 
-  const [locationLabel, setLocationLabel] = useState<string | null>(null);
-  const [locationReady, setLocationReady] = useState(false);
-  const [seenDate, setSeenDate] = useState(isoDateOffset(0));
-  const [selectedSize, setSelectedSize] = useState<string>("all");
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [selectedBehaviors, setSelectedBehaviors] = useState<string[]>([]);
+  const [phase, setPhase] = useState<"intro" | "question">("intro");
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [showLocationSheet, setShowLocationSheet] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locationSource, setLocationSource] = useState<
+    "search" | "current" | "recent" | null
+  >(null);
 
-  const [allItems, setAllItems] = useState<MushroomArchetypeListItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const filteredItems = useMemo(
-    () => filterWizardResults(allItems, selectedColors, selectedBehaviors),
-    [allItems, selectedBehaviors, selectedColors]
+  const question = WIZARD_QUESTIONS[questionIndex] ?? "location";
+  const storeEditQuestion = useStepByStepStore((s) => s.editQuestion);
+  const isEditSession = Boolean(
+    route.params?.editQuestion ?? storeEditQuestion
   );
 
-  const cards = useMemo(
-    () => filteredItems.map((item) => mapMushroomToCatalogueCard(item)),
-    [filteredItems]
-  );
-
-  const progress = ((stepIndex + 1) / STEP_ORDER.length) * 100;
-
-  const toggleInList = (value: string, list: string[], setter: (v: string[]) => void) => {
-    setter(
-      list.includes(value)
-        ? list.filter((v) => v !== value)
-        : [...list, value]
-    );
-  };
-
-  useEffect(() => {
-    void (async () => {
-      const discovery = await resolveBirdDiscoveryLocation();
-      if (discovery) {
-        setLocationReady(true);
-        setLocationLabel(discovery.label);
-      }
-    })();
-  }, []);
-
-  const loadBirds = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const discovery = await resolveBirdDiscoveryLocation();
-      if (!discovery) {
-        setError(strings.locationRequired);
-        setAllItems([]);
+  useFocusEffect(
+    useCallback(() => {
+      const edit =
+        route.params?.editQuestion ??
+        useStepByStepStore.getState().editQuestion;
+      if (edit) {
+        const idx = WIZARD_QUESTIONS.indexOf(edit);
+        setPhase("question");
+        setQuestionIndex(idx >= 0 ? idx : 0);
         return;
       }
+      if (route.params?.startFresh) {
+        useStepByStepStore.getState().resetAnswers();
+        setPhase("intro");
+        setQuestionIndex(0);
+        setLocationSource(null);
+        navigation.setParams({ startFresh: undefined, editQuestion: undefined });
+      }
+    }, [navigation, route.params?.editQuestion, route.params?.startFresh])
+  );
 
-      const birdSize = selectedSize === "all" ? undefined : [selectedSize];
-      const { data } = await archetypeService.stepByStep(
-        {
-          location: {
-            lat: discovery.coords[0],
-            lng: discovery.coords[1],
-          },
-          seenDate,
-          birdSize,
-          region:
-            discovery.source !== "gps" ? discovery.regionId : undefined,
-        },
-        { pageNo: 0, pageSize: 60 }
-      );
-      setAllItems(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : strings.loadError);
-      setAllItems([]);
-    } finally {
-      setLoading(false);
+  const applyLocation = useCallback(
+    (location: WizardRecentLocation, source: "search" | "current" | "recent") => {
+      setLocation(location);
+      rememberLocation(location);
+      setLocationSource(source);
+    },
+    [rememberLocation, setLocation]
+  );
+
+  const startAnalyze = useCallback(() => {
+    useStepByStepStore.getState().setEditQuestion(null);
+    navigation.getParent()?.navigate("Camera", {
+      screen: "DiagnosisLoading",
+      params: { identifyMode: "stepByStep" },
+    });
+  }, [navigation]);
+
+  const goNext = useCallback(() => {
+    if (isEditSession) {
+      startAnalyze();
+      return;
     }
-  }, [seenDate, selectedSize, strings.loadError, strings.locationRequired]);
+    if (questionIndex >= WIZARD_QUESTIONS.length - 1) {
+      startAnalyze();
+      return;
+    }
+    setQuestionIndex((index) => index + 1);
+  }, [isEditSession, questionIndex, startAnalyze]);
+
+  const goBack = useCallback(() => {
+    if (phase === "intro") {
+      navigation.goBack();
+      return;
+    }
+    if (isEditSession) {
+      startAnalyze();
+      return;
+    }
+    if (questionIndex === 0) {
+      setPhase("intro");
+      return;
+    }
+    setQuestionIndex((index) => index - 1);
+  }, [isEditSession, navigation, phase, questionIndex, startAnalyze]);
+
+  const nextEnabled = useMemo(() => {
+    if (question === "date") return Boolean(answers.seenDate);
+    return hasWizardQuestionAnswer(question, answers);
+  }, [answers, question]);
+
+  const handleCurrentLocation = useCallback(async () => {
+    setLocating(true);
+    try {
+      const loc = await getCurrentLocation({ timeout: 12000 });
+      if (loc?.latitude == null || loc?.longitude == null) return;
+      const label = await resolveLocationAddress(loc.latitude, loc.longitude);
+      applyLocation(
+        { label, latitude: loc.latitude, longitude: loc.longitude },
+        "current"
+      );
+    } finally {
+      setLocating(false);
+    }
+  }, [applyLocation]);
 
   useEffect(() => {
-    if (step !== "results") return;
-    void loadBirds();
-  }, [step, loadBirds]);
-
-  const goNext = () => {
-    if (stepIndex < STEP_ORDER.length - 1) {
-      setStepIndex((i) => i + 1);
+    if (answers.location && locationSource == null) {
+      setLocationSource("search");
     }
-  };
+  }, [answers.location, locationSource]);
 
-  const goBack = () => {
-    if (stepIndex > 0) {
-      setStepIndex((i) => i - 1);
-    } else {
-      navigation.goBack();
-    }
-  };
-
-  const renderResults = () => {
-    if (loading) {
-      return (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text variant="body" color="textSecondary">
-            {strings.refining}
-          </Text>
-        </View>
-      );
-    }
-    if (error) {
-      return (
-        <View style={styles.centered}>
-          <Text variant="body" color="textSecondary" style={styles.errorText}>
-            {error}
-          </Text>
-          <TouchableOpacity onPress={() => void loadBirds()}>
-            <Text variant="body" weight="semibold" color="primary">
-              {strings.retry}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    return (
-      <FlatList
-        data={cards}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => {
-          const raw = filteredItems[index] as MushroomArchetypeListItem & {
-            distanceFromUser?: number;
-          };
-          const distance =
-            raw?.distanceFromUser != null
-              ? `${Math.round(raw.distanceFromUser)} m away`
-              : undefined;
-          return (
-            <MushroomCard
-              id={item.id}
-              name={item.name}
-              scientificName={item.scientificName}
-              image={item.image}
-              imageUrls={item.imageUrls}
-              description={distance}
-              variant="compact"
-              imageAspectRatio={1}
-              onPress={() =>
-                navigation.navigate("BirdDetails", {
-                  mushroomId: item.id,
-                  source: "home",
-                })
-              }
-              style={styles.card}
-            />
-          );
-        }}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <Text variant="body" color="textSecondary" style={styles.empty}>
-            {strings.empty}
-          </Text>
-        }
-      />
-    );
-  };
-
-  const renderStepBody = () => {
-    switch (step) {
+  const renderQuestionBody = () => {
+    switch (question) {
       case "location":
         return (
-          <>
-            <Text variant="headline" size="small" weight="bold" style={styles.stepTitle}>
-              {strings.steps.location}
+          <View style={styles.questionBlock}>
+            <Text style={[styles.questionTitle, { color: colors.textPrimary }]}>
+              {wizardQuestionTitle(0, strings.questions.location)}
             </Text>
-            <Text variant="body" size="small" color="textSecondary" style={styles.hint}>
-              {strings.locationHint}
-            </Text>
-            <Text variant="body" size="medium" weight="semibold">
-              {locationReady
-                ? locationLabel ?? strings.locationDetected
-                : strings.locationRequired}
-            </Text>
-          </>
+            <View style={styles.locationSections}>
+              <View style={styles.locationSection}>
+                <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>
+                  {strings.customLocation}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowLocationSheet(true)}
+                  style={[
+                    styles.locationRow,
+                    {
+                      backgroundColor: colors.surfacePrimary,
+                      borderColor:
+                        locationSource === "search" && answers.location
+                          ? colors.primaryCTA
+                          : colors.border0,
+                    },
+                  ]}
+                >
+                  <WizardMapPinIcon width={20} height={20} />
+                  <Text
+                    style={[
+                      styles.locationRowLabel,
+                      {
+                        color: answers.location
+                          ? colors.textPrimary
+                          : colors.textTertiary,
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {answers.location?.label ?? strings.enterLocation}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.locationSection}>
+                <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>
+                  {strings.customLocation}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => void handleCurrentLocation()}
+                  style={[
+                    styles.locationRow,
+                    {
+                      backgroundColor: colors.surfacePrimary,
+                      borderColor:
+                        locationSource === "current"
+                          ? colors.primaryCTA
+                          : colors.border0,
+                    },
+                  ]}
+                >
+                  <WizardCurrentLocationIcon width={20} height={20} />
+                  <Text
+                    style={[
+                      styles.locationRowLabel,
+                      { color: colors.textTertiary },
+                    ]}
+                  >
+                    {strings.currentLocation}
+                  </Text>
+                  {locating ? (
+                    <ActivityIndicator size="small" color={colors.primaryCTA} />
+                  ) : null}
+                </TouchableOpacity>
+              </View>
+
+              {recentLocations.length > 0 ? (
+                <View style={styles.locationSection}>
+                  <Text
+                    style={[styles.fieldLabel, { color: colors.textPrimary }]}
+                  >
+                    {strings.recentlyUsed}
+                  </Text>
+                  {recentLocations.map((item) => (
+                    <TouchableOpacity
+                      key={`${item.label}-${item.latitude}`}
+                      onPress={() => applyLocation(item, "recent")}
+                      style={styles.recentRow}
+                    >
+                      <WizardClockIcon width={20} height={20} />
+                      <Text
+                        style={[
+                          styles.locationRowLabel,
+                          { color: colors.textPrimary },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          </View>
         );
       case "date":
         return (
-          <>
-            <Text variant="headline" size="small" weight="bold" style={styles.stepTitle}>
-              {strings.steps.date}
+          <View style={styles.questionBlock}>
+            <Text style={[styles.questionTitle, { color: colors.textPrimary }]}>
+              {wizardQuestionTitle(1, strings.questions.date)}
             </Text>
-            <View style={styles.chipsRow}>
-              {[
-                { id: isoDateOffset(0), label: strings.dateOptions.today },
-                { id: isoDateOffset(1), label: strings.dateOptions.yesterday },
-              ].map((opt) => {
-                const active = seenDate === opt.id;
-                return (
-                  <TouchableOpacity
-                    key={opt.id}
-                    onPress={() => setSeenDate(opt.id)}
-                    style={[
-                      styles.chip,
-                      {
-                        backgroundColor: active
-                          ? colors.primary
-                          : colors.surfaceSecondary,
-                        borderColor: active ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      variant="caption"
-                      size="small"
-                      weight="medium"
-                      color={active ? "surface" : "textSecondary"}
-                    >
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </>
+            <WizardCalendar
+              selectedIso={answers.seenDate}
+              onSelect={setSeenDate}
+              onResetToday={() => setSeenDate(isoDateToday())}
+              resetLabel={strings.resetToday}
+            />
+          </View>
         );
       case "size":
         return (
-          <>
-            <Text variant="headline" size="small" weight="bold" style={styles.stepTitle}>
-              {strings.steps.size}
+          <View style={styles.questionBlock}>
+            <Text style={[styles.questionTitle, { color: colors.textPrimary }]}>
+              {wizardQuestionTitle(2, strings.questions.size)}
             </Text>
-            <View style={styles.chipsRow}>
-              {BIRD_SIZE_OPTIONS.map((opt) => {
-                const active = selectedSize === opt.id;
+            <View style={styles.sizeBody}>
+              <WizardSizePicker
+                selectedIndex={answers.sizeIndex}
+                onSelect={setSizeIndex}
+              />
+            </View>
+          </View>
+        );
+      case "colors":
+        return (
+          <View style={styles.questionBlock}>
+            <Text style={[styles.questionTitle, { color: colors.textPrimary }]}>
+              {wizardQuestionTitle(3, strings.questions.colors)}
+            </Text>
+            <WizardColorGrid
+              selected={answers.colors}
+              onToggle={toggleColor}
+            />
+          </View>
+        );
+      case "habitat":
+        return (
+          <View style={styles.questionBlock}>
+            <Text style={[styles.questionTitle, { color: colors.textPrimary }]}>
+              {wizardQuestionTitle(4, strings.questions.habitat)}
+            </Text>
+            <View style={styles.habitatList}>
+              {WIZARD_HABITAT_OPTIONS.map((option) => {
+                const active = answers.habitat === option;
                 return (
                   <TouchableOpacity
-                    key={opt.id}
-                    onPress={() => setSelectedSize(opt.id)}
+                    key={option}
+                    onPress={() => setHabitat(option)}
                     style={[
-                      styles.chip,
+                      styles.habitatRow,
                       {
                         backgroundColor: active
-                          ? colors.primary
-                          : colors.surfaceSecondary,
-                        borderColor: active ? colors.primary : colors.border,
+                          ? `${colors.primaryCTA}18`
+                          : colors.surfacePrimary,
+                        borderColor: active
+                          ? colors.primaryCTA
+                          : colors.border0,
                       },
                     ]}
                   >
                     <Text
-                      variant="caption"
-                      size="small"
-                      weight="medium"
-                      color={active ? "surface" : "textSecondary"}
+                      style={[
+                        styles.habitatLabel,
+                        {
+                          color: active
+                            ? colors.primaryCTA
+                            : colors.textPrimary,
+                          fontFamily: active ? FONTS.bold : FONTS.regular,
+                        },
+                      ]}
                     >
-                      {opt.label}
+                      {option}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-          </>
-        );
-      case "colors":
-        return (
-          <>
-            <Text variant="headline" size="small" weight="bold" style={styles.stepTitle}>
-              {strings.steps.colors}
-            </Text>
-            <Text variant="body" size="small" color="textSecondary" style={styles.hint}>
-              {strings.colorsHint}
-            </Text>
-            <SelectableChips
-              options={COLOR_OPTIONS}
-              selected={selectedColors}
-              onToggle={(v) => toggleInList(v, selectedColors, setSelectedColors)}
-              colors={colors}
-            />
-          </>
-        );
-      case "behavior":
-        return (
-          <>
-            <Text variant="headline" size="small" weight="bold" style={styles.stepTitle}>
-              {strings.steps.behavior}
-            </Text>
-            <Text variant="body" size="small" color="textSecondary" style={styles.hint}>
-              {strings.behaviorHint}
-            </Text>
-            <SelectableChips
-              options={BEHAVIOR_OPTIONS}
-              selected={selectedBehaviors}
-              onToggle={(v) =>
-                toggleInList(v, selectedBehaviors, setSelectedBehaviors)
-              }
-              colors={colors}
-            />
-          </>
-        );
-      case "results":
-        return (
-          <>
-            <Text variant="headline" size="small" weight="bold" style={styles.stepTitle}>
-              {strings.steps.results}
-            </Text>
-            {renderResults()}
-          </>
+          </View>
         );
       default:
         return null;
@@ -487,66 +384,122 @@ export const StepByStepScreen: React.FC = () => {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
+      <FindYourBirdBackground />
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <View
-          style={[
-            styles.header,
-            { paddingTop: insets.top > 0 ? 0 : spacing[2] },
-          ]}
-        >
-          <TouchableOpacity onPress={goBack} hitSlop={HIT_SLOP.CLOSE}>
-            <NavBackIcon color={colors.textPrimary} size={24} />
-          </TouchableOpacity>
-          <Text
-            variant="headline"
-            size="medium"
-            weight="bold"
-            style={styles.headerTitle}
-          >
-            {strings.title}
-          </Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
-        <View style={styles.progressTrack}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${progress}%`, backgroundColor: colors.primary },
-            ]}
-          />
-        </View>
-
-        <Text
-          variant="body"
-          size="small"
-          color="textSecondary"
-          style={styles.subtitle}
-        >
-          {strings.subtitle}
-        </Text>
-
-        <View style={step === "results" ? styles.resultsBody : styles.stepBody}>
-          {renderStepBody()}
-        </View>
-
-        {step !== "results" ? (
-          <View
-            style={[
-              styles.footer,
-              { paddingBottom: Math.max(insets.bottom, spacing[4]) },
-            ]}
-          >
-            <Button
-              title={step === "behavior" ? strings.seeResults : strings.next}
-              variant="primary"
-              size="large"
-              fullWidth
-              onPress={goNext}
+        {phase === "intro" ? (
+          <>
+            <View style={styles.introHeader}>
+              <Text
+                style={[styles.introNavTitle, { color: colors.textPrimary }]}
+                numberOfLines={1}
+              >
+                {strings.title}
+              </Text>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                hitSlop={HIT_SLOP.CLOSE}
+                accessibilityRole="button"
+                accessibilityLabel={strings.closeA11y}
+              >
+                <CloseIcon variant="plain" size={24} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.introBody}>
+              <AppImage
+                source={Images.wizardFindYourBird}
+                style={styles.introArt}
+                resizeMode="contain"
+              />
+              <Text style={[styles.introTitle, { color: colors.textPrimary }]}>
+                {strings.introTitle}
+              </Text>
+              <Text
+                style={[styles.introCopy, { color: colors.textTertiary }]}
+              >
+                {strings.introBody}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.footer,
+                { paddingBottom: Math.max(insets.bottom, 16) },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() => setPhase("question")}
+                activeOpacity={0.85}
+                style={[
+                  styles.cta,
+                  { backgroundColor: colors.primaryCTA },
+                ]}
+              >
+                <Text style={styles.ctaLabel}>{strings.findOutNow}</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <>
+            <WizardProgressHeader
+              questionIndex={questionIndex}
+              onBack={goBack}
+              onSkip={goNext}
+              skipLabel={strings.skip}
             />
-          </View>
-        ) : null}
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {renderQuestionBody()}
+            </ScrollView>
+            <View
+              style={[
+                styles.footer,
+                { paddingBottom: Math.max(insets.bottom, 16) },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={goNext}
+                disabled={!nextEnabled}
+                activeOpacity={0.85}
+                style={[
+                  styles.cta,
+                  {
+                    backgroundColor: nextEnabled
+                      ? colors.primaryCTA
+                      : colors.borderSecondary,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.ctaLabel,
+                    {
+                      color: nextEnabled
+                        ? "#FFFFFF"
+                        : colors.textTertiary,
+                    },
+                  ]}
+                >
+                  {strings.next}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </SafeAreaView>
+
+      <ChangeLocationBottomSheet
+        visible={showLocationSheet}
+        onClose={() => setShowLocationSheet(false)}
+        variant={answers.location ? "custom" : "add"}
+        initialQuery={answers.location?.label}
+        onConfirm={(location) => {
+          applyLocation(toRecentLocation(location), "search");
+          setShowLocationSheet(false);
+        }}
+      />
     </View>
   );
 };
@@ -554,66 +507,125 @@ export const StepByStepScreen: React.FC = () => {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   safe: { flex: 1 },
-  header: {
+  introHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing[4],
-    paddingBottom: spacing[2],
-    gap: spacing[2],
+    paddingLeft: 20,
+    paddingRight: 12,
+    paddingVertical: 12,
+    minHeight: 52,
+    gap: 8,
   },
-  headerTitle: { flex: 1, textAlign: "center" },
-  headerSpacer: { width: 24 },
-  progressTrack: {
-    height: 4,
-    marginHorizontal: spacing[4],
-    marginBottom: spacing[2],
-    borderRadius: 2,
-    backgroundColor: "rgba(0,0,0,0.08)",
-    overflow: "hidden",
-  },
-  progressFill: { height: "100%", borderRadius: 2 },
-  subtitle: {
-    paddingHorizontal: spacing[6],
-    marginBottom: spacing[3],
-  },
-  stepBody: {
+  introNavTitle: {
     flex: 1,
-    paddingHorizontal: spacing[4],
-    gap: spacing[3],
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    lineHeight: 24,
   },
-  resultsBody: {
-    flex: 1,
-    paddingHorizontal: spacing[4],
-  },
-  stepTitle: { marginBottom: spacing[1] },
-  hint: { marginBottom: spacing[2] },
-  chipsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing[1],
-  },
-  chip: {
-    paddingHorizontal: spacing[2],
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  listContent: {
-    paddingBottom: spacing[8],
-    gap: spacing[2],
-  },
-  card: { marginBottom: spacing[2] },
-  centered: {
+  introBody: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: spacing[6],
-    gap: spacing[4],
+    paddingHorizontal: 54,
+    gap: 8,
+    marginTop: -40,
   },
-  errorText: { textAlign: "center" },
-  empty: { textAlign: "center", marginTop: spacing[8] },
+  introArt: {
+    width: 150,
+    height: 137,
+  },
+  introTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 24,
+    lineHeight: 32,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  introCopy: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+  },
+  questionBlock: {
+    gap: 24,
+    paddingTop: 12,
+  },
+  questionTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  locationSections: {
+    gap: 20,
+  },
+  locationSection: {
+    gap: 8,
+  },
+  fieldLabel: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  locationRowLabel: {
+    flex: 1,
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
+  },
+  recentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 4,
+  },
+  sizeBody: {
+    flexGrow: 1,
+    minHeight: 280,
+    justifyContent: "center",
+  },
+  habitatList: {
+    gap: 8,
+  },
+  habitatRow: {
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  habitatLabel: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
   footer: {
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[2],
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  cta: {
+    height: 44,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaLabel: {
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#FFFFFF",
   },
 });

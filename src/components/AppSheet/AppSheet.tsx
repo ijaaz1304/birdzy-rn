@@ -369,6 +369,9 @@ function getLimitReachedSheetBackground(
   limitType: LimitType,
   isDark: boolean
 ): ImageSourcePropType | null {
+  if (limitType === "soundGallery") {
+    return Images.recordingLimitReachedBanner;
+  }
   const item = getCarouselItemForLimitType(limitType);
   const imageKey = isDark ? item.imageDark : item.imageLight;
   const images = Images as Record<string, ImageSourcePropType | undefined>;
@@ -2466,6 +2469,19 @@ function LimitReachedContent({
   const isCollectionLimit = isCollectionLimitType(limitType);
   const isIdentificationLimit = limitType === "identification";
   const isMushroomOfDayLimit = limitType === "mushroomOfDay";
+  const isSoundGalleryLimit = limitType === "soundGallery";
+
+  if (isSoundGalleryLimit) {
+    return (
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={onUpgrade}
+        accessibilityRole="button"
+        accessibilityLabel="Go Pro"
+        style={StyleSheet.absoluteFill}
+      />
+    );
+  }
 
   return (
     <View style={sheetStyles.limitRoot}>
@@ -2873,7 +2889,7 @@ function PermissionPrimaryButton({
     <TouchableOpacity
       style={[
         sheetStyles.permissionPrimaryBtn,
-        { backgroundColor: colors.primary },
+        { backgroundColor: colors.primaryCTA },
       ]}
       onPress={onPress}
       disabled={disabled || loading}

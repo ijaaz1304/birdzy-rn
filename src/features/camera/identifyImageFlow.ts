@@ -94,6 +94,8 @@ type SubmitNavigation = NativeStackNavigationProp<
 
 export const submitProcessedImageForIdentify = async (params: {
   image: CroppedImageObject;
+  /** Optional second image for multi-photo identify (max 2). */
+  extraImages?: CroppedImageObject[];
   displayImage?: CroppedImageObject;
   navigation: SubmitNavigation;
   isPremium: boolean;
@@ -104,6 +106,7 @@ export const submitProcessedImageForIdentify = async (params: {
 }): Promise<void> => {
   const {
     image,
+    extraImages = [],
     displayImage,
     navigation,
     isPremium,
@@ -135,12 +138,21 @@ export const submitProcessedImageForIdentify = async (params: {
     }
   }
 
+  const allImages = [image, ...extraImages].slice(0, 2);
   const paramsForLoading = {
     image: {
       uri: image.uri,
       width: image.width,
       height: image.height,
     },
+    images:
+      allImages.length > 1
+        ? allImages.map((img) => ({
+            uri: img.uri,
+            width: img.width,
+            height: img.height,
+          }))
+        : undefined,
     displayImage: displayImage
       ? {
           uri: displayImage.previewUri ?? displayImage.uri,

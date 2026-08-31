@@ -18,8 +18,8 @@ import { spacing } from "../../design-system/spacing";
 import { useTabBarLayoutOptional } from "../../contexts/TabBarLayoutContext";
 import { useIdentificationEntryStore } from "../../features/camera/identificationEntry.store";
 
-/** Match MainTabs `tabBarStyle.paddingHorizontal` (fallback geometry only) */
-const TAB_BAR_H_PADDING = spacing[4];
+/** Match CustomBottomTabBar `paddingHorizontal` (fallback geometry only) */
+const TAB_BAR_H_PADDING = spacing[2];
 const TOOLTIP_BOTTOM_OFFSET = 88;
 const TOOLTIP_STORAGE_KEY = UI_STATE_KEYS.APP_LOGS_TOOLTIP_SHOWN;
 export const TOOLTIP_ELIGIBLE_FOR_SIGNUP_KEY =

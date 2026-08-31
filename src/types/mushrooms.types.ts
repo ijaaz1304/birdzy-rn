@@ -130,6 +130,7 @@ export interface MushroomDetail extends MushroomListItem {
   weightRange?: string;
   birdWatchingTips?: import("../services/api/features/bird.api.types").BirdWatchingTips;
   rangeDetails?: import("../services/api/features/bird.api.types").BirdRangeDetails;
+  profile?: import("../services/api/features/bird.api.types").BirdProfileDetails;
 }
 
 export interface MushroomListResponse {

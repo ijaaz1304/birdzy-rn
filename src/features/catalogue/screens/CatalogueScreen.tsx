@@ -31,6 +31,7 @@ import { useFeatureConfig } from "../../../config/context";
 import { screenStyles } from "../../../styles/common";
 import { FilterState } from "../../../organisms/FilterModal/types";
 import { AppCard } from "../../../components/shared";
+import { useCatalogueCardSound } from "../hooks/useCatalogueCardSound";
 import { useBirdsStore } from "../birds.store";
 import { CardSkeleton } from "../../../components/skeleton";
 import { waitForAuthentication } from "../../../utils/authUtils";
@@ -139,6 +140,7 @@ export const CatalogueScreen: React.FC = () => {
   >(undefined);
   const strings = useStrings();
   const { showToast } = useToast();
+  const { playingId, toggleSound } = useCatalogueCardSound();
 
   // Fetch filter options on first catalogue load so modal opens with list ready
   useEffect(() => {
@@ -643,6 +645,12 @@ export const CatalogueScreen: React.FC = () => {
           handleItemPress(item.id, item.imageUrls?.[0] ?? item.image?.uri)
         }
         starred={isStarred}
+        showSoundButton
+        hasSound={(item.soundUrls?.length ?? 0) > 0}
+        soundPlaying={playingId === item.id}
+        onSoundPress={() => {
+          void toggleSound(item.id, item.soundUrls);
+        }}
         onStarPress={() => {
           void (async () => {
             if (isStarred) {
@@ -683,6 +691,8 @@ export const CatalogueScreen: React.FC = () => {
       toggleFavorite,
       showToast,
       strings.collection.favorite,
+      playingId,
+      toggleSound,
     ]
   );
 

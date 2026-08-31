@@ -12,7 +12,7 @@ import { useTheme } from "../../hooks/useTheme";
 import { Text, Button } from "../../atoms";
 import { OVERLAY_COLORS } from "../../constants/colorConstants";
 import { Radius } from "../../design";
-import { getPopupChromeStyle, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
+import { getPopupChromeStyle, getPopupPrimaryCtaStyle, getPopupPrimaryCtaTextColor, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -137,10 +137,8 @@ export const AppPopup: React.FC<AppPopupProps> = ({
               title={primaryButtonText}
               variant="primary"
               size="large"
-              style={{
-                backgroundColor: colors.primary,
-              }}
-              textStyle={{ color: colors.onPrimary }}
+              style={getPopupPrimaryCtaStyle(theme)}
+              textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
               onPress={onPrimaryPress}
               fullWidth
               disabled={primaryLoading}

@@ -1,4 +1,4 @@
-import { AppImage } from "@/components/AppImage";
+import { AppImageBackground } from "@/components/AppImage";
 import React from "react";
 import {
   ImageSourcePropType,
@@ -14,14 +14,13 @@ import { useStrings } from "../../../hooks/useStrings";
 import { useTheme } from "../../../hooks/useTheme";
 import { Radius } from "../../../design";
 
-const CARD_BG = "#F5EBEB";
 const CARD_BORDER = "rgba(17, 17, 17, 0.05)";
+const CARD_BG = "#F5EBEB";
 
 type CornerCardProps = {
   title: string;
   description: string;
-  icon: ImageSourcePropType;
-  watermark?: ImageSourcePropType;
+  background: ImageSourcePropType;
   onPress: () => void;
   textPrimary: string;
   textSecondary: string;
@@ -30,37 +29,35 @@ type CornerCardProps = {
 const CornerCard: React.FC<CornerCardProps> = ({
   title,
   description,
-  icon,
-  watermark,
+  background,
   onPress,
   textPrimary,
   textSecondary,
 }) => (
-  <TouchableOpacity
-    activeOpacity={0.85}
-    onPress={onPress}
-    style={[styles.cornerCard, { backgroundColor: CARD_BG, borderColor: CARD_BORDER }]}
-  >
-    {watermark ? (
-      <AppImage source={watermark} style={styles.watermark} resizeMode="contain" />
-    ) : null}
-    <AppImage source={icon} style={styles.cardIcon} resizeMode="contain" />
-    <View style={styles.cardCopy}>
-      <AppText
-        variant="body14"
-        style={[styles.cardTitle, { color: textPrimary }]}
-        numberOfLines={2}
-      >
-        {title}
-      </AppText>
-      <AppText
-        variant="caption12"
-        style={{ color: textSecondary, lineHeight: 16 }}
-        numberOfLines={2}
-      >
-        {description}
-      </AppText>
-    </View>
+  <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.cornerCardWrap}>
+    <AppImageBackground
+      source={background}
+      style={[styles.cornerCard, { borderColor: CARD_BORDER, backgroundColor: CARD_BG }]}
+      imageStyle={styles.cornerCardImage}
+      resizeMode="cover"
+    >
+      <View style={styles.cardCopy}>
+        <AppText
+          variant="body14"
+          style={[styles.cardTitle, { color: textPrimary }]}
+          numberOfLines={2}
+        >
+          {title}
+        </AppText>
+        <AppText
+          variant="caption12"
+          style={{ color: textSecondary, lineHeight: 16 }}
+          numberOfLines={2}
+        >
+          {description}
+        </AppText>
+      </View>
+    </AppImageBackground>
   </TouchableOpacity>
 );
 
@@ -96,8 +93,7 @@ export const HomeMushroomCornerSection: React.FC<Props> = ({
         <CornerCard
           title={corner.birdOfTheDay}
           description={corner.birdOfTheDayDescription}
-          icon={Images.homeBirdOfDayCard}
-          watermark={Images.homeBirdOfDayCard}
+          background={Images.homeBirdOfDayCard}
           onPress={onMushroomOfTheDay}
           textPrimary={textPrimary}
           textSecondary={textSecondary}
@@ -105,8 +101,7 @@ export const HomeMushroomCornerSection: React.FC<Props> = ({
         <CornerCard
           title={corner.askAi.title}
           description={corner.askAi.description}
-          icon={Images.homeAskAiCardIcon}
-          watermark={Images.homeAskAiCardIcon}
+          background={Images.homeAskAiCardIcon}
           onPress={onAskAi}
           textPrimary={textPrimary}
           textSecondary={textSecondary}
@@ -116,30 +111,27 @@ export const HomeMushroomCornerSection: React.FC<Props> = ({
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={onBirdSoundLibrary}
-        style={[styles.libraryRow, { backgroundColor: CARD_BG, borderColor: CARD_BORDER }]}
+        style={styles.libraryRowWrap}
       >
-        <AppImage
+        <AppImageBackground
           source={Images.homeBirdSoundLibrary}
-          style={styles.libraryIcon}
-          resizeMode="contain"
-        />
-        <View style={styles.libraryCopy}>
-          <AppText
-            variant="body14"
-            style={[styles.cardTitle, { color: textPrimary }]}
-          >
-            {corner.birdSoundLibrary.title}
-          </AppText>
-          <AppText variant="caption12" style={{ color: textSecondary, lineHeight: 16 }}>
-            {corner.birdSoundLibrary.description}
-          </AppText>
-        </View>
-        <MaterialIcons name="chevron-right" size={20} color={textPrimary} />
-        <AppImage
-          source={Images.homeBirdSoundLibrary}
-          style={styles.libraryWatermark}
-          resizeMode="contain"
-        />
+          style={[styles.libraryRow, { borderColor: CARD_BORDER, backgroundColor: CARD_BG }]}
+          imageStyle={styles.libraryRowImage}
+          resizeMode="stretch"
+        >
+          <View style={styles.libraryCopy}>
+            <AppText
+              variant="body14"
+              style={[styles.cardTitle, { color: textPrimary }]}
+            >
+              {corner.birdSoundLibrary.title}
+            </AppText>
+            <AppText variant="caption12" style={{ color: textSecondary, lineHeight: 16 }}>
+              {corner.birdSoundLibrary.description}
+            </AppText>
+          </View>
+          <MaterialIcons name="chevron-right" size={20} color={textPrimary} />
+        </AppImageBackground>
       </TouchableOpacity>
     </View>
   );
@@ -158,25 +150,19 @@ const styles = StyleSheet.create({
     gap: 12,
     height: 136,
   },
+  cornerCardWrap: {
+    flex: 1,
+  },
   cornerCard: {
     flex: 1,
     borderWidth: 1,
     borderRadius: Radius.md,
     padding: 12,
     overflow: "hidden",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
   },
-  watermark: {
-    position: "absolute",
-    right: -1,
-    bottom: -5,
-    width: 80,
-    height: 80,
-    opacity: 0.05,
-  },
-  cardIcon: {
-    width: 36,
-    height: 36,
+  cornerCardImage: {
+    borderRadius: Radius.md,
   },
   cardCopy: {
     gap: 4,
@@ -185,32 +171,27 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     lineHeight: 20,
   },
+  libraryRowWrap: {
+    width: "100%",
+  },
   libraryRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    height: 72,
     borderWidth: 1,
     borderRadius: Radius.md,
     paddingVertical: 8,
-    paddingLeft: 12,
+    paddingLeft: 56,
     paddingRight: 16,
     overflow: "hidden",
-    minHeight: 72,
   },
-  libraryIcon: {
-    width: 36,
-    height: 36,
+  libraryRowImage: {
+    borderRadius: Radius.md,
+    resizeMode: "stretch",
   },
   libraryCopy: {
     flex: 1,
     gap: 4,
-  },
-  libraryWatermark: {
-    position: "absolute",
-    right: 16,
-    top: 13,
-    width: 80,
-    height: 80,
-    opacity: 0.05,
   },
 });

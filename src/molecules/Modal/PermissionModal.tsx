@@ -12,8 +12,7 @@ import { Modal } from "./Modal";
 import { ModalBackgroundSvg } from "./ModalBackgroundSvg";
 import { Card } from "../Card";
 import { useStrings } from "../../hooks/useStrings";
-import { APP_COLORS } from "../../config/colors";
-import { getDarkPopupBorderStyle } from "../../design-system/modalTokens";
+import { getDarkPopupBorderStyle, getPopupPrimaryCtaStyle, getPopupPrimaryCtaTextColor, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
 
 export type PermissionType =
   | "camera"
@@ -143,21 +142,16 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
               variant="outline"
               size="large"
               onPress={onClose}
-              style={[
-                styles.laterButton,
-                {
-                  borderColor: isDark
-                    ? APP_COLORS.cancelSecondaryBorderDark
-                    : APP_COLORS.cancelSecondaryBorderLight,
-                },
-              ]}
+              style={[styles.laterButton, getPopupSecondaryCtaStyle(theme)]}
+              textStyle={{ color: getPopupSecondaryCtaTextColor(theme) }}
             />
             <Button
               title={permissionConfig.buttonLabel}
               variant="primary"
               size="large"
               onPress={onGrant}
-              style={styles.grantButton}
+              style={[styles.grantButton, getPopupPrimaryCtaStyle(theme)]}
+              textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
             />
           </View>
         </Card>

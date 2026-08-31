@@ -11,10 +11,12 @@ import { useAuthStore } from "../../../features/auth/auth.store";
 import { ApiException, NetworkException } from "../errors";
 import { BackendApiResponse } from "./auth.api.types";
 import type {
+  AddBirdSpecimenRequest,
   BirdIdentifyResponse,
   BirdArchetypeListResponse,
   BirdStepByStepRequest,
   BirdGalleryAudioResponse,
+  UpdateBirdSpecimenRequest,
 } from "./bird.api.types";
 import {
   IdentifyResponse,
@@ -174,9 +176,25 @@ export const coreApi = {
     uri: string;
     type?: string;
     name?: string;
+    startTime?: number;
+    duration?: number;
+    userLocation?: [number, number];
   }): Promise<BirdIdentifyResponse> => {
     const formData = new FormData();
-    formData.append("files", file as unknown as Blob);
+    formData.append("files", {
+      uri: file.uri,
+      type: file.type,
+      name: file.name,
+    } as unknown as Blob);
+    if (file.startTime != null) {
+      formData.append("startTime", String(file.startTime));
+    }
+    if (file.duration != null) {
+      formData.append("duration", String(file.duration));
+    }
+    if (file.userLocation?.length === 2) {
+      formData.append("userLocation", JSON.stringify(file.userLocation));
+    }
     return postFormData<BirdIdentifyResponse>(
       API_ENDPOINTS.CORE.IDENTIFY_SOUND,
       formData,
@@ -441,7 +459,7 @@ export const coreApi = {
    * Error (500): { "error": true, "reason": "Internal Server Error" }
    */
   addSpecimen: async (
-    data: AddMushroomSpecimenRequest
+    data: AddBirdSpecimenRequest | AddMushroomSpecimenRequest
   ): Promise<MushroomSpecimenDetailResponse> => {
     const response = await apiClient.post<MushroomSpecimenDetailResponse>(
       API_ENDPOINTS.CORE.SPECIMEN_ADD,
@@ -609,7 +627,7 @@ export const coreApi = {
    */
   updateSpecimen: async (
     id: string,
-    data: UpdateMushroomSpecimenRequest
+    data: UpdateBirdSpecimenRequest | UpdateMushroomSpecimenRequest
   ): Promise<MushroomSpecimenDetailResponse> => {
     const response = await apiClient.patch<MushroomSpecimenDetailResponse>(
       `${API_ENDPOINTS.CORE.SPECIMEN_UPDATE}/${id}`,

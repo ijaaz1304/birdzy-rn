@@ -12,8 +12,8 @@ export const MUSHROOM_OF_DAY_MODAL_REF = {
 
 /** Dark heading asset (basket + ribbon) — 1005×498. */
 export const MUSHROOM_OF_DAY_HEADER_ASPECT = 1005 / 498;
-/** Light heading asset (same art, extra empty bottom) — 1360×989. */
-export const MUSHROOM_OF_DAY_HEADER_LIGHT_ASPECT = 1360 / 989;
+/** Light heading asset — bird_of_the_day_popup.webp (1340×680). */
+export const MUSHROOM_OF_DAY_HEADER_LIGHT_ASPECT = 1340 / 680;
 
 export const MUSHROOM_OF_DAY_MODAL_LAYOUT = {
   closeTopBelowSafe: 32,

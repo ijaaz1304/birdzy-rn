@@ -13,6 +13,7 @@ import { CollectionDetailsScreen } from "../features/collection/screens/Collecti
 // Reminders removed - not needed for rocks/minerals app
 import { MushroomDetailsScreen } from "../features/collection/screens/MushroomDetailsScreen";
 import { EditBirdDetailsScreen } from "../features/collection/screens/EditMushroomDetailsScreen";
+import { BirdSoundsScreen } from "../features/collection/screens/BirdSoundsScreen";
 import { IDENTIFY_FULL_SCREEN_OPTIONS } from "./identifyFlowScreenOptions";
 
 const Stack = createNativeStackNavigator<CollectionStackParamList>();
@@ -47,6 +48,7 @@ export const CollectionStack: React.FC = () => {
         name="EditBirdDetails"
         component={EditBirdDetailsScreen}
       />
+      <Stack.Screen name="BirdSounds" component={BirdSoundsScreen} />
     </Stack.Navigator>
   );
 };

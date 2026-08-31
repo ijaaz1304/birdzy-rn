@@ -24,6 +24,19 @@ import type {
 
 export type { MushroomIdentification, IdentifyMushroomResult };
 
+/** Known empty-reply fallback for /core/chat and /got-bitten. */
+const CANNED_AI_EMPTY_REPLIES = [
+  "Hmm, I need a moment to process that. Could you try again?",
+  "Oops, something went wrong. Please resend your message.",
+  "I'm having trouble responding right now. Mind trying once more?",
+] as const;
+
+function cannedEmptyAiReply(): string {
+  return CANNED_AI_EMPTY_REPLIES[
+    Math.floor(Math.random() * CANNED_AI_EMPTY_REPLIES.length)
+  ];
+}
+
 export interface DiseaseDiagnosis {
   id: string;
   name: string;
@@ -169,7 +182,11 @@ class AIService {
   /**
    * Identify bird from audio recording (POST /core/ai/identify-sound).
    */
-  async identifyBirdSound(audioUri: string): Promise<{
+  async identifyBirdSound(
+    audioUri: string,
+    crop?: { startSec: number; durationSec: number },
+    userLocation?: [number, number]
+  ): Promise<{
     imageUrls: string[];
     soundUrls?: string[];
     matches: MushroomIdentification[];
@@ -190,6 +207,9 @@ class AIService {
         uri: audioUri,
         type,
         name,
+        startTime: crop?.startSec,
+        duration: crop?.durationSec,
+        userLocation,
       });
 
       if (response.error) {
@@ -237,7 +257,8 @@ class AIService {
       if (response.error) {
         throw new ApiException(response.reason || "Request failed");
       }
-      return response.data?.reply ?? "";
+      const reply = response.data?.reply?.trim() ?? "";
+      return reply || cannedEmptyAiReply();
     } catch (error) {
       throw normalizeError(error);
     }
@@ -325,14 +346,7 @@ class AIService {
 
       // Handle empty response (known issue mentioned in API docs)
       if (!response.data.reply || response.data.reply.trim() === "") {
-        const cannedResponses = [
-          "Hmm, I need a moment to process that. Could you try again?",
-          "Oops, something went wrong. Please resend your message.",
-          "I'm having trouble responding right now. Mind trying once more?",
-        ];
-        return cannedResponses[
-          Math.floor(Math.random() * cannedResponses.length)
-        ];
+        return cannedEmptyAiReply();
       }
 
       return response.data.reply;

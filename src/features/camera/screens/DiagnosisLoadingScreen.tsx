@@ -11,6 +11,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { Text, Button } from "../../../atoms";
+import { Images } from "../../../assets";
 import { aiService } from "../../../services";
 import { CameraStackParamList } from "../../../navigation/types";
 import { FindYourBirdBackground } from "../../bird-personality/components/FindYourMushroomBackground";
@@ -56,11 +57,17 @@ import { spacing } from "../../../design-system/spacing";
 import { useIdentificationEntryStore } from "../identificationEntry.store";
 import { useIdentificationResultsStore } from "../identificationResults.store";
 import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
+import { fetchStepByStepMatches } from "../../discovery/utils/runStepByStepAnalysis";
 
 const navigateHomeFromDiagnosis = (
-  navigation: NativeStackNavigationProp<CameraStackParamList, "DiagnosisLoading">
+  navigation: NativeStackNavigationProp<CameraStackParamList, "DiagnosisLoading">,
+  isStepByStep = false
 ) => {
   useIdentificationEntryStore.getState().setSuppressFtueAutoNavigation(true);
+  if (isStepByStep) {
+    navigation.getParent()?.navigate("Home", { screen: "StepByStep" });
+    return;
+  }
   // Keep a completed/cancelled analysis from reopening as the active Camera tab
   // route after the user has returned Home.
   if (typeof navigation.popToTop === "function") {
@@ -97,9 +104,10 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<DiagnosisLoadingScreenNavigationProp>();
   const route = useRoute<DiagnosisLoadingScreenRouteProp>();
-  const { image, displayImage, images, audioUri, identifyMode } =
+  const { image, displayImage, images, audioUri, identifyMode, cropStartSec, cropDurationSec, audioDurationSec, recordedAt } =
     route.params || ({} as CameraStackParamList["DiagnosisLoading"]);
   const isSoundMode = identifyMode === "sound" || !!audioUri;
+  const isStepByStepMode = identifyMode === "stepByStep";
   const uploadImages =
     images?.length && images[0]?.uri ? images : image?.uri ? [image] : [];
   const previewImage = displayImage?.uri
@@ -137,7 +145,9 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   }, []);
 
   const navigateToPossibleMatches = (
-    possibleMatches: ReturnType<typeof mapIdentificationToPossibleMatch>[]
+    possibleMatches: ReturnType<typeof mapIdentificationToPossibleMatch>[],
+    fromStepByStep = false,
+    uploadedSoundUrls?: string[]
   ) => {
     const identificationImage = primaryImage?.uri
       ? { uri: primaryImage.uri }
@@ -145,12 +155,31 @@ export const DiagnosisLoadingScreen: React.FC = () => {
     // Persist before navigate so Possible Matches can paint immediately from store + params.
     useIdentificationResultsStore
       .getState()
-      .setResults(possibleMatches, identificationImage);
-    navigation.replace("OtherPossibleMatches", {
+      .setResults(possibleMatches, identificationImage, {
+        uploadedSoundUrls,
+      });
+    const params = {
       title: CAMERA_STRINGS.results.possibleMatchesHeading,
       matches: possibleMatches,
       identificationImage,
-    });
+      fromStepByStep,
+      ...(isSoundMode
+        ? {
+            fromSound: true as const,
+            audioUri,
+            audioDurationSec,
+            recordedAt,
+          }
+        : {}),
+    };
+    if (fromStepByStep) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "OtherPossibleMatches", params }],
+      });
+      return;
+    }
+    navigation.replace("OtherPossibleMatches", params);
   };
 
   useEffect(() => {
@@ -169,6 +198,39 @@ export const DiagnosisLoadingScreen: React.FC = () => {
         );
         await performanceService.stopTrace(BIRD_IDENTIFICATION_TRACE);
       };
+
+      if (isStepByStepMode) {
+        try {
+          const possibleMatches = await fetchStepByStepMatches();
+          if (cancelled || !isMountedRef.current) return;
+
+          const thumbnailUris = possibleMatches
+            .map((match) => getPossibleMatchThumbnailUri(match))
+            .filter((uri): uri is string => !!uri);
+
+          setLoadingPhase("preparing");
+          void awaitPrefetchRemoteImages(thumbnailUris, thumbnailUris.length, 0);
+          if (thumbnailUris.length > 0 && !cancelled && isMountedRef.current) {
+            const waitForDecode = new Promise<void>((resolve) => {
+              thumbPrefetchDoneRef.current = resolve;
+            });
+            setThumbPrefetchUris(thumbnailUris.slice(0, 5));
+            await Promise.race([
+              waitForDecode,
+              new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+            ]);
+          }
+
+          if (cancelled || !isMountedRef.current) return;
+          void stopIdentificationTrace("success");
+          navigateToPossibleMatches(possibleMatches, true);
+        } catch (error) {
+          console.error("Step-by-step diagnosis error:", error);
+          await stopIdentificationTrace("failure");
+          if (!cancelled && isMountedRef.current) setShowErrorModal(true);
+        }
+        return;
+      }
 
       if (isSoundMode) {
         if (!audioUri) {
@@ -203,11 +265,22 @@ export const DiagnosisLoadingScreen: React.FC = () => {
       try {
         let matches;
         let matchesFoundCount;
+        let uploadedSoundUrls: string[] | undefined;
 
         if (isSoundMode && audioUri) {
-          const soundResult = await aiService.identifyBirdSound(audioUri);
+          const crop =
+            cropStartSec != null && cropDurationSec != null
+              ? { startSec: cropStartSec, durationSec: cropDurationSec }
+              : undefined;
+          const userLocation = getIdentificationUserLocationForApi();
+          const soundResult = await aiService.identifyBirdSound(
+            audioUri,
+            crop,
+            userLocation
+          );
           matches = soundResult.matches;
           matchesFoundCount = soundResult.matchesFoundCount;
+          uploadedSoundUrls = soundResult.soundUrls;
         } else {
           const uploadUris = uploadImages
             .map((i) => i.uri)
@@ -265,7 +338,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
 
         if (cancelled || !isMountedRef.current) return;
 
-        navigateToPossibleMatches(possibleMatches);
+        navigateToPossibleMatches(possibleMatches, false, uploadedSoundUrls);
 
         void (async () => {
           rescheduleInactivityNotifications().catch(() => {
@@ -336,6 +409,9 @@ export const DiagnosisLoadingScreen: React.FC = () => {
                 ) : (
                   <IdentificationScannerFrame
                     imageUri={primaryImage?.uri}
+                    fallbackImage={
+                      isStepByStepMode ? Images.wizardFindYourBird : undefined
+                    }
                     style={styles.scannerFrameWrapper}
                   />
                 )}
@@ -364,7 +440,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
                   variant="primary"
                   size="large"
                   fullWidth
-                  onPress={() => navigateHomeFromDiagnosis(navigation)}
+                  onPress={() => navigateHomeFromDiagnosis(navigation, isStepByStepMode)}
                   textStyle={{ flexShrink: 0 }}
                 />
               </View>
@@ -378,11 +454,11 @@ export const DiagnosisLoadingScreen: React.FC = () => {
         visible={showErrorModal}
         onClose={() => {
           setShowErrorModal(false);
-          navigateHomeFromDiagnosis(navigation);
+          navigateHomeFromDiagnosis(navigation, isStepByStepMode);
         }}
         onRetry={() => {
           setShowErrorModal(false);
-          navigateHomeFromDiagnosis(navigation);
+          navigateHomeFromDiagnosis(navigation, isStepByStepMode);
         }}
         onChatWithAI={() => {
           setShowErrorModal(false);

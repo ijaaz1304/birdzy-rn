@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { AppText } from "../../../components/shared";
-import { Images } from "../../../assets";
+import { ExploreHotspotIcon, ExplorePinIcon, Images } from "../../../assets";
 import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { FONTS } from "../../../common/typography";
 import { useTheme } from "../../../hooks/useTheme";
@@ -11,8 +11,17 @@ import { Radius } from "../../../design";
 import { archetypeService } from "../../../services/archetype/archetype.service";
 import { CATEGORIES } from "../../../constants/appConstants";
 
+/** Figma 8230:72834 / 8230:72835 — map art only; copy is live text */
 const EXPLORE_BANNER_BG = "#F5EBEB";
-const CARD_BORDER = "#E9EFD2";
+const EXPLORE_OUTER_BORDER = "#E7E7E7";
+const EXPLORE_INNER_BORDER = "#E9EFD2";
+
+const MAP_HOTSPOTS = [
+  { left: 109, top: 36 },
+  { left: 188, top: 96 },
+  { left: 105, top: 132 },
+  { left: 39, top: 111 },
+] as const;
 
 type Props = {
   onExploreMap: () => void;
@@ -54,16 +63,37 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
         styles.container,
         {
           backgroundColor: theme.colors.surfacePrimary,
-          borderColor: theme.colors.border,
+          borderColor: EXPLORE_OUTER_BORDER,
         },
       ]}
     >
-      <View style={[styles.banner, { backgroundColor: EXPLORE_BANNER_BG, borderColor: CARD_BORDER }]}>
-        <AppImage
-          source={Images.homeExploreNearYouMap}
-          style={styles.mapArt}
-          resizeMode="contain"
-        />
+      <View
+        style={[
+          styles.banner,
+          {
+            backgroundColor: EXPLORE_BANNER_BG,
+            borderColor: EXPLORE_INNER_BORDER,
+          },
+        ]}
+      >
+        <View style={styles.mapArt} pointerEvents="none">
+          <AppImage
+            source={Images.homeExploreNearYouMap}
+            style={styles.mapImage}
+            resizeMode="contain"
+          />
+          {MAP_HOTSPOTS.map((spot) => (
+            <View
+              key={`${spot.left}-${spot.top}`}
+              style={[styles.hotspot, { left: spot.left, top: spot.top }]}
+            >
+              <ExploreHotspotIcon width={12} height={12} />
+            </View>
+          ))}
+          <View style={styles.pin}>
+            <ExplorePinIcon width={24} height={24} />
+          </View>
+        </View>
         <View style={styles.bannerCopy}>
           <AppText
             variant="title18"
@@ -81,7 +111,7 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
               styles.mapButton,
               {
                 backgroundColor: theme.colors.surfacePrimary,
-                borderColor: theme.colors.border,
+                borderColor: EXPLORE_OUTER_BORDER,
               },
             ]}
           >
@@ -137,7 +167,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   banner: {
-    height: 154,
+    height: 172,
     borderRadius: Radius.md,
     borderWidth: 1,
     overflow: "hidden",
@@ -145,10 +175,26 @@ const styles = StyleSheet.create({
   },
   mapArt: {
     position: "absolute",
-    right: -24,
-    top: 8,
-    width: 236,
-    height: 173,
+    left: 128,
+    top: 4,
+    width: 264,
+    height: 194,
+  },
+  mapImage: {
+    width: "100%",
+    height: "100%",
+  },
+  hotspot: {
+    position: "absolute",
+    width: 12,
+    height: 12,
+  },
+  pin: {
+    position: "absolute",
+    left: 146,
+    top: 41,
+    width: 24,
+    height: 24,
   },
   bannerCopy: {
     position: "absolute",
@@ -157,6 +203,7 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -52 }],
     width: 158,
     gap: 16,
+    zIndex: 1,
   },
   bannerTitle: {
     fontFamily: FONTS.bold,

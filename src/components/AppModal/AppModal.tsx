@@ -28,7 +28,7 @@ import { SCREEN_COLORS } from "../../constants/colorConstants";
 
 import { Radius } from "../../design";
 
-import { getPopupChromeStyle, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
+import { getPopupChromeStyle, getPopupPrimaryCtaStyle, getPopupPrimaryCtaTextColor, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
 import { getAppStoreUrl } from "../../constants/appStoreConstants";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -424,8 +424,8 @@ function SubscriptionFailedContent({
         size="large"
         onPress={onRetry}
         fullWidth
-        style={{ backgroundColor: theme.colors.primary }}
-        textStyle={{ color: theme.colors.onPrimary }}
+        style={getPopupPrimaryCtaStyle(theme)}
+        textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
       />
     </>
   );
@@ -486,8 +486,8 @@ function RateUsPopupContent({
         size="large"
         onPress={handleRateNow}
         fullWidth
-        style={{ backgroundColor: theme.colors.primary }}
-        textStyle={{ color: theme.colors.onPrimary }}
+        style={getPopupPrimaryCtaStyle(theme)}
+        textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
       />
       <TouchableOpacity
         onPress={onClose}
@@ -555,8 +555,8 @@ function StayUpdatedContent({
         size="large"
         onPress={onEnableUpdates}
         fullWidth
-        style={{ backgroundColor: theme.colors.primary }}
-        textStyle={{ color: theme.colors.onPrimary }}
+        style={getPopupPrimaryCtaStyle(theme)}
+        textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
       />
       <TouchableOpacity
         onPress={onClose}
@@ -624,8 +624,8 @@ function WriteFeedbackContent({
         size="large"
         onPress={onWriteFeedback}
         fullWidth
-        style={{ backgroundColor: theme.colors.primary }}
-        textStyle={{ color: theme.colors.onPrimary }}
+        style={getPopupPrimaryCtaStyle(theme)}
+        textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
       />
     </>
   );
@@ -686,8 +686,8 @@ function EnablePushContent({
         size="large"
         onPress={handleAllow}
         fullWidth
-        style={{ backgroundColor: theme.colors.primary }}
-        textStyle={{ color: theme.colors.onPrimary }}
+        style={getPopupPrimaryCtaStyle(theme)}
+        textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
       />
     </>
   );
@@ -741,8 +741,8 @@ function LogoutConfirmContent({
         fullWidth
         disabled={isLoading}
         loading={isLoading}
-        style={{ backgroundColor: theme.colors.primary }}
-        textStyle={{ color: theme.colors.onPrimary }}
+        style={getPopupPrimaryCtaStyle(theme)}
+        textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
       />
       <Button
         title={strings.logOutConfirmNoThanks}
@@ -803,7 +803,7 @@ function DeletePostContent({
           style={[
             popupStyles.deletePostButton,
             {
-              backgroundColor: theme.colors.primary,
+              ...getPopupPrimaryCtaStyle(theme),
               marginBottom: 12,
             },
           ]}
@@ -888,10 +888,10 @@ function DeleteCollectionContent({
           disabled={isLoading}
           loading={isLoading}
           style={{
-            backgroundColor: theme.colors.primary,
+            ...getPopupPrimaryCtaStyle(theme),
             marginBottom: theme.spacing[3],
           }}
-          textStyle={{ color: theme.colors.onPrimary }}
+          textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
         />
         <Button
           title={strings.noThanks}
@@ -959,7 +959,16 @@ function CongratulationsContent({
             variant={btn.variant || "primary"}
             size="large"
             onPress={btn.onPress}
-            style={fullStyles.button}
+            style={[
+              fullStyles.button,
+              (!btn.variant || btn.variant === "primary") &&
+                getPopupPrimaryCtaStyle(theme),
+            ]}
+            textStyle={
+              !btn.variant || btn.variant === "primary"
+                ? { color: getPopupPrimaryCtaTextColor(theme) }
+                : undefined
+            }
           />
         ))}
       </View>
@@ -1002,7 +1011,16 @@ function CouldNotIdentifyContent({
             variant={btn.variant || "primary"}
             size="large"
             onPress={btn.onPress}
-            style={fullStyles.button}
+            style={[
+              fullStyles.button,
+              (!btn.variant || btn.variant === "primary") &&
+                getPopupPrimaryCtaStyle(theme),
+            ]}
+            textStyle={
+              !btn.variant || btn.variant === "primary"
+                ? { color: getPopupPrimaryCtaTextColor(theme) }
+                : undefined
+            }
           />
         ))}
       </View>

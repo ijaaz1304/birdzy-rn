@@ -18,6 +18,7 @@ import { NAVIGATION_STRINGS } from "../../../config/navigation.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { spacing } from "../../../design-system/spacing";
 import { Radius } from "../../../design";
+import { useIdentificationEntry } from "../IdentificationEntryProvider";
 
 type Nav = NativeStackNavigationProp<CameraStackParamList, "IdentifyHub">;
 
@@ -27,6 +28,7 @@ export const IdentifyHubScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const strings = NAVIGATION_STRINGS.identifyHub;
+  const { startSoundIdentificationEntry } = useIdentificationEntry();
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -40,7 +42,7 @@ export const IdentifyHubScreen: React.FC = () => {
     const root = navigation.getParent()?.getParent();
     root?.navigate("MainTabs" as keyof RootStackParamList, {
       screen: "Home",
-      params: { screen: "StepByStep" },
+      params: { screen: "StepByStep", params: { startFresh: true } },
     });
   };
 
@@ -57,7 +59,7 @@ export const IdentifyHubScreen: React.FC = () => {
       icon: "mic" as const,
       title: strings.sound,
       hint: strings.soundHint,
-      onPress: () => navigation.navigate("SoundIdentify"),
+      onPress: () => startSoundIdentificationEntry(),
     },
     {
       id: "wizard",

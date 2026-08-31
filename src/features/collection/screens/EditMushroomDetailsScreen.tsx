@@ -35,7 +35,6 @@ import {
 } from "../../../molecules";
 import { CollectionStackParamList } from "../../../navigation/types";
 import { MushroomPhoto } from "../../../types/mushroom-media.types";
-import { getDisplayName } from "../../../utils/mushroomDisplayUtils";
 import { mushroomSpecimenService } from "../../../services/specimen/mushroomSpecimen.service";
 import { archetypeService } from "../../../services/archetype/archetype.service";
 import { useAppLogsStore } from "../../app-logs/app-logs.store";
@@ -53,7 +52,6 @@ import { typography } from "../../../design-system/typography";
 import { Radius } from "../../../design";
 import { spacing } from "../../../design-system/spacing";
 import {
-  EDIT_MUSHROOM_TABS,
   EDIT_BIRD_TABS,
   EditMushroomTabId,
   EditableMushroomData,
@@ -62,7 +60,6 @@ import {
   parseEditableMushroomData,
   toDropdownOptions,
 } from "../editMushroomDetails.utils";
-import { isBirdRecord } from "../../../utils/birdApiMappers";
 import { COLLECTION_STRINGS } from "../../../config/strings/collection.strings";
 import {
   BIRD_TYPE_LABELS,
@@ -177,25 +174,12 @@ export const EditBirdDetailsScreen: React.FC = () => {
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({});
   const [activeTab, setActiveTab] = useState<EditMushroomTabId>("overview");
 
-  const isBird = useMemo(
-    () =>
-      isBirdRecord(
-        (formData ?? initialData ?? paramsInitialData ?? {}) as Record<
-          string,
-          unknown
-        >
-      ),
-    [formData, initialData, paramsInitialData]
-  );
-
-  const editTabs = isBird ? EDIT_BIRD_TABS : EDIT_MUSHROOM_TABS;
+  const editTabs = EDIT_BIRD_TABS;
   const birdStrings = COLLECTION_STRINGS.birdDetails.traits;
 
   const scrollViewRef = useRef<ScrollView>(null);
   const sectionYOffsets = useRef<Record<EditMushroomTabId, number>>({
     overview: 0,
-    safety: 0,
-    similar: 0,
     physical: 0,
     habitat: 0,
   });
@@ -229,12 +213,6 @@ export const EditBirdDetailsScreen: React.FC = () => {
       setIsDirty(false);
     }
   }, [initialData]);
-
-  useEffect(() => {
-    if (isBird && (activeTab === "safety" || activeTab === "similar")) {
-      setActiveTab("overview");
-    }
-  }, [isBird, activeTab]);
 
   useEffect(() => {
     const y = sectionYOffsets.current[activeTab] ?? 0;
@@ -526,9 +504,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
             color="textSecondary"
             style={styles.centeredText}
           >
-            {isBird
-              ? "Sighting not found. Please go back and try again."
-              : "Mushroom not found. Please go back and try again."}
+            Sighting not found. Please go back and try again.
           </Text>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -788,287 +764,125 @@ export const EditBirdDetailsScreen: React.FC = () => {
           </>
         )}
 
-        {!isBird &&
-          renderSectionCard(
-            "safety",
-            "Safety",
-            <>
-              {renderDropdown("Edibility", "edibility", "edibility")}
-              {renderDropdown(
-                "Toxicity Severity",
-                "toxicitySeverity",
-                "toxicitySeverity"
-              )}
-              {renderDropdown("Psychoactive", "psychoactive", "psychoactive")}
-              <BaseTextArea
-                {...textAreaThemeProps}
-                label="Symptoms if any"
-                value={formData.symptoms || ""}
-                onChangeText={(text) => updateField("symptoms", text)}
-                placeholder="Describe symptoms"
-                numberOfLines={4}
-                minHeight={100}
-              />
-            </>
-          )}
-
-        {!isBird &&
-          renderSectionCard(
-            "similar",
-            "Similar species",
-            <>
-              {(formData.lookAlikes ?? []).length > 0 ? (
-                (formData.lookAlikes ?? []).map((item, index) => (
-                  <View
-                    key={`${item.scientificName}-${index}`}
-                    style={styles.lookAlikeRow}
-                  >
-                    <Text
-                      variant="body"
-                      size="medium"
-                      weight="semibold"
-                      style={{ color: colors.textPrimary }}
-                    >
-                      {getDisplayName(item) || item.scientificName}
-                    </Text>
-                    {item.keyDifferences ? (
-                      <Text
-                        variant="body"
-                        size="small"
-                        color="textSecondary"
-                        style={{ marginTop: 4 }}
-                      >
-                        {item.keyDifferences}
-                      </Text>
-                    ) : null}
-                  </View>
-                ))
-              ) : (
-                <Text variant="body" size="medium" color="textSecondary">
-                  No similar species listed.
-                </Text>
-              )}
-            </>
-          )}
-
         {renderSectionCard(
           "physical",
-          isBird ? "Identification" : "Physical Traits",
+          "Identification",
           <>
-            {isBird ? (
-              <>
-                <BaseInputField
-                  {...inputFieldThemeProps}
-                  label={birdStrings.length}
-                  value={formData.lengthRange || ""}
-                  onChangeText={(text) => updateField("lengthRange", text)}
-                  placeholder="e.g. 18–25 cm"
-                />
-                <BaseInputField
-                  {...inputFieldThemeProps}
-                  label={birdStrings.wingspan}
-                  value={formData.wingspanRange || ""}
-                  onChangeText={(text) => updateField("wingspanRange", text)}
-                  placeholder="e.g. 32–40 cm"
-                />
-                <BaseInputField
-                  {...inputFieldThemeProps}
-                  label={birdStrings.weight}
-                  value={formData.weightRange || ""}
-                  onChangeText={(text) => updateField("weightRange", text)}
-                  placeholder="e.g. 30–45 g"
-                />
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label={birdStrings.colors}
-                  value={formData.dominantColors || ""}
-                  onChangeText={(text) => updateField("dominantColors", text)}
-                  placeholder="Comma-separated colors"
-                  numberOfLines={3}
-                  minHeight={80}
-                />
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label={birdStrings.flightPattern}
-                  value={formData.flightPattern || ""}
-                  onChangeText={(text) => updateField("flightPattern", text)}
-                  placeholder="e.g. Direct, undulating"
-                  numberOfLines={3}
-                  minHeight={80}
-                />
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label={birdStrings.flightAltitude}
-                  value={formData.flightAltitude || ""}
-                  onChangeText={(text) => updateField("flightAltitude", text)}
-                  placeholder="e.g. Low, canopy"
-                  numberOfLines={3}
-                  minHeight={80}
-                />
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label={birdStrings.keyMarks}
-                  value={formData.keyIdentificationMarks || ""}
-                  onChangeText={(text) =>
-                    updateField("keyIdentificationMarks", text)
-                  }
-                  placeholder="Field marks for ID"
-                  numberOfLines={4}
-                  minHeight={100}
-                />
-                {renderDropdown(
-                  birdStrings.birdType,
-                  "birdType",
-                  "birdType"
-                )}
-                {renderDropdown(
-                  birdStrings.conservation,
-                  "conservationStatus",
-                  "conservationStatus"
-                )}
-              </>
-            ) : (
-              <>
-                {renderDropdown("Cap Shape", "capShape", "capShape")}
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label="Cap Surface"
-                  value={formData.capSurface || ""}
-                  onChangeText={(text) => updateField("capSurface", text)}
-                  placeholder="Describe cap surface"
-                  numberOfLines={4}
-                  minHeight={100}
-                />
-                <BaseInputField
-                  {...inputFieldThemeProps}
-                  label="Cap Color"
-                  value={formData.capColor || ""}
-                  onChangeText={(text) => updateField("capColor", text)}
-                  placeholder="Enter cap color"
-                />
-                {renderDropdown(
-                  "Underside Type",
-                  "undersideType",
-                  "undersideType"
-                )}
-                {renderDropdown("Stem Presence", "stemPresence", "stemPresence")}
-                {renderDropdown("Stem Surface", "stemSurface", "stemSurface")}
-                {renderDropdown("Ring Present", "ringPresent", "ringPresent")}
-                {renderDropdown("Volva Present", "volvaPresent", "volvaPresent")}
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label="Size Range"
-                  value={formData.capDiameterRange || ""}
-                  onChangeText={(text) => updateField("capDiameterRange", text)}
-                  placeholder="Enter size range"
-                  numberOfLines={4}
-                  minHeight={100}
-                />
-              </>
+            <BaseInputField
+              {...inputFieldThemeProps}
+              label={birdStrings.length}
+              value={formData.lengthRange || ""}
+              onChangeText={(text) => updateField("lengthRange", text)}
+              placeholder="e.g. 18–25 cm"
+            />
+            <BaseInputField
+              {...inputFieldThemeProps}
+              label={birdStrings.wingspan}
+              value={formData.wingspanRange || ""}
+              onChangeText={(text) => updateField("wingspanRange", text)}
+              placeholder="e.g. 32–40 cm"
+            />
+            <BaseInputField
+              {...inputFieldThemeProps}
+              label={birdStrings.weight}
+              value={formData.weightRange || ""}
+              onChangeText={(text) => updateField("weightRange", text)}
+              placeholder="e.g. 30–45 g"
+            />
+            <BaseTextArea
+              {...textAreaThemeProps}
+              label={birdStrings.colors}
+              value={formData.dominantColors || ""}
+              onChangeText={(text) => updateField("dominantColors", text)}
+              placeholder="Comma-separated colors"
+              numberOfLines={3}
+              minHeight={80}
+            />
+            <BaseTextArea
+              {...textAreaThemeProps}
+              label={birdStrings.flightPattern}
+              value={formData.flightPattern || ""}
+              onChangeText={(text) => updateField("flightPattern", text)}
+              placeholder="e.g. Direct, undulating"
+              numberOfLines={3}
+              minHeight={80}
+            />
+            <BaseTextArea
+              {...textAreaThemeProps}
+              label={birdStrings.flightAltitude}
+              value={formData.flightAltitude || ""}
+              onChangeText={(text) => updateField("flightAltitude", text)}
+              placeholder="e.g. Low, canopy"
+              numberOfLines={3}
+              minHeight={80}
+            />
+            <BaseTextArea
+              {...textAreaThemeProps}
+              label={birdStrings.keyMarks}
+              value={formData.keyIdentificationMarks || ""}
+              onChangeText={(text) =>
+                updateField("keyIdentificationMarks", text)
+              }
+              placeholder="Field marks for ID"
+              numberOfLines={4}
+              minHeight={100}
+            />
+            {renderDropdown(birdStrings.birdType, "birdType", "birdType")}
+            {renderDropdown(
+              birdStrings.conservation,
+              "conservationStatus",
+              "conservationStatus"
             )}
           </>
         )}
 
         {renderSectionCard(
           "habitat",
-          isBird ? "Habitat & Diet" : "Habitat and distribution",
+          "Habitat & Diet",
           <>
             <BaseTextArea
               {...textAreaThemeProps}
-              label={
-                isBird
-                  ? COLLECTION_STRINGS.birdDetails.habitat.habitat
-                  : "Habitat Type"
-              }
+              label={COLLECTION_STRINGS.birdDetails.habitat.habitat}
               value={formData.habitatType || ""}
               onChangeText={(text) => updateField("habitatType", text)}
               placeholder="Enter habitat"
               numberOfLines={4}
               minHeight={100}
             />
-            {isBird ? (
-              <>
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label={COLLECTION_STRINGS.birdDetails.habitat.diet}
-                  value={formData.diet || ""}
-                  onChangeText={(text) => updateField("diet", text)}
-                  placeholder="What this bird eats"
-                  numberOfLines={4}
-                  minHeight={100}
-                />
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label={COLLECTION_STRINGS.birdDetails.habitat.distribution}
-                  value={formData.geographicDistribution || ""}
-                  onChangeText={(text) =>
-                    updateField("geographicDistribution", text)
-                  }
-                  placeholder="Regions where found"
-                  numberOfLines={4}
-                  minHeight={100}
-                />
-                <BaseInputField
-                  {...inputFieldThemeProps}
-                  label={birdStrings.bestTime}
-                  value={formData.bestTimeToWatch || ""}
-                  onChangeText={(text) => updateField("bestTimeToWatch", text)}
-                  placeholder="Best time to watch"
-                />
-                <BaseInputField
-                  {...inputFieldThemeProps}
-                  label={birdStrings.preferredLocations}
-                  value={formData.preferredLocations || ""}
-                  onChangeText={(text) =>
-                    updateField("preferredLocations", text)
-                  }
-                  placeholder="Preferred locations"
-                />
-              </>
-            ) : (
-              <>
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label="Growth Pattern"
-                  value={formData.growthPattern || ""}
-                  onChangeText={(text) => updateField("growthPattern", text)}
-                  placeholder="Enter growth pattern"
-                  numberOfLines={4}
-                  minHeight={100}
-                />
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label="Geographic Distribution"
-                  value={formData.geographicDistribution || ""}
-                  onChangeText={(text) =>
-                    updateField("geographicDistribution", text)
-                  }
-                  placeholder="Enter geographic distribution"
-                  numberOfLines={4}
-                  minHeight={100}
-                />
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label="Fruiting Season"
-                  value={formData.fruitingSeasonText || ""}
-                  onChangeText={(text) => updateField("fruitingSeasonText", text)}
-                  placeholder="Enter fruiting season"
-                  numberOfLines={4}
-                  minHeight={100}
-                />
-                <BaseTextArea
-                  {...textAreaThemeProps}
-                  label="Geographic Distribution Hotspots"
-                  value={formData.distributionHotspotsText || ""}
-                  onChangeText={(text) =>
-                    updateField("distributionHotspotsText", text)
-                  }
-                  placeholder="Enter distribution hotspots"
-                  numberOfLines={4}
-                  minHeight={100}
-                />
-              </>
-            )}
+            <BaseTextArea
+              {...textAreaThemeProps}
+              label={COLLECTION_STRINGS.birdDetails.habitat.diet}
+              value={formData.diet || ""}
+              onChangeText={(text) => updateField("diet", text)}
+              placeholder="What this bird eats"
+              numberOfLines={4}
+              minHeight={100}
+            />
+            <BaseTextArea
+              {...textAreaThemeProps}
+              label={COLLECTION_STRINGS.birdDetails.habitat.distribution}
+              value={formData.geographicDistribution || ""}
+              onChangeText={(text) =>
+                updateField("geographicDistribution", text)
+              }
+              placeholder="Regions where found"
+              numberOfLines={4}
+              minHeight={100}
+            />
+            <BaseInputField
+              {...inputFieldThemeProps}
+              label={birdStrings.bestTime}
+              value={formData.bestTimeToWatch || ""}
+              onChangeText={(text) => updateField("bestTimeToWatch", text)}
+              placeholder="Best time to watch"
+            />
+            <BaseInputField
+              {...inputFieldThemeProps}
+              label={birdStrings.preferredLocations}
+              value={formData.preferredLocations || ""}
+              onChangeText={(text) => updateField("preferredLocations", text)}
+              placeholder="Preferred locations"
+            />
           </>
         )}
       </ScrollView>
@@ -1267,9 +1081,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     paddingVertical: 0,
-  },
-  lookAlikeRow: {
-    paddingVertical: spacing[2],
   },
   bottomBar: {
     borderTopWidth: 1,

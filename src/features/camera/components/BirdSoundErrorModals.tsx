@@ -11,6 +11,7 @@ import { Text, Button } from "../../../atoms";
 import { Images } from "../../../assets";
 import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
 import { useTheme } from "../../../hooks/useTheme";
+import { getPopupPrimaryCtaStyle } from "../../../design-system/modalTokens";
 import { spacing } from "../../../design-system/spacing";
 import { Radius } from "../../../design";
 
@@ -76,6 +77,7 @@ function SoundErrorModal({
               size="large"
               fullWidth
               onPress={onRetry}
+              style={getPopupPrimaryCtaStyle(theme)}
             />
           ) : null}
           <Button

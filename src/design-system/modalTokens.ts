@@ -29,6 +29,17 @@ export const POPUP_BORDER_RADIUS = MODAL.cardRadius;
 /** Figma secondary popup CTA radius — Radius-xl / 24px */
 export const POPUP_SECONDARY_CTA_RADIUS = 24;
 
+/** Primary popup CTA fill — bird brand purple (`primaryCTA` / `#725481`) */
+export function getPopupPrimaryCtaStyle(theme: Theme): ViewStyle {
+  return {
+    backgroundColor: theme.colors.primaryCTA,
+  };
+}
+
+export function getPopupPrimaryCtaTextColor(theme: Theme): string {
+  return theme.colors.onPrimary;
+}
+
 /** Secondary popup CTA: 24px radius, surface primary fill, border-0 stroke */
 export function getPopupSecondaryCtaStyle(theme: Theme): ViewStyle {
   return {

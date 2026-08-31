@@ -1,5 +1,5 @@
 /**
- * Local hybrid search over mushroom names (new_mushroom_search.json).
+ * Local hybrid search over bird names (birdSearch.json).
  * Prefix index narrows the dataset; light fuzzy match runs on the bucket only.
  * Dropdown suggestions from this only; API search runs when the user selects one.
  */
@@ -22,11 +22,12 @@ export type SearchDataItem = {
 type RawSearchDataItem = {
   scientificName?: string;
   verbatimScientificName?: string;
+  commonName?: string | null;
   commonNames?: unknown;
   genusCommonNames?: unknown;
 };
 
-const searchDataRaw = require("../../new_mushroom_search.json");
+const searchDataRaw = require("../../birdSearch.json");
 const rawItems: RawSearchDataItem[] = Array.isArray(searchDataRaw)
   ? searchDataRaw
   : Array.isArray((searchDataRaw as { default?: RawSearchDataItem[] })?.default)
@@ -44,7 +45,11 @@ function normalizeSearchItem(raw: RawSearchDataItem): SearchDataItem | null {
   const commonNames = normalizeCommonNameList(raw.commonNames);
   const genusCommonNames = normalizeCommonNameList(raw.genusCommonNames);
   const primaryCommonName =
-    getPrimaryCommonName({ commonNames, genusCommonNames }) ?? null;
+    getPrimaryCommonName({
+      commonNames,
+      genusCommonNames,
+      commonName: raw.commonName,
+    }) ?? null;
 
   return {
     canonicalName: scientificName,
@@ -61,7 +66,7 @@ for (let i = 0; i < rawItems.length; i++) {
   if (item) searchData.push(item);
 }
 
-const PREFIX_LOG = "[MushroomSearch]";
+const PREFIX_LOG = "[BirdSearch]";
 const prefixMap = new Map<string, SearchDataItem[]>();
 
 function getPrefixKeys(name: string): string[] {
@@ -155,7 +160,7 @@ function matchScore(item: SearchDataItem, q: string): number {
 /**
  * Hybrid search: prefix bucket lookup then startsWith/includes in bucket only.
  */
-export function searchMushroomsHybrid(
+export function searchBirdsHybrid(
   query: string,
   limit = 15
 ): SearchDataItem[] {
@@ -209,5 +214,8 @@ export function searchMushroomsHybrid(
   return out;
 }
 
-/** @deprecated Use searchMushroomsHybrid */
-export const searchMineralsHybrid = searchMushroomsHybrid;
+/** @deprecated Use searchBirdsHybrid */
+export const searchMushroomsHybrid = searchBirdsHybrid;
+
+/** @deprecated Use searchBirdsHybrid */
+export const searchMineralsHybrid = searchBirdsHybrid;

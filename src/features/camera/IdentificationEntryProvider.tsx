@@ -1,6 +1,7 @@
 /**
- * Home-screen identification permission flow (location + camera popups).
- * Location popups render here once — shared store, same flow everywhere.
+ * Identification permission flow (location + camera/microphone popups).
+ * Identify tab opens Choose a Method. Photo: location → camera popup → Camera.
+ * Sound: location → microphone popup → SoundIdentify.
  */
 
 import React, {
@@ -17,15 +18,19 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   CameraPermissionPopup,
   ChangeLocationBottomSheet,
+  ChooseMethodPopup,
   LocationManageAccessPopup,
   LocationPermissionPopup,
+  MicrophonePermissionPopup,
 } from "../../molecules/Modal";
 import { RootStackParamList } from "../../navigation/types";
 import {
   checkCameraPermission,
   openDeviceSettings,
   requestCameraPermission,
+  requestMicrophonePermission,
 } from "../../services/permissions";
+import { shouldSkipLocationPermissionPrompt } from "../../services/permissions/permissionPromptSkip";
 import { shouldShowIdentificationLocationGate } from "./locationToggle.helpers";
 import { useIdentificationLocationStore } from "./identificationLocation.store";
 import { useLocationPermissionUiStore } from "./locationPermissionUi.store";
@@ -36,6 +41,8 @@ type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 type IdentificationEntryContextValue = {
   startIdentificationEntry: () => void;
+  startSoundIdentificationEntry: () => void;
+  openIdentifyMethodChooser: () => void;
 };
 
 const IdentificationEntryContext =
@@ -70,6 +77,7 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
     handleEnableLocationRequest,
     locationRequestLoading,
     promptForLocation,
+    syncPermission,
   } = useLocationToggleFlow();
 
   const awaitingNative = useLocationPermissionUiStore((s) => s.awaitingNative);
@@ -77,7 +85,12 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
   const [showCameraPopup, setShowCameraPopup] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraBlocked, setCameraBlocked] = useState(false);
+  const [showMicrophonePopup, setShowMicrophonePopup] = useState(false);
+  const [microphoneLoading, setMicrophoneLoading] = useState(false);
+  const [microphoneBlocked, setMicrophoneBlocked] = useState(false);
+  const [showChooseMethodPopup, setShowChooseMethodPopup] = useState(false);
   const flowActiveRef = useRef(false);
+  const flowKindRef = useRef<"photo" | "sound">("photo");
   const setCameraPermissionGranted = useIdentificationEntryStore(
     (s) => s.setCameraPermissionGranted
   );
@@ -96,7 +109,20 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
     });
   }, [navigation]);
 
+  const navigateToSoundIdentify = useCallback(() => {
+    flowActiveRef.current = false;
+    navigation.navigate("MainTabs", {
+      screen: "Camera",
+      params: { screen: "SoundIdentify" },
+    });
+  }, [navigation]);
+
   const proceedAfterLocationResolved = useCallback(async () => {
+    if (flowKindRef.current === "sound") {
+      navigateToSoundIdentify();
+      return;
+    }
+
     const camera = await checkCameraPermission();
     setCameraPermissionGranted(camera.granted);
     if (camera.granted) {
@@ -105,27 +131,50 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
     }
     setCameraBlocked(!!camera.blocked);
     setShowCameraPopup(true);
-  }, [navigateToCamera, setCameraPermissionGranted]);
+  }, [navigateToCamera, navigateToSoundIdentify, setCameraPermissionGranted]);
+
+  const beginIdentificationEntry = useCallback(
+    async (kind: "photo" | "sound") => {
+      flowActiveRef.current = true;
+      flowKindRef.current = kind;
+      setShowMicrophonePopup(false);
+      setShowCameraPopup(false);
+
+      const skipLocation = await shouldSkipLocationPermissionPrompt();
+      if (skipLocation) {
+        await syncPermission();
+        void proceedAfterLocationResolved();
+        return;
+      }
+
+      if (shouldShowIdentificationLocationGate()) {
+        void promptForLocation();
+        return;
+      }
+
+      void proceedAfterLocationResolved();
+    },
+    [proceedAfterLocationResolved, promptForLocation, syncPermission]
+  );
 
   const startIdentificationEntry = useCallback(() => {
-    flowActiveRef.current = true;
+    void beginIdentificationEntry("photo");
+  }, [beginIdentificationEntry]);
 
-    if (shouldShowIdentificationLocationGate()) {
-      void promptForLocation();
-      return;
-    }
-
-    void proceedAfterLocationResolved();
-  }, [proceedAfterLocationResolved, promptForLocation]);
+  const startSoundIdentificationEntry = useCallback(() => {
+    void beginIdentificationEntry("sound");
+  }, [beginIdentificationEntry]);
 
   useEffect(() => {
-    useIdentificationEntryStore
-      .getState()
-      .setStartEntryHandler(startIdentificationEntry);
+    const store = useIdentificationEntryStore.getState();
+    store.setStartEntryHandler(startIdentificationEntry);
+    store.setStartSoundEntryHandler(startSoundIdentificationEntry);
     return () => {
-      useIdentificationEntryStore.getState().setStartEntryHandler(null);
+      const next = useIdentificationEntryStore.getState();
+      next.setStartEntryHandler(null);
+      next.setStartSoundEntryHandler(null);
     };
-  }, [startIdentificationEntry]);
+  }, [startIdentificationEntry, startSoundIdentificationEntry]);
 
   const handleAllowLocation = useCallback(() => {
     void (async () => {
@@ -185,9 +234,65 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
     flowActiveRef.current = false;
   }, []);
 
+  const handleAllowMicrophone = useCallback(() => {
+    if (microphoneBlocked) {
+      void openDeviceSettings();
+      return;
+    }
+
+    setMicrophoneLoading(true);
+    void (async () => {
+      try {
+        const result = await requestMicrophonePermission();
+        setMicrophoneBlocked(!!result.blocked);
+        if (result.granted) {
+          setShowMicrophonePopup(false);
+          navigateToSoundIdentify();
+        }
+      } finally {
+        setMicrophoneLoading(false);
+      }
+    })();
+  }, [microphoneBlocked, navigateToSoundIdentify]);
+
+  const handleMicrophonePopupClose = useCallback(() => {
+    setShowMicrophonePopup(false);
+    flowActiveRef.current = false;
+  }, []);
+
+  const openIdentifyMethodChooser = useCallback(() => {
+    setShowChooseMethodPopup(true);
+  }, []);
+
+  const handleChooseSound = useCallback(() => {
+    setShowChooseMethodPopup(false);
+    startSoundIdentificationEntry();
+  }, [startSoundIdentificationEntry]);
+
+  const handleChoosePhoto = useCallback(() => {
+    setShowChooseMethodPopup(false);
+    startIdentificationEntry();
+  }, [startIdentificationEntry]);
+
+  const handleChooseStepByStep = useCallback(() => {
+    setShowChooseMethodPopup(false);
+    navigation.navigate("MainTabs", {
+      screen: "Home",
+      params: { screen: "StepByStep", params: { startFresh: true } },
+    });
+  }, [navigation]);
+
   const value = useMemo(
-    () => ({ startIdentificationEntry }),
-    [startIdentificationEntry]
+    () => ({
+      startIdentificationEntry,
+      startSoundIdentificationEntry,
+      openIdentifyMethodChooser,
+    }),
+    [
+      startIdentificationEntry,
+      startSoundIdentificationEntry,
+      openIdentifyMethodChooser,
+    ]
   );
 
   return (
@@ -237,6 +342,22 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
         onAllowCamera={handleAllowCamera}
         loading={cameraLoading}
         openSettings={cameraBlocked}
+      />
+
+      <MicrophonePermissionPopup
+        visible={showMicrophonePopup}
+        onClose={handleMicrophonePopupClose}
+        onAllowMicrophone={handleAllowMicrophone}
+        loading={microphoneLoading}
+        openSettings={microphoneBlocked}
+      />
+
+      <ChooseMethodPopup
+        visible={showChooseMethodPopup}
+        onClose={() => setShowChooseMethodPopup(false)}
+        onSelectSound={handleChooseSound}
+        onSelectPhoto={handleChoosePhoto}
+        onSelectStepByStep={handleChooseStepByStep}
       />
     </IdentificationEntryContext.Provider>
   );

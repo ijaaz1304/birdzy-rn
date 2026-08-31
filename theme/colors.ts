@@ -52,6 +52,10 @@ export const APP_COLORS = {
   /** Primary CTA button fill — light and dark mode */
   ctaPrimary: '#725481',
 
+  /** Figma 8035:46238 — Feed / Collection Create chip */
+  createButtonBg: '#F5EBEB',
+  createButtonFg: '#402122',
+
   /** Pagination dot — selected / unselected (light mode) */
   paginationDotSelectedLight: '#01474F',
   paginationDotUnselectedLight: 'rgba(1, 71, 79, 0.2)',

@@ -37,6 +37,7 @@ import { useBackHandler } from "../../../utils/backHandler";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
 import { AppCard } from "../../../components/shared";
+import { useCatalogueCardSound } from "../hooks/useCatalogueCardSound";
 import { CARD_COLORS } from "../../../constants/colorConstants";
 import { useStrings } from "../../../hooks/useStrings";
 import { useToast } from "../../../hooks";
@@ -82,6 +83,7 @@ export const SearchScreen: React.FC = () => {
   const catalogueConfig = useFeatureConfig("catalogue");
   const strings = useStrings();
   const { showToast } = useToast();
+  const { playingId, toggleSound } = useCatalogueCardSound();
 
   const initialQueryFromParams = route.params?.initialQuery;
 
@@ -342,6 +344,12 @@ export const SearchScreen: React.FC = () => {
             })
           }
           starred={isStarred}
+          showSoundButton
+          hasSound={(item.soundUrls?.length ?? 0) > 0}
+          soundPlaying={playingId === item.id}
+          onSoundPress={() => {
+            void toggleSound(item.id, item.soundUrls);
+          }}
           onStarPress={() => {
             void (async () => {
               if (isStarred) {
@@ -381,6 +389,8 @@ export const SearchScreen: React.FC = () => {
       searchCardWidth,
       cardBorderColor,
       cardBg,
+      playingId,
+      toggleSound,
     ]
   );
 

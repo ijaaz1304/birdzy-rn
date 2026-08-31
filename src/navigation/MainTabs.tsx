@@ -110,12 +110,13 @@ export const MainTabs: React.FC = () => {
   const shouldHideTabBar = (tabName: string, nestedRouteName?: string) => {
     if (tabName === "Camera") return true;
     const hiddenByTab: Record<string, string[]> = {
-      Home: ["BirdOfTheDay", "OtherApps", "BirdDetails"],
-      Catalogue: ["BirdDetails", "SearchFilter"],
+      Home: ["BirdOfTheDay", "OtherApps", "BirdDetails", "AudioGallery", "StepByStep", "BirdSounds"],
+      Catalogue: ["BirdDetails", "SearchFilter", "BirdSounds"],
       Collection: [
         "CreateCollection",
         "BirdDetails",
         "EditBirdDetails",
+        "BirdSounds",
       ],
       Camera: [
         "CameraPermissionGate",
@@ -126,6 +127,7 @@ export const MainTabs: React.FC = () => {
         "IdentifyHub",
         "CameraMain",
         "SoundIdentify",
+        "SoundCrop",
       ],
       Feed: ["CreatePost", "CropImage", "PostDetails", "NotificationCenter"],
     };

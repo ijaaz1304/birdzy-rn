@@ -274,6 +274,10 @@ export const UI_COLORS = {
   WARN_AMBER: "#f59e0b",
   /** Filter modal selected category background fallback */
   FILTER_SELECTED_BG: "#DEE7E4",
+  /** Step-by-step wizard progress fill — Figma brand-2 olive */
+  WIZARD_PROGRESS: "#747E3B",
+  /** Size-scale selected pill border — Figma 8890:124449 */
+  WIZARD_SIZE_PILL_BORDER: "#41EDE9",
 } as const;
 
 /** Dev/settings fallback colors (e.g. DevEnvironmentInfo when theme not available) */
@@ -327,16 +331,15 @@ export const FEED_COLORS = {
   /** Facebook-style active like label and stats (e.g. "Liked", "5 likes") */
   LIKE_ACTIVE: SOCIAL_COLORS.FACEBOOK,
 
-  // FAB (Floating Action Button) — Feed & Collection create button
+  // FAB (Floating Action Button) — Feed & Collection create button (Figma 8035:46238)
   FAB: {
     LIGHT: {
-      BACKGROUND: APP_COLORS.brandLight,
-      TEXT: APP_COLORS.brandPrimaryDark,
+      BACKGROUND: APP_COLORS.createButtonBg,
+      TEXT: APP_COLORS.createButtonFg,
     },
     DARK: {
-      BACKGROUND: "#1D1B17",
-      BORDER: "#333333",
-      TEXT: "#F7B23A",
+      BACKGROUND: APP_COLORS.createButtonBg,
+      TEXT: APP_COLORS.createButtonFg,
     },
     BORDER_RADIUS: 24,
   },
@@ -364,18 +367,23 @@ export const HOME_COLORS = {
   DISCOUNT_BANNER: {
     BG_LIGHT: "#F5F5F5",
     BG_DARK: "#1A1A1A",
-    /** 50% OFF and body text – on banner image */
-    HEADLINE_LIGHT: "#FFFFFF",
+    /** 50% OFF and body text – Figma 8598:66213 (dark text on purple gradient) */
+    HEADLINE_LIGHT: "#111111",
     HEADLINE_DARK: "#FFFFFF",
+    ENDS_LABEL_LIGHT: "#505050",
     /** Timer box background */
-    TIMER_BOX_BG_LIGHT: APP_COLORS.modalTextOnPrimary,
+    TIMER_BOX_BG_LIGHT: "#01474F",
+    CTA_BG_LIGHT: APP_COLORS.ctaPrimary,
+    CTA_TEXT_LIGHT: APP_COLORS.modalTextOnPrimary,
+    GRADIENT_LIGHT: ["#E5D4ED", "#9E70B6"] as const,
+    FILL_GRADIENT_LIGHT: ["#E8D4F0", "#F3E6F4"] as const,
     /** Timer box (dark mode) — #111 base + amber overlay, gold border */
     TIMER_BOX_BASE_DARK: "#111111",
     TIMER_BOX_OVERLAY_DARK: "rgba(255, 197, 69, 0.12)",
     TIMER_BOX_BORDER_DARK: "#FFE477",
     TIMER_BOX_RADIUS_DARK: 8,
     /** Timer box text */
-    TIMER_BOX_TEXT_LIGHT: "#111111",
+    TIMER_BOX_TEXT_LIGHT: "#FFFFFF",
     TIMER_BOX_TEXT_DARK: "#FFFFFF",
     /** Subscribe now CTA (dark mode) */
     CTA_BG_DARK: APP_COLORS.ctaPrimary,
@@ -396,16 +404,19 @@ export const HOME_COLORS = {
   },
   // DiscountCountdownBanner — sticky home pill (Figma 10864:63314 dark bg asset)
   COUNTDOWN_BANNER: {
-    BG_LIGHT: APP_COLORS.brandLight,
+    BG_LIGHT: "#DEE5E6",
     BG_DARK: "transparent",
-    BORDER: APP_COLORS.brandPrimaryDark,
+    BORDER: "#9BB8BA",
+    BORDER_GRADIENT_START: "#108C82",
+    BORDER_GRADIENT_END: "#C5B8D8",
+    BADGE_BG: "#01474F",
     BORDER_DARK: "#FFE477",
-    TIME_BOX_BG_LIGHT: "rgba(255,255,255,0.7)",
+    TIME_BOX_BG_LIGHT: APP_COLORS.modalTextOnPrimary,
     TIME_BOX_BG_DARK: "#111111",
     TIME_BOX_OVERLAY_DARK: "rgba(255, 197, 69, 0.12)",
-    TIME_BOX_BORDER_LIGHT: "rgba(0,0,0,0.1)",
+    TIME_BOX_BORDER_LIGHT: "#7B7BAA",
     TIME_BOX_BORDER_DARK: "#FFE477",
-    TIME_BOX_RADIUS_LIGHT: 26,
+    TIME_BOX_RADIUS_LIGHT: 16,
     TIME_BOX_RADIUS_DARK: 26,
     SECONDS_BOX_BORDER_DARK: DARK_SURFACE_BRAND_1,
     SHADOW: "rgba(64, 33, 34, 0.10)",
@@ -503,7 +514,7 @@ export const CAMERA_MATCH_COLORS = {
   BADGE_OVERLAY_DARK: "rgba(255,255,255,0.3)",
 } as const;
 
-// Tab bar (MainTabs) – Figma 8015:141357 (active top border + label #111, inactive #888)
+// Tab bar (MainTabs) – selected/unselected match Shroom (#111 / #888); line = brand CTA
 export const TAB_BAR_COLORS = {
   LIGHT: {
     line: APP_COLORS.ctaPrimary,
@@ -536,11 +547,12 @@ export const HOME_LAYOUT = {
   BANNER_PADDING_H: 16,
   BANNER_PADDING_V: 8,
   BANNER_GAP: 8,
-  DISCOUNT_BANNER_HEIGHT: 240,
+  /** Figma 8975:41033 — 335×160 banner art */
+  DISCOUNT_BANNER_HEIGHT: 141,
   DISCOUNT_BANNER_DESIGN_WIDTH: 335,
   DISCOUNT_BANNER_DESIGN_HEIGHT: 160,
-  DISCOUNT_BANNER_MIN_HEIGHT: 144,
-  DISCOUNT_BANNER_MAX_HEIGHT: 172,
+  DISCOUNT_BANNER_MIN_HEIGHT: 126,
+  DISCOUNT_BANNER_MAX_HEIGHT: 144,
   DISCOUNT_BANNER_RADIUS: 16,
   DISCOUNT_BANNER_MARGIN_H: 16,
   DISCOUNT_BANNER_PADDING: 12,
@@ -555,8 +567,10 @@ export const HOME_LAYOUT = {
   ROCK_OF_DAY_GAP: 22,
   OTHER_APP_CARD_RADIUS: 12,
   OTHER_APP_CARD_MIN_HEIGHT: 220,
-  GO_PRO_IMAGE_WIDTH: 92,
-  GO_PRO_IMAGE_HEIGHT: 32,
+  GO_PRO_IMAGE_WIDTH: 97,
+  GO_PRO_IMAGE_HEIGHT: 40,
+  YOU_ARE_PRO_IMAGE_WIDTH: 125,
+  YOU_ARE_PRO_IMAGE_HEIGHT: 40,
 } as const;
 
 // Home banners – light mode background colors for BannerCard

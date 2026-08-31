@@ -1,17 +1,17 @@
 /**
- * Mushroom details scroll sections — Figma Mushroom Details (8204:87366).
- * Free: Overview → Safety Guide → Similar species. Premium sections below are blurred.
+ * Bird details scroll sections.
  */
 
 import { AppImage, AppImageBackground, CachedRemoteImage } from "@/components/AppImage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Linking, StyleProp, ViewStyle, AppState } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { InfoRow } from "../../../atoms";
 import { MapPreview } from "../../../molecules";
 import { BlurOverlay } from "../../../components/BlurOverlay";
-import { MushroomSafetyBadge } from "../../../components/mushroom/MushroomSafetyBadge";
 import { Images } from "../../../assets";
 import { SubscribeToPremiumCard } from "./SubscribeToPremiumCard";
 import { APP_COLORS } from "../../../config/colors";
@@ -31,29 +31,24 @@ import { resetLocationPermissionDenialCount } from "../../../services/permission
 import { getCurrentLocation } from "../../../utils/locationService";
 import { COUNTRY_MAP_ZOOM_LEVEL } from "../../../utils/countryCoordinates";
 import type { IdentificationLocation } from "../../camera/identificationLocation.store";
-import {
-  EDIBILITY_LABELS,
-  MUSHROOM_SAFETY_DISCLAIMER,
-  PSYCHOACTIVE_LABELS,
-  SAFETY_AI_REFERENCE_DISCLAIMER,
-  TOXICITY_SEVERITY_LABELS,
-} from "../../../constants/mushroomOptions";
-import {
-  formatDistributionHotspotsDisplay,
-  formatFruitingSeasonDisplay,
-  formatMushroomList,
-  normalizeMushroomDetail,
-} from "../../../utils/mushroomApiMappers";
-import { isBirdRecord } from "../../../utils/birdApiMappers";
+import { normalizeMushroomDetail } from "../../../utils/mushroomApiMappers";
 import {
   BirdSoundsSection,
+  BIRD_SOUND_PREVIEW_COUNT,
   BirdRangeMapSection,
   BirdGeographicRangeMap,
-  BirdPhysicalTraitsRows,
+  BirdCharacteristicsSection,
+  BirdBehaviorSection,
   BirdHabitatRows,
+  BirdFeedingDietSection,
+  BirdBreedingSection,
+  BirdMigrationNotes,
+  BirdOverviewExtras,
   BirdRecordSoundCtaNav,
 } from "./BirdDetailSections";
 import { COLLECTION_STRINGS } from "../../../config/strings/collection.strings";
+import type { BirdSoundsScreenParams } from "../../../navigation/types";
+import { buildBirdSoundListItems } from "../utils/birdSoundListItems";
 import type { MushroomDetail } from "../../../types/mushrooms.types";
 import type { LookAlike } from "../../../services/api/features/core.api.types";
 import { getDisplayName } from "../../../utils/mushroomDisplayUtils";
@@ -62,7 +57,6 @@ import { FIGMA_TOKENS } from "../../../design-system/colors/figmaTokens";
 const LAYOUT_MARGIN = 20;
 const SECTION_DIVIDER_BORDER_LIGHT = "#E7E7E7";
 const SECTION_DIVIDER_BORDER_DARK = "#333333";
-const ROW_DIVIDER = { height: 1, backgroundColor: "#E7E7E7" };
 
 function formatSimilarityAccuracy(score?: number | null): string | null {
   if (score == null || Number.isNaN(score)) return null;
@@ -127,10 +121,12 @@ export type MushroomScrollSectionId =
   | "overview"
   | "sounds"
   | "range"
-  | "safety"
   | "similar"
   | "morphology"
-  | "habitat";
+  | "habitat"
+  | "behavior"
+  | "feeding"
+  | "breeding";
 
 type Props = {
   mushroomData: MushroomDetail;
@@ -143,7 +139,6 @@ type Props = {
   onNavigatePremium: () => void;
   onLookAlikePress?: (lookAlike: Record<string, unknown>) => void;
   onSeeAllSimilarPress?: () => void;
-  // onSafetyGuidePress?: () => void;
   onSectionLayout?: (sectionId: MushroomScrollSectionId, y: number) => void;
   locationFlow: CustomLocationSectionFlow;
   textPrimary: string;
@@ -227,185 +222,6 @@ function TaxonomyRows({
             valueStyle={styles.infoRowValue}
           />
           {index < visibleRows.length - 1 ? <View style={rowDivider} /> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function MorphologyRows({
-  mushroom,
-  textPrimary,
-  textSecondary,
-}: {
-  mushroom: ReturnType<typeof normalizeMushroomDetail>;
-  textPrimary: string;
-  textSecondary: string;
-}) {
-  const rows = [
-    { label: "Cap Shape", value: mushroom.capShape },
-    { label: "Cap Surface", value: formatMushroomList(mushroom.capSurface) },
-    { label: "Cap Color", value: mushroom.capColor },
-    { label: "Underside Type", value: mushroom.undersideType },
-    { label: "Stem Presence", value: mushroom.stemPresence },
-    { label: "Stem Surface", value: formatMushroomList(mushroom.stemSurface) },
-    { label: "Ring Present", value: mushroom.ringPresent },
-    { label: "Volva Present", value: mushroom.volvaPresent },
-    { label: "Stem Height", value: mushroom.stemHeightRange },
-  ].filter((row) => row.value?.trim());
-
-  if (rows.length === 0) return null;
-
-  return (
-    <View style={styles.rowsBlock}>
-      {rows.map((row, index) => (
-        <View key={row.label}>
-          <InfoRow
-            label={row.label}
-            value={row.value!}
-            labelColor={textSecondary}
-            valueColor={textPrimary}
-            rowPaddingVertical={2}
-            labelStyle={styles.infoRowLabel}
-            valueStyle={styles.infoRowValue}
-          />
-          {index < rows.length - 1 ? <View style={ROW_DIVIDER} /> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function SafetyRows({
-  mushroom,
-  textPrimary,
-  textSecondary,
-}: {
-  mushroom: ReturnType<typeof normalizeMushroomDetail>;
-  textPrimary: string;
-  textSecondary: string;
-}) {
-  const rows = [
-    {
-      label: "Edibility",
-      value: mushroom.edibility
-        ? EDIBILITY_LABELS[mushroom.edibility] ?? mushroom.edibility
-        : undefined,
-    },
-    {
-      label: "Toxicity Severity",
-      value: mushroom.toxicitySeverity
-        ? TOXICITY_SEVERITY_LABELS[mushroom.toxicitySeverity] ??
-          mushroom.toxicitySeverity
-        : undefined,
-    },
-    {
-      label: "Psychoactive",
-      value: mushroom.psychoactive
-        ? PSYCHOACTIVE_LABELS[mushroom.psychoactive] ?? mushroom.psychoactive
-        : undefined,
-    },
-    { label: "Symptoms if any", value: mushroom.symptoms },
-    { label: "Size Range", value: mushroom.capDiameterRange },
-  ].filter((row) => row.value?.trim());
-
-  if (rows.length === 0) return null;
-
-  return (
-    <View style={styles.rowsBlock}>
-      {rows.map((row, index) => (
-        <View key={row.label}>
-          <InfoRow
-            label={row.label}
-            value={row.value!}
-            labelColor={textSecondary}
-            valueColor={textPrimary}
-            rowPaddingVertical={2}
-            labelStyle={styles.infoRowLabel}
-            valueStyle={styles.infoRowValue}
-          />
-          {index < rows.length - 1 ? <View style={ROW_DIVIDER} /> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function SafetyReferenceBanner({
-  isDark,
-  textPrimary,
-}: {
-  isDark: boolean;
-  textPrimary: string;
-}) {
-  return (
-    <View
-      style={[
-        styles.safetyReferenceBanner,
-        isDark && styles.safetyReferenceBannerDark,
-      ]}
-    >
-      <AppImage
-        source={Images.informationCircle}
-        style={styles.safetyReferenceIcon}
-        resizeMode="contain"
-      />
-      <Text style={[styles.safetyReferenceText, { color: textPrimary }]}>
-        {SAFETY_AI_REFERENCE_DISCLAIMER}
-      </Text>
-    </View>
-  );
-}
-
-function HabitatRows({
-  mushroom,
-  textPrimary,
-  textSecondary,
-}: {
-  mushroom: ReturnType<typeof normalizeMushroomDetail>;
-  textPrimary: string;
-  textSecondary: string;
-}) {
-  const rows = [
-    {
-      label: "Habitat Type",
-      value: formatMushroomList(mushroom.habitatType),
-    },
-    { label: "Growth Pattern", value: mushroom.growthPattern },
-    {
-      label: "Geographic Distribution",
-      value: formatMushroomList(
-        mushroom.geographicDistribution?.length
-          ? mushroom.geographicDistribution
-          : mushroom.commonlyFoundIn
-      ),
-    },
-    {
-      label: "Fruiting Season",
-      value: formatFruitingSeasonDisplay(mushroom.fruitingSeason),
-    },
-    {
-      label: "Geographic Distribution Hotspots",
-      value: formatDistributionHotspotsDisplay(mushroom.distributionHotspots),
-    },
-  ].filter((row) => row.value?.trim());
-
-  if (rows.length === 0) return null;
-
-  return (
-    <View style={styles.rowsBlock}>
-      {rows.map((row, index) => (
-        <View key={row.label}>
-          <InfoRow
-            label={row.label}
-            value={row.value!}
-            labelColor={textSecondary}
-            valueColor={textPrimary}
-            rowPaddingVertical={2}
-            labelStyle={styles.infoRowLabel}
-            valueStyle={styles.infoRowValue}
-          />
-          {index < rows.length - 1 ? <View style={ROW_DIVIDER} /> : null}
         </View>
       ))}
     </View>
@@ -854,11 +670,6 @@ function SimilarSpeciesCards({
         {lookAlikes.map((item, index) => {
           const uri = item.imageUrls?.[0];
           const score = formatSimilarityAccuracy(item.similarityScore);
-          const lookAlike = item as LookAlike & {
-            edibility?: string | null;
-            toxicitySeverity?: string | null;
-            psychoactive?: string | null;
-          };
           return (
             <TouchableOpacity
               key={item.speciesId ?? item.scientificName ?? index}
@@ -900,12 +711,6 @@ function SimilarSpeciesCards({
                     {item.scientificName}
                   </Text>
                 ) : null}
-                <MushroomSafetyBadge
-                  edibility={lookAlike.edibility}
-                  toxicitySeverity={lookAlike.toxicitySeverity}
-                  psychoactive={lookAlike.psychoactive}
-                  compact
-                />
               </View>
               {uri ? (
                 <CachedRemoteImage
@@ -940,7 +745,6 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
   onNavigatePremium,
   onLookAlikePress,
   onSeeAllSimilarPress,
-  // onSafetyGuidePress,
   onSectionLayout,
   locationFlow,
   textPrimary,
@@ -949,6 +753,7 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
   surfaceSecondary,
 }) => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NativeStackNavigationProp<{ BirdSounds: BirdSoundsScreenParams }>>();
   const mushroom = useMemo(
     () =>
       normalizeMushroomDetail(
@@ -959,22 +764,48 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
   const classification = mushroom.scientificClassification;
   const lookAlikes = mushroom.lookAlikes ?? [];
   const locked = !isPremium && !isMushroomOfTheDay;
-  const isBird = isBirdRecord(
-    mushroomData as unknown as Record<string, unknown>
-  );
   const birdStrings = COLLECTION_STRINGS.birdDetails;
   const soundUrls = mushroomData.soundUrls ?? [];
-  const showBirdSoundsSection = isBird;
-  const hasSounds = soundUrls.length > 0;
-  const hasRange =
-    isBird &&
-    Boolean(
-      mushroomData.rangeDetails &&
-        (mushroomData.rangeDetails.yearRound ||
-          mushroomData.rangeDetails.breeding ||
-          mushroomData.rangeDetails.migration ||
-          mushroomData.rangeDetails.nonBreeding)
-    );
+  const userCapturedSounds = (
+    mushroomData as MushroomDetail & { userCapturedSounds?: string[] }
+  ).userCapturedSounds;
+  const specimenTimestamps = mushroomData as MushroomDetail & {
+    createdAt?: string;
+    updatedAt?: string;
+  };
+  const hasSounds = soundUrls.length > 0 || (userCapturedSounds?.length ?? 0) > 0;
+  const totalSoundCount =
+    buildBirdSoundListItems({
+      soundUrls,
+      userCapturedSounds,
+    }).length;
+
+  const openBirdSounds = useCallback(() => {
+    navigation.navigate("BirdSounds", {
+      soundUrls,
+      userCapturedSounds,
+      customLocation: mushroomData.customLocation,
+      createdAt: specimenTimestamps.createdAt,
+      updatedAt: specimenTimestamps.updatedAt,
+    });
+  }, [
+    navigation,
+    soundUrls,
+    userCapturedSounds,
+    mushroomData.customLocation,
+    specimenTimestamps.createdAt,
+    specimenTimestamps.updatedAt,
+  ]);
+  const lastSectionPad = {
+    paddingBottom: 20 + Math.max(insets.bottom, 16),
+  };
+  const hasRange = Boolean(
+    mushroomData.rangeDetails &&
+      (mushroomData.rangeDetails.yearRound ||
+        mushroomData.rangeDetails.breeding ||
+        mushroomData.rangeDetails.migration ||
+        mushroomData.rangeDetails.nonBreeding)
+  );
 
   const wikipediaUrl =
     mushroomData.wikipediaUrl ||
@@ -989,7 +820,51 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
 
   return (
     <View style={styles.root}>
-      {/* Overview */}
+      <View
+          {...registerLayout("sounds")}
+          style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+        >
+          <View style={styles.soundsHeader}>
+            <Text
+              style={[
+                styles.sectionTitlePlain,
+                styles.sectionTitlePlainCompact,
+                { color: textPrimary },
+              ]}
+            >
+              {hasSounds
+                ? `${birdStrings.sections.sounds} (${totalSoundCount})`
+                : birdStrings.sections.sounds}
+            </Text>
+            {hasSounds && totalSoundCount > BIRD_SOUND_PREVIEW_COUNT ? (
+              <TouchableOpacity
+                onPress={openBirdSounds}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={[styles.soundsViewAll, { color: textPrimary }]}>
+                  {birdStrings.sounds.viewAll}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+          {hasSounds ? (
+            <BirdSoundsSection
+              soundUrls={soundUrls}
+              userCapturedSounds={userCapturedSounds}
+              customLocation={mushroomData.customLocation}
+              createdAt={specimenTimestamps.createdAt}
+              updatedAt={specimenTimestamps.updatedAt}
+              textPrimary={textPrimary}
+              textSecondary={textSecondary}
+              surfaceSecondary={surfaceSecondary}
+            />
+          ) : null}
+          <BirdRecordSoundCtaNav
+            textPrimary={textPrimary}
+            surfaceSecondary={surfaceSecondary}
+          />
+        </View>
+
       <View
         {...registerLayout("overview")}
         style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
@@ -1031,104 +906,15 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
           textPrimary={textPrimary}
           textSecondary={textSecondary}
         />
+
+        <BirdOverviewExtras
+          bird={mushroomData}
+          textPrimary={textPrimary}
+          textSecondary={textSecondary}
+          isDark={isDark}
+        />
       </View>
 
-      {showBirdSoundsSection ? (
-        <View
-          {...registerLayout("sounds")}
-          style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-        >
-          <PremiumLockedSection
-            locked={locked}
-            onGetPremium={onNavigatePremium}
-            isDark={isDark}
-            heading={
-              <Text style={[styles.sectionTitlePlain, { color: textPrimary }]}>
-                {birdStrings.sections.sounds}
-              </Text>
-            }
-          >
-            {hasSounds ? (
-              <BirdSoundsSection
-                soundUrls={soundUrls}
-                textPrimary={textPrimary}
-                textSecondary={textSecondary}
-                surfaceSecondary={surfaceSecondary}
-              />
-            ) : null}
-            <BirdRecordSoundCtaNav
-              textPrimary={textPrimary}
-              surfaceSecondary={surfaceSecondary}
-            />
-          </PremiumLockedSection>
-        </View>
-      ) : null}
-
-      {isBird ? (
-        <View
-          {...registerLayout("range")}
-          style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-        >
-          <PremiumLockedSection
-            locked={locked}
-            onGetPremium={onNavigatePremium}
-            isDark={isDark}
-            heading={
-              <Text style={[styles.sectionTitlePlain, { color: textPrimary }]}>
-                {birdStrings.sections.range}
-              </Text>
-            }
-          >
-            <BirdGeographicRangeMap
-              textPrimary={textPrimary}
-              textSecondary={textSecondary}
-              surfaceSecondary={surfaceSecondary}
-              locked={locked}
-              rangeDetails={mushroomData.rangeDetails}
-              customLocation={mushroomData.customLocation}
-            />
-            {hasRange ? (
-              <BirdRangeMapSection
-                rangeDetails={mushroomData.rangeDetails}
-                textPrimary={textPrimary}
-                textSecondary={textSecondary}
-              />
-            ) : null}
-          </PremiumLockedSection>
-        </View>
-      ) : null}
-
-      {/* Mushroom Safety Guide banner — temporarily hidden
-      <View style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}>
-        <View style={styles.safetyGuideBanner}>
-          <AppImage
-            source={Images.aiChatCenterImage}
-            style={styles.safetyGuideImage}
-            resizeMode="contain"
-          />
-          <View style={styles.safetyGuideCopy}>
-            <Text style={[styles.safetyGuideTitle, { color: textPrimary }]}>
-              Mushroom Safety Guide
-            </Text>
-            <Text
-              style={[styles.safetyGuideSubtitle, { color: textSecondary }]}
-            >
-              Learn how AI identification works, understand look-alike risks,
-              and follow safe foraging practices.
-            </Text>
-            <TouchableOpacity
-              onPress={onSafetyGuidePress}
-              style={styles.safetyGuideButton}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.safetyGuideButtonText}>
-                View Safety Guide
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-      */}
 
       {lookAlikes.length > 0 ? (
         <View
@@ -1142,7 +928,7 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
             heading={
               <View style={styles.similarHeaderWrap}>
                 <SectionTopicHeading
-                  title={isBird ? birdStrings.sections.similarBirds : "Similar species"}
+                  title={birdStrings.sections.similarBirds}
                   isDark={isDark}
                   textPrimary={textPrimary}
                   useDividerStyle={locked}
@@ -1171,119 +957,175 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
         </View>
       ) : null}
 
-      {!isBird ? (
       <View
-        {...registerLayout("safety")}
-        style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-      >
-        <PremiumLockedSection
-          locked={locked}
-          onGetPremium={onNavigatePremium}
-          isDark={isDark}
-          heading={
-            <SectionTopicHeading
-              title="Safety"
+            {...registerLayout("morphology")}
+            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+          >
+            <PremiumLockedSection
+              locked={locked}
+              onGetPremium={onNavigatePremium}
               isDark={isDark}
-              textPrimary={textPrimary}
-              useDividerStyle={locked}
-            />
-          }
-        >
-          <SafetyRows
-            mushroom={mushroom}
-            textPrimary={textPrimary}
-            textSecondary={textSecondary}
-          />
-          <SafetyReferenceBanner isDark={isDark} textPrimary={textPrimary} />
-        </PremiumLockedSection>
-      </View>
-      ) : null}
-
-      <View
-        {...registerLayout("morphology")}
-        style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-      >
-        <PremiumLockedSection
-          locked={locked}
-          onGetPremium={onNavigatePremium}
-          isDark={isDark}
-          heading={
-            <SectionTopicHeading
-              title={
-                isBird
-                  ? birdStrings.sections.identification
-                  : "Physical Traits"
+              heading={
+                <SectionTopicHeading
+                  title={birdStrings.sections.characteristics}
+                  isDark={isDark}
+                  textPrimary={textPrimary}
+                  useDividerStyle={locked}
+                />
               }
-              isDark={isDark}
-              textPrimary={textPrimary}
-              useDividerStyle={locked}
-            />
-          }
-        >
-          {isBird ? (
-            <BirdPhysicalTraitsRows
-              bird={mushroomData}
-              textPrimary={textPrimary}
-              textSecondary={textSecondary}
-            />
-          ) : (
-            <MorphologyRows
-              mushroom={mushroom}
-              textPrimary={textPrimary}
-              textSecondary={textSecondary}
-            />
-          )}
-        </PremiumLockedSection>
-      </View>
+            >
+              <BirdCharacteristicsSection
+                bird={mushroomData}
+                textPrimary={textPrimary}
+                textSecondary={textSecondary}
+              />
+            </PremiumLockedSection>
+          </View>
 
-      <View
-        {...registerLayout("habitat")}
-        style={[
-          styles.sectionCard,
-          styles.sectionCardLast,
-          {
-            backgroundColor: surfacePrimary,
-            paddingBottom: 20 + Math.max(insets.bottom, 16),
-          },
-        ]}
-      >
-        <PremiumLockedSection
-          locked={locked}
-          onGetPremium={onNavigatePremium}
-          isDark={isDark}
-          heading={
-            <SectionTopicHeading
-              title={
-                isBird
-                  ? birdStrings.sections.habitat
-                  : "Habitat and distribution"
-              }
+          <View
+            {...registerLayout("behavior")}
+            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+          >
+            <PremiumLockedSection
+              locked={locked}
+              onGetPremium={onNavigatePremium}
               isDark={isDark}
-              textPrimary={textPrimary}
-              useDividerStyle={locked}
-            />
-          }
-        >
-          {isBird ? (
-            <BirdHabitatRows
-              bird={mushroomData}
-              textPrimary={textPrimary}
-              textSecondary={textSecondary}
-            />
-          ) : (
-            <HabitatRows
-              mushroom={mushroom}
-              textPrimary={textPrimary}
-              textSecondary={textSecondary}
-            />
-          )}
-        </PremiumLockedSection>
-        {!locked && !isBird ? (
-          <Text style={[styles.disclaimer, { color: textSecondary }]}>
-            {MUSHROOM_SAFETY_DISCLAIMER}
-          </Text>
-        ) : null}
-      </View>
+              heading={
+                <SectionTopicHeading
+                  title={birdStrings.sections.behavior}
+                  isDark={isDark}
+                  textPrimary={textPrimary}
+                  useDividerStyle={locked}
+                />
+              }
+            >
+              <BirdBehaviorSection
+                bird={mushroomData}
+                textPrimary={textPrimary}
+                textSecondary={textSecondary}
+              />
+            </PremiumLockedSection>
+          </View>
+
+          <View
+            {...registerLayout("habitat")}
+            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+          >
+            <PremiumLockedSection
+              locked={locked}
+              onGetPremium={onNavigatePremium}
+              isDark={isDark}
+              heading={
+                <SectionTopicHeading
+                  title={birdStrings.sections.habitat}
+                  isDark={isDark}
+                  textPrimary={textPrimary}
+                  useDividerStyle={locked}
+                />
+              }
+            >
+              <BirdHabitatRows
+                bird={mushroomData}
+                textPrimary={textPrimary}
+                textSecondary={textSecondary}
+              />
+            </PremiumLockedSection>
+          </View>
+
+          <View
+            {...registerLayout("feeding")}
+            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+          >
+            <PremiumLockedSection
+              locked={locked}
+              onGetPremium={onNavigatePremium}
+              isDark={isDark}
+              heading={
+                <SectionTopicHeading
+                  title={birdStrings.sections.feeding}
+                  isDark={isDark}
+                  textPrimary={textPrimary}
+                  useDividerStyle={locked}
+                />
+              }
+            >
+              <BirdFeedingDietSection
+                bird={mushroomData}
+                textPrimary={textPrimary}
+                textSecondary={textSecondary}
+              />
+            </PremiumLockedSection>
+          </View>
+
+          <View
+            {...registerLayout("breeding")}
+            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+          >
+            <PremiumLockedSection
+              locked={locked}
+              onGetPremium={onNavigatePremium}
+              isDark={isDark}
+              heading={
+                <SectionTopicHeading
+                  title={birdStrings.sections.breeding}
+                  isDark={isDark}
+                  textPrimary={textPrimary}
+                  useDividerStyle={locked}
+                />
+              }
+            >
+              <BirdBreedingSection
+                bird={mushroomData}
+                textPrimary={textPrimary}
+                textSecondary={textSecondary}
+              />
+            </PremiumLockedSection>
+          </View>
+
+          <View
+            {...registerLayout("range")}
+            style={[
+              styles.sectionCard,
+              styles.sectionCardLast,
+              { backgroundColor: surfacePrimary, ...lastSectionPad },
+            ]}
+          >
+            <PremiumLockedSection
+              locked={locked}
+              onGetPremium={onNavigatePremium}
+              isDark={isDark}
+              heading={
+                <SectionTopicHeading
+                  title={birdStrings.sections.migration}
+                  isDark={isDark}
+                  textPrimary={textPrimary}
+                  useDividerStyle={locked}
+                />
+              }
+            >
+              <BirdMigrationNotes
+                bird={mushroomData}
+                textPrimary={textPrimary}
+                textSecondary={textSecondary}
+              />
+              <BirdGeographicRangeMap
+                textPrimary={textPrimary}
+                textSecondary={textSecondary}
+                surfaceSecondary={surfaceSecondary}
+                locked={locked}
+                rangeDetails={mushroomData.rangeDetails}
+                customLocation={mushroomData.customLocation}
+              />
+              {hasRange ? (
+                <BirdRangeMapSection
+                  rangeDetails={mushroomData.rangeDetails}
+                  textPrimary={textPrimary}
+                  textSecondary={textSecondary}
+                />
+              ) : null}
+            </PremiumLockedSection>
+          </View>
+
     </View>
   );
 };
@@ -1452,55 +1294,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacing[4],
   },
-  safetyGuideBanner: {
-    backgroundColor: "#E9EFD2",
-    borderRadius: Radius.md,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    overflow: "hidden",
-    minHeight: 140,
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  safetyGuideImage: {
-    position: "absolute",
-    right: -8,
-    top: 8,
-    width: 140,
-    height: 140,
-    opacity: 0.9,
-  },
-  safetyGuideCopy: {
-    flex: 1,
-    maxWidth: 220,
-    gap: 16,
-    zIndex: 1,
-  },
-  safetyGuideTitle: {
-    fontFamily: FONTS.bold,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  safetyGuideSubtitle: {
-    fontFamily: FONTS.regular,
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  safetyGuideButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E7E7E7",
-    borderRadius: 24,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  safetyGuideButtonText: {
-    fontFamily: FONTS.medium,
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#111111",
-  },
   similarSection: {
     gap: 8,
     width: "100%",
@@ -1519,6 +1312,18 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: APP_COLORS.brandPrimaryDark,
     textDecorationLine: "underline",
+  },
+  soundsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    width: "100%",
+  },
+  soundsViewAll: {
+    fontFamily: FONTS.medium,
+    fontSize: 12,
+    lineHeight: 16,
   },
   similarScroll: {
     gap: 20,
@@ -1560,33 +1365,6 @@ const styles = StyleSheet.create({
     height: 76,
     borderRadius: Radius.sm,
   },
-  rowsBlock: {
-    gap: 12,
-    width: "100%",
-  },
-  safetyReferenceBanner: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    marginTop: 12,
-    padding: 12,
-    borderRadius: Radius.md,
-    backgroundColor: "#FFF9F0",
-  },
-  safetyReferenceBannerDark: {
-    backgroundColor: "#2A2418",
-  },
-  safetyReferenceIcon: {
-    width: 20,
-    height: 20,
-    marginTop: 2,
-  },
-  safetyReferenceText: {
-    flex: 1,
-    fontFamily: FONTS.regular,
-    fontSize: 14,
-    lineHeight: 20,
-  },
   premiumContentWrap: {
     position: "relative",
     overflow: "hidden",
@@ -1604,11 +1382,5 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
-  },
-  disclaimer: {
-    fontFamily: FONTS.regular,
-    fontSize: 12,
-    lineHeight: 16,
-    marginTop: 16,
   },
 });

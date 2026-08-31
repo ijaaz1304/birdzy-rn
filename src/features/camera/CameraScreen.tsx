@@ -19,7 +19,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { AppState, BackHandler, Platform, StatusBar, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { AppState, BackHandler, Platform, StatusBar, StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   useFocusEffect,
   useIsFocused,
@@ -56,6 +56,12 @@ import {
 import { CameraWarnings } from "./CameraWarnings";
 import { CameraTipsModal, LimitReachedBottomSheet } from "../../molecules/Modal";
 import { IdentificationLocationBanner } from "./components/IdentificationLocationBanner";
+import { CameraImageSlots } from "./components/CameraImageSlots";
+import { CameraDailyScanBanner } from "./components/CameraDailyScanBanner";
+import { usePhotoIdentificationLimit } from "./hooks/usePhotoIdentificationLimit";
+import {
+  MAX_CAMERA_IDENTIFY_IMAGES,
+} from "./utils/identificationLimitDisplay";
 import { shouldShowLocationBannerAsGranted } from "./locationToggle.helpers";
 import { useLocationToggleFlow } from "./useLocationToggleFlow";
 import { useLocationPermissionUiStore } from "./locationPermissionUi.store";
@@ -95,9 +101,8 @@ const HAS_SEEN_CAMERA_TIPS_KEY = SCREEN_STORAGE_KEYS.HAS_SEEN_CAMERA_TIPS;
 
 /** Height of CameraZoomControls row (track hit area). */
 const ZOOM_CONTROLS_HEIGHT = 32;
-const SELECTED_THUMB_ABOVE_ZOOM_GAP = 16;
+const CAPTURE_CONTENT_GAP = 16;
 const SUBMIT_BELOW_ZOOM_GAP = 12;
-const SUBMIT_BUTTON_HEIGHT = 44;
 
 type CameraScreenNavigationProp = NativeStackNavigationProp<
   CameraStackParamList,
@@ -123,7 +128,6 @@ export const CameraScreen: React.FC = () => {
   const [cameraFacing, setCameraFacing] = useState<"back" | "front">("back");
   const device = useCameraDevice(cameraFacing);
   const insets = useSafeAreaInsets();
-  const { height: screenHeight } = useWindowDimensions();
   const captureFrameLayout = useCaptureFrameLayout();
   const hasShownTipsRef = useRef(false);
   const selectedImagesRef = useRef<CroppedImageObject[]>([]);
@@ -151,6 +155,8 @@ export const CameraScreen: React.FC = () => {
     null
   );
   const isPremium = useSubscriptionStore(selectIsPremium);
+  const { limit: photoLimit, refresh: refreshPhotoLimit } =
+    usePhotoIdentificationLimit(!isPremium);
   const { submitProcessed, isProcessing } = useIdentifyImagePipeline({
     navigation,
     isPremium,
@@ -210,18 +216,13 @@ export const CameraScreen: React.FC = () => {
     isCameraReadyRef.current = isCameraReady;
   }, [isCameraReady]);
 
-  const zoomSliderBottom =
-    Math.max(8, insets.bottom) + 76 + Math.round(screenHeight * 0.1);
-
-  const selectedPreviewLayout = useMemo(
-    () => ({
-      thumbBottom:
-        zoomSliderBottom + ZOOM_CONTROLS_HEIGHT + SELECTED_THUMB_ABOVE_ZOOM_GAP,
-      submitBottom:
-        zoomSliderBottom - SUBMIT_BELOW_ZOOM_GAP - SUBMIT_BUTTON_HEIGHT,
-    }),
-    [zoomSliderBottom]
-  );
+  const captureContentLayout = useMemo(() => {
+    const frameBottom =
+      captureFrameLayout.frameTop + captureFrameLayout.frameSize;
+    return {
+      top: frameBottom + CAPTURE_CONTENT_GAP,
+    };
+  }, [captureFrameLayout.frameSize, captureFrameLayout.frameTop]);
 
   useEffect(() => {
     selectedImagesRef.current = selectedImages;
@@ -248,16 +249,18 @@ export const CameraScreen: React.FC = () => {
     }t=${Date.now()}`;
     const fileName =
       uri.split("/").pop()?.split("?")[0] || `image-${Date.now()}.jpg`;
-    setSelectedImages([
-      {
+    setSelectedImages((prev) => {
+      if (prev.length >= MAX_CAMERA_IDENTIFY_IMAGES) return prev;
+      const nextImage = {
         uri,
         previewUri,
         fileName,
         type: getMimeType(uri),
         width: pendingCropWidth,
         height: pendingCropHeight,
-      },
-    ]);
+      };
+      return [...prev, nextImage].slice(0, MAX_CAMERA_IDENTIFY_IMAGES);
+    });
     navigation.setParams({ pendingCrop: undefined });
     identifyFlowLog("preview_ready", { uriPrefix: uri.slice(0, 32) });
   }, [
@@ -561,7 +564,13 @@ export const CameraScreen: React.FC = () => {
     }, [handleBackPress])
   );
 
-  // Identify flow keeps at most one preview image (retake replaces it).
+  useFocusEffect(
+    useCallback(() => {
+      void refreshPhotoLimit();
+    }, [refreshPhotoLimit])
+  );
+
+  // Identify flow supports up to two preview images before submit.
 
   const openGallery = useCallback(async () => {
     analyticsService.logEvent(EVENTS.identify_photo, { source: "gallery" });
@@ -608,7 +617,12 @@ export const CameraScreen: React.FC = () => {
       return;
     }
 
-    setSelectedImages([]);
+    if (selectedImagesRef.current.length >= MAX_CAMERA_IDENTIFY_IMAGES) {
+      setWarning(strings.camera.limits.maxPhotosSelected);
+      setTimeout(() => setWarning(null), 3000);
+      return;
+    }
+
     isCapturingRef.current = true;
     setIsCapturing(true);
     const watchdog = setTimeout(() => {
@@ -710,6 +724,7 @@ export const CameraScreen: React.FC = () => {
     navigation,
     returnImageToAskAI,
     torchOn,
+    strings.camera.limits.maxPhotosSelected,
   ]);
 
   const removePhoto = (idx: number) => {
@@ -719,8 +734,8 @@ export const CameraScreen: React.FC = () => {
   const submit = async () => {
     const imgs = selectedImagesRef.current;
     if (!imgs.length) return;
-    identifyFlowLog("submit_started");
-    await submitProcessed(imgs[0]);
+    identifyFlowLog("submit_started", { count: imgs.length });
+    await submitProcessed(imgs);
     identifyFlowLog("submit_finished");
   };
 
@@ -997,7 +1012,15 @@ export const CameraScreen: React.FC = () => {
 
       {/* Top-right: sound identify */}
       <TouchableOpacity
-        onPress={() => navigation.navigate("SoundIdentify")}
+        onPress={() => {
+          const startSound =
+            useIdentificationEntryStore.getState().startSoundEntryHandler;
+          if (startSound) {
+            startSound();
+            return;
+          }
+          navigation.navigate("SoundIdentify");
+        }}
         style={[
           styles.topNavButton,
           styles.topNavButtonRight,
@@ -1084,68 +1107,40 @@ export const CameraScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Selected image — above zoom slider */}
-      {selectedImages.length > 0 && (
-        <View
-          style={[
-            styles.selectedThumbRow,
-            { bottom: selectedPreviewLayout.thumbBottom },
-          ]}
-          pointerEvents="box-none"
-        >
-          {selectedImages.map((img, idx) => (
-            <View key={img.previewUri} style={styles.thumbWrap}>
-              <View
-                style={[
-                  styles.thumbImageClip,
-                  { borderColor: theme.colors.border },
-                ]}
-              >
-                <AppImage
-                  source={{ uri: img.previewUri }}
-                  style={styles.thumbImage}
-                />
-              </View>
-              <TouchableOpacity
-                onPress={() => removePhoto(idx)}
-                style={[
-                  styles.thumbRemove,
-                  { backgroundColor: theme.colors.surface + "F2" },
-                ]}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <MaterialIcons
-                  name="close"
-                  size={16}
-                  color={theme.colors.textPrimary}
-                />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* Zoom slider — above bottom bar, lifted 10% of screen height */}
+      {/* Two-image slots, daily scan banner, and zoom — below viewfinder (Figma) */}
       <View
-        style={[styles.zoomSliderFloating, { bottom: zoomSliderBottom }]}
+        style={[
+          styles.captureContentColumn,
+          {
+            top: captureContentLayout.top,
+          },
+        ]}
         pointerEvents="box-none"
       >
-        <CameraZoomControls
-          zoom={zoomUi}
-          onZoomChange={setZoomUi}
-          disabled={!isCameraReady}
+        <CameraImageSlots
+          images={selectedImages}
+          maxImages={MAX_CAMERA_IDENTIFY_IMAGES}
+          onRemove={removePhoto}
         />
-      </View>
 
-      {/* Start searching — below zoom slider */}
-      {selectedImages.length > 0 && (
-        <View
-          style={[
-            styles.submitBtnWrap,
-            { bottom: selectedPreviewLayout.submitBottom },
-          ]}
-          pointerEvents="box-none"
-        >
+        {!isPremium && (
+          <CameraDailyScanBanner
+            remaining={photoLimit.remaining}
+            dailyLimit={photoLimit.dailyLimit}
+            resetLabel={photoLimit.resetLabel}
+            style={styles.dailyScanBanner}
+          />
+        )}
+
+        <View style={styles.zoomSliderInline} pointerEvents="box-none">
+          <CameraZoomControls
+            zoom={zoomUi}
+            onZoomChange={setZoomUi}
+            disabled={!isCameraReady}
+          />
+        </View>
+
+        {selectedImages.length > 0 && (
           <TouchableOpacity
             onPress={submit}
             activeOpacity={0.85}
@@ -1156,6 +1151,7 @@ export const CameraScreen: React.FC = () => {
                 backgroundColor: theme.colors.primary,
                 borderRadius: theme.radius.lg,
                 opacity: isProcessing ? 0.7 : 1,
+                marginTop: SUBMIT_BELOW_ZOOM_GAP,
               },
             ]}
           >
@@ -1175,8 +1171,8 @@ export const CameraScreen: React.FC = () => {
                 : strings.camera.buttons.startSearching}
             </Text>
           </TouchableOpacity>
-        </View>
-      )}
+        )}
+      </View>
 
       {/* Bottom controls: Gallery (left) | Capture (center) | Tips (right) */}
       <View
@@ -1323,13 +1319,21 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 11,
   },
-  zoomSliderFloating: {
+  captureContentColumn: {
     position: "absolute",
-    left: 0,
-    right: 0,
+    left: 20,
+    right: 20,
     zIndex: 11,
     alignItems: "center",
-    paddingHorizontal: 20,
+    gap: CAPTURE_CONTENT_GAP,
+  },
+  dailyScanBanner: {
+    marginTop: 0,
+  },
+  zoomSliderInline: {
+    width: "100%",
+    alignItems: "center",
+    paddingHorizontal: 0,
   },
   bottomBar: {
     position: "absolute",
@@ -1442,15 +1446,6 @@ const styles = StyleSheet.create({
     gap: 8,
     zIndex: 11,
   },
-  selectedThumbRow: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "center",
-    zIndex: 12,
-  },
   thumbsRow: {
     flexDirection: "row",
     gap: 12,
@@ -1498,12 +1493,5 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 20,
     paddingVertical: 12,
-  },
-  submitBtnWrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 12,
   },
 });

@@ -4,9 +4,12 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { Images } from "../../../assets";
+import {
+  BirdSizeScaleGraphic,
+  Images,
+} from "../../../assets";
 import { useNavigation } from "@react-navigation/native";
 import { InfoRow, Text } from "../../../atoms";
 import { StaticMap } from "../../../molecules/StaticMap/StaticMap";
@@ -19,7 +22,15 @@ import { formatMushroomList } from "../../../utils/mushroomApiMappers";
 import { FONTS } from "../../../common/typography";
 import { spacing } from "../../../design-system/spacing";
 import { Radius } from "../../../design";
+import { APP_COLORS } from "../../../config/colors";
 import { useSemanticColors } from "../../../hooks/useSemanticColors";
+import {
+  BIRD_SIZE_SCALE_COUNT,
+  getBirdDetailBlocks,
+  hasAnyValue,
+} from "../utils/birdDetailContent";
+import { buildBirdSoundListItems } from "../utils/birdSoundListItems";
+import { BirdSoundRow } from "./BirdSoundRow";
 
 const MONTH_LABELS = [
   "J",
@@ -267,19 +278,40 @@ export function BirdRangeMapSection({
   );
 }
 
+export const BIRD_SOUND_PREVIEW_COUNT = 2;
+
 export function BirdSoundsSection({
   soundUrls,
+  userCapturedSounds,
+  customLocation,
+  createdAt,
+  updatedAt,
   textPrimary,
   textSecondary,
   surfaceSecondary,
 }: {
   soundUrls: string[];
+  userCapturedSounds?: string[];
+  customLocation?: string;
+  createdAt?: string;
+  updatedAt?: string;
   textPrimary: string;
   textSecondary: string;
   surfaceSecondary: string;
 }) {
-  const strings = COLLECTION_STRINGS.birdDetails.sounds;
-  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+
+  const items = useMemo(
+    () =>
+      buildBirdSoundListItems({
+        soundUrls,
+        userCapturedSounds,
+        customLocation,
+        createdAt,
+        updatedAt,
+      }),
+    [soundUrls, userCapturedSounds, customLocation, createdAt, updatedAt]
+  );
 
   useEffect(() => {
     return () => {
@@ -288,64 +320,409 @@ export function BirdSoundsSection({
   }, []);
 
   const togglePlay = useCallback(
-    async (index: number, url: string) => {
-      if (playingIndex === index) {
+    async (id: string, url: string) => {
+      if (playingId === id) {
         await soundRecordingService.stopPlayback();
-        setPlayingIndex(null);
+        setPlayingId(null);
         return;
       }
       await soundRecordingService.stopPlayback();
       await soundRecordingService.play(url);
-      setPlayingIndex(index);
+      setPlayingId(id);
     },
-    [playingIndex]
+    [playingId]
   );
 
-  if (soundUrls.length === 0) return null;
+  if (items.length === 0) return null;
+
+  const visibleItems = items.slice(0, BIRD_SOUND_PREVIEW_COUNT);
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.soundsScroll}
-    >
-      {soundUrls.map((url, index) => {
-        const isPlaying = playingIndex === index;
-        return (
-          <TouchableOpacity
-            key={`${url}-${index}`}
-            style={[
-              styles.soundCard,
-              { backgroundColor: surfaceSecondary },
-            ]}
-            onPress={() => void togglePlay(index, url)}
-            activeOpacity={0.85}
-          >
+    <View style={styles.soundList}>
+      {visibleItems.map((item) => (
+        <BirdSoundRow
+          key={item.id}
+          item={item}
+          isPlaying={playingId === item.id}
+          onPress={() => void togglePlay(item.id, item.url)}
+          surfaceSecondary={surfaceSecondary}
+          textPrimary={textPrimary}
+          textSecondary={textSecondary}
+        />
+      ))}
+    </View>
+  );
+}
+
+export function BirdLabeledBlock({
+  title,
+  body,
+  textPrimary,
+  textSecondary,
+}: {
+  title: string;
+  body?: string;
+  textPrimary: string;
+  textSecondary: string;
+}) {
+  if (!body?.trim()) return null;
+  return (
+    <View style={styles.labeledBlock}>
+      <Text style={[styles.blockTitle, { color: textPrimary }]}>{title}</Text>
+      <Text style={[styles.blockBody, { color: textSecondary }]}>{body}</Text>
+    </View>
+  );
+}
+
+export function BirdOverviewExtras({
+  bird,
+  textPrimary,
+  textSecondary,
+  isDark,
+}: {
+  bird: MushroomDetail;
+  textPrimary: string;
+  textSecondary: string;
+  isDark: boolean;
+}) {
+  const strings = COLLECTION_STRINGS.birdDetails.overview;
+  const { sizeScale, colors, familyDescription } = getBirdDetailBlocks(bird);
+  const chipBorder = isDark ? "#333333" : "#E7E7E7";
+
+  if (!sizeScale && colors.length === 0 && !familyDescription) return null;
+
+  return (
+    <View style={styles.overviewExtras}>
+      {sizeScale ? (
+        <View style={styles.overviewExtraBlock}>
+          <Text style={[styles.blockTitle, { color: textPrimary }]}>
+            {strings.size}
+          </Text>
+          <View style={styles.sizeTag}>
+            <Text style={[styles.sizeTagLabel, { color: textPrimary }]}>
+              {sizeScale.label}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+      {colors.length > 0 ? (
+        <View style={styles.overviewExtraBlock}>
+          <Text style={[styles.blockTitle, { color: textPrimary }]}>
+            {strings.colors}
+          </Text>
+          <View style={styles.colorChips}>
+            {colors.map((chip) => (
+              <View
+                key={chip.label}
+                style={[
+                  styles.colorChip,
+                  {
+                    borderColor: chipBorder,
+                    backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF",
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.colorDot,
+                    {
+                      backgroundColor: chip.hex,
+                      borderColor:
+                        chip.hex.toLowerCase() === "#ffffff"
+                          ? chipBorder
+                          : chip.hex,
+                    },
+                  ]}
+                />
+                <Text style={[styles.colorChipLabel, { color: textPrimary }]}>
+                  {chip.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
+      {familyDescription ? (
+        <BirdLabeledBlock
+          title={strings.family}
+          body={familyDescription}
+          textPrimary={textPrimary}
+          textSecondary={textSecondary}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+function BirdSizeScale({
+  sizeScale,
+  textPrimary,
+  textSecondary,
+}: {
+  sizeScale: { label: string; index: number };
+  textPrimary: string;
+  textSecondary: string;
+}) {
+  const strings = COLLECTION_STRINGS.birdDetails.characteristics;
+  return (
+    <View style={styles.sizeScaleBlock}>
+      <Text style={[styles.blockTitle, { color: textPrimary }]}>
+        {strings.size}
+      </Text>
+      <Text style={[styles.sizeScaleLabel, { color: textSecondary }]}>
+        {sizeScale.label}
+      </Text>
+      <View style={styles.sizeDotsRow}>
+        {Array.from({ length: BIRD_SIZE_SCALE_COUNT }).map((_, index) => {
+          const selected = index === sizeScale.index;
+          return (
             <View
+              key={`size-dot-${index}`}
               style={[
-                styles.soundIconWrap,
-                isPlaying && styles.soundIconWrapActive,
+                styles.sizeDot,
+                selected ? styles.sizeDotSelected : styles.sizeDotIdle,
               ]}
-            >
-              <AppImage
-                source={isPlaying ? Images.soundPause : Images.soundPlay}
-                style={styles.soundPlayIcon}
-                resizeMode="contain"
-              />
-            </View>
-            <Text style={[styles.soundLabel, { color: textPrimary }]}>
-              {`${strings.callPrefix} ${index + 1}`}
-            </Text>
-            <Text
-              style={[styles.soundHint, { color: textSecondary }]}
-              numberOfLines={1}
-            >
-              {isPlaying ? strings.playing : strings.tapToPlay}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
+            />
+          );
+        })}
+      </View>
+      <BirdSizeScaleGraphic
+        width="100%"
+        height={78}
+        preserveAspectRatio="xMidYMid meet"
+      />
+    </View>
+  );
+}
+
+export function BirdCharacteristicsSection({
+  bird,
+  textPrimary,
+  textSecondary,
+}: {
+  bird: MushroomDetail;
+  textPrimary: string;
+  textSecondary: string;
+}) {
+  const strings = COLLECTION_STRINGS.birdDetails.characteristics;
+  const { sizeScale, characteristics } = getBirdDetailBlocks(bird);
+  const hasText = hasAnyValue(characteristics);
+  if (!sizeScale && !hasText) return null;
+
+  return (
+    <View style={styles.topicStack}>
+      {sizeScale ? (
+        <BirdSizeScale
+          sizeScale={sizeScale}
+          textPrimary={textPrimary}
+          textSecondary={textSecondary}
+        />
+      ) : null}
+      <BirdLabeledBlock
+        title={strings.shape}
+        body={characteristics.shape}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.beak}
+        body={characteristics.beak}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.tail}
+        body={characteristics.tail}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.legs}
+        body={characteristics.legs}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.length}
+        body={characteristics.length}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.wingspan}
+        body={characteristics.wingspan}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.weight}
+        body={characteristics.weight}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+    </View>
+  );
+}
+
+export function BirdBehaviorSection({
+  bird,
+  textPrimary,
+  textSecondary,
+}: {
+  bird: MushroomDetail;
+  textPrimary: string;
+  textSecondary: string;
+}) {
+  const strings = COLLECTION_STRINGS.birdDetails.behavior;
+  const { behavior } = getBirdDetailBlocks(bird);
+  if (!hasAnyValue(behavior)) return null;
+  return (
+    <View style={styles.topicStack}>
+      <BirdLabeledBlock
+        title={strings.feeding}
+        body={behavior.feeding}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.flight}
+        body={behavior.flight}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.vocal}
+        body={behavior.vocal}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.territoriality}
+        body={behavior.territoriality}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.social}
+        body={behavior.social}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+    </View>
+  );
+}
+
+export function BirdFeedingDietSection({
+  bird,
+  textPrimary,
+  textSecondary,
+}: {
+  bird: MushroomDetail;
+  textPrimary: string;
+  textSecondary: string;
+}) {
+  const strings = COLLECTION_STRINGS.birdDetails.feeding;
+  const { feeding } = getBirdDetailBlocks(bird);
+  if (!hasAnyValue(feeding)) return null;
+  return (
+    <View style={styles.topicStack}>
+      <BirdLabeledBlock
+        title={strings.dietType}
+        body={feeding.dietType}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.feedingStyle}
+        body={feeding.feedingStyle}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.diet}
+        body={feeding.diet}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+    </View>
+  );
+}
+
+export function BirdBreedingSection({
+  bird,
+  textPrimary,
+  textSecondary,
+}: {
+  bird: MushroomDetail;
+  textPrimary: string;
+  textSecondary: string;
+}) {
+  const strings = COLLECTION_STRINGS.birdDetails.breeding;
+  const { breeding } = getBirdDetailBlocks(bird);
+  if (!hasAnyValue(breeding)) return null;
+  return (
+    <View style={styles.topicStack}>
+      <BirdLabeledBlock
+        title={strings.season}
+        body={breeding.season}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.nestType}
+        body={breeding.nestType}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.material}
+        body={breeding.material}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.parentalCare}
+        body={breeding.parentalCare}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+    </View>
+  );
+}
+
+export function BirdMigrationNotes({
+  bird,
+  textPrimary,
+  textSecondary,
+}: {
+  bird: MushroomDetail;
+  textPrimary: string;
+  textSecondary: string;
+}) {
+  const strings = COLLECTION_STRINGS.birdDetails.migration;
+  const { migration } = getBirdDetailBlocks(bird);
+  if (!hasAnyValue(migration)) return null;
+  return (
+    <View style={styles.topicStack}>
+      <BirdLabeledBlock
+        title={strings.resident}
+        body={migration.resident}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.path}
+        body={migration.path}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={strings.seasonal}
+        body={migration.seasonal}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+    </View>
   );
 }
 
@@ -411,37 +788,40 @@ export function BirdHabitatRows({
   textSecondary: string;
 }) {
   const s = COLLECTION_STRINGS.birdDetails.habitat;
-  const rows = [
-    { label: s.habitat, value: formatMushroomList(bird.habitatType) },
-    { label: s.diet, value: formatMushroomList(bird.diet) },
-    {
-      label: s.distribution,
-      value: formatMushroomList(
-        bird.geographicDistribution?.length
-          ? bird.geographicDistribution
-          : bird.commonlyFoundIn
-      ),
-    },
-  ].filter((row) => row.value?.trim());
-
-  if (rows.length === 0) return null;
-
+  const { habitat } = getBirdDetailBlocks(bird);
+  if (!hasAnyValue(habitat)) return null;
   return (
-    <View style={styles.rowsBlock}>
-      {rows.map((row, index) => (
-        <View key={row.label}>
-          <InfoRow
-            label={row.label}
-            value={row.value!}
-            labelColor={textSecondary}
-            valueColor={textPrimary}
-            rowPaddingVertical={2}
-          />
-          {index < rows.length - 1 ? (
-            <View style={styles.rowDivider} />
-          ) : null}
-        </View>
-      ))}
+    <View style={styles.topicStack}>
+      <BirdLabeledBlock
+        title={s.habitat}
+        body={habitat.habitat}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={s.preferredLocations}
+        body={habitat.preferredLocations}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={s.bestTime}
+        body={habitat.bestTime}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={s.conservation}
+        body={habitat.conservation}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
+      <BirdLabeledBlock
+        title={s.distribution}
+        body={habitat.distribution}
+        textPrimary={textPrimary}
+        textSecondary={textSecondary}
+      />
     </View>
   );
 }
@@ -586,41 +966,105 @@ const styles = StyleSheet.create({
     backgroundColor: "#E7E7E7",
     marginVertical: spacing[1],
   },
-  soundsScroll: {
+  soundList: {
     gap: spacing[3],
-    paddingVertical: spacing[1],
+    width: "100%",
   },
-  soundCard: {
-    width: 140,
-    borderRadius: Radius.md,
-    padding: spacing[3],
-    alignItems: "center",
-    gap: spacing[2],
+  labeledBlock: {
+    gap: 12,
+    width: "100%",
   },
-  soundIconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.06)",
-  },
-  soundIconWrapActive: {
-    backgroundColor: "#2196F3",
-  },
-  soundPlayIcon: {
-    width: 28,
-    height: 28,
-  },
-  soundLabel: {
+  blockTitle: {
     fontFamily: FONTS.bold,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  blockBody: {
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
+  },
+  overviewExtras: {
+    marginTop: 20,
+    gap: 20,
+    width: "100%",
+  },
+  overviewExtraBlock: {
+    gap: 12,
+    width: "100%",
+  },
+  sizeTag: {
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: "#41EDE9",
+    borderRadius: 24,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  sizeTagLabel: {
+    fontFamily: FONTS.medium,
     fontSize: 14,
     lineHeight: 20,
   },
-  soundHint: {
+  colorChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  colorChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 24,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  colorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  colorChipLabel: {
+    fontFamily: FONTS.medium,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  topicStack: {
+    gap: 20,
+    width: "100%",
+  },
+  sizeScaleBlock: {
+    gap: 8,
+    width: "100%",
+  },
+  sizeScaleLabel: {
     fontFamily: FONTS.regular,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  sizeDotsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 8,
+    width: "100%",
+  },
+  sizeDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+  },
+  sizeDotSelected: {
+    borderColor: APP_COLORS.ctaPrimary,
+    backgroundColor: APP_COLORS.ctaPrimary,
+  },
+  sizeDotIdle: {
+    borderColor: "#E7E7E7",
+    backgroundColor: "#FFFFFF",
   },
   rangeBars: {
     gap: spacing[3],

@@ -10,11 +10,13 @@ import {
   requestMicrophonePermission,
 } from "../permissions";
 
-const MAX_RECORDING_SECONDS = 30;
+const MAX_RECORDING_SECONDS = 60;
 
 class SoundRecordingService {
   private recordingUri: string | null = null;
   private recordingStartedAt: number | null = null;
+  private pausedAt: number | null = null;
+  private pausedAccumMs = 0;
 
   async ensureMicrophonePermission(): Promise<boolean> {
     const current = await checkMicrophonePermission();
@@ -29,7 +31,9 @@ class SoundRecordingService {
     return `${RNFS.CachesDirectoryPath}/bird-sound-${Date.now()}.${ext}`;
   }
 
-  async startRecording(): Promise<void> {
+  async startRecording(
+    onMetering?: (db: number) => void
+  ): Promise<void> {
     const allowed = await this.ensureMicrophonePermission();
     if (!allowed) {
       throw new Error("Microphone permission is required to record bird sounds.");
@@ -37,9 +41,39 @@ class SoundRecordingService {
 
     const path = this.buildRecordingPath();
     const uri = Platform.OS === "ios" ? path : `file://${path}`;
-    await AudioRecorderPlayer.startRecorder(uri);
+    await AudioRecorderPlayer.startRecorder(uri, undefined, true);
     this.recordingUri = uri;
     this.recordingStartedAt = Date.now();
+    this.pausedAt = null;
+    this.pausedAccumMs = 0;
+    AudioRecorderPlayer.addRecordBackListener((meta) => {
+      const metering =
+        typeof meta.currentMetering === "number" ? meta.currentMetering : 0;
+      onMetering?.(metering);
+    });
+  }
+
+  async pauseRecording(): Promise<void> {
+    if (this.pausedAt) return;
+    await AudioRecorderPlayer.pauseRecorder();
+    this.pausedAt = Date.now();
+  }
+
+  async resumeRecording(): Promise<void> {
+    if (!this.pausedAt) return;
+    await AudioRecorderPlayer.resumeRecorder();
+    this.pausedAccumMs += Date.now() - this.pausedAt;
+    this.pausedAt = null;
+  }
+
+  elapsedRecordingSeconds(): number {
+    if (!this.recordingStartedAt) return 0;
+    const pausedNow = this.pausedAt ? Date.now() - this.pausedAt : 0;
+    return Math.max(
+      0,
+      (Date.now() - this.recordingStartedAt - this.pausedAccumMs - pausedNow) /
+        1000
+    );
   }
 
   async stopRecording(): Promise<string> {
@@ -49,6 +83,8 @@ class SoundRecordingService {
     const uri = result || this.recordingUri;
     this.recordingUri = null;
     this.recordingStartedAt = null;
+    this.pausedAt = null;
+    this.pausedAccumMs = 0;
 
     if (!uri) {
       throw new Error("No recording available.");
@@ -61,8 +97,7 @@ class SoundRecordingService {
   /** Auto-stop when max duration reached; returns uri. */
   async stopRecordingIfOverLimit(): Promise<string | null> {
     if (!this.recordingStartedAt) return null;
-    const elapsedSec = (Date.now() - this.recordingStartedAt) / 1000;
-    if (elapsedSec < MAX_RECORDING_SECONDS) return null;
+    if (this.elapsedRecordingSeconds() < MAX_RECORDING_SECONDS) return null;
     return this.stopRecording();
   }
 

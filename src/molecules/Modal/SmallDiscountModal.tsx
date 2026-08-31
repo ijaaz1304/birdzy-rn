@@ -12,7 +12,7 @@ import { Modal } from "./Modal";
 import { ModalBackgroundSvg } from "./ModalBackgroundSvg";
 import { Card } from "../Card";
 import { useStrings } from "../../hooks/useStrings";
-import { getDarkPopupBorderStyle } from "../../design-system/modalTokens";
+import { getDarkPopupBorderStyle, getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 
 export interface SmallDiscountModalProps {
   visible: boolean;
@@ -99,7 +99,7 @@ export const SmallDiscountModal: React.FC<SmallDiscountModalProps> = ({
               size="medium"
               onPress={onSubscribe}
               fullWidth
-              style={styles.button}
+              style={[styles.button, getPopupPrimaryCtaStyle(theme)]}
             />
           </View>
         </Card>

@@ -43,12 +43,8 @@ export const SessionLocationPermissionModal: React.FC<
     let mounted = true;
     void getLocationPermissionEntryAction().then((entry) => {
       if (!mounted) return;
-      if (entry === "granted") {
+      if (entry === "granted" || entry === "manage_settings") {
         finish();
-        return;
-      }
-      if (entry === "manage_settings") {
-        setShowManagePopup(true);
       }
     });
     return () => {
@@ -63,7 +59,7 @@ export const SessionLocationPermissionModal: React.FC<
       return;
     }
     if (entry === "manage_settings") {
-      setShowManagePopup(true);
+      finish();
       return;
     }
 
@@ -76,7 +72,7 @@ export const SessionLocationPermissionModal: React.FC<
         return;
       }
       if (outcome.showManageSettings) {
-        setShowManagePopup(true);
+        finish();
       } else {
         finish();
       }

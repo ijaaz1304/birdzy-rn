@@ -1,5 +1,6 @@
 /**
- * Figma 8015:141357 — Home | Catalogue | [Identify] | Feed | Collection
+ * Bottom tab bar — layout and selection treatment match Shroom-Ai MainTabs.
+ * Identify stays a chooser (does not switch to the Camera tab).
  */
 
 import React, { useCallback, useMemo, useRef } from "react";
@@ -13,7 +14,7 @@ import {
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppImage } from "@/components/AppImage";
-import { Images } from "../assets";
+import { IdentifyTabIcon, Images } from "../assets";
 import { NAVIGATION_STRINGS } from "../config/navigation.strings";
 import { TAB_BAR_COLORS as TAB_BAR_COLORS_CONST } from "../constants/colorConstants";
 import { APP_COLORS } from "../config/colors";
@@ -23,9 +24,11 @@ import { useTabBarLayout } from "../contexts/TabBarLayoutContext";
 import type { MeasurableTabName } from "../contexts/TabBarLayoutContext";
 import { analyticsService } from "../services/analytics/analytics.service";
 import { EVENTS } from "../services/analytics/analytics.events";
+import { useIdentificationEntry } from "../features/camera/IdentificationEntryProvider";
 
-const TAB_BAR_BASE_HEIGHT = 56;
-const TAB_ICON_SIZE = 16;
+/** Inner tab row height (icons + labels); safe-area padding is added separately. */
+const TAB_BAR_BASE_HEIGHT = 66;
+const TAB_ICON_SIZE = 24;
 const CENTER_TAB_ICON_SIZE = 24;
 const CENTER_TAB_CIRCLE_SIZE = 48;
 
@@ -108,15 +111,16 @@ export function CustomBottomTabBar({
 }: BottomTabBarProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { openIdentifyMethodChooser } = useIdentificationEntry();
   const tabColors =
     theme.mode === "dark"
       ? TAB_BAR_COLORS_CONST.DARK
       : TAB_BAR_COLORS_CONST.LIGHT;
 
   const tabActiveColor = tabColors.selected;
-  const tabActiveBorderColor = tabColors.line;
+  const tabLineColor = tabColors.line;
   const tabInactiveColor = tabColors.unselected;
-  const tabBarBottomInset = Math.max(insets.bottom, spacing[2]);
+  const tabBarBottomInset = Math.max(insets.bottom, 10);
   const tabBarHeight = TAB_BAR_BASE_HEIGHT + tabBarBottomInset;
 
   const focusedRoute = state.routes[state.index];
@@ -165,16 +169,7 @@ export function CustomBottomTabBar({
 
   const handleIdentifyPress = () => {
     analyticsService.logEvent(EVENTS.identify_bottom_nav);
-    const cameraRoute = routeByName.get("Camera");
-    if (!cameraRoute) return;
-
-    navigation.emit({
-      type: "tabPress",
-      target: cameraRoute.key,
-      canPreventDefault: true,
-    });
-
-    navigation.navigate("Camera", { screen: "IdentifyHub" });
+    openIdentifyMethodChooser();
   };
 
   const renderSideTab = (name: SideTabName) => {
@@ -192,24 +187,32 @@ export function CustomBottomTabBar({
         accessibilityLabel={TAB_LABELS[name]}
         accessibilityState={focused ? { selected: true } : {}}
         onPress={() => handleSideTabPress(name)}
-        style={[
-          styles.sideTab,
-          focused && {
-            borderTopWidth: 2,
-            borderTopColor: tabActiveBorderColor,
-          },
-        ]}
+        style={styles.sideTab}
       >
-        <AppImage source={TAB_ICONS[name]} style={iconStyle} resizeMode="contain" />
+        <View style={styles.tabIconWrap}>
+          <AppImage
+            source={TAB_ICONS[name]}
+            style={iconStyle}
+            resizeMode="contain"
+          />
+          <View
+            style={[
+              styles.activeLine,
+              {
+                opacity: focused ? 1 : 0,
+                backgroundColor: focused ? tabLineColor : theme.colors.textPrimary,
+              },
+            ]}
+          />
+        </View>
         <Text
           style={[
             styles.tabLabel,
-            {
-              color: focused ? tabActiveColor : tabInactiveColor,
-              fontFamily: focused ? "Satoshi-Medium" : "Satoshi-Regular",
-            },
+            { color: focused ? tabActiveColor : tabInactiveColor },
           ]}
           numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
           allowFontScaling={false}
         >
           {TAB_LABELS[name]}
@@ -223,36 +226,39 @@ export function CustomBottomTabBar({
       style={[
         styles.bar,
         {
-          backgroundColor: tabColors.background,
-          borderTopColor: tabColors.border,
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.border,
           paddingBottom: tabBarBottomInset,
           height: tabBarHeight,
           minHeight: tabBarHeight,
         },
       ]}
     >
-      <View style={styles.leftGroup}>
-        {LEFT_TABS.map(renderSideTab)}
-      </View>
+      {LEFT_TABS.map(renderSideTab)}
 
       <MeasuredTabTarget
         tabName="Camera"
         accessibilityLabel={NAVIGATION_STRINGS.tabs.identify}
         onPress={handleIdentifyPress}
-        style={styles.centerTabWrap}
+        style={styles.centerTab}
       >
-        <View style={styles.centerTabCircle}>
-          <AppImage
-            source={Images.bottomTabIdentifyDark}
-            style={styles.centerTabIcon}
-            resizeMode="contain"
-          />
+        <View style={styles.tabIconWrap}>
+          <View
+            style={[
+              styles.middleTabCircle,
+              { backgroundColor: APP_COLORS.ctaPrimary },
+            ]}
+          >
+            <IdentifyTabIcon
+              width={CENTER_TAB_ICON_SIZE}
+              height={CENTER_TAB_ICON_SIZE}
+              color="#FFFFFF"
+            />
+          </View>
         </View>
       </MeasuredTabTarget>
 
-      <View style={styles.rightGroup}>
-        {RIGHT_TABS.map(renderSideTab)}
-      </View>
+      {RIGHT_TABS.map(renderSideTab)}
     </View>
   );
 }
@@ -283,58 +289,57 @@ function resetTabToRoot(
 const styles = StyleSheet.create({
   bar: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    borderTopWidth: 1,
-    paddingHorizontal: spacing[4],
-    paddingTop: 0,
-    gap: spacing[2],
-  },
-  leftGroup: {
-    flex: 1,
-    flexDirection: "row",
-    gap: spacing[2],
-  },
-  rightGroup: {
-    flex: 1,
-    flexDirection: "row",
-    gap: spacing[2],
+    alignItems: "center",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: spacing[2],
+    paddingTop: 6,
   },
   sideTab: {
     flex: 1,
-    alignItems: "center",
-    paddingTop: spacing[3],
-    paddingBottom: spacing[1],
-    gap: spacing[1],
-  },
-  tabLabel: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-    width: "100%",
-  },
-  centerTabWrap: {
+    minWidth: 0,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: spacing[3],
-    paddingBottom: spacing[1],
   },
-  centerTabCircle: {
+  centerTab: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabIconWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 48,
+    height: 38,
+  },
+  activeLine: {
+    position: "absolute",
+    top: -4,
+    height: 3,
+    width: 32,
+    borderRadius: 2,
+  },
+  tabLabel: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 15,
+    textAlign: "center",
+    width: "100%",
+    paddingHorizontal: 1,
+    fontFamily: "Satoshi-Regular",
+  },
+  middleTabCircle: {
     width: CENTER_TAB_CIRCLE_SIZE,
     height: CENTER_TAB_CIRCLE_SIZE,
     borderRadius: CENTER_TAB_CIRCLE_SIZE / 2,
-    backgroundColor: APP_COLORS.ctaPrimary,
     alignItems: "center",
     justifyContent: "center",
-  },
-  centerTabIcon: {
-    width: CENTER_TAB_ICON_SIZE,
-    height: CENTER_TAB_ICON_SIZE,
+    marginTop: 4,
   },
   tabPressable: {
     flex: 1,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing[1],
   },
 });

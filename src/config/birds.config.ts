@@ -239,21 +239,21 @@ export const birdsAppConfig: AppConfig = {
   onboarding: {
     pages: [
       {
-        title: "Identify birds instantly",
+        title: "Discover thousands of birds like never before",
         subtitle:
-          "Use photo, sound, or our step-by-step wizard to name birds in seconds.",
+          "Scan with AI, explore a vast bird database, and connect with a nature-loving community.",
         imageKey: "auth_scans",
       },
       {
-        title: "Build your private collection",
+        title: "Browse a vast collection of birds",
         subtitle:
-          "Save sightings to your life list, wishlist, and custom trip lists.",
+          "Explore a global collection of birds with detailed images, filters, and identification guides.",
         imageKey: "auth_cards",
       },
       {
-        title: "Explore the global catalogue",
+        title: "Curate your own bird collections",
         subtitle:
-          "Browse 10,000+ species with photos, calls, range maps, and filters.",
+          "Create personalized collections and organize your birds just the way you prefer.",
         imageKey: "auth_identity",
         stats: {
           label: "Number of species",
@@ -263,15 +263,15 @@ export const birdsAppConfig: AppConfig = {
         tabs: ["Popular", "Raptors", "Songbirds", "Waterfowl"],
       },
       {
-        title: "Learn with AI Chat",
+        title: "Identify birds by sound",
         subtitle:
-          "Ask our bird expert about field marks, behavior, and look-alikes.",
+          "Record or upload bird sounds to identify species by their songs and calls, even when they're hidden from view.",
         imageKey: "auth_scans",
       },
       {
-        title: "Join the community",
+        title: "Keep track of your bird journey",
         subtitle:
-          "Share sightings, photos, and tips with birders around the world.",
+          "Sign up and log in to ensure your bird discoveries are never lost.",
         imageKey: "auth_mins",
       },
     ],

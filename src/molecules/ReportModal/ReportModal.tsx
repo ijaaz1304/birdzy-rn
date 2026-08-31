@@ -12,7 +12,7 @@ import { Button } from "../../atoms";
 import { MODAL_STRINGS } from "../../config/strings/modals.strings";
 import { FONTS } from "../../common/typography";
 import { dismissKeyboardSmooth } from "../../utils/dismissKeyboardSmooth";
-import { getPopupChromeStyle } from "../../design-system/modalTokens";
+import { getPopupChromeStyle, getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 
 import { spacing } from "../../design-system/spacing";
 
@@ -197,7 +197,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               onPress={handleSubmit}
               disabled={isSubmitting || !message.trim()}
               loading={isSubmitting}
-              style={styles.submitButton}
+              style={[styles.submitButton, getPopupPrimaryCtaStyle(theme)]}
             />
           </View>
         </View>

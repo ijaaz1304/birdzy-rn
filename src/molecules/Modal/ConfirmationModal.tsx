@@ -11,8 +11,7 @@ import { Icon } from "../../atoms";
 import { Modal } from "./Modal";
 import { ModalBackgroundSvg } from "./ModalBackgroundSvg";
 import { Card } from "../Card";
-import { APP_COLORS } from "../../config/colors";
-import { getDarkPopupBorderStyle } from "../../design-system/modalTokens";
+import { getDarkPopupBorderStyle, getPopupPrimaryCtaStyle, getPopupPrimaryCtaTextColor, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
 
 export interface ConfirmationModalProps {
   visible: boolean;
@@ -118,14 +117,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               size="large"
               onPress={onClose}
               disabled={loading}
-              style={[
-                styles.cancelButton,
-                {
-                  borderColor: isDark
-                    ? APP_COLORS.cancelSecondaryBorderDark
-                    : APP_COLORS.cancelSecondaryBorderLight,
-                },
-              ]}
+              style={[styles.cancelButton, getPopupSecondaryCtaStyle(theme)]}
+              textStyle={{ color: getPopupSecondaryCtaTextColor(theme) }}
             />
             <Button
               title={confirmLabel}
@@ -133,7 +126,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               size="large"
               onPress={handleConfirm}
               loading={loading}
-              style={styles.confirmButton}
+              style={[styles.confirmButton, getPopupPrimaryCtaStyle(theme)]}
+              textStyle={{ color: getPopupPrimaryCtaTextColor(theme) }}
             />
           </View>
         </Card>

@@ -9,6 +9,7 @@ import {
 } from "@react-navigation/native";
 import { buildDeepLinkResetState } from "../navigation/deepLinking/deepLinkNavigation";
 import type { ResolvedRootNavigation } from "../services/notifications/notificationRouting";
+import { useIdentificationEntryStore } from "../features/camera/identificationEntry.store";
 
 /**
  * Fast navigation helper that uses CommonActions for better performance
@@ -175,10 +176,16 @@ export function navigateToSubscriptionMain(params?: Record<string, unknown>) {
   navigateToSubscriptionScreen("SubscriptionMain", params);
 }
 
-/** Open Camera tab → Sound Identify flow (from Home, Collection, etc.). */
+/** Open Camera tab → Sound Identify flow (location then microphone popups). */
 export function navigateToSoundIdentify(
   navigation: { navigate: (name: string, params?: object) => void }
 ) {
+  const startSound =
+    useIdentificationEntryStore.getState().startSoundEntryHandler;
+  if (startSound) {
+    startSound();
+    return;
+  }
   navigation.navigate("MainTabs", {
     screen: "Camera",
     params: { screen: "SoundIdentify" },

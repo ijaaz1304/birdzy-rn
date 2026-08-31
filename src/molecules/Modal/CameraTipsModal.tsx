@@ -15,7 +15,7 @@ import { Modal } from "./Modal";
 import { IDENTIFICATION_TIP_LIGHT_IMAGES } from "../../assets/identificationTipImages";
 import { TipSampleImage } from "./TipSampleImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
-import { getPopupChromeStyle } from "../../design-system/modalTokens";
+import { getPopupChromeStyle, getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 export interface CameraTipsModalProps {
   visible: boolean;
   onClose: () => void;
@@ -193,6 +193,7 @@ export const CameraTipsModal: React.FC<CameraTipsModalProps> = ({
           size="large"
           onPress={onClose}
           fullWidth
+          style={getPopupPrimaryCtaStyle(theme)}
         />
       </View>
     </View>

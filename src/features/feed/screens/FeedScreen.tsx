@@ -38,6 +38,7 @@ import {
 } from "../../../services/analytics/analytics.service";
 import { FLATLIST_CONFIG } from "../../../constants/appConstants";
 import { FEED_COLORS } from "../../../constants/colorConstants";
+import { APP_COLORS } from "../../../config/colors";
 
 const SCREEN = Dimensions.get("window");
 /** Header + tabs + soft gradient fade below tabs (status bar added at runtime). */
@@ -558,6 +559,8 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               active={activeTab === "all"}
               onPress={() => handleTabChange("all")}
               variant="underline"
+              activeColor={APP_COLORS.ctaPrimary}
+              underlineColor={APP_COLORS.ctaPrimary}
             />
           </View>
           <View style={{ flex: 1 }}>
@@ -566,6 +569,8 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               active={activeTab === "mine"}
               onPress={() => handleTabChange("mine")}
               variant="underline"
+              activeColor={APP_COLORS.ctaPrimary}
+              underlineColor={APP_COLORS.ctaPrimary}
             />
           </View>
         </View>

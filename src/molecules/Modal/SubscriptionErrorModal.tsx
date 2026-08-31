@@ -13,7 +13,7 @@ import { ModalBackgroundSvg } from "./ModalBackgroundSvg";
 import { Card } from "../Card";
 import { useStrings } from "../../hooks/useStrings";
 import { Images } from "../../assets";
-import { getDarkPopupBorderStyle } from "../../design-system/modalTokens";
+import { getDarkPopupBorderStyle, getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 
 export interface SubscriptionErrorModalProps {
   visible: boolean;
@@ -118,7 +118,7 @@ export const SubscriptionErrorModal: React.FC<SubscriptionErrorModalProps> = ({
                 variant="primary"
                 size="large"
                 onPress={onRetry}
-                style={styles.retryButton}
+                style={[styles.retryButton, getPopupPrimaryCtaStyle(theme)]}
               />
             )}
           </View>

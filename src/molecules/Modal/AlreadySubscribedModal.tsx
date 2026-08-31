@@ -12,7 +12,7 @@ import { Modal } from "./Modal";
 import { ModalBackgroundSvg } from "./ModalBackgroundSvg";
 import { Card } from "../Card";
 import { useStrings } from "../../hooks/useStrings";
-import { getDarkPopupBorderStyle } from "../../design-system/modalTokens";
+import { getDarkPopupBorderStyle, getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 
 export interface AlreadySubscribedModalProps {
   visible: boolean;
@@ -129,7 +129,7 @@ export const AlreadySubscribedModal: React.FC<AlreadySubscribedModalProps> = ({
               variant="primary"
               size="large"
               onPress={onViewStatus}
-              style={styles.viewButton}
+              style={[styles.viewButton, getPopupPrimaryCtaStyle(theme)]}
             />
           </View>
         </Card>

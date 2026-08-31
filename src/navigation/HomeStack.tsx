@@ -11,6 +11,7 @@ import { MushroomDetailsScreen } from "../features/collection/screens/MushroomDe
 import { OtherAppsScreen } from "../features/home/screens/OtherAppsScreen";
 import { StepByStepScreen } from "../features/discovery/screens/StepByStepScreen";
 import { AudioGalleryScreen } from "../features/discovery/screens/AudioGalleryScreen";
+import { BirdSoundsScreen } from "../features/collection/screens/BirdSoundsScreen";
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
@@ -29,6 +30,7 @@ export const HomeStack: React.FC = () => {
       <Stack.Screen name="OtherApps" component={OtherAppsScreen} />
       <Stack.Screen name="StepByStep" component={StepByStepScreen} />
       <Stack.Screen name="AudioGallery" component={AudioGalleryScreen} />
+      <Stack.Screen name="BirdSounds" component={BirdSoundsScreen} />
     </Stack.Navigator>
   );
 };

@@ -13,6 +13,7 @@ import { CameraPermissionGateScreen } from "../features/camera/screens/CameraPer
 import { CameraCaptureScreen } from "../features/camera/screens/CameraCaptureScreen";
 import { DiagnosisLoadingScreen } from "../features/camera/screens/DiagnosisLoadingScreen";
 import { SoundIdentifyScreen } from "../features/camera/screens/SoundIdentifyScreen";
+import { SoundCropScreen } from "../features/camera/screens/SoundCropScreen";
 import { IdentifyHubScreen } from "../features/camera/screens/IdentifyHubScreen";
 import { IdentifyImageCropScreen } from "../features/camera/screens/IdentifyImageCropScreen";
 import { OtherPossibleMatchesScreen } from "../features/camera/screens/OtherPossibleMatchesScreen";
@@ -64,6 +65,7 @@ export const CameraStack: React.FC = () => {
       />
       <Stack.Screen name="IdentifyHub" component={IdentifyHubScreen} />
       <Stack.Screen name="SoundIdentify" component={SoundIdentifyScreen} />
+      <Stack.Screen name="SoundCrop" component={SoundCropScreen} />
       <Stack.Screen
         name="OtherPossibleMatches"
         component={OtherPossibleMatchesScreen}
