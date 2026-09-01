@@ -522,7 +522,7 @@ function StayUpdatedContent({
     <>
       <View style={[popupStyles.iconWrap, { marginBottom: theme.spacing[4] }]}>
         <AppImage
-          source={Images.mushroomStayUpdated}
+          source={Images.speciesStayUpdated}
           style={popupStyles.icon}
           resizeMode="contain"
         />
@@ -546,7 +546,7 @@ function StayUpdatedContent({
           { color: theme.colors.textSecondary, marginBottom: theme.spacing[6] },
         ]}
       >
-        Enable notifications to stay informed about new features, mushroom
+        Enable notifications to stay informed about new features, bird
         discoveries, and app updates.
       </Text>
       <Button
@@ -653,7 +653,7 @@ function EnablePushContent({
     <>
       <View style={[popupStyles.iconWrap, { marginBottom: theme.spacing[4] }]}>
         <AppImage
-          source={Images.mushroomStayUpdated}
+          source={Images.speciesStayUpdated}
           style={popupStyles.icon}
           resizeMode="contain"
         />
@@ -677,7 +677,7 @@ function EnablePushContent({
           { color: theme.colors.textSecondary, marginBottom: theme.spacing[6] },
         ]}
       >
-        Get notified about new mushrooms, identification updates, and community
+        Get notified about new birds, identification updates, and community
         activity.
       </Text>
       <Button

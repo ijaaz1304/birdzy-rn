@@ -24,7 +24,7 @@ export function WhichBirdAreYouBackground() {
     >
       <AppImage
         source={
-          isDark ? Images.whichMushroomDarkBg : Images.whichMushroomAreYouBg
+          isDark ? Images.whichBirdResultBgDark : Images.whichBirdAreYouBg
         }
         style={styles.background}
         resizeMode="cover"

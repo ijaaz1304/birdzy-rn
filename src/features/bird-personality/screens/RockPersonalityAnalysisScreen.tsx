@@ -19,7 +19,7 @@ import {
 import { prefetchBundledSource } from "../../../imagePipeline/prefetchBundledSources";
 import { logQuizCompleted } from "../quizAnalytics";
 import { IdentificationScannerFrame } from "../../camera/components/IdentificationScannerFrame";
-import { WhichMushroomAreYouBackground } from "../components/WhichMushroomAreYouBackground";
+import { WhichBirdAreYouBackground } from "../components/WhichBirdAreYouBackground";
 
 type NavigationProp = NativeStackNavigationProp<
   BirdPersonalityStackParamList,
@@ -68,7 +68,7 @@ export const BirdPersonalityAnalysisScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <WhichMushroomAreYouBackground />
+      <WhichBirdAreYouBackground />
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={styles.content}>
           {photoUri ? (

@@ -6,13 +6,13 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { CollectionStackParamList } from "./types";
 import { CollectionScreen } from "../features/collection/screens/CollectionScreen";
-import { MyMushroomsScreen } from "../features/collection/screens/MyMushroomsScreen";
+import { MyBirdsScreen } from "../features/collection/screens/MyBirdsScreen";
 import { WishlistScreen } from "../features/collection/screens/WishlistScreen";
 import { CreateCollectionScreen } from "../features/collection/screens/CreateCollectionScreen";
 import { CollectionDetailsScreen } from "../features/collection/screens/CollectionDetailsScreen";
 // Reminders removed - not needed for rocks/minerals app
-import { MushroomDetailsScreen } from "../features/collection/screens/MushroomDetailsScreen";
-import { EditBirdDetailsScreen } from "../features/collection/screens/EditMushroomDetailsScreen";
+import { BirdDetailsScreen } from "../features/collection/screens/BirdDetailsScreen";
+import { EditBirdDetailsScreen } from "../features/collection/screens/EditBirdDetailsScreen";
 import { BirdSoundsScreen } from "../features/collection/screens/BirdSoundsScreen";
 import { IDENTIFY_FULL_SCREEN_OPTIONS } from "./identifyFlowScreenOptions";
 
@@ -28,7 +28,7 @@ export const CollectionStack: React.FC = () => {
       }}
     >
       <Stack.Screen name="CollectionMain" component={CollectionScreen} />
-      <Stack.Screen name="MyBirds" component={MyMushroomsScreen} />
+      <Stack.Screen name="MyBirds" component={MyBirdsScreen} />
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
       <Stack.Screen
         name="CreateCollection"
@@ -41,7 +41,7 @@ export const CollectionStack: React.FC = () => {
       {/* Reminders removed - not needed for rocks/minerals app */}
       <Stack.Screen
         name="BirdDetails"
-        component={MushroomDetailsScreen}
+        component={BirdDetailsScreen}
         options={IDENTIFY_FULL_SCREEN_OPTIONS}
       />
       <Stack.Screen

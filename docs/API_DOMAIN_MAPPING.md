@@ -320,7 +320,7 @@ Defined in Bird API doc; labels today in `src/constants/mushroomOptions.ts` → 
 | **Endpoint** | `GET /core/archetypes/getDetails/:id` |
 | **Service** | `archetypeService.getArchetypeDetails()` |
 | **Normalizer** | `normalizeMushroomDetail()` in `mushroomApiMappers.ts` |
-| **UI** | `MushroomDetailsScreen`, catalogue detail routes |
+| **UI** | `BirdDetailsScreen`, catalogue detail routes |
 
 ### Archetype stats (home / catalogue tabs)
 
@@ -415,7 +415,7 @@ These exist in `API_ENDPOINTS.MUSHROOMS` and `mushrooms.api.ts` but **are not in
 ### Update specimen — PATCH fields
 
 Bird API uses **flat dot-notation** keys (e.g. `"scientificClassification.kingdom"`).  
-Edit UI: `EditMushroomDetailsScreen`, `editMushroomDetails.utils.ts` — mushroom-only fields today.
+Edit UI: `EditBirdDetailsScreen`, `editMushroomDetails.utils.ts` — mushroom-only fields today.
 
 ### Legacy specimen endpoints
 
@@ -430,7 +430,7 @@ Edit UI: `EditMushroomDetailsScreen`, `editMushroomDetails.utils.ts` — mushroo
 coreApi.* specimen methods              src/services/api/features/core.api.ts
   → mushroomSpecimenService             src/services/specimen/mushroomSpecimen.service.ts
   → normalizeSpecimenListItem()         src/utils/mushroomApiMappers.ts
-  → MyMushroomsScreen, MushroomDetailsScreen, EditMushroomDetailsScreen
+  → MyBirdsScreen, BirdDetailsScreen, EditBirdDetailsScreen
   → collectionInvalidation.store
 ```
 
@@ -524,7 +524,7 @@ Each file item links optional `specimen` (scientificName, commonName, images, so
 
 | Shroomzy UI | Bird target | Key files |
 |-------------|-------------|-----------|
-| Mushroom of the Day modal | Bird of the Day | `HomeScreen`, `HomeMushroomCornerSection`, `@birdzy_species_of_day_*` keys |
+| Mushroom of the Day modal | Bird of the Day | `HomeScreen`, `HomeBirdCornerSection`, `@birdzy_species_of_day_*` keys |
 | Edibility / toxicity badges | Conservation status, ID marks | Detail screens, identify results |
 | Mushroom safety disclaimer | Bird watching / no medical claims | `mushroomOptions.ts` |
 | Quiz (`which_shroom`) | Bird quiz or remove | `src/features/quiz/` |

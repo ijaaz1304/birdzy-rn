@@ -42,6 +42,7 @@ import {
   FLATLIST_CONFIG,
   FREE_COLLECTION_LIMIT,
   isUserCreatedCollectionName,
+  CATEGORIES,
 } from "../../../constants/appConstants";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
@@ -57,6 +58,8 @@ import {
   resolveCollectionPreviewUrls,
   resolveSystemCollectionCardPreview,
   toSpecimenPreviewImages,
+  NEAR_YOU_COLLECTION_NAME,
+  fetchNearYouCollectionPreview,
 } from "../collection.utils";
 import { runFeedNotificationsOnCollectionFocus } from "../../../services/notifications/feedNotificationsOnCollectionFocus.service";
 import { useAppLogsStore } from "../../app-logs/app-logs.store";
@@ -114,12 +117,19 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
   const [showGoProSheet, setShowGoProSheet] = useState(false);
   const isPremium = useSubscriptionStore(selectIsPremium);
 
-  // Default collections: Identified, Wishlist (Owned hidden for now)
-  const DEFAULT_COLLECTION_NAMES = ["Identified", "Wishlist"] as const;
+  // Default collections: Identified, Wishlist, Near You (Owned hidden for now)
+  const DEFAULT_COLLECTION_NAMES = [
+    "Identified",
+    "Wishlist",
+    NEAR_YOU_COLLECTION_NAME,
+  ] as const;
   const defaultCollectionPlaceholder = (name: string): Collection => ({
     name,
     count: 0,
-    createdAt: "Recently",
+    createdAt:
+      name === NEAR_YOU_COLLECTION_NAME
+        ? strings.collection.collections.nearYouSubtitle
+        : "Recently",
     images: [],
   });
   const emptyCasePlaceholders: Collection[] = useMemo(
@@ -220,9 +230,9 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
         didStatsRetry,
       });
 
-      // Identified & Wishlist: specimen fetchAll is source of truth for thumbnails.
+      // Identified, Wishlist & Near You: specimen / location APIs for card previews.
       try {
-        const [identifiedRes, wishlistRes] = await Promise.all([
+        const [identifiedRes, wishlistRes, nearYouPreview] = await Promise.all([
           mushroomSpecimenService.fetchAllSpecimens(
             { isIdentified: [true] },
             { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
@@ -231,6 +241,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
             { isWishlisted: [true] },
             { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
           ),
+          fetchNearYouCollectionPreview(),
         ]);
         const identifiedSpecimenImages = toSpecimenPreviewImages(
           identifiedRes.data as unknown as Parameters<
@@ -268,6 +279,15 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
                 images: wishlistPreview.images,
               }
             : merged[1];
+        merged[2] =
+          merged[2]?.name === NEAR_YOU_COLLECTION_NAME
+            ? {
+                ...merged[2],
+                count: nearYouPreview.count,
+                images: nearYouPreview.images,
+                createdAt: strings.collection.collections.nearYouSubtitle,
+              }
+            : merged[2];
       } catch (_) {}
 
       // User-created collections only: pass both collectionId (query) and _collections (body)
@@ -320,7 +340,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
         defaultCollectionPlaceholder(name)
       );
       try {
-        const [identifiedRes, wishlistRes] = await Promise.all([
+        const [identifiedRes, wishlistRes, nearYouPreview] = await Promise.all([
           mushroomSpecimenService.fetchAllSpecimens(
             { isIdentified: [true] },
             { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
@@ -329,6 +349,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
             { isWishlisted: [true] },
             { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
           ),
+          fetchNearYouCollectionPreview(),
         ]);
         defaults = defaults.map((c) => {
           if (c.name === "Identified")
@@ -351,6 +372,13 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
                 >[0]
               ),
             };
+          if (c.name === NEAR_YOU_COLLECTION_NAME)
+            return {
+              ...c,
+              count: nearYouPreview.count,
+              images: nearYouPreview.images,
+              createdAt: strings.collection.collections.nearYouSubtitle,
+            };
           return c;
         });
       } catch (_) {}
@@ -363,7 +391,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, hasHydrated, isPremium]);
+  }, [user?.id, hasHydrated, isPremium, strings.collection.collections.nearYouSubtitle]);
 
   // Fetch collections from API on mount
   useEffect(() => {
@@ -423,6 +451,16 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
         analyticsService.logEvent(EVENTS.sub_collection_screen, {
           collection_name: item.name,
         });
+        if (item.name === NEAR_YOU_COLLECTION_NAME) {
+          navigation.navigate("MainTabs", {
+            screen: "Catalogue",
+            params: {
+              screen: "CatalogueMain",
+              params: { category: CATEGORIES.NEAR_YOU },
+            },
+          });
+          return;
+        }
         if (item.name === "Wishlist") {
           navigation.navigate("Wishlist");
           return;
@@ -444,6 +482,13 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
     },
     [navigation]
   );
+
+  const handleGoToSoundLibrary = useCallback(() => {
+    navigation.navigate("MainTabs", {
+      screen: "Home",
+      params: { screen: "AudioGallery" },
+    });
+  }, [navigation]);
 
   const [showCreate, setShowCreate] = useState(false);
   const [showAddMineral, setShowAddMineral] = useState(false);
@@ -666,12 +711,13 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={isDark ? collectionBgDark : collectionBgLight}
       />
-      {/* Header — surface background per design */}
+      {/* Header — title + Sound Library pill (Figma 8609:59587) */}
       <View
         style={[
           styles.header,
           {
-            paddingHorizontal: Space[6],
+            paddingLeft: 20,
+            paddingRight: 8,
             backgroundColor: isDark ? collectionBgDark : collectionBgLight,
           },
         ]}
@@ -679,6 +725,29 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
         <Text variant="title" size="large" weight="bold">
           Collection
         </Text>
+        <TouchableOpacity
+          style={[
+            styles.headerPill,
+            styles.headerPillSecondary,
+            {
+              backgroundColor: colors.surfacePrimary,
+              borderColor: colors.border0,
+            },
+          ]}
+          onPress={handleGoToSoundLibrary}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={strings.collection.buttons.goToSoundLibrary}
+        >
+          <Text
+            variant="body"
+            size="small"
+            weight="medium"
+            style={{ color: colors.textPrimary }}
+          >
+            {strings.collection.buttons.goToSoundLibrary}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Partitioned grid: 4 boxes (Identified, Wishlist, Owned + others) - always shown; bg F6F6F6 light / 171717 dark */}
@@ -751,7 +820,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
         animationType="fade"
         contentStyle={styles.modalContent}
       >
-        <Card variant="elevated" padding="large" style={styles.addMushroomCard}>
+        <Card variant="elevated" padding="large" style={styles.addBirdCard}>
           <View style={styles.modalHeader}>
             <Text variant="title" size="medium" weight="bold">
               {strings.collection.forms.addNewMineral.title}
@@ -846,7 +915,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingVertical: spacing[4],
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: spacing[3],
+    gap: 8,
+  },
+  headerPill: {
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  headerPillSecondary: {
+    borderWidth: 1,
   },
   gridSection: {
     flex: 1,
@@ -883,7 +967,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  addMushroomCard: {
+  addBirdCard: {
     width: "100%",
   },
   addMineralButtons: {

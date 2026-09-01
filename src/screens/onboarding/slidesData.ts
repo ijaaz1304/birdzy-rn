@@ -11,25 +11,25 @@ export type OnboardingSlide = {
 export const slides: OnboardingSlide[] = [
   {
     id: "1",
-    title: "Discover mushrooms like never before",
+    title: "Discover birds like never before",
     description:
-      "Scan with AI, explore an exclusive mushroom database, and connect with a nature-loving community.",
+      "Identify by photo or sound, explore a global species catalogue, and connect with birders worldwide.",
     image: Images.diagnoseAi,
     buttonText: "Next",
   },
   {
     id: "2",
-    title: "Browse thousands of mushrooms",
+    title: "Browse thousands of bird species",
     description:
-      "Explore a global collection of mushrooms and fungi with detailed images and origins.",
+      "Explore photos, calls, range maps, and field-guide details for birds around the world.",
     image: Images.diagnoseAi,
     buttonText: "Next",
   },
   {
     id: "3",
-    title: "Build your own mushroom collections",
+    title: "Build your own bird collections",
     description:
-      "Create personal collections and organize mushrooms your way.",
+      "Save sightings, grow your life list, and organize trip lists your way.",
     image: Images.diagnoseAi,
     buttonText: "Get Started",
   },

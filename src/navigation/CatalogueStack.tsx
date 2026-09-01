@@ -7,7 +7,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { CatalogueStackParamList } from "./types";
 import { CatalogueScreen } from "../features/catalogue/screens/CatalogueScreen";
 import { SearchScreen } from "../features/catalogue/screens/SearchScreen";
-import { MushroomDetailsScreen } from "../features/collection/screens/MushroomDetailsScreen";
+import { BirdDetailsScreen } from "../features/collection/screens/BirdDetailsScreen";
 import { BirdSoundsScreen } from "../features/collection/screens/BirdSoundsScreen";
 import { IDENTIFY_FULL_SCREEN_OPTIONS } from "./identifyFlowScreenOptions";
 
@@ -25,7 +25,7 @@ export const CatalogueStack: React.FC = () => {
       <Stack.Screen name="CatalogueMain" component={CatalogueScreen} />
       <Stack.Screen
         name="BirdDetails"
-        component={MushroomDetailsScreen}
+        component={BirdDetailsScreen}
         options={IDENTIFY_FULL_SCREEN_OPTIONS}
       />
       <Stack.Screen name="SearchFilter" component={SearchScreen} />

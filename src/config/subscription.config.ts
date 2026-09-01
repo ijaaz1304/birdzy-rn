@@ -101,9 +101,9 @@ export const SUBSCRIPTION_CAROUSEL_IMAGE_KEYS = {
     light: "subscriptionPopupIconSoundIdentification",
     dark: "subscriptionPopupIconSoundIdentificationDark",
   },
-  mushroomOfDay: {
-    light: "subscriptionPopupIconMushroomOfDay",
-    dark: "subscriptionPopupIconMushroomOfDayDark",
+  birdOfDay: {
+    light: "subscriptionPopupIconBirdOfDay",
+    dark: "subscriptionPopupIconBirdOfDayDark",
   },
   aiChat: {
     light: "subscriptionPopupIconAiChat",
@@ -160,12 +160,12 @@ export const SUBSCRIPTION_CAROUSEL_ITEMS = [
   },
   {
     id: "6",
-    iconKey: "mushroomOfDay",
+    iconKey: "birdOfDay",
     title: "Get multiple birds of the day - Go pro+ now",
     description:
       "Free users can only view one Bird of the Day per day. Pro+ gives you unlimited refreshes.",
-    imageLight: "subscriptionPopupIconMushroomOfDay",
-    imageDark: "subscriptionPopupIconMushroomOfDayDark",
+    imageLight: "subscriptionPopupIconBirdOfDay",
+    imageDark: "subscriptionPopupIconBirdOfDayDark",
   },
   {
     id: "7",
@@ -203,16 +203,18 @@ export type LimitType =
   | "collectionAlt"
   | "details"
   | "feed"
-  | "mushroomOfDay"
+  | "birdOfDay"
   | "aiChat"
   | "soundGallery";
 
 /** First carousel item that matches the limit type (by iconKey). Used for limit-reached bottom sheet. */
 export function getCarouselItemForLimitType(
-  limitType: LimitType
+  limitType: LimitType | "mushroomOfDay"
 ): (typeof SUBSCRIPTION_CAROUSEL_ITEMS)[number] {
+  const normalized =
+    limitType === "mushroomOfDay" ? ("birdOfDay" as const) : limitType;
   const item = SUBSCRIPTION_CAROUSEL_ITEMS.find(
-    (item) => item.iconKey === limitType
+    (item) => item.iconKey === normalized
   );
   if (item) return item;
   return SUBSCRIPTION_CAROUSEL_ITEMS[0];

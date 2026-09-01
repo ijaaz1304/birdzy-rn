@@ -77,7 +77,7 @@ rangeDetails.*, lengthRange, wingspanRange, weightRange, similarBirds, _archetyp
 
 `AddMushroomSpecimenRequest` requires `canonicalName`, `gbifId`, `mindatId` — **not in Bird API**. Must be replaced with Bird fields.
 
-`EditMushroomDetailsScreen` / `editMushroomDetails.utils.ts` — mushroom-only PATCH fields.
+`EditBirdDetailsScreen` / `editMushroomDetails.utils.ts` — mushroom-only PATCH fields.
 
 ---
 
@@ -183,8 +183,8 @@ These exist in `API_ENDPOINTS.CORE` or `MUSHROOMS` but are **not documented** fo
 | **Camera / Identify** | `identifyImageFlow.ts`, `DiagnosisLoadingScreen.tsx`, `OtherPossibleMatchesScreen.tsx` | Bird match UI, sound ID entry point |
 | **Ask AI** | `AskAIScreen.tsx`, chat hooks | Copy: mushroom → bird; keep canned responses |
 | **Catalogue** | `CatalogueScreen.tsx`, `SearchScreen.tsx`, `mushrooms.store.ts` | Bird filters, stats tabs (raptors/songbirds/etc.) |
-| **Collection** | `MushroomDetailsScreen.tsx`, `EditMushroomDetailsScreen.tsx` | Bird detail sections (sound, flight, range, conservation) |
-| **Home** | `HomeMushroomCornerSection.tsx`, species of day | Bird of the Day |
+| **Collection** | `BirdDetailsScreen.tsx`, `EditBirdDetailsScreen.tsx` | Bird detail sections (sound, flight, range, conservation) |
+| **Home** | `HomeBirdCornerSection.tsx`, species of day | Bird of the Day |
 | **Constants** | `mushroomOptions.ts`, `mushrooms.config.ts` | → `birdOptions.ts`, `birds.config.ts` |
 | **Bundled data** | `new_mushroom_search.json` | Replace with Bird search index or remove (API search) |
 

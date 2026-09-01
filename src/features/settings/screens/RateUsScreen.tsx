@@ -38,7 +38,7 @@ export const RateUsScreen: React.FC = () => {
     setShowRateUsModal(false);
 
     void sendRatingFeedback({
-      domain: "Mushrooms",
+      domain: "Birds",
       message: "",
       rating,
       source: "rate_us",
@@ -64,7 +64,7 @@ export const RateUsScreen: React.FC = () => {
   ) => {
     try {
       await sendRatingFeedback({
-        domain: "Mushrooms",
+        domain: "Birds",
         name: data.name || undefined,
         email: data.email || undefined,
         message: data.feedback,

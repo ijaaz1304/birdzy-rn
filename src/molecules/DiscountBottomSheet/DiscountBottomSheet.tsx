@@ -213,7 +213,7 @@ export const DiscountBottomSheet: React.FC<DiscountBottomSheetProps> = ({
               zIndex: 3,
             }}
           >
-            Instantly upgrade to enjoy a smarter, faster mushroom app for half
+            Instantly upgrade to enjoy a smarter, faster birding app for half
             the price.
           </Text>
 

@@ -41,7 +41,7 @@
 |-----|------------|
 | `mushrooms.store.ts` | Re-exports `birds.store.ts` |
 | `mushroomApiMappers.ts` | Delegates to `birdApiMappers.ts` |
-| Screen files `MushroomDetailsScreen.tsx`, etc. | Route names updated; file rename deferred |
+| Screen files `BirdDetailsScreen.tsx`, etc. | Route names updated; file rename deferred |
 
 ---
 

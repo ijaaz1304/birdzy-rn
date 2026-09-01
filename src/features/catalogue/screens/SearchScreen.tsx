@@ -437,7 +437,7 @@ export const SearchScreen: React.FC = () => {
                   }}
                 placeholder={
                   catalogueConfig.searchPlaceholder?.replace(/\?/g, "") ??
-                  "Find mushrooms by name or traits..."
+                  "Find birds by name or traits..."
                 }
                 showFilterButton={false}
                 leftIcon="search"

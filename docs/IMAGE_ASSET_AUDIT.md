@@ -141,7 +141,7 @@ Audit of which app flows use which images, organized by asset folder. All assets
 | Empty collection | `icons/collection/empty_collection_light.png` | ⚠️ dark exists but not used | — |
 | Placeholder / tabs | — | — | `details/card_image_placeholder.png`, `tab_batch.png`, etc. |
 
-**Screens:** `MushroomDetailsScreen`, `EditMushroomDetailsScreen`, `CollectionDetailsScreen`, `EmptyCollections`, `MushroomDetailSections`
+**Screens:** `BirdDetailsScreen`, `EditBirdDetailsScreen`, `CollectionDetailsScreen`, `EmptyCollections`, `MushroomDetailSections`
 
 **SVG exports:** `RateMatchSad01Light/Dark`, `RateMatchSad02Light/Dark`, `RateMatchFlushedLight/Dark`, `RateMatchHappyLight/Dark`, `RateMatchStarFaceLight/Dark`, `DetailsMoreAddStarLight/Dark`, `DetailsMoreRemoveStarLight/Dark`, `DetailsMoreShareLight/Dark`, `DetailsMoreEditLight/Dark`, `DetailsMoreReportLight/Dark`, `DetailsMoreRemoveLight/Dark`
 

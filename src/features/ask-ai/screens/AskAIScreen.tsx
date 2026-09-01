@@ -50,10 +50,7 @@ const SEND_BUTTON_SIZE = 48;
 const MEDIA_ICON_SIZE = 20;
 const SEND_ICON_SIZE = 24;
 
-const ASK_AI_SUGGESTED_QUESTIONS = [
-  ...ASK_AI_STRINGS.suggestedQuestions,
-  ASK_AI_STRINGS.gotBittenPrompt,
-];
+const ASK_AI_SUGGESTED_QUESTIONS = [...ASK_AI_STRINGS.suggestedQuestions];
 
 /** Figma: Radius xl = 24px */
 const SUGGESTED_CHIP_BORDER_RADIUS = 24;

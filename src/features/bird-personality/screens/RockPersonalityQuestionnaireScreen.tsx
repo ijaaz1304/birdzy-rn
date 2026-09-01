@@ -20,7 +20,7 @@ import { QUESTIONNAIRE_QUESTIONS } from "../data/questionnaireData";
 import { AI_CHAT_COLORS } from "../../../constants/colorConstants";
 import { FIGMA_TOKENS } from "../../../design-system/colors/figmaTokens";
 
-import { FindYourMushroomBackground } from "../components/FindYourMushroomBackground";
+import { FindYourBirdBackground } from "../components/FindYourBirdBackground";
 import { AskAIScreenBackground } from "../../ask-ai/components/AskAIScreenBackground";
 
 import { FONTS } from "../../../common/typography";
@@ -158,7 +158,7 @@ export const BirdPersonalityQuestionnaireScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {isDark ? <AskAIScreenBackground /> : <FindYourMushroomBackground />}
+      {isDark ? <AskAIScreenBackground /> : <FindYourBirdBackground />}
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         {/* Header with Back Button */}
         <View

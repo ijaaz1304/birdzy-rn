@@ -378,7 +378,6 @@ export function BirdOverviewExtras({
   bird,
   textPrimary,
   textSecondary,
-  isDark,
 }: {
   bird: MushroomDetail;
   textPrimary: string;
@@ -386,13 +385,14 @@ export function BirdOverviewExtras({
   isDark: boolean;
 }) {
   const strings = COLLECTION_STRINGS.birdDetails.overview;
-  const { sizeScale, colors, familyDescription } = getBirdDetailBlocks(bird);
-  const chipBorder = isDark ? "#333333" : "#E7E7E7";
+  const { familyDescription } = getBirdDetailBlocks(bird);
 
-  if (!sizeScale && colors.length === 0 && !familyDescription) return null;
+  // Size/color chips hidden for now; keep family description when present.
+  if (!familyDescription) return null;
 
   return (
     <View style={styles.overviewExtras}>
+      {/*
       {sizeScale ? (
         <View style={styles.overviewExtraBlock}>
           <Text style={[styles.blockTitle, { color: textPrimary }]}>
@@ -442,6 +442,7 @@ export function BirdOverviewExtras({
           </View>
         </View>
       ) : null}
+      */}
       {familyDescription ? (
         <BirdLabeledBlock
           title={strings.family}

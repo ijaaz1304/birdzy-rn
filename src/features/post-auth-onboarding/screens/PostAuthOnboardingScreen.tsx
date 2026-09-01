@@ -539,7 +539,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         primaryColor={colors.ctaSolidBackground}
         onPrimaryColor={colors.ctaTextDark}
         title="Important updates can come fast — don't miss them."
-        subtitle="Get alerts for new mushroom finds, safety warnings, and similar species."
+        subtitle="Get alerts for new bird sightings, migration updates, and featured species."
         image={onboardingImages.notification}
         continueLabel="Continue"
       />

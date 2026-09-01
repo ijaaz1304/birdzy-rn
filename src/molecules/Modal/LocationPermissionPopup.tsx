@@ -87,7 +87,7 @@ export const LocationPermissionPopup: React.FC<
 
           <AppImage
             source={
-              isDark ? Images.mushroomLocationDark : Images.mushroomLocation
+              isDark ? Images.speciesLocationDark : Images.speciesLocation
             }
             style={styles.heroIcon}
             resizeMode="contain"

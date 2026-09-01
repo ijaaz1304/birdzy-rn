@@ -122,7 +122,7 @@ export function getFirstImageUri(
 /**
  * Get stable card id from mushroom record (archetypeId or _id).
  */
-export function getMushroomCardId(mushroom: {
+export function getBirdCardId(mushroom: {
   archetypeId?: string;
   _id?: string;
   custom_id?: string;
@@ -144,7 +144,7 @@ export function mapMushroomToCatalogueCard(
   mushroom: MushroomLike,
   category?: string
 ): CatalogueCardItem {
-  const id = getMushroomCardId(mushroom);
+  const id = getBirdCardId(mushroom);
   const displayName = getDisplayName(mushroom);
   const displayScientific = getMushroomDisplayScientificFromFields(mushroom);
   const imageUrls = resolveMushroomImageUrlsForDisplay(
@@ -170,7 +170,7 @@ export function mapMushroomToCatalogueCard(
  * Map mushroom/archetype to home card item (name + subtitle, display name rules).
  */
 export function mapMushroomToHomeCard(mushroom: MushroomLike): HomeCardItem {
-  const id = getMushroomCardId(mushroom);
+  const id = getBirdCardId(mushroom);
   const name = getDisplayName(mushroom);
   const subtitle = getMushroomDisplayScientificFromFields(mushroom) ?? "";
   const image = getFirstImageUri(mushroom.imageUrls);

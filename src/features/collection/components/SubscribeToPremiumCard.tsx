@@ -60,7 +60,7 @@ export function SubscribeToPremiumCard({ isDark, onPress, style }: Props) {
       accessibilityLabel="Subscribe to Premium"
     >
       <AppImage
-        source={Images.mushroomSubsToPremium}
+        source={Images.birdSubsToPremium}
         style={styles.lightImage}
         resizeMode="contain"
       />

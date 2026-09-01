@@ -89,7 +89,7 @@ export const CameraPermissionPopup: React.FC<CameraPermissionPopupProps> = ({
           </TouchableOpacity>
 
           <AppImage
-            source={Images.mushroomCapturePopup}
+            source={Images.speciesCapturePopup}
             style={styles.heroIcon}
             resizeMode="contain"
             preferRNImage

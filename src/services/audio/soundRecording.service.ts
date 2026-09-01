@@ -31,6 +31,12 @@ class SoundRecordingService {
     return `${RNFS.CachesDirectoryPath}/bird-sound-${Date.now()}.${ext}`;
   }
 
+  /** MediaRecorder expects a raw path on Android, not a file:// URI. */
+  private toRecordingUri(path: string): string {
+    if (path.startsWith("file://")) return path;
+    return Platform.OS === "android" ? `file://${path}` : path;
+  }
+
   async startRecording(
     onMetering?: (db: number) => void
   ): Promise<void> {
@@ -40,9 +46,8 @@ class SoundRecordingService {
     }
 
     const path = this.buildRecordingPath();
-    const uri = Platform.OS === "ios" ? path : `file://${path}`;
-    await AudioRecorderPlayer.startRecorder(uri, undefined, true);
-    this.recordingUri = uri;
+    await AudioRecorderPlayer.startRecorder(path, undefined, true);
+    this.recordingUri = this.toRecordingUri(path);
     this.recordingStartedAt = Date.now();
     this.pausedAt = null;
     this.pausedAccumMs = 0;

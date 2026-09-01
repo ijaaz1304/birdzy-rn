@@ -6,15 +6,15 @@ import { AppImage } from "@/components/AppImage";
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated, Easing, ImageSourcePropType, StyleProp, ViewStyle } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-import { Images } from "../../../assets";
+import { IdentificationScannerOverlay, Images } from "../../../assets";
 import { LoadingImage } from "../../../components/LoadingImage";
-import { useTheme } from "../../../hooks/useTheme";
 import { Radius } from "../../../design";
 import { APP_COLORS } from "../../../config/colors";
 
 const FRAME_SIZE = 280;
 const INNER_SIZE = 240;
 const SCAN_BEAM_HEIGHT = 64;
+const SCANNER_COLOR = APP_COLORS.splashBackground;
 
 export type IdentificationScannerFrameProps = {
   imageUri?: string;
@@ -25,7 +25,6 @@ export type IdentificationScannerFrameProps = {
 export const IdentificationScannerFrame: React.FC<
   IdentificationScannerFrameProps
 > = ({ imageUri, fallbackImage = Images.mineralSample, style }) => {
-  const theme = useTheme();
   const scanProgress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -54,8 +53,7 @@ export const IdentificationScannerFrame: React.FC<
     outputRange: [-SCAN_BEAM_HEIGHT, INNER_SIZE],
   });
 
-  const primary = theme.colors.primary;
-  const trailColors = [`${primary}99`, `${primary}33`, `${primary}00`];
+  const trailColors = [`${SCANNER_COLOR}99`, `${SCANNER_COLOR}33`, `${SCANNER_COLOR}00`];
 
   return (
     <View style={[styles.wrapper, style]}>
@@ -81,7 +79,7 @@ export const IdentificationScannerFrame: React.FC<
             { transform: [{ translateY: beamTranslateY }] },
           ]}
         >
-          <View style={[styles.scanLine, { backgroundColor: primary }]} />
+          <View style={[styles.scanLine, { backgroundColor: SCANNER_COLOR }]} />
           <LinearGradient
             colors={trailColors}
             style={styles.scanTrail}
@@ -91,10 +89,10 @@ export const IdentificationScannerFrame: React.FC<
         </Animated.View>
       </View>
 
-      <AppImage
-        source={Images.askAiScan}
+      <IdentificationScannerOverlay
+        width={FRAME_SIZE}
+        height={FRAME_SIZE}
         style={styles.cornerOverlay}
-        resizeMode="contain"
       />
     </View>
   );

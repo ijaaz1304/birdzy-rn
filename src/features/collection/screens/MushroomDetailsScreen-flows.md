@@ -75,7 +75,7 @@ Derived:
 
 ```
                     ┌─────────────────────┐
-                    │ MushroomDetailsScreen│
+                    │ BirdDetailsScreen│
                     │ (route params in)   │
                     └──────────┬──────────┘
                                │

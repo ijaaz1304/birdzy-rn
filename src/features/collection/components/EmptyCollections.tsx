@@ -24,7 +24,7 @@ export const EmptyCollections: React.FC = () => {
           image={Images.emptyCollection}
           imageStyle={styles.emptyImage}
           title="No collections yet"
-          subtitle="Create a collection to organize your mushrooms"
+          subtitle="Create a collection to organize your birds"
         />
       </Card>
     </View>

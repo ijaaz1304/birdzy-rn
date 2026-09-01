@@ -5,7 +5,11 @@ import { Images } from "../../../assets";
 import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { spacing } from "../../../design-system/spacing";
 
-/** Source art is 1340×704. */
+/**
+ * Inline “recording limit reached” promo banner (1340×704, text baked in).
+ * For list/detail surfaces (e.g. Audio Gallery header) — not upgrade bottom sheets.
+ * Bottom sheets use Images.subscriptionPopupIconSoundGallery (full-bleed).
+ */
 const BANNER_ASPECT_RATIO = 1340 / 704;
 
 type Props = {

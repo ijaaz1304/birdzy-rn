@@ -62,7 +62,7 @@ export const Button: React.FC<ButtonProps> = ({
     // Variant styles
     const variantStyles: Record<string, ViewStyle> = {
       primary: {
-        backgroundColor: theme.colors.primary,
+        backgroundColor: theme.colors.primaryCTA,
       },
       secondary: {
         backgroundColor: theme.colors.secondary,
@@ -70,7 +70,7 @@ export const Button: React.FC<ButtonProps> = ({
       outline: {
         backgroundColor: "transparent",
         borderWidth: 1,
-        borderColor: theme.colors.primary,
+        borderColor: theme.colors.primaryCTA,
       },
       ghost: {
         backgroundColor: "transparent",
@@ -89,7 +89,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getTextColor = (): string => {
     if (variant === "outline" || variant === "ghost") {
-      return theme.colors.primary;
+      return theme.colors.primaryCTA;
     }
     return theme.colors.onPrimary;
   };

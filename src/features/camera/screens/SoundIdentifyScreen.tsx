@@ -19,15 +19,13 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme } from "../../../hooks/useTheme";
 import { Text, NavBackIcon, Toggle } from "../../../atoms";
 import { CameraStackParamList } from "../../../navigation/types";
-import { soundRecordingService } from "../../../services/audio/soundRecording.service";
-import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
-import { HIT_SLOP } from "../../../constants/uiConstants";
-import { FONTS } from "../../../common/typography";
-import { FindYourBirdBackground } from "../../bird-personality/components/FindYourMushroomBackground";
-import { SoundSpectrogramView } from "../components/SoundSpectrogramView";
+import { RecordingSpectrogramPanel } from "../components/RecordingSpectrogramPanel";
+import { RecordingTimer } from "../components/RecordingTimer";
+import { RecordingNoiseStatus } from "../components/RecordingNoiseStatus";
+import { RecordingControls } from "../components/RecordingControls";
 import { useLocationToggleFlow } from "../useLocationToggleFlow";
 import { shouldShowLocationBannerAsGranted } from "../locationToggle.helpers";
-import { formatSoundHms, formatSoundStamp } from "../utils/soundCrop";
+import { formatSoundStamp } from "../utils/soundCrop";
 import {
   checkMicrophonePermission,
   openDeviceSettings,
@@ -36,28 +34,28 @@ import {
 } from "../../../services/permissions";
 import { shouldSkipMicrophonePermissionPrompt } from "../../../services/permissions/permissionPromptSkip";
 import { MicrophonePermissionPopup } from "../../../molecules/Modal";
+import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
+import { HIT_SLOP } from "../../../constants/uiConstants";
+import { FONTS } from "../../../common/typography";
+import { FindYourBirdBackground } from "../../bird-personality/components/FindYourBirdBackground";
+import { useBirdRecording } from "../hooks/useBirdRecording";
+import { soundIdentifyRecordingService } from "../../../services/audio/soundIdentifyRecording.service";
+import { formatMinRecordingLengthMessage } from "../constants/soundRecording.constants";
+import { logSoundRecord, logSoundRenderCount } from "../utils/soundRecordLog";
+import {
+  SoundRecordingCropContent,
+  type SoundCropSession,
+} from "../components/SoundRecordingCropContent";
+import { useSoundRecordingSpectrogramStore } from "../soundRecordingSpectrogram.store";
 
-type Nav = NativeStackNavigationProp<CameraStackParamList, "SoundIdentify">;
+type Nav = NativeStackNavigationProp<CameraStackParamList>;
 
-type LiveStatus = "listening" | "searching" | "noise" | "noMatch";
-type Phase = "entry" | "recording";
+type ScreenPhase = "entry" | "recording" | "crop";
 
 const copy = CAMERA_STRINGS.sound;
 
-function statusCopy(status: LiveStatus): string {
-  switch (status) {
-    case "noise":
-      return copy.statusNoise;
-    case "noMatch":
-      return copy.statusNoMatch;
-    case "searching":
-      return copy.statusSearching;
-    default:
-      return copy.statusListening;
-  }
-}
-
 export const SoundIdentifyScreen: React.FC = () => {
+  logSoundRenderCount("SoundIdentifyScreen");
   const theme = useTheme();
   const colors = theme.colors;
   const navigation = useNavigation<Nav>();
@@ -73,108 +71,69 @@ export const SoundIdentifyScreen: React.FC = () => {
     location
   );
 
-  const [phase, setPhase] = useState<Phase>("entry");
+  const [phase, setPhase] = useState<ScreenPhase>("entry");
+  const [cropSession, setCropSession] = useState<SoundCropSession | null>(null);
   const [showMicPopup, setShowMicPopup] = useState(false);
   const [micLoading, setMicLoading] = useState(false);
   const [micBlocked, setMicBlocked] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [elapsedSec, setElapsedSec] = useState(0);
-  const [busy, setBusy] = useState(false);
-  const [metering, setMetering] = useState(0);
   const [recordedAt] = useState(() => Date.now());
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const stoppingRef = useRef(false);
   const spin = useRef(new Animated.Value(0)).current;
 
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
   const goToCrop = useCallback(
-    (uri: string, durationSec: number) => {
-      navigation.replace("SoundCrop", {
+    (uri: string, durationSec: number, spectrogramColumns: number[][]) => {
+      logSoundRecord("recording complete — crop phase", {
+        durationSec,
+        columnCount: spectrogramColumns.length,
+        uri,
+      });
+      useSoundRecordingSpectrogramStore.getState().setColumns(spectrogramColumns);
+      setCropSession({
         audioUri: uri,
         durationSec: Math.max(1, Math.round(durationSec)),
         recordedAt,
       });
+      setPhase("crop");
     },
-    [navigation, recordedAt]
+    [recordedAt]
   );
 
-  const stopAndCrop = useCallback(async () => {
-    if (stoppingRef.current) return;
-    stoppingRef.current = true;
-    clearTimer();
-    setIsRecording(false);
-    setIsPaused(false);
-    try {
-      setBusy(true);
-      const duration = soundRecordingService.elapsedRecordingSeconds();
-      const uri = await soundRecordingService.stopRecording();
-      goToCrop(uri, duration || elapsedSec);
-    } catch {
-      stoppingRef.current = false;
-    } finally {
-      setBusy(false);
-    }
-  }, [clearTimer, elapsedSec, goToCrop]);
-
-  const startTimer = useCallback(() => {
-    clearTimer();
-    timerRef.current = setInterval(() => {
-      const next = Math.floor(soundRecordingService.elapsedRecordingSeconds());
-      setElapsedSec(next);
-      if (next >= soundRecordingService.maxRecordingSeconds) {
-        void stopAndCrop();
-      }
-    }, 250);
-  }, [clearTimer, stopAndCrop]);
-
-  const beginRecording = useCallback(async () => {
-    try {
-      setBusy(true);
-      setElapsedSec(0);
-      await soundRecordingService.startRecording((db) => setMetering(db));
-      setIsRecording(true);
-      setIsPaused(false);
-      startTimer();
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Could not start recording.";
-      if (/permission/i.test(message)) {
-        showPermissionAlert(
-          "Microphone access needed",
-          "Allow microphone access to record bird sounds for identification.",
-          openDeviceSettings
-        );
-      }
+  const recording = useBirdRecording({
+    onRecordingComplete: goToCrop,
+    onPermissionDenied: () => {
+      showPermissionAlert(
+        "Microphone access needed",
+        "Allow microphone access to record bird sounds for identification.",
+        openDeviceSettings
+      );
       setPhase("entry");
-    } finally {
-      setBusy(false);
-    }
-  }, [startTimer]);
+    },
+    onError: () => {
+      setPhase("entry");
+    },
+  });
 
   const tryStartRecording = useCallback(async () => {
-    if (busy || isRecording) return;
+    if (recording.busy || recording.isRecording || recording.isPaused) return;
 
     if (await shouldSkipMicrophonePermissionPrompt()) {
-      await beginRecording();
+      await recording.beginRecording();
       return;
     }
 
     const microphone = await checkMicrophonePermission();
     if (microphone.granted) {
-      await beginRecording();
+      await recording.beginRecording();
       return;
     }
 
     setMicBlocked(!!microphone.blocked);
     setShowMicPopup(true);
-  }, [beginRecording, busy, isRecording]);
+  }, [
+    recording.beginRecording,
+    recording.busy,
+    recording.isPaused,
+    recording.isRecording,
+  ]);
 
   const handleEntryRecordPress = useCallback(() => {
     setPhase("recording");
@@ -182,10 +141,10 @@ export const SoundIdentifyScreen: React.FC = () => {
 
   const handleMicPopupClose = useCallback(() => {
     setShowMicPopup(false);
-    if (!isRecording) {
+    if (!recording.isRecording && !recording.isPaused) {
       setPhase("entry");
     }
-  }, [isRecording]);
+  }, [recording.isPaused, recording.isRecording]);
 
   const handleAllowMicrophone = useCallback(() => {
     if (micBlocked) {
@@ -200,32 +159,32 @@ export const SoundIdentifyScreen: React.FC = () => {
         setMicBlocked(!!result.blocked);
         if (result.granted) {
           setShowMicPopup(false);
-          await beginRecording();
+          await recording.beginRecording();
         }
       } finally {
         setMicLoading(false);
       }
     })();
-  }, [beginRecording, micBlocked]);
-
-  const recordingInitRef = useRef(false);
+  }, [micBlocked, recording]);
 
   useEffect(() => {
-    if (phase !== "recording") {
-      recordingInitRef.current = false;
+    if (phase !== "recording") return;
+    if (
+      recording.busy ||
+      recording.isRecording ||
+      recording.isPaused ||
+      soundIdentifyRecordingService.isSessionActive()
+    ) {
       return;
     }
-    if (recordingInitRef.current || isRecording) return;
-    recordingInitRef.current = true;
     void tryStartRecording();
-  }, [phase, isRecording, tryStartRecording]);
-
-  useEffect(() => {
-    return () => {
-      clearTimer();
-      void soundRecordingService.stopRecording().catch(() => undefined);
-    };
-  }, [clearTimer]);
+  }, [
+    phase,
+    recording.busy,
+    recording.isPaused,
+    recording.isRecording,
+    tryStartRecording,
+  ]);
 
   useEffect(() => {
     if (phase !== "recording") return undefined;
@@ -243,38 +202,25 @@ export const SoundIdentifyScreen: React.FC = () => {
   }, [phase, spin]);
 
   const handleBack = () => {
-    void soundRecordingService.stopRecording().catch(() => undefined);
-    clearTimer();
-    if (phase === "recording" && !isRecording) {
+    if (phase === "crop") {
+      useSoundRecordingSpectrogramStore.getState().clear();
+      setCropSession(null);
+      setPhase("entry");
+      return;
+    }
+    void recording.cancelRecording();
+    if (phase === "recording" && recording.state === "idle") {
       setPhase("entry");
       return;
     }
     navigation.goBack();
   };
 
-  const togglePause = async () => {
-    if (!isRecording || busy) return;
-    try {
-      if (isPaused) {
-        await soundRecordingService.resumeRecording();
-        setIsPaused(false);
-        startTimer();
-      } else {
-        await soundRecordingService.pauseRecording();
-        clearTimer();
-        setIsPaused(true);
-      }
-    } catch {
-      void stopAndCrop();
-    }
-  };
-
-  const liveStatus: LiveStatus = (() => {
-    if (metering > -12) return "noise";
-    if (elapsedSec >= 10 && metering < -45) return "noMatch";
-    if (elapsedSec >= 5) return "searching";
-    return "listening";
-  })();
+  const handleCropRetry = useCallback(() => {
+    useSoundRecordingSpectrogramStore.getState().clear();
+    setCropSession(null);
+    setPhase("entry");
+  }, []);
 
   const stamp = formatSoundStamp(new Date(recordedAt));
   const place =
@@ -285,6 +231,9 @@ export const SoundIdentifyScreen: React.FC = () => {
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
   });
+  const minLengthCopy = formatMinRecordingLengthMessage(
+    recording.minRecordingSeconds
+  );
 
   const locationCard = !locationOn ? (
     <View
@@ -377,6 +326,22 @@ export const SoundIdentifyScreen: React.FC = () => {
     );
   }
 
+  if (phase === "crop" && cropSession) {
+    return (
+      <View style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
+        <FindYourBirdBackground />
+        <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+          <SoundRecordingCropContent
+            session={cropSession}
+            navigation={navigation}
+            onBack={handleBack}
+            onRetrySound={handleCropRetry}
+          />
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
       <FindYourBirdBackground />
@@ -393,83 +358,58 @@ export const SoundIdentifyScreen: React.FC = () => {
         </View>
 
         <View style={styles.body}>
-          <View style={styles.topBlock}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>
-              {copy.recording}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              {copy.minLength}
-            </Text>
-            <View
-              style={[styles.timerPill, { backgroundColor: colors.primaryCTA }]}
-            >
-              <Text style={styles.timerText}>{formatSoundHms(elapsedSec)}</Text>
+          <View style={styles.recordingTop}>
+            <View style={styles.recordingHeader}>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>
+                {copy.recording}
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                {minLengthCopy}
+              </Text>
+              <RecordingTimer />
             </View>
 
-            <SoundSpectrogramView
-              live={isRecording && !isPaused}
-              liveColor={colors.primaryCTA}
-              playheadRatio={0.5}
+            <RecordingSpectrogramPanel
+              active={recording.spectrogramActive}
+              fallback={recording.usesFallbackRecorder}
             />
 
-            <Text style={[styles.meta, { color: colors.textSecondary }]}>
-              {stamp}  •  {place}
-            </Text>
+            <View style={styles.metaRow}>
+              <Text style={[styles.meta, { color: colors.textSecondary }]}>
+                {stamp}
+              </Text>
+              <View style={styles.metaDot} />
+              <Text style={[styles.meta, { color: colors.textSecondary }]}>
+                {place}
+              </Text>
+            </View>
 
             {locationCard}
           </View>
 
-          <View style={styles.statusBlock}>
-            <Animated.View style={{ transform: [{ rotate }] }}>
-              <AppImage
-                source={Images.soundListeningSpinner}
-                style={styles.spinner}
-                resizeMode="contain"
-              />
-            </Animated.View>
-            <Text style={[styles.statusText, { color: colors.textSecondary }]}>
-              {statusCopy(liveStatus)}
-            </Text>
-          </View>
+          <RecordingNoiseStatus
+            rotate={rotate}
+            processing={recording.state === "processing"}
+          />
 
-          <View style={styles.controls}>
-            <View style={styles.recordHalo}>
-              <TouchableOpacity
-                onPress={() => void stopAndCrop()}
-                disabled={busy}
-                style={[styles.stopBtn, { opacity: busy ? 0.6 : 1 }]}
-                accessibilityLabel={copy.stopRecording}
-              >
-                {busy ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <View style={styles.stopSquare} />
-                )}
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              onPress={() => void togglePause()}
-              disabled={busy || !isRecording}
-              style={[
-                styles.pauseBtn,
-                {
-                  borderColor: colors.border0,
-                  backgroundColor: colors.surfacePrimary,
-                },
-              ]}
-              accessibilityLabel={
-                isPaused ? copy.resumeRecording : copy.pauseRecording
-              }
-            >
-              <AppImage
-                source={isPaused ? Images.soundPlay : Images.soundPause}
-                style={styles.pauseIcon}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          </View>
+          <RecordingControls
+            busy={recording.busy}
+            isRecording={recording.isRecording}
+            isPaused={recording.isPaused}
+            onStop={() => void recording.stopAndFinalize()}
+            onPause={() => void recording.pauseRecording()}
+            onResume={() => void recording.resumeRecording()}
+          />
         </View>
       </SafeAreaView>
+
+      {recording.state === "processing" ? (
+        <View style={styles.processingOverlay} pointerEvents="auto">
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={styles.processingTitle}>{copy.finalizingRecording}</Text>
+          <Text style={styles.processingSubtitle}>{copy.finalizingAudio}</Text>
+        </View>
+      ) : null}
 
       <MicrophonePermissionPopup
         visible={showMicPopup}
@@ -554,9 +494,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 12,
   },
-  topBlock: {
-    gap: 16,
+  recordingTop: {
+    gap: 24,
+    width: "100%",
+  },
+  recordingHeader: {
+    gap: 8,
     alignItems: "center",
+    width: "100%",
   },
   title: {
     fontFamily: FONTS.bold,
@@ -587,6 +532,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     letterSpacing: -0.16,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  metaDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#5D5D5D",
   },
   locationCard: {
     width: "100%",
@@ -627,32 +584,47 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 8,
   },
-  recordHalo: {
-    padding: 12,
-    borderRadius: 999,
-    backgroundColor: "rgba(17,17,17,0.05)",
-  },
-  stopBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#EF4444",
+  stopRecordBtn: {
+    width: 72,
+    height: 72,
     alignItems: "center",
     justifyContent: "center",
+    opacity: 1,
   },
-  stopSquare: {
-    width: 16,
-    height: 16,
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
+  stopRecordImage: {
+    width: 72,
+    height: 72,
+  },
+  controlDisabled: {
+    opacity: 0.45,
   },
   pauseBtn: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  pauseIcon: { width: 24, height: 24 },
+  pauseIcon: { width: 48, height: 48 },
+  processingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 24,
+  },
+  processingTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    lineHeight: 26,
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
+  processingSubtitle: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
 });

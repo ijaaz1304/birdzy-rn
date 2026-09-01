@@ -623,7 +623,7 @@ export const RemoveFromCollectionModal: React.FC<
               color="textSecondary"
               style={styles.instruction}
             >
-              Please select the collections you want to remove this mushroom
+              Please select the collections you want to remove this bird
               from.
             </Text>
 
@@ -742,7 +742,7 @@ export const RemoveFromCollectionModal: React.FC<
 
             <View style={styles.emptyContainer}>
               <Text variant="body" size="medium" color="textSecondary">
-                This mushroom is not in any collections
+                This bird is not in any collections
               </Text>
               {initialCollectionName ? (
                 <Text

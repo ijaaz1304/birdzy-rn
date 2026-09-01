@@ -11,11 +11,11 @@ export interface ActiveSubscription {
 
 /** Default benefits list for subscription UI when user is not subscribed. */
 export const DEFAULT_SUBSCRIPTION_BENEFITS: string[] = [
-  "Identify mushrooms without any limits",
+  "Identify birds without any limits",
   "Create and save unlimited collections",
-  "Access complete mushroom info anytime",
+  "Access complete bird info anytime",
   "Post without limits in the feed",
-  "Get unlimited mushrooms of the day",
+  "Get unlimited Bird of the Day refreshes",
   "Send unlimited messages with AI chatbot",
 ];
 

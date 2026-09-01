@@ -293,6 +293,15 @@ export const CatalogueScreen: React.FC = () => {
     [filters, scrollTabIntoView, selectedTab]
   );
 
+  const handleExploreNearYou = useCallback(() => {
+    if (selectedTab === CATEGORIES.NEAR_YOU) {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      scrollTabIntoView(CATEGORIES.NEAR_YOU, true);
+      return;
+    }
+    handleTabPress(CATEGORIES.NEAR_YOU);
+  }, [handleTabPress, scrollTabIntoView, selectedTab]);
+
   // Load minerals function - reusable for refresh and pagination
   const loadMinerals = useCallback(
     async (
@@ -722,10 +731,29 @@ export const CatalogueScreen: React.FC = () => {
               { paddingHorizontal: Space[4] },
             ]}
           >
-            <View style={styles.titleContainer}>
+            <View style={styles.headerTopRow}>
               <Text variant="title" size="large" weight="bold">
                 {catalogueConfig.screenTitle}
               </Text>
+              <TouchableOpacity
+                style={[
+                  styles.headerPill,
+                  { backgroundColor: colors.primaryCTA },
+                ]}
+                onPress={handleExploreNearYou}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={strings.catalogue.screen.exploreNearYou}
+              >
+                <Text
+                  variant="body"
+                  size="small"
+                  weight="medium"
+                  color="onPrimary"
+                >
+                  {strings.catalogue.screen.exploreNearYou}
+                </Text>
+              </TouchableOpacity>
             </View>
             <View style={styles.searchRow}>
               <View style={styles.searchBarInHeader}>
@@ -1157,6 +1185,21 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     width: "100%",
+  },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 8,
+  },
+  headerPill: {
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
   },
   searchRow: {
     flexDirection: "row",

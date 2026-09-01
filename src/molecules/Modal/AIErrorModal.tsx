@@ -21,11 +21,15 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export interface AIErrorModalProps {
   visible: boolean;
   onClose: () => void;
-  /** Re-take photo: typically go back to camera. */
+  /** Re-take photo / try again: typically go back to camera or wizard. */
   onRetry: () => void;
   /** Chat with AI: typically navigate to Ask AI. */
   onChatWithAI: () => void;
   errorMessage?: string;
+  /** Override primary CTA label (default: Re-take photo). */
+  retryLabel?: string;
+  /** Override primary CTA fill (default: theme primaryCTA). */
+  primaryCtaColor?: string;
 }
 
 export const AIErrorModal: React.FC<AIErrorModalProps> = ({
@@ -34,6 +38,8 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
   onRetry,
   onChatWithAI,
   errorMessage,
+  retryLabel,
+  primaryCtaColor,
 }) => {
   const theme = useTheme();
   const colors = theme.colors;
@@ -138,11 +144,15 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
                 }}
               />
               <Button
-                title={strings.camera.buttons.retakePhoto}
+                title={retryLabel ?? strings.camera.buttons.retakePhoto}
                 variant="primary"
                 size="large"
                 onPress={onRetry}
-                style={[styles.actionButton, getPopupPrimaryCtaStyle(theme)]}
+                style={[
+                  styles.actionButton,
+                  getPopupPrimaryCtaStyle(theme),
+                  primaryCtaColor ? { backgroundColor: primaryCtaColor } : null,
+                ]}
               />
             </View>
           </View>

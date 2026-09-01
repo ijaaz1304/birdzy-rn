@@ -360,18 +360,15 @@ const LIMIT_REACHED_HEIGHT_BY_TYPE: Record<LimitType, string> = {
   identification: "60%",
   soundIdentification: "60%",
   feed: "64%",
-  mushroomOfDay: "70%",
+  birdOfDay: "70%",
   soundGallery: "64%",
 };
 
-/** Upgrade/limit-reached background — carousel asset includes illustration + bg. */
+/** Upgrade/limit-reached bottom sheet — full-bleed popUp/mushroom art only (never inline banners). */
 function getLimitReachedSheetBackground(
   limitType: LimitType,
   isDark: boolean
 ): ImageSourcePropType | null {
-  if (limitType === "soundGallery") {
-    return Images.recordingLimitReachedBanner;
-  }
   const item = getCarouselItemForLimitType(limitType);
   const imageKey = isDark ? item.imageDark : item.imageLight;
   const images = Images as Record<string, ImageSourcePropType | undefined>;
@@ -554,7 +551,7 @@ function usesCompactLimitTitleStyle(limitType: LimitType): boolean {
     isCollectionLimitType(limitType) ||
     limitType === "identification" ||
     limitType === "soundIdentification" ||
-    limitType === "mushroomOfDay"
+    limitType === "birdOfDay"
   );
 }
 
@@ -2468,20 +2465,7 @@ function LimitReachedContent({
   const bottomPadding = CONTENT_PADDING_V + (insets?.bottom ?? 0);
   const isCollectionLimit = isCollectionLimitType(limitType);
   const isIdentificationLimit = limitType === "identification";
-  const isMushroomOfDayLimit = limitType === "mushroomOfDay";
-  const isSoundGalleryLimit = limitType === "soundGallery";
-
-  if (isSoundGalleryLimit) {
-    return (
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={onUpgrade}
-        accessibilityRole="button"
-        accessibilityLabel="Go Pro"
-        style={StyleSheet.absoluteFill}
-      />
-    );
-  }
+  const isBirdOfDayLimit = limitType === "birdOfDay";
 
   return (
     <View style={sheetStyles.limitRoot}>
@@ -2490,8 +2474,8 @@ function LimitReachedContent({
           sheetStyles.limitTextCtaSection,
           isCollectionLimit && sheetStyles.collectionLimitTextCtaSection,
           isIdentificationLimit && sheetStyles.identificationLimitTextCtaSection,
-          isMushroomOfDayLimit &&
-            sheetStyles.mushroomOfDayLimitTextCtaSection,
+          isBirdOfDayLimit &&
+            sheetStyles.birdOfDayLimitTextCtaSection,
           {
             marginTop: "auto",
             paddingHorizontal: theme.spacing[6],
@@ -2512,7 +2496,7 @@ function LimitReachedContent({
             sheetStyles.limitDesc,
             isCollectionLimit && sheetStyles.collectionLimitDesc,
             isIdentificationLimit && sheetStyles.identificationLimitDesc,
-            isMushroomOfDayLimit && sheetStyles.mushroomOfDayLimitDesc,
+            isBirdOfDayLimit && sheetStyles.birdOfDayLimitDesc,
             { marginTop: theme.spacing[2] },
           ]}
         >
@@ -3120,7 +3104,7 @@ const SUBSCRIPTION_LIST_ICONS_LIGHT: Record<string, ImageSourcePropType> = {
   Collections: Images.subscriptionListCollection,
   Details: Images.subscriptionListDetails,
   Feed: Images.subscriptionListFeed,
-  "Mushrooms of the day": Images.subscriptionListMushroomOfDay,
+  "Bird of the Day": Images.subscriptionListBirdOfDay,
   "AI Chat": Images.subscriptionListAiChat,
 };
 
@@ -3129,7 +3113,7 @@ const SUBSCRIPTION_LIST_ICONS_DARK: Record<string, ImageSourcePropType> = {
   Collections: Images.subscriptionListCollectionDark,
   Details: Images.subscriptionListDetailsDark,
   Feed: Images.subscriptionListFeedDark,
-  "Mushrooms of the day": Images.subscriptionListMushroomOfDayDark,
+  "Bird of the Day": Images.subscriptionListBirdOfDayDark,
   "AI Chat": Images.subscriptionListAiChatDark,
 };
 
@@ -3918,11 +3902,11 @@ const sheetStyles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-  mushroomOfDayLimitTextCtaSection: {
+  birdOfDayLimitTextCtaSection: {
     paddingTop: 0,
     marginTop: "auto",
   },
-  mushroomOfDayLimitDesc: {
+  birdOfDayLimitDesc: {
     fontSize: 16,
     lineHeight: 24,
     textAlign: "center",

@@ -606,3 +606,8 @@ export const getPendingRateUsAfterLocation = async (): Promise<boolean> => {
     return false;
   }
 };
+
+/** @deprecated Use shouldShowBirdOfTheDayPopup */
+export const shouldShowBirdOfTheDayPopup = shouldShowMushroomOfTheDayPopup;
+/** @deprecated Use markBirdOfTheDayPopupShown */
+export const markBirdOfTheDayPopupShown = markMushroomOfTheDayPopupShown;

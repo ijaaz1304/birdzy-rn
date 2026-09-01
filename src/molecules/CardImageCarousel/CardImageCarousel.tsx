@@ -1,6 +1,6 @@
 /**
  * CardImageCarousel – single or multiple images with optional auto-slide.
- * Used in list cards (AppCard, MushroomCard). Handles empty, single, multiple, and errors.
+ * Used in list cards (AppCard, BirdCard). Handles empty, single, multiple, and errors.
  */
 
 import React, { useState, useRef, useEffect, useCallback } from "react";

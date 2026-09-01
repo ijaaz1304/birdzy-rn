@@ -6,7 +6,8 @@
 import { formatString } from "./utils";
 
 export const FAQ_STRINGS_TEMPLATE = {
-  intro: "",
+  intro:
+    "Quick answers about identifying birds, building your life list, and getting the most out of {appName}.",
   contactLabel: "For any further questions, please email:",
   contactEmail: "developer@trackzio.com",
   items: [
@@ -26,7 +27,25 @@ export const FAQ_STRINGS_TEMPLATE = {
       id: "3",
       question: "How does bird identification work?",
       answer:
-        "Use Identify to take a photo, upload from gallery, record a call, or run the step-by-step wizard. Our AI returns possible matches with confidence scores. Tap any match for photos, calls, range, habitat, and similar species. Free users have daily ID limits; Premium users enjoy unlimited identifications.",
+        "{appName} offers three ways to identify birds: photo ID, sound ID, and step-by-step wizard. Take or upload a photo, record a call, or answer a few field questions — our AI returns possible matches with confidence scores. Tap any match to open the species page with photos, calls, range, habitat, and similar species. Free users have daily limits; Premium users enjoy unlimited identifications.",
+    },
+    {
+      id: "3a",
+      question: "How do I identify a bird by sound?",
+      answer:
+        "From Home or Identify, choose Identify by Sound. Record a bird call for a few seconds in a quiet spot, then review and crop the clip if needed. We analyse the audio and suggest species matches with confidence scores. You can save the recording to your Bird Sound Library, add notes, or open a match for full species details. Free users get 2 sound identifications per day; Premium is unlimited.",
+    },
+    {
+      id: "3b",
+      question: "How does step-by-step identification work?",
+      answer:
+        "Use Step-by-step Identify when you don't have a clear photo or recording. Answer questions about where and when you saw the bird, its size, colours, and habitat. We narrow results to species likely in your area — similar to a Merlin-style bird finder. Review matches, tap one for details, or report if none fit. Location helps improve Near You results.",
+    },
+    {
+      id: "3c",
+      question: "What information do I get for an identified bird?",
+      answer:
+        "Every match opens a species page. Free users see an overview with photos, size, colours, and family. Premium unlocks the full profile: calls and songs (play samples or your own recording), key ID marks, behaviour, habitat and diet, breeding and nesting, migration and range maps, conservation status, similar species, and birding tips such as best time and preferred locations. Save any result to your life list, wishlist, or a custom collection.",
     },
     {
       id: "4",
@@ -78,9 +97,15 @@ export const FAQ_STRINGS_TEMPLATE = {
     },
     {
       id: "12",
-      question: "How does AI chat work?",
+      question: "How does Ask AI work?",
       answer:
-        "Ask AI is your birding assistant for field marks, behavior, and look-alikes. Free users get 5 messages per day; Premium unlocks unlimited chat.",
+        "Ask AI is your birding assistant. Ask about field marks, calls, behaviour, habitat, migration, or share a photo for help narrowing an ID. Tap a suggested question to get started. Free users get 5 messages per day; Premium unlocks unlimited chat.",
+    },
+    {
+      id: "12a",
+      question: "What is the Bird Sound Library?",
+      answer:
+        "After sound identification, save recordings to replay, compare, and manage later. Filter by identified or unknown clips, sort your library, and re-run identification anytime. Free users can store up to 20 recordings; Premium removes that cap.",
     },
     {
       id: "13",

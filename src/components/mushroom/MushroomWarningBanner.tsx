@@ -6,7 +6,7 @@ import { Images } from "../../assets";
 import { Radius } from "../../design";
 
 const DEFAULT_WARNING =
-  "This mushroom may be toxic, deadly, or psychoactive. Avoid consuming it. Handle with caution and consult a local expert for accurate identification.";
+  "This species may be protected or sensitive. Observe from a distance, avoid disturbing nests, and follow local wildlife guidelines.";
 
 export function getMushroomWarningTitle(
   edibility?: string | null,

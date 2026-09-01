@@ -251,7 +251,7 @@ export const useBirdsStore = create<MushroomsState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : "Failed to fetch mushrooms";
+              : "Failed to fetch birds";
           set({ error: errorMessage, isLoading: false });
         }
       },
@@ -272,13 +272,13 @@ export const useBirdsStore = create<MushroomsState>()(
             // Single batched update
             set({ selectedMushroom: mineral, isLoading: false, error: null });
           } else {
-            set({ error: "Mushroom not found", isLoading: false });
+            set({ error: "Bird not found", isLoading: false });
           }
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : "Failed to fetch mushroom details";
+              : "Failed to fetch bird details";
           set({ error: errorMessage, isLoading: false });
         }
       },

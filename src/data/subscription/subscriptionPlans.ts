@@ -27,11 +27,11 @@ export const FREE_VS_PREMIUM_COMPARISON: ComparisonFeature[] = [
   { feature: "Identification", free: "2/day", premium: "Unlimited" },
   {
     feature: "Collections",
-    free: "2 collections, 50 mushrooms",
+    free: "2 collections, 100 sightings",
     premium: "Unlimited",
   },
   { feature: "Details", free: "Overview only", premium: "Full details" },
   { feature: "Feed", free: "1 post/day", premium: "Unlimited" },
-  { feature: "Mushrooms of the day", free: "1", premium: "Unlimited" },
+  { feature: "Bird of the Day", free: "1", premium: "Unlimited" },
   { feature: "AI Chat", free: "5 mess/day", premium: "Unlimited" },
 ];

@@ -51,7 +51,7 @@ export const birdsFeedConfig: FeedConfig = {
   },
 
   postCard: {
-    itemNameLabel: "Mushroom Name",
+    itemNameLabel: "Bird Name",
     actions: {
       like: "Like",
       comment: "Comment",

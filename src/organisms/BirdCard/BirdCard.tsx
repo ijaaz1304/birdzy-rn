@@ -1,6 +1,6 @@
 /**
- * MushroomCard organism component
- * Reusable card component for displaying mushroom information
+ * BirdCard organism component
+ * Reusable card component for displaying bird information
  */
 
 import { AppImage } from "@/components/AppImage";
@@ -23,7 +23,7 @@ import {
   getMushroomDisplayScientific,
 } from "../../utils/mushroomDisplayUtils";
 
-export interface MushroomCardProps {
+export interface BirdCardProps {
   id: string;
   name: string;
   scientificName?: string;
@@ -48,7 +48,7 @@ export interface MushroomCardProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export const MushroomCard: React.FC<MushroomCardProps> = ({
+export const BirdCard: React.FC<BirdCardProps> = ({
   id,
   name,
   scientificName,
@@ -89,8 +89,8 @@ export const MushroomCard: React.FC<MushroomCardProps> = ({
   const showScientificLine = displayScientific !== undefined;
 
   const starSource = isFavorite
-    ? Images.mushroomWishlistStarFilled
-    : Images.mushroomWishlistStar;
+    ? Images.wishlistStarFilled
+    : Images.wishlistStar;
 
   const getRarityColor = (): string => {
     const colorMap: Record<string, string> = {

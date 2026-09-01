@@ -252,7 +252,7 @@ export const CameraCaptureScreen: React.FC = () => {
           <CloseIcon isDark={theme.mode === "dark"} size={28} />
         </TouchableOpacity>
         <Text variant="title" size="medium" weight="semibold">
-          Identify Mushroom
+          Identify Bird
         </Text>
         <View style={styles.placeholder} />
       </View>
@@ -339,7 +339,7 @@ export const CameraCaptureScreen: React.FC = () => {
               Camera Preview
             </Text>
             <Text variant="body" size="small" color="textTertiary">
-              Point at the mushroom to identify
+              Point at the bird to identify
             </Text>
           </View>
         )}
@@ -381,7 +381,7 @@ export const CameraCaptureScreen: React.FC = () => {
           color="textSecondary"
           style={styles.hintText}
         >
-          Make sure the mushroom is well-lit and in focus
+          Make sure the bird is well-lit and in focus
         </Text>
       </View>
 

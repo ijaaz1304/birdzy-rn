@@ -1,6 +1,6 @@
 /**
  * Assets exports
- * Mushroom WebP assets live under src/assets/ (askai, home, popUp/mushroom, etc.).
+ * Bird app WebP assets live under src/assets/ (askai, home, popUp/mushroom, etc.).
  * Prefer .webp requires where a WebP file exists (iOS decodes via SDWebImageWebPCoder).
  */
 
@@ -12,7 +12,7 @@ import { IDENTIFICATION_TIP_LIGHT_IMAGES } from "./identificationTipImages";
 export { default as SubscriptionBackground } from "./subscription/background/light/subscription_bg.svg";
 export { default as SubscriptionBackgroundDark } from "./subscription/background/dark/subscription_bg.png";
 
-// SVG / banner exports (mushroom WebP where noted)
+// SVG / banner exports (bundled WebP where noted)
 export { default as PlantCardsSvg } from "./onboarding/light/background_1.webp";
 export { default as SpeciesSvg } from "./home/species_of_day.webp";
 export { default as PlantScanSvg } from "./home/identify.webp";
@@ -21,24 +21,24 @@ export { default as AiBannerSvg } from "./home/ask_ai.webp";
 export { default as AiBannerFullSvg } from "./home/ask_ai.webp";
 export { default as DiscountBannerSvg } from "./home/images/banner/light/discount_banner.webp";
 export { default as DiscountBannerDarkSvg } from "./home/images/banner/dark/discount_banner.png";
-export { default as MushroomOfTheDayBannerSvg } from "./home/species_of_day.webp";
-export { default as MushroomOfTheDayBannerDarkSvg } from "./home/popup/mushroom/dark/mushroom_of_the_day_header.webp";
-export { default as MushroomOfTheDayBgSvg } from "./home/popup/mushroom/light/mushroom_of_the_day.webp";
-/** @deprecated Use MushroomOfTheDayBannerSvg */
 export { default as BirdOfTheDayBannerSvg } from "./home/species_of_day.webp";
-/** @deprecated Use MushroomOfTheDayBannerDarkSvg */
 export { default as BirdOfTheDayBannerDarkSvg } from "./home/popup/mushroom/dark/mushroom_of_the_day_header.webp";
-/** @deprecated Use MushroomOfTheDayBgSvg */
 export { default as BirdOfTheDayBgSvg } from "./home/popup/mushroom/light/mushroom_of_the_day.webp";
+/** @deprecated Use BirdOfTheDayBannerSvg */
+export { default as MushroomOfTheDayBannerSvg } from "./home/species_of_day.webp";
+/** @deprecated Use BirdOfTheDayBannerDarkSvg */
+export { default as MushroomOfTheDayBannerDarkSvg } from "./home/popup/mushroom/dark/mushroom_of_the_day_header.webp";
+/** @deprecated Use BirdOfTheDayBgSvg */
+export { default as MushroomOfTheDayBgSvg } from "./home/popup/mushroom/light/mushroom_of_the_day.webp";
 export { default as Banner1Svg } from "./home/images/banner/light/identify_banner.webp";
 export { default as Banner1DarkSvg } from "./home/images/banner/dark/identify_banner.png";
 export { default as Banner2Svg } from "./home/images/banner/light/identify_banner.webp";
 export { default as Banner2DarkSvg } from "./home/images/banner/dark/discount_banner.png";
 
 export { IDENTIFICATION_TIP_LIGHT_IMAGES, IDENTIFICATION_TIP_LIGHT_IMAGE_LIST } from "./identificationTipImages";
+export { default as IdentificationScannerOverlay } from "./identification/scanner.svg";
 export { default as CatalogueVolumeIcon } from "./catalogue/icons/volume_high.svg";
 export { default as BirdSizeScaleGraphic } from "./collection/details/bird/size_scale.svg";
-export { default as IdentifyTabIcon } from "./common/bottomTab/identification.svg";
 export { default as HomeTabIcon } from "./common/bottomTab/home.svg";
 export { default as CatalogueTabIcon } from "./common/bottomTab/catalogue.svg";
 export { default as FeedTabIcon } from "./common/bottomTab/feed.svg";
@@ -72,8 +72,8 @@ export { default as RateMatchHappyDark } from "./collection/details/rateMatch/da
 export { default as RateMatchStarFaceLight } from "./collection/details/rateMatch/light/star_face.svg";
 export { default as RateMatchStarFaceDark } from "./collection/details/rateMatch/dark/star_face.svg";
 
-/** Local bundled quiz archetype images keyed by quiz mushroom id. */
-export const QUIZ_MUSHROOM_LOCAL_IMAGES = {
+/** Local bundled quiz archetype images keyed by quiz bird archetype id. */
+export const QUIZ_BIRD_LOCAL_IMAGES = {
   porcini: require("./quiz/which_shroom/porcini.webp"),
   reishi: require("./quiz/which_shroom/reishi.webp"),
   oyster_mushroom: require("./quiz/which_shroom/oyster_mushroom.webp"),
@@ -85,15 +85,15 @@ export const QUIZ_MUSHROOM_LOCAL_IMAGES = {
 } as const;
 
 export const Images = {
-  mushroomSample: require("./catalogue/icons/species/no_mushroom.webp"),
-  /** @deprecated Use mushroomSample */
+  birdSample: require("./catalogue/icons/species/no_mushroom.webp"),
+  /** @deprecated Use birdSample */
   plantSample: require("./catalogue/icons/species/no_mushroom.webp"),
-  /** @deprecated Use mushroomSample */
+  /** @deprecated Use birdSample */
   mineralSample: require("./catalogue/icons/species/no_mushroom.webp"),
   plantCardsDark: require("./onboarding/dark/background_1.webp"),
-  /** @deprecated Use mushroomCardsDark */
+  /** @deprecated Use plantCardsDark */
   mineralCardsDark: require("./onboarding/dark/background_1.webp"),
-  /** @deprecated Use mushroomCardsLight */
+  /** @deprecated Use mineralCardsLight */
   mineralCardsLight: require("./onboarding/light/background_2.webp"),
   speciesDark: require("./home/species_of_day.webp"),
   /** @deprecated Use speciesDark */
@@ -131,13 +131,13 @@ export const Images = {
   subscriptionIconCollection: require("./subscription/carousel/light/collection.webp"),
   subscriptionIconDetails: require("./subscription/carousel/light/detail.webp"),
   subscriptionIconFeed: require("./subscription/carousel/light/feed.webp"),
-  subscriptionIconMushroomOfDay: require("./subscription/carousel/light/shroom_of_the_day.webp"),
+  subscriptionIconBirdOfDay: require("./subscription/carousel/light/shroom_of_the_day.webp"),
   subscriptionIconAiChat: require("./subscription/carousel/light/ai.webp"),
   subscriptionIconIdentificationDark: require("./subscription/carousel/dark/identify.webp"),
   subscriptionIconCollectionDark: require("./subscription/carousel/dark/collection.webp"),
   subscriptionIconDetailsDark: require("./subscription/carousel/dark/detail.webp"),
   subscriptionIconFeedDark: require("./subscription/carousel/dark/feed.webp"),
-  subscriptionIconMushroomOfDayDark: require("./subscription/carousel/dark/shroom_of_the_day.webp"),
+  subscriptionIconBirdOfDayDark: require("./subscription/carousel/dark/shroom_of_the_day.webp"),
   subscriptionIconAiChatDark: require("./subscription/carousel/dark/ai.webp"),
   /** Subscription paywall / post-auth feature carousel (subs_0…subs_5 PNGs). */
   subscriptionCarousel0: require("./subscription/carousel_png/subs_0.png"),
@@ -157,31 +157,31 @@ export const Images = {
   subscriptionListCollection: require("./subscription/list/light/2.webp"),
   subscriptionListDetails: require("./subscription/list/light/3.webp"),
   subscriptionListFeed: require("./subscription/list/light/4.webp"),
-  subscriptionListMushroomOfDay: require("./subscription/list/light/5.webp"),
+  subscriptionListBirdOfDay: require("./subscription/list/light/5.webp"),
   subscriptionListAiChat: require("./subscription/list/light/6.webp"),
   subscriptionListIdentificationDark: require("./subscription/list/dark/1.webp"),
   subscriptionListCollectionDark: require("./subscription/list/dark/2.webp"),
   subscriptionListDetailsDark: require("./subscription/list/dark/3.webp"),
   subscriptionListFeedDark: require("./subscription/list/dark/4.webp"),
-  subscriptionListMushroomOfDayDark: require("./subscription/list/dark/5.webp"),
+  subscriptionListBirdOfDayDark: require("./subscription/list/dark/5.webp"),
   subscriptionListAiChatDark: require("./subscription/list/dark/6.webp"),
 
   modalNotification: require("./common/modal/notification.png"),
-  mushroomTrash: require("./catalogue/icons/species/trash.webp"),
+  speciesTrash: require("./catalogue/icons/species/trash.webp"),
   discountTimer: require("./catalogue/icons/species/discount_timer.webp"),
-  mushroomLocation: require("./catalogue/icons/species/location.webp"),
-  mushroomLocationDark: require("./catalogue/icons/species/dark/location.webp"),
+  speciesLocation: require("./catalogue/icons/species/location.webp"),
+  speciesLocationDark: require("./catalogue/icons/species/dark/location.webp"),
   locationPost: require("./catalogue/icons/species/location_post.webp"),
-  mushroomCapturePopup: require("./catalogue/icons/species/capture_popup.webp"),
+  speciesCapturePopup: require("./catalogue/icons/species/capture_popup.webp"),
   microphonePopup: require("./common/icons/microphone.png"),
   identifyMethodPopup: require("./common/icons/identify_option_icon.png"),
   askAiScan: require("./askai/scan.webp"),
-  mushroomLocationLock: require("./catalogue/icons/species/location_lock.webp"),
-  mushroomSetting: require("./catalogue/icons/species/setting.webp"),
-  mushroomSettingDark: require("./catalogue/icons/species/dark/setting.webp"),
-  mushroomStayUpdated: require("./catalogue/icons/species/stay_updated.webp"),
-  mushroomIdentificationDisclaimer: require("./catalogue/icons/species/identification_disclaimer.png"),
-  mushroomIdentificationDisclaimerDark: require("./common/iconfix/disclaimer_dark.png"),
+  speciesLocationLock: require("./catalogue/icons/species/location_lock.webp"),
+  speciesSetting: require("./catalogue/icons/species/setting.webp"),
+  speciesSettingDark: require("./catalogue/icons/species/dark/setting.webp"),
+  speciesStayUpdated: require("./catalogue/icons/species/stay_updated.webp"),
+  identificationDisclaimer: require("./catalogue/icons/species/identification_disclaimer.png"),
+  identificationDisclaimerDark: require("./common/iconfix/disclaimer_dark.png"),
 
   avatarHome: require("./home/avatar.png"),
   avatarCover: require("./home/avatar_cover.png"),
@@ -227,13 +227,12 @@ export const Images = {
   arrowDown: require("./onboarding/auth/light/icons/arrow_down.png"),
   arrowDownLight: require("./onboarding/auth/light/icons/arrow_down.png"),
   arrowDownDark: require("./home/popup/icons/arrow_down_dark.png"),
-
-  mushroomPersonalityImage: require("./askai/find_mushroom_center_image.webp"),
+  birdPersonalityImage: require("./askai/find_mushroom_center_image.webp"),
   uploadIconDark: require("./common/iconfix/upload_dark.png"),
 
-  /** Mushroom card wishlist stars — iconfix/home (catalogue, collection, top matches). */
-  mushroomWishlistStar: require("./common/iconfix/home/star.png"),
-  mushroomWishlistStarFilled: require("./common/iconfix/home/star_filled.png"),
+  /** Wishlist stars — iconfix/home (catalogue, collection, top matches). */
+  wishlistStar: require("./common/iconfix/home/star.png"),
+  wishlistStarFilled: require("./common/iconfix/home/star_filled.png"),
   starFilled: require("./common/iconfix/home/star_filled.png"),
   starUnfilled: require("./common/iconfix/home/star.png"),
   starFilledLight: require("./common/iconfix/home/star_filled.png"),
@@ -261,7 +260,7 @@ export const Images = {
   subscriptionPopup70Light: require("./home/popup/mushroom/light/subs_offer_bg.webp"),
   subscriptionPopup70Dark: require("./subscription/background/dark/popup_70.png"),
 
-  /** Limit-reached upgrade sheet — full popUp/mushroom artwork (bg + illustration). */
+  /** Limit-reached upgrade sheet — full-bleed popup artwork (bg + illustration). */
   subscriptionPopupIconCollection: require("./home/popup/mushroom/light/collection.webp"),
   subscriptionPopupIconCollectionDark: require("./home/popup/mushroom/dark/collection.webp"),
   subscriptionPopupIconIdentification: require("./home/popup/mushroom/light/identify_popup_bg.webp"),
@@ -270,23 +269,24 @@ export const Images = {
   subscriptionPopupIconDetailsDark: require("./home/popup/mushroom/dark/detail.webp"),
   subscriptionPopupIconFeed: require("./home/popup/mushroom/light/feed_popup_bg.png"),
   subscriptionPopupIconFeedDark: require("./home/popup/mushroom/dark/feed_popup_bg.png"),
-  /** Sound library storage limit — upgrade sheet hero art. */
+  /** Sound library storage limit — full-bleed upgrade sheet. */
   subscriptionPopupIconSoundGallery: require("./home/popup/mushroom/light/sound_popup_bg.webp"),
   subscriptionPopupIconSoundGalleryDark: require("./home/popup/mushroom/dark/sound_popup_bg.webp"),
-  /** Daily sound ID limit — upgrade sheet hero art. */
-  subscriptionPopupIconSoundIdentification: require("./home/popup/mushroom/light/sound_identify_popup_bg.webp"),
-  subscriptionPopupIconSoundIdentificationDark: require("./home/popup/mushroom/dark/sound_identify_popup_bg.webp"),
-  subscriptionPopupIconMushroomOfDay: require("./home/popup/mushroom/light/bird_of_the_day_popup.webp"),
-  subscriptionPopupIconMushroomOfDayDark: require("./home/popup/mushroom/dark/mushroom_of_the_day.webp"),
-  subscriptionPopupIconAiChat: require("./home/popup/mushroom/light/chat_popup_bg.webp"),
-  subscriptionPopupIconAiChatDark: require("./home/popup/mushroom/dark/chat_popup_bg.webp"),
+  /** Daily sound ID limit — full-bleed upgrade sheet (not the 550px icon crop). */
+  subscriptionPopupIconSoundIdentification: require("./home/popup/mushroom/light/sound_popup_bg.webp"),
+  subscriptionPopupIconSoundIdentificationDark: require("./home/popup/mushroom/dark/sound_popup_bg.webp"),
+  /** Bird of the Day refresh limit — full-bleed sheet (not the 1340px header banner). */
+  subscriptionPopupIconBirdOfDay: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  subscriptionPopupIconBirdOfDayDark: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  /** AI chat limit — full-bleed sheet (not the 375px carousel icon). */
+  subscriptionPopupIconAiChat: require("./askai/ask_ai_bg.webp"),
+  subscriptionPopupIconAiChatDark: require("./askai/dark/ask_ai_bg.webp"),
 
   bannerLight: require("./home/images/banner/light/discount_banner.webp"),
   bannerDark: require("./home/images/banner/dark/discount_banner.png"),
   discountCountdownStickyBgDark: require("./home/images/banner/dark/discount_countdown_sticky_bg.png"),
-
-  mushroomGift: require("./home/species_of_day.webp"),
-  mushroomGiftDark: require("./home/species_of_day.webp"),
+  birdOfDayGift: require("./home/species_of_day.webp"),
+  birdOfDayGiftDark: require("./home/species_of_day.webp"),
   homeGiftBox: require("./subscription/discount/subscription_gift_icon.png"),
   homeDiscountStickyNest: require("./home/discount_sticky_banner_nest.png"),
   homeDiscountBannerBird: require("./home/discount_banner_bird.png"),
@@ -307,6 +307,7 @@ export const Images = {
   goProDark: require("./home/go_pro_home.png"),
   youArePro: require("./home/you_are_pro.png"),
   fullSubsBanner: require("./home/images/banner/light/full_subs_banner.png"),
+  /** Inline recording-limit banner only (details, audio gallery list header, etc.) — not upgrade bottom sheets. */
   recordingLimitReachedBanner: require("./home/popup/recording_limit_reached_banner.png"),
   splashBird: require("./branding/splash/splash_bird.png"),
   noSound: require("./catalogue/icons/no_sound.png"),
@@ -332,27 +333,27 @@ export const Images = {
   onboarding50PercentDark: require("./onboarding/post_auth/light/50_off.webp"),
   analyseAi: require("./askai/ask_ai_bg.webp"),
   analyseAiDark: require("./askai/dark/ask_ai_bg.webp"),
-  whichMushroomAreYouBg: require("./askai/which_mushroom_are_you_bg.png"),
-  findYourMushroomBg: require("./askai/find_your_mushroom_bg.png"),
+  whichBirdAreYouBg: require("./askai/which_mushroom_are_you_bg.png"),
+  findYourBirdBg: require("./askai/find_your_mushroom_bg.png"),
   identifyBg: require("./identification/light/identification_bg.webp"),
   identifyBgDark: require("./identification/dark/identification_bg.webp"),
-  whichMushroomLightBg: require("./askai/which_shroom_result_bg.png"),
-  whichMushroomDarkBg: require("./askai/dark/which_mushroom_are_you_bg.webp"),
-  findYourMushroomBgDark: require("./askai/dark/find_your_mushroom_bg.png"),
+  whichBirdResultBg: require("./askai/which_shroom_result_bg.png"),
+  whichBirdResultBgDark: require("./askai/dark/which_mushroom_are_you_bg.webp"),
+  findYourBirdBgDark: require("./askai/dark/find_your_mushroom_bg.png"),
   collectionBgLight: require("./home/popup/mushroom/light/collection.webp"),
   collectionBgDark: require("./home/popup/mushroom/dark/collection.webp"),
   collectionAltBgLight: require("./home/popup/mushroom/light/collection_1.webp"),
   collectionAltBgDark: require("./home/popup/mushroom/dark/collection_1.webp"),
 
   cameraIcon: require("./home/identify.webp"),
-  askAiCaptureMushroom: require("./askai/capture_mushroom.png"),
-  findYourMushCamera: require("./askai/find_mush_camera.png"),
-  askAiUploadMushroom: require("./askai/upload_mushroom.png"),
+  askAiCaptureBird: require("./askai/capture_mushroom.png"),
+  findYourBirdCamera: require("./askai/find_mush_camera.png"),
+  askAiUploadBird: require("./askai/upload_mushroom.png"),
 
   bottomTabHome: require("./common/bottomTab/home.png"),
   bottomTabCatalogue: require("./common/bottomTab/catalogue.png"),
-  bottomTabIdentify: require("./common/bottomTab/identification_dark.webp"),
-  bottomTabIdentifyDark: require("./common/bottomTab/identification_dark.webp"),
+  bottomTabIdentify: require("./common/bottomTab/identification.png"),
+  bottomTabIdentifyDark: require("./common/bottomTab/identification.png"),
   bottomTabCollection: require("./common/bottomTab/collections_bookmark.png"),
   bottomTabFeed: require("./common/bottomTab/feed.png"),
 
@@ -403,6 +404,7 @@ export const Images = {
   soundSpectrogram: require("./camera/sound/spectrogram.png"),
   soundListeningSpinner: require("./camera/sound/listening_spinner.png"),
   soundIdentifyHero: require("./camera/sound/identify_by_sound_hero.png"),
+  soundIdentifyPause: require("./camera/sound/pause_white.png"),
   soundPause: require("./common/icons/pause_sound.png"),
   soundRecord: require("./common/iconfix/sound/record.webp"),
   soundRecordStop: require("./common/iconfix/sound/record_stop.webp"),
@@ -421,26 +423,25 @@ export const Images = {
   popupCongratulationsBgDark: require("./home/popup/mushroom/dark/congratulations_bg.webp"),
   popupStoragePermissionBg: require("./home/popup/mushroom/light/storage_permission_bg.webp"),
   popupStoragePermissionBgDark: require("./home/popup/mushroom/dark/storage_permission_bg.webp"),
-
-  mushroomEdible: require("./collection/details/mushroom/edible.webp"),
-  mushroomInedible: require("./collection/details/mushroom/inedible.webp"),
-  mushroomToxic: require("./collection/details/mushroom/toxic.webp"),
-  mushroomPsychoactive: require("./collection/details/mushroom/psychoactive.webp"),
-  mushroomGoPro: require("./collection/details/mushroom/go_pro.webp"),
-  mushroomSubsToPremium: require("./collection/details/mushroom/subs_to_premium.webp"),
-  mushroomBlurredLocation: require("./collection/details/mushroom/blurred_location.webp"),
-  mushroomToday: require("./home/popup/mushroom/light/bird_of_the_day_popup.webp"),
-  mushroomTodayDark: require("./home/popup/mushroom/dark/mushroom_of_the_day_header.webp"),
-  mushroomOfTheDayPopupBg: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
-  mushroomOfTheDayPopupBgDark: require("./home/popup/mushroom/dark/mushroom_of_the_day.webp"),
-  mushroomGlowingStar: require("./home/glowing_star.webp"),
-  mushroomOuterCard: require("./home/outer_card.webp"),
-  homeFindShrooms: require("./home/find_species.webp"),
-  homeFindShroomsDark: require("./home/dark/find_species.png"),
+  birdEdibleBadge: require("./collection/details/mushroom/edible.webp"),
+  birdInedibleBadge: require("./collection/details/mushroom/inedible.webp"),
+  birdToxicBadge: require("./collection/details/mushroom/toxic.webp"),
+  birdPsychoactiveBadge: require("./collection/details/mushroom/psychoactive.webp"),
+  birdGoPro: require("./collection/details/mushroom/go_pro.webp"),
+  birdSubsToPremium: require("./collection/details/mushroom/subs_to_premium.webp"),
+  birdBlurredLocation: require("./collection/details/mushroom/blurred_location.webp"),
+  birdOfDayPopup: require("./home/popup/mushroom/light/bird_of_the_day_popup.webp"),
+  birdOfDayPopupDark: require("./home/popup/mushroom/dark/mushroom_of_the_day_header.webp"),
+  birdOfDayPopupBg: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  birdOfDayPopupBgDark: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  homeGlowingStar: require("./home/glowing_star.webp"),
+  homeOuterCard: require("./home/outer_card.webp"),
+  homeFindSpecies: require("./home/find_species.webp"),
+  homeFindSpeciesDark: require("./home/dark/find_species.png"),
   homeAskAiCard: require("./home/ask_ai.webp"),
   homeAskAiCardDark: require("./home/dark/ask_ai.png"),
-  homeMushroomOfDay: require("./home/species_of_day.webp"),
-  homeMushroomOfDayDark: require("./home/dark/species_of_day.png"),
+  homeBirdOfDay: require("./home/species_of_day.webp"),
+  homeBirdOfDayDark: require("./home/dark/species_of_day.png"),
   homeIdentifyBanner: require("./home/images/banner/light/identify_banner.webp"),
   homeIdentifyBannerDark: require("./home/images/banner/dark/identify_banner.png"),
   homeIdentifyBySound: require("./home/identify_by_sound_inner.png"),
@@ -456,6 +457,55 @@ export const Images = {
   passwordEye: require("./catalogue/icons/species/eye.webp"),
   passwordEyeOff: require("./catalogue/icons/species/eye_off.webp"),
   filterIcon: require("./catalogue/icons/species/filter.png"),
+
+  /** @deprecated Mushroom-era aliases — use bird/species keys above */
+  mushroomSample: require("./catalogue/icons/species/no_mushroom.webp"),
+  subscriptionIconMushroomOfDay: require("./subscription/carousel/light/shroom_of_the_day.webp"),
+  subscriptionIconMushroomOfDayDark: require("./subscription/carousel/dark/shroom_of_the_day.webp"),
+  subscriptionListMushroomOfDay: require("./subscription/list/light/5.webp"),
+  subscriptionListMushroomOfDayDark: require("./subscription/list/dark/5.webp"),
+  mushroomTrash: require("./catalogue/icons/species/trash.webp"),
+  mushroomLocation: require("./catalogue/icons/species/location.webp"),
+  mushroomLocationDark: require("./catalogue/icons/species/dark/location.webp"),
+  mushroomCapturePopup: require("./catalogue/icons/species/capture_popup.webp"),
+  mushroomLocationLock: require("./catalogue/icons/species/location_lock.webp"),
+  mushroomSetting: require("./catalogue/icons/species/setting.webp"),
+  mushroomSettingDark: require("./catalogue/icons/species/dark/setting.webp"),
+  mushroomStayUpdated: require("./catalogue/icons/species/stay_updated.webp"),
+  mushroomIdentificationDisclaimer: require("./catalogue/icons/species/identification_disclaimer.png"),
+  mushroomIdentificationDisclaimerDark: require("./common/iconfix/disclaimer_dark.png"),
+  mushroomPersonalityImage: require("./askai/find_mushroom_center_image.webp"),
+  mushroomWishlistStar: require("./common/iconfix/home/star.png"),
+  mushroomWishlistStarFilled: require("./common/iconfix/home/star_filled.png"),
+  subscriptionPopupIconMushroomOfDay: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  subscriptionPopupIconMushroomOfDayDark: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  mushroomGift: require("./home/species_of_day.webp"),
+  mushroomGiftDark: require("./home/species_of_day.webp"),
+  whichMushroomAreYouBg: require("./askai/which_mushroom_are_you_bg.png"),
+  findYourMushroomBg: require("./askai/find_your_mushroom_bg.png"),
+  whichMushroomLightBg: require("./askai/which_shroom_result_bg.png"),
+  whichMushroomDarkBg: require("./askai/dark/which_mushroom_are_you_bg.webp"),
+  findYourMushroomBgDark: require("./askai/dark/find_your_mushroom_bg.png"),
+  askAiCaptureMushroom: require("./askai/capture_mushroom.png"),
+  findYourMushCamera: require("./askai/find_mush_camera.png"),
+  askAiUploadMushroom: require("./askai/upload_mushroom.png"),
+  mushroomEdible: require("./collection/details/mushroom/edible.webp"),
+  mushroomInedible: require("./collection/details/mushroom/inedible.webp"),
+  mushroomToxic: require("./collection/details/mushroom/toxic.webp"),
+  mushroomPsychoactive: require("./collection/details/mushroom/psychoactive.webp"),
+  mushroomGoPro: require("./collection/details/mushroom/go_pro.webp"),
+  mushroomSubsToPremium: require("./collection/details/mushroom/subs_to_premium.webp"),
+  mushroomBlurredLocation: require("./collection/details/mushroom/blurred_location.webp"),
+  mushroomToday: require("./home/popup/mushroom/light/bird_of_the_day_popup.webp"),
+  mushroomTodayDark: require("./home/popup/mushroom/dark/mushroom_of_the_day_header.webp"),
+  mushroomOfTheDayPopupBg: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  mushroomOfTheDayPopupBgDark: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  mushroomGlowingStar: require("./home/glowing_star.webp"),
+  mushroomOuterCard: require("./home/outer_card.webp"),
+  homeFindShrooms: require("./home/find_species.webp"),
+  homeFindShroomsDark: require("./home/dark/find_species.png"),
+  homeMushroomOfDay: require("./home/species_of_day.webp"),
+  homeMushroomOfDayDark: require("./home/dark/species_of_day.png"),
 };
 
 /** Standard render size for back-navigation arrows (wrapper + hit target). */
@@ -478,3 +528,6 @@ export { default as DetailsMoreReportDark } from "./common/iconfix/details_more/
 export { default as DetailsMoreRemoveLight } from "./common/iconfix/details_more/light/remove.svg";
 export { default as DetailsMoreRemoveDark } from "./common/iconfix/details_more/dark/remove.svg";
 export { default as DualLineSvg } from "./common/iconfix/dual_line.svg";
+
+/** @deprecated Use QUIZ_BIRD_LOCAL_IMAGES */
+export const QUIZ_MUSHROOM_LOCAL_IMAGES = QUIZ_BIRD_LOCAL_IMAGES;

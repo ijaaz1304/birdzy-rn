@@ -224,7 +224,7 @@ export const PhotoSelectionScreen: React.FC = () => {
           >
             <View style={styles.iconContainer}>
               <AppImage
-                source={Images.findYourMushCamera}
+                source={Images.findYourBirdCamera}
                 style={styles.optionIcon}
                 resizeMode="contain"
               />
@@ -263,7 +263,7 @@ export const PhotoSelectionScreen: React.FC = () => {
           >
             <View style={styles.iconContainer}>
               <AppImage
-                source={Images.askAiUploadMushroom}
+                source={Images.askAiUploadBird}
                 style={styles.optionIcon}
                 resizeMode="contain"
               />

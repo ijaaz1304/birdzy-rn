@@ -317,7 +317,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                   style={styles.authIllustrationImage}
                   resizeMode="contain"
                   fadeDuration={0}
-                  defaultSource={Images.homeFindShrooms}
+                  defaultSource={Images.homeFindSpecies}
                 />
               </View>
             </View>
@@ -476,7 +476,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                           style={styles.illustrationImage}
                           resizeMode="contain"
                           fadeDuration={0}
-                          defaultSource={Images.homeFindShrooms}
+                          defaultSource={Images.homeFindSpecies}
                         />
                       </View>
                     </View>
@@ -492,7 +492,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                         style={styles.illustrationImage}
                         resizeMode="contain"
                         fadeDuration={0}
-                        defaultSource={Images.homeFindShrooms}
+                        defaultSource={Images.homeFindSpecies}
                       />
                     </View>
                   )
@@ -512,7 +512,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                       >
                         <AppImage
                           source={
-                            Images.homeFindShroomsDark || Images.homeFindShrooms
+                            Images.homeFindSpeciesDark || Images.homeFindSpecies
                           }
                           style={styles.illustrationImage}
                           resizeMode="contain"
@@ -530,7 +530,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                           source={
                             Images.mineralCardsLight ||
                             Images.mineralCardsDark ||
-                            Images.homeFindShrooms
+                            Images.homeFindSpecies
                           }
                           style={styles.illustrationImage}
                           resizeMode="contain"

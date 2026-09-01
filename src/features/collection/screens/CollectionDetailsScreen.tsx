@@ -603,7 +603,7 @@ export const CollectionDetailsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <AppImage
-                source={isDark ? Images.trashDark : Images.mushroomTrash}
+                source={isDark ? Images.trashDark : Images.speciesTrash}
                 style={[
                   styles.menuDeleteIcon,
                   isDark ? { tintColor: colors.textPrimary } : undefined,
@@ -656,7 +656,7 @@ export const CollectionDetailsScreen: React.FC = () => {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 onClear={() => setSearchQuery("")}
-                placeholder="Find mushroom by name"
+                placeholder="Find bird by name"
                 showFilterButton={false}
               />
             </View>

@@ -96,7 +96,7 @@ export const HOME_STRINGS = {
       locationRequired: "Turn on location to find birds near you.",
       loadError: "Could not load nearby birds.",
       retry: "Try again",
-      empty: "No birds match your filters. Try broadening size or colors.",
+      empty: "No birds match your answers. Try a different location, date, or size.",
       introTitle: "Let’s Find Your Bird",
       introBody:
         "Answer a few simple questions about the bird you saw, and we’ll help narrow down the most accurate matches.",

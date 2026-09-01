@@ -10,7 +10,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useTheme } from "../../../hooks/useTheme";
 import { Text, NavBackIcon } from "../../../atoms";
-import { MushroomCard } from "../../../organisms";
+import { BirdCard } from "../../../organisms";
 import { useFeatureConfig } from "../../../config/context";
 import { screenStyles } from "../../../styles/common";
 import { mushroomSpecimenService } from "../../../services/specimen/mushroomSpecimen.service";
@@ -24,14 +24,14 @@ import { CollectionStackParamList } from "../../../navigation/types";
 
 import { spacing } from "../../../design-system/spacing";
 
-type MyMushroomsScreenNavigationProp = NativeStackNavigationProp<
+type MyBirdsScreenNavigationProp = NativeStackNavigationProp<
   CollectionStackParamList,
   "MyBirds"
 >;
 
-export const MyMushroomsScreen: React.FC = () => {
+export const MyBirdsScreen: React.FC = () => {
   const theme = useTheme();
-  const navigation = useNavigation<MyMushroomsScreenNavigationProp>();
+  const navigation = useNavigation<MyBirdsScreenNavigationProp>();
   const collectionConfig = useFeatureConfig("collection");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,7 +100,7 @@ export const MyMushroomsScreen: React.FC = () => {
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <View style={styles.itemCardWrapper}>
-              <MushroomCard
+              <BirdCard
                 id={item.id}
                 name={item.name}
                 scientificName={item.scientificName}

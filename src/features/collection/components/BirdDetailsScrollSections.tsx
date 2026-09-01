@@ -117,7 +117,7 @@ function SectionTopicHeading({
   );
 }
 
-export type MushroomScrollSectionId =
+export type BirdScrollSectionId =
   | "overview"
   | "sounds"
   | "range"
@@ -133,13 +133,13 @@ type Props = {
   detailedDescription?: string;
   isDark: boolean;
   isPremium: boolean;
-  isMushroomOfTheDay?: boolean;
+  isBirdOfTheDay?: boolean;
   customLocation?: string;
   countryMapLoading?: boolean;
   onNavigatePremium: () => void;
   onLookAlikePress?: (lookAlike: Record<string, unknown>) => void;
   onSeeAllSimilarPress?: () => void;
-  onSectionLayout?: (sectionId: MushroomScrollSectionId, y: number) => void;
+  onSectionLayout?: (sectionId: BirdScrollSectionId, y: number) => void;
   locationFlow: CustomLocationSectionFlow;
   textPrimary: string;
   textSecondary: string;
@@ -238,7 +238,7 @@ function LocationLockedPrompt({
   return (
     <View style={styles.locationLockedCard}>
       <AppImageBackground
-        source={Images.mushroomBlurredLocation}
+        source={Images.birdBlurredLocation}
         style={styles.locationLockedBackground}
         imageStyle={styles.locationLockedBackgroundImage}
         resizeMode="cover"
@@ -246,7 +246,7 @@ function LocationLockedPrompt({
         <View style={styles.locationLockedContent}>
           <View style={styles.locationLockedTop}>
             <AppImage
-              source={Images.mushroomLocationLock}
+              source={Images.speciesLocationLock}
               style={styles.locationLockedIcon}
               resizeMode="contain"
             />
@@ -734,12 +734,12 @@ function SimilarSpeciesCards({
   );
 }
 
-export const MushroomDetailsScrollSections: React.FC<Props> = ({
+export const BirdDetailsScrollSections: React.FC<Props> = ({
   mushroomData,
   detailedDescription,
   isDark,
   isPremium,
-  isMushroomOfTheDay = false,
+  isBirdOfTheDay = false,
   customLocation,
   countryMapLoading,
   onNavigatePremium,
@@ -763,7 +763,7 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
   );
   const classification = mushroom.scientificClassification;
   const lookAlikes = mushroom.lookAlikes ?? [];
-  const locked = !isPremium && !isMushroomOfTheDay;
+  const locked = !isPremium && !isBirdOfTheDay;
   const birdStrings = COLLECTION_STRINGS.birdDetails;
   const soundUrls = mushroomData.soundUrls ?? [];
   const userCapturedSounds = (
@@ -812,7 +812,7 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
     mushroom.wikipediaLink ||
     mushroom.wikipediaUrl;
 
-  const registerLayout = (sectionId: MushroomScrollSectionId) => ({
+  const registerLayout = (sectionId: BirdScrollSectionId) => ({
     onLayout: (e: { nativeEvent: { layout: { y: number } } }) => {
       onSectionLayout?.(sectionId, e.nativeEvent.layout.y);
     },
@@ -1129,6 +1129,9 @@ export const MushroomDetailsScrollSections: React.FC<Props> = ({
     </View>
   );
 };
+
+/** @deprecated Use BirdDetailsScrollSections */
+export const MushroomDetailsScrollSections = BirdDetailsScrollSections;
 
 const styles = StyleSheet.create({
   root: {

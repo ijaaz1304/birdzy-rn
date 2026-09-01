@@ -35,13 +35,13 @@ import {
   HomeWizardBanner,
   HomeExploreNearYouSection,
   EXPLORE_NEAR_YOU_CATEGORIES,
-  HomeMushroomCornerSection,
+  HomeBirdCornerSection,
 } from "../components";
 import { useIdentificationEntry } from "../../camera/IdentificationEntryProvider";
 import { useIdentificationEntryStore } from "../../camera/identificationEntry.store";
 import { useFeatureConfig } from "../../../config/context";
 import { screenStyles, layoutStyles } from "../../../styles/common";
-import { MushroomOfTheDayModal } from "../../../molecules/Modal/MushroomOfTheDayModal";
+import { BirdOfTheDayModal } from "../../../molecules/Modal/BirdOfTheDayModal";
 import { LimitReachedBottomSheet } from "../../../molecules/Modal/LimitReachedBottomSheet";
 import { CongratulationsModal } from "../../../molecules/Modal/CongratulationsModal";
 import { navigateToSubscriptionMain } from "../../../utils/navigation";
@@ -278,7 +278,7 @@ export const HomeScreen = () => {
   const mushroomOfTheDayIndexRef = useRef(0);
 
   // Rock of the Day Modal state
-  const [showMushroomOfTheDayModal, setShowMushroomOfTheDayModal] =
+  const [showBirdOfTheDayModal, setShowBirdOfTheDayModal] =
     useState(false);
   const [showMotdLimitSheet, setShowMotdLimitSheet] = useState(false);
   const [loadingMushroomOfTheDay, setLoadingMushroomOfTheDay] = useState(false);
@@ -419,7 +419,7 @@ export const HomeScreen = () => {
     await prefetchRemoteImage(imageUrl);
     InteractionManager.runAfterInteractions(() => {
       if (!isHomeFocusedRef.current) return;
-      setShowMushroomOfTheDayModal(true);
+      setShowBirdOfTheDayModal(true);
     });
     analyticsService.logEvent(EVENTS.bird_of_day_popup_shown);
     analyticsService.logEvent(EVENTS.bird_of_the_day_screen);
@@ -658,7 +658,7 @@ export const HomeScreen = () => {
         ? mushroomOfTheDay.image.uri
         : undefined;
     await prefetchRemoteImage(imageUrl);
-    setShowMushroomOfTheDayModal(true);
+    setShowBirdOfTheDayModal(true);
   }, [mushroomOfTheDay]);
 
   return (
@@ -904,8 +904,8 @@ export const HomeScreen = () => {
         </View>
 
         <View style={styles.sectionBlock}>
-          <HomeMushroomCornerSection
-            onMushroomOfTheDay={() => {
+          <HomeBirdCornerSection
+            onBirdOfTheDay={() => {
               if (mushroomOfTheDay) {
                 void handleOpenMushroomOfDay();
               }
@@ -1002,8 +1002,8 @@ export const HomeScreen = () => {
       </View>
 
       {/* Mushroom of the Day Modal: View details + Refresh (premium cycles; free shows upgrade). */}
-      <MushroomOfTheDayModal
-        visible={showMushroomOfTheDayModal && !!mushroomOfTheDay}
+      <BirdOfTheDayModal
+        visible={showBirdOfTheDayModal && !!mushroomOfTheDay}
         mushroomId={mushroomOfTheDay?.id}
         mushroomName={mushroomOfTheDay?.name || ""}
         scientificName={mushroomOfTheDay?.scientificName}
@@ -1014,7 +1014,7 @@ export const HomeScreen = () => {
         isRefreshing={loadingMushroomOfTheDay}
         onClose={() => {
           analyticsService.logEvent(EVENTS.bird_of_day_popup_dismissed);
-          setShowMushroomOfTheDayModal(false);
+          setShowBirdOfTheDayModal(false);
         }}
         onRefresh={async () => {
           if (!isPremium) return;
@@ -1056,7 +1056,7 @@ export const HomeScreen = () => {
 
       <LimitReachedBottomSheet
         visible={showMotdLimitSheet}
-        limitType="mushroomOfDay"
+        limitType="birdOfDay"
         onClose={() => setShowMotdLimitSheet(false)}
         onUpgrade={() => {
           setShowMotdLimitSheet(false);

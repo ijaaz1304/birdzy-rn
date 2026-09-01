@@ -223,7 +223,7 @@ class ArchetypeService {
             specimenCount: specimens.length,
           });
           throw new ApiException(
-            "This mushroom is already in your collection. The server couldn't add it to wishlist."
+            "This bird is already in your collection. The server couldn't add it to wishlist."
           );
         }
       }

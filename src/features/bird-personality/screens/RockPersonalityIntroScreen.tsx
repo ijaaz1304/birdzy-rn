@@ -12,9 +12,9 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { AppText, AppButton } from "../../../components/shared";
-import { Images, CancelIconLight, CancelIconDark, QUIZ_MUSHROOM_LOCAL_IMAGES } from "../../../assets";
+import { Images, CancelIconLight, CancelIconDark, QUIZ_BIRD_LOCAL_IMAGES } from "../../../assets";
 import { BirdPersonalityStackParamList } from "../../../navigation/types";
-import { FindYourMushroomBackground } from "../components/FindYourMushroomBackground";
+import { FindYourBirdBackground } from "../components/FindYourBirdBackground";
 import { AskAIScreenBackground } from "../../ask-ai/components/AskAIScreenBackground";
 import { usePopParentStackOnBack } from "../../../hooks/usePopParentStackOnBack";
 import { QUESTIONNAIRE_QUESTIONS } from "../data/questionnaireData";
@@ -41,12 +41,12 @@ export const BirdPersonalityIntroScreen: React.FC = () => {
   const heroImageSize = isCompact ? 168 : 200;
 
   useEffect(() => {
-    prefetchBundledSources(Object.values(QUIZ_MUSHROOM_LOCAL_IMAGES));
+    prefetchBundledSources(Object.values(QUIZ_BIRD_LOCAL_IMAGES));
   }, []);
 
   return (
     <View style={styles.container}>
-      {isDark ? <AskAIScreenBackground /> : <FindYourMushroomBackground />}
+      {isDark ? <AskAIScreenBackground /> : <FindYourBirdBackground />}
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={styles.headerRow}>
           <AppText
@@ -85,7 +85,7 @@ export const BirdPersonalityIntroScreen: React.FC = () => {
           >
             <View style={styles.imageContainer}>
               <AppImage
-                source={Images.mushroomPersonalityImage}
+                source={Images.birdPersonalityImage}
                 style={{
                   width: heroImageSize,
                   height: heroImageSize,

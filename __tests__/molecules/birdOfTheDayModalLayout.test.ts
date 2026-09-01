@@ -2,11 +2,11 @@ jest.mock("@/utils/tabletLayout", () => ({
   isTabletDevice: (width: number) => width >= 600,
 }));
 
-import { computeMushroomOfTheDayModalLayout } from "../../src/molecules/Modal/mushroomOfTheDayModal.config";
+import { computeBirdOfTheDayModalLayout } from "../../src/molecules/Modal/birdOfTheDayModal.config";
 
-describe("computeMushroomOfTheDayModalLayout", () => {
+describe("computeBirdOfTheDayModalLayout", () => {
   it("caps content width on iPad and keeps footer above safe area", () => {
-    const layout = computeMushroomOfTheDayModalLayout({
+    const layout = computeBirdOfTheDayModalLayout({
       windowWidth: 820,
       windowHeight: 1180,
       safeTop: 24,
@@ -25,7 +25,7 @@ describe("computeMushroomOfTheDayModalLayout", () => {
   });
 
   it("keeps hero between header and footer on phone", () => {
-    const layout = computeMushroomOfTheDayModalLayout({
+    const layout = computeBirdOfTheDayModalLayout({
       windowWidth: 390,
       windowHeight: 844,
       safeTop: 47,

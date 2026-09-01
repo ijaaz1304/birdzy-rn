@@ -78,10 +78,16 @@ export function wizardQuestionTitle(
   return `Question ${index + 1}/${WIZARD_QUESTION_COUNT}: ${prompt}`;
 }
 
-export function wizardSizeApiValue(sizeIndex: number | null): string[] | undefined {
+export function toWizardSeenDateIso(isoDate: string | null | undefined): string | undefined {
+  if (!isoDate) return undefined;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!match) return isoDate;
+  return `${isoDate}T10:00:00Z`;
+}
+
+export function wizardSizeApiValue(sizeIndex: number | null): string | undefined {
   if (sizeIndex == null) return undefined;
-  const value = WIZARD_SIZE_API_VALUES[sizeIndex];
-  return value ? [value] : undefined;
+  return WIZARD_SIZE_API_VALUES[sizeIndex];
 }
 
 export function wizardSizeDisplay(sizeIndex: number | null): string {
@@ -110,15 +116,11 @@ export function buildWizardAnswerRows(answers: WizardAnswers): WizardAnswerRow[]
   const locationValue = answers.location?.label?.trim() ?? "";
   const dateValue = formatWizardDate(answers.seenDate);
   const sizeValue = wizardSizeDisplay(answers.sizeIndex);
-  const colorValue = answers.colors[0] ?? "";
-  const habitatValue = answers.habitat?.trim() ?? "";
 
   const values: Record<WizardQuestion, string> = {
     location: locationValue,
     date: dateValue,
     size: sizeValue,
-    colors: colorValue,
-    habitat: habitatValue,
   };
 
   return WIZARD_QUESTIONS.map((question, index) => ({
@@ -126,10 +128,6 @@ export function buildWizardAnswerRows(answers: WizardAnswers): WizardAnswerRow[]
     number: index + 1,
     title: WIZARD_ANSWER_QUESTIONS[question],
     value: values[question],
-    colorHex:
-      question === "colors" && colorValue
-        ? wizardColorHex(colorValue)
-        : undefined,
   })).filter((row) => row.value.length > 0);
 }
 
@@ -144,10 +142,6 @@ export function hasWizardQuestionAnswer(
       return Boolean(answers.seenDate);
     case "size":
       return answers.sizeIndex != null;
-    case "colors":
-      return answers.colors.length > 0;
-    case "habitat":
-      return Boolean(answers.habitat);
     default:
       return false;
   }

@@ -16,6 +16,7 @@ setup_permissions([
   'PhotoLibrary',
   'Notifications',
   'LocationWhenInUse',
+  'Microphone',
 ])
 
 # Remove requestAlwaysAuthorization from vendor sources before they are compiled.

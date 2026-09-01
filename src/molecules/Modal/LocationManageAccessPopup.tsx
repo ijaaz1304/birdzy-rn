@@ -95,7 +95,7 @@ export const LocationManageAccessPopup: React.FC<
               </TouchableOpacity>
 
               <AppImage
-                source={isDark ? Images.mushroomSettingDark : Images.mushroomSetting}
+                source={isDark ? Images.speciesSettingDark : Images.speciesSetting}
                 style={styles.heroIcon}
                 resizeMode="contain"
                 preferRNImage

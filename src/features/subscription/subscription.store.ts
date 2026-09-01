@@ -91,11 +91,10 @@ function mapUserToSubscription(user: any): Subscription {
       "advanced_identification",
       "unlimited_identifications",
       "unlimited_collections",
-      "full_mushroom_data",
+      "full_bird_data",
       "unlimited_feed_posts",
       "unlimited_ai_chat",
       "unlimited_bird_of_day_refresh",
-      "unlimited_mushroom_of_day_refresh",
     ];
   }
 

@@ -129,18 +129,18 @@ export const OnboardingScreenPhone: React.FC = () => {
           return { image: Images.diagnoseAi };
         case "auth_identity":
           return isDark
-            ? { image: Images.homeFindShroomsDark }
-            : { image: Images.homeFindShrooms };
+            ? { image: Images.homeFindSpeciesDark }
+            : { image: Images.homeFindSpecies };
         case "auth_cards":
           return {
-            image: isDark ? Images.homeMushroomOfDayDark : Images.homeMushroomOfDay,
+            image: isDark ? Images.homeBirdOfDayDark : Images.homeBirdOfDay,
           };
         case "auth_mins":
           return {
-            image: isDark ? Images.homeFindShroomsDark : Images.homeFindShrooms,
+            image: isDark ? Images.homeFindSpeciesDark : Images.homeFindSpecies,
           };
         default:
-          return { image: Images.homeFindShrooms };
+          return { image: Images.homeFindSpecies };
       }
     },
     []

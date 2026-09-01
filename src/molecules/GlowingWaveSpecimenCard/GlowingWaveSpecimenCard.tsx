@@ -157,7 +157,7 @@ export const GlowingWaveSpecimenCard: React.FC<
       >
         <Animated.View style={[StyleSheet.absoluteFill, starWaveStyle]}>
           <AppImage
-            source={Images.mushroomGlowingStar}
+            source={Images.homeGlowingStar}
             style={{ width: starRenderWidth, height: starRenderHeight }}
             resizeMode="stretch"
           />
@@ -177,7 +177,7 @@ export const GlowingWaveSpecimenCard: React.FC<
       >
         <View style={{ width: outerCardWidth, height: outerCardHeight }}>
           <AppImage
-            source={Images.mushroomOuterCard}
+            source={Images.homeOuterCard}
             style={{ width: outerCardWidth, height: outerCardHeight }}
             resizeMode="stretch"
           />

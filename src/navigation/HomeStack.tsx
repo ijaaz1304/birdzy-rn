@@ -6,7 +6,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "./types";
 import { HomeScreen } from "../features/home/screens/HomeScreen";
-import { MushroomDetailsScreen } from "../features/collection/screens/MushroomDetailsScreen";
+import { BirdDetailsScreen } from "../features/collection/screens/BirdDetailsScreen";
 // Weather removed - not needed for rocks/minerals app
 import { OtherAppsScreen } from "../features/home/screens/OtherAppsScreen";
 import { StepByStepScreen } from "../features/discovery/screens/StepByStepScreen";
@@ -25,7 +25,7 @@ export const HomeStack: React.FC = () => {
       }}
     >
       <Stack.Screen name="HomeMain" component={HomeScreen} />
-      <Stack.Screen name="BirdDetails" component={MushroomDetailsScreen} />
+      <Stack.Screen name="BirdDetails" component={BirdDetailsScreen} />
       {/* Weather removed - not needed for rocks/minerals app */}
       <Stack.Screen name="OtherApps" component={OtherAppsScreen} />
       <Stack.Screen name="StepByStep" component={StepByStepScreen} />

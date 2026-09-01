@@ -7,7 +7,7 @@
  */
 
 import { Platform } from "react-native";
-/** Android package ID for Google Play Store (Birdzy: Mushroom Identifier) */
+/** Android package ID for Google Play Store (Birdzy) */
 export const ANDROID_PACKAGE_ID = "com.trackzio.birds" as const;
 
 /** iOS App Store ID - Update this with your actual App Store ID */

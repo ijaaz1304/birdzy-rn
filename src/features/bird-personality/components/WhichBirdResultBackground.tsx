@@ -30,7 +30,7 @@ export function WhichBirdResultBackground({ isDark }: Props) {
     >
       <AppImage
         source={
-          isDark ? Images.whichMushroomDarkBg : Images.whichMushroomLightBg
+          isDark ? Images.whichBirdResultBgDark : Images.whichBirdResultBg
         }
         style={styles.background}
         resizeMode="cover"

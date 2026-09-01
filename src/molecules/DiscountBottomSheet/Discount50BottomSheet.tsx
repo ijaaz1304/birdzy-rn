@@ -35,7 +35,7 @@ const FEATURES = [
   {
     icon: "subscriptionListIdentification",
     iconDark: "subscriptionListIdentificationDark",
-    text: "Identify as many mushrooms as you want.",
+    text: "Identify as many birds as you want.",
   },
   {
     icon: "subscriptionListCollection",
@@ -45,7 +45,7 @@ const FEATURES = [
   {
     icon: "subscriptionListDetails",
     iconDark: "subscriptionListDetailsDark",
-    text: "Get all the detailed information for each mushroom.",
+    text: "Get all the detailed information for each bird.",
   },
   {
     icon: "subscriptionListFeed",
@@ -53,9 +53,9 @@ const FEATURES = [
     text: "Post as often as you like with no daily limit.",
   },
   {
-    icon: "subscriptionListMushroomOfDay",
-    iconDark: "subscriptionListMushroomOfDayDark",
-    text: "Refresh and view more mushrooms daily.",
+    icon: "subscriptionListBirdOfDay",
+    iconDark: "subscriptionListBirdOfDayDark",
+    text: "Refresh and view more birds daily.",
   },
   {
     icon: "subscriptionListAiChat",

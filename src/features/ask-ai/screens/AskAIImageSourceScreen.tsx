@@ -176,7 +176,7 @@ export const AskAIImageSourceScreen: React.FC = () => {
               source={
                 theme.mode === "dark"
                   ? Images.iconfixCameraDark
-                  : Images.askAiCaptureMushroom
+                  : Images.askAiCaptureBird
               }
               style={{ width: 36, height: 36 }}
               resizeMode="contain"
@@ -220,7 +220,7 @@ export const AskAIImageSourceScreen: React.FC = () => {
               source={
                 theme.mode === "dark"
                   ? Images.uploadIconDark
-                  : Images.askAiUploadMushroom
+                  : Images.askAiUploadBird
               }
               style={{ width: 36, height: 36 }}
               resizeMode="contain"

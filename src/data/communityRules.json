@@ -11,17 +11,17 @@
     {
       "id": 2,
       "title": "Stay On-Topic",
-      "description": "Share content related to mushrooms, fungi, nature, and discoveries. Irrelevant or spammy posts may be removed."
+      "description": "Share content related to birds, birding, nature, and sightings. Irrelevant or spammy posts may be removed."
     },
     {
       "id": 3,
       "title": "No Harmful Content",
-      "description": "Avoid unsafe handling tips, misuse of chemicals, or misinformation about mushrooms."
+      "description": "Avoid unsafe handling tips, harassment of wildlife, or misinformation about birds and habitats."
     },
     {
       "id": 4,
       "title": "Give Credit",
-      "description": "When sharing photos, research, or information about mushrooms, credit the original source whenever possible."
+      "description": "When sharing photos, research, or information about birds, credit the original source whenever possible."
     },
     {
       "id": 5,
@@ -39,7 +39,7 @@
       "description": "If you see harmful or inappropriate content, use the report feature or contact the moderators."
     }
   ],
-  "footerNote": "✨ Remember: This community is for learning, sharing discoveries, and appreciating the fascinating world of mushrooms. Let's keep it safe, friendly, and inspiring!",
+  "footerNote": "✨ Remember: This community is for learning, sharing sightings, and appreciating the fascinating world of birds. Let's keep it safe, friendly, and inspiring!",
   "cta": {
     "label": "Okay",
     "action": "accept_community_rules"

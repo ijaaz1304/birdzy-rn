@@ -14,7 +14,7 @@ export interface UpgradeModalProps {
   limitType?: LimitType;
   title?: string;
   subtitle?: string;
-  /** Override sheet height (e.g. '60%' for Mushroom of the Day upgrade). */
+  /** Override sheet height (e.g. '60%' for Bird of the Day upgrade). */
   height?: number | string;
 }
 
@@ -22,7 +22,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   visible,
   onClose,
   onUpgrade,
-  limitType = "mushroomOfDay",
+  limitType = "birdOfDay",
   height,
 }) => (
   <AppSheet

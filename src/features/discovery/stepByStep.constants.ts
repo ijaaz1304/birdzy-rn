@@ -1,7 +1,7 @@
 import { COLLECTION_STRINGS } from "../../config/strings/collection.strings";
 import type { WizardQuestion } from "./stepByStep.types";
 
-export const WIZARD_QUESTION_COUNT = 5;
+export const WIZARD_QUESTION_COUNT = 3;
 
 export const WIZARD_COLOR_OPTIONS = [
   { id: "Black", hex: "#111111" },
@@ -37,15 +37,15 @@ export const WIZARD_SIZE_RANGES = [
   "> 70 cm",
 ] as const;
 
-/** Maps the 7-point Figma scale onto the step-by-step API `birdSize` values. */
+/** Maps the 7-point UI scale onto step-by-step API `birdSize` labels. */
 export const WIZARD_SIZE_API_VALUES = [
-  "small",
-  "small",
-  "medium",
-  "medium",
-  "large",
-  "large",
-  "xlarge",
+  "Very Small",
+  "Small",
+  "Medium-Small",
+  "Medium",
+  "Large",
+  "Very Large",
+  "Unknown",
 ] as const;
 
 export const WIZARD_WEEKDAY_LABELS = [
@@ -62,6 +62,4 @@ export const WIZARD_ANSWER_QUESTIONS: Record<WizardQuestion, string> = {
   location: "Where did you see it?",
   date: "When did you see it?",
   size: "Size",
-  colors: "Main color",
-  habitat: "Habitat",
 };

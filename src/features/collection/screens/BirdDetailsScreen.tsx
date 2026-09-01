@@ -42,6 +42,7 @@ import {
   getMushroomImageUrls,
 } from "../../../config/mushroomImageUrls.config";
 import { formatTitleCase } from "../../../utils";
+import { resolveArchetypeId } from "../../../utils/navigationIds";
 import { resolveMushroomImageUrlsForDisplay } from "../../../utils/mushroomCardUtils";
 import { getSpecimenDisplayImageUrls } from "../collection.utils";
 import {
@@ -115,10 +116,10 @@ import {
 import { typography } from "../../../design-system/typography";
 import { CatalogueDetailCarousel } from "../components/CatalogueDetailCarousel";
 import {
-  MushroomDetailsScrollSections,
+  BirdDetailsScrollSections,
   useCustomLocationSectionFlow,
-  type MushroomScrollSectionId,
-} from "../components/MushroomDetailsScrollSections";
+  type BirdScrollSectionId,
+} from "../components/BirdDetailsScrollSections";
 import { RemoveFromWishlistConfirmation } from "../../../components/RemoveFromWishlistConfirmation";
 import { useBackHandler } from "../../../utils/backHandler";
 import { AddToCollectionBottomSheet } from "../../camera/components/AddToCollectionBottomSheet";
@@ -169,11 +170,11 @@ const RATE_MATCH_CARD_RADIUS = 12;
 const RATE_MATCH_CARD_WIDTH = "100%";
 const RATE_MATCH_SUBMIT_TEXT = APP_COLORS.surfaceDark;
 
-type MushroomDetailsScreenRouteProp = RouteProp<
+type BirdDetailsScreenRouteProp = RouteProp<
   CollectionStackParamList,
   "BirdDetails"
 >;
-type MushroomDetailsScreenNavigationProp = CompositeNavigationProp<
+type BirdDetailsScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<CollectionStackParamList, "BirdDetails">,
   NativeStackNavigationProp<RootStackParamList>
 >;
@@ -205,14 +206,15 @@ function summarizeImageUrlsForLog(urls: unknown[] | undefined): string[] {
   });
 }
 
-export const MushroomDetailsScreen: React.FC = () => {
+export const BirdDetailsScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
   const spacing = theme.spacing;
-  const navigation = useNavigation<MushroomDetailsScreenNavigationProp>();
-  const route = useRoute<MushroomDetailsScreenRouteProp>();
+  const navigation = useNavigation<BirdDetailsScreenNavigationProp>();
+  const route = useRoute<BirdDetailsScreenRouteProp>();
+  const routeParams = route.params;
+  const mushroomId = resolveArchetypeId(routeParams) ?? "";
   const {
-    mushroomId,
     source,
     collectionName,
     collectionId: routeCollectionId,
@@ -229,10 +231,10 @@ export const MushroomDetailsScreen: React.FC = () => {
     identificationImage,
     initialMushroomData,
     previewImageUri,
-  } = route.params || { mushroomId: "" };
+  } = routeParams || {};
   const isFromIdentification =
     source === "identification" || fromOtherPossibleMatches === true;
-  const isMushroomOfTheDay = source === "birdOfTheDay";
+  const isBirdOfTheDay = source === "birdOfTheDay";
 
   useEffect(() => {
     if (isFromIdentification) {
@@ -240,12 +242,12 @@ export const MushroomDetailsScreen: React.FC = () => {
         mushroom_id: String(mushroomId),
       });
     }
-    if (isMushroomOfTheDay) {
+    if (isBirdOfTheDay) {
       analyticsService.logEvent(EVENTS.bird_of_the_day_screen, {
         mushroom_id: String(mushroomId),
       });
     }
-  }, [isFromIdentification, isMushroomOfTheDay, mushroomId]);
+  }, [isFromIdentification, isBirdOfTheDay, mushroomId]);
 
   useEffect(() => {
     if (__DEV__ && otherMatches && otherMatches.length > 0) {
@@ -1005,7 +1007,7 @@ export const MushroomDetailsScreen: React.FC = () => {
     const displayName = data ? getDisplayName(data) : "";
     log.info("[MushroomDetails] handleShare", {
       source,
-      isMushroomOfTheDay,
+      isBirdOfTheDay,
       mushroomIdSuffix: mushroomId?.slice(-8),
       hasData: !!data,
       displayNameLen: displayName.length,
@@ -1670,7 +1672,7 @@ export const MushroomDetailsScreen: React.FC = () => {
       >
         <View style={styles.loadingContainer}>
           <Text variant="body" size="medium" style={{ marginBottom: 16 }}>
-            No mushroom data available
+            No bird data available
           </Text>
           <TouchableOpacity
             onPress={handleBack}
@@ -1893,7 +1895,7 @@ export const MushroomDetailsScreen: React.FC = () => {
                   setRateMatchSubmitting(true);
                   try {
                     await sendRatingFeedback({
-                      domain: "Mushrooms",
+                      domain: "Birds",
                       message:
                         rateMatchMessage.trim() ||
                         `Rating: ${rateMatchRating}/5`,
@@ -1954,12 +1956,12 @@ export const MushroomDetailsScreen: React.FC = () => {
             mushroomSectionsOffsetY.current = e.nativeEvent.layout.y;
           }}
         >
-          <MushroomDetailsScrollSections
+          <BirdDetailsScrollSections
             mushroomData={mushroomData}
             detailedDescription={detailedDescription}
             isDark={isDark}
             isPremium={isPremium}
-            isMushroomOfTheDay={isMushroomOfTheDay}
+            isBirdOfTheDay={isBirdOfTheDay}
             customLocation={
               (mushroomData as { customLocation?: string }).customLocation
             }
@@ -2045,7 +2047,7 @@ export const MushroomDetailsScreen: React.FC = () => {
                   },
                 });
             }}
-            onSectionLayout={(sectionId: MushroomScrollSectionId, y) => {
+            onSectionLayout={(sectionId: BirdScrollSectionId, y) => {
               sectionYOffsets.current[sectionId] =
                 mushroomSectionsOffsetY.current + y;
             }}
@@ -2076,7 +2078,7 @@ export const MushroomDetailsScreen: React.FC = () => {
   const scrollBottomSurface = isDark ? SHEET_COLORS.DARK : SHEET_COLORS.LIGHT;
   const scrollBottomSpacerHeight = showStickyAddToCollection
     ? stickyAddToCollectionBarInset
-    : isMushroomOfTheDay &&
+    : isBirdOfTheDay &&
       showMoreRocksClicks < 3 &&
       birdOfTheDayIds &&
       birdOfTheDayIds.length > 1
@@ -2111,7 +2113,7 @@ export const MushroomDetailsScreen: React.FC = () => {
             weight="semibold"
             style={styles.headerCenter}
           >
-            {isIdentificationOverlay ? "Best matches" : "Mushroom details"}
+            {isIdentificationOverlay ? "Best matches" : "Bird details"}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <TouchableOpacity
@@ -2354,7 +2356,7 @@ export const MushroomDetailsScreen: React.FC = () => {
                     .getState()
                     .info("[MushroomDetails] Share menu tapped", {
                       source,
-                      isMushroomOfTheDay,
+                      isBirdOfTheDay,
                       mushroomIdSuffix: mushroomId?.slice(-8),
                     });
                   setShowMenu(false);
@@ -2546,8 +2548,8 @@ export const MushroomDetailsScreen: React.FC = () => {
                 sendRatingFeedback,
               } = require("../../../services/rating/ratingFeedback.service");
               await sendRatingFeedback({
-                domain: "Mushrooms",
-                message: `Mushroom: ${getDisplayName(mushroomData ?? {})}\n${message}`,
+                domain: "Birds",
+                message: `Bird: ${getDisplayName(mushroomData ?? {})}\n${message}`,
               });
               showToast("Report submitted successfully", "success");
             } catch (error) {
@@ -3232,6 +3234,8 @@ export const MushroomDetailsScreen: React.FC = () => {
                           </TouchableOpacity>
                         ) : null}
                       </View>
+                    {/*
+                      Name-origin chip hidden for now (Figma polish).
                     {nameOrigin ? (
                       <View style={styles.aiNameOriginWrapper}>
                         <View
@@ -3249,6 +3253,7 @@ export const MushroomDetailsScreen: React.FC = () => {
                         </View>
                       </View>
                     ) : null}
+                    */}
                   </View>
                 </View>
 
@@ -3331,13 +3336,13 @@ export const MushroomDetailsScreen: React.FC = () => {
                           ];
                           const showLock =
                             !isPremium &&
-                            !isMushroomOfTheDay &&
+                            !isBirdOfTheDay &&
                             tab.id !== "overview" &&
                             tab.id !== "sounds" &&
                             birdPremiumTabs.includes(tab.id);
                           return showLock ? (
                             <AppImage
-                              source={Images.mushroomGoPro}
+                              source={Images.birdGoPro}
                               style={styles.aiTabBadge}
                               resizeMode="contain"
                             />
@@ -3494,7 +3499,7 @@ export const MushroomDetailsScreen: React.FC = () => {
         )}
 
         {/* Rock of the day: sticky "Show more rocks (1/3)" for everyone; no blur, full data. Counter starts at 1. */}
-        {isMushroomOfTheDay &&
+        {isBirdOfTheDay &&
           showMoreRocksClicks < 3 &&
           birdOfTheDayIds &&
           birdOfTheDayIds.length > 1 && (
@@ -3559,7 +3564,7 @@ export const MushroomDetailsScreen: React.FC = () => {
                       currentIndex >= 0
                         ? currentIndex + 1
                         : Math.max(1, showMoreRocksClicks + 1);
-                    return `Show more mushrooms (${viewingResult}/${totalResults})`;
+                    return `Show more birds (${viewingResult}/${totalResults})`;
                   })()}
                 </Text>
               </TouchableOpacity>
@@ -3575,7 +3580,7 @@ export const MushroomDetailsScreen: React.FC = () => {
           setShowShowMoreRocksUpgradeModal(false);
           navigateToSubscriptionMain();
         }}
-        limitType="mushroomOfDay"
+        limitType="birdOfDay"
         height="72%"
       />
 
@@ -3590,6 +3595,9 @@ export const MushroomDetailsScreen: React.FC = () => {
     </>
   );
 };
+
+/** @deprecated Use BirdDetailsScreen */
+export const MushroomDetailsScreen = BirdDetailsScreen;
 
 const styles = StyleSheet.create({
   container: {

@@ -123,7 +123,7 @@ const getReminderTypeTitle = (
     case "charging":
       return "Charging Reminder";
     default:
-      return "Mushroom Care Reminder";
+      return "Birding Reminder";
   }
 };
 

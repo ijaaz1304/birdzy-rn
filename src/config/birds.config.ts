@@ -25,7 +25,7 @@ export const birdsAppConfig: AppConfig = {
       title: "BIRD OF THE DAY",
       subtitle: "Say hello to today's featured species!",
       buttonText: "Open",
-      image: Images.homeMushroomOfDay,
+      image: Images.homeBirdOfDay,
     },
     sections: {
       exploreByCategory: {
@@ -54,13 +54,13 @@ export const birdsAppConfig: AppConfig = {
             id: "birds",
             title: "Birdzy Identification",
             subtitle: "Discover & identify birds",
-            image: Images.homeFindShrooms,
+            image: Images.homeFindSpecies,
           },
           {
             id: "coins",
             title: "Coinzy-Coin AI Identification",
             subtitle: "Discover, Identify, Track & Trade Coins",
-            image: Images.homeFindShrooms,
+            image: Images.homeFindSpecies,
           },
         ],
       },
@@ -283,11 +283,11 @@ export const birdsAppConfig: AppConfig = {
 
   assets: {
     images: {
-      placeholder: Images.homeFindShrooms,
+      placeholder: Images.homeFindSpecies,
       defaultAvatar: Images.appIcon,
       giftBox: Images.giftBox,
       appIcon: Images.appIcon,
-      mushroomSample: Images.homeFindShrooms,
+      mushroomSample: Images.homeFindSpecies,
     },
   },
 

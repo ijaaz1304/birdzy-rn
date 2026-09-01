@@ -18,7 +18,7 @@ import { spacing } from "../../design-system/spacing";
 
 /** Brief pause after keyboard hide — avoids parent KeyboardAvoidingView keeping bottom inset. */
 const KEYBOARD_LAYOUT_SETTLE_MS = 80;
-/** Keep parent keyboard avoidance disabled briefly after close (see MushroomDetailsScreen). */
+/** Keep parent keyboard avoidance disabled briefly after close (see BirdDetailsScreen). */
 export const REPORT_MODAL_KEYBOARD_COOLDOWN_MS = 450;
 
 const POST_COPY = MODAL_STRINGS.modals.reportPost;

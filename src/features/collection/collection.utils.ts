@@ -1,7 +1,63 @@
 import type { Collection } from "../../services/api/features/core.api.types";
-import { getArchetypeImageUrls, resolveSpecimenArchetypeId } from "../../utils/mushroomApiMappers";
-import { resolveMushroomImageUrlsForDisplay } from "../../utils/mushroomCardUtils";
+import { archetypeService } from "../../services/archetype/archetype.service";
+import { resolveBirdDiscoveryLocation } from "../../utils/birdDiscoveryLocation.helpers";
+import {
+  getArchetypeImageUrls,
+  normalizeArchetypeListItem,
+  resolveSpecimenArchetypeId,
+} from "../../utils/mushroomApiMappers";
+import {
+  resolveMushroomImageUrlsForDisplay,
+} from "../../utils/mushroomCardUtils";
 import { getPrimaryCommonName } from "../../utils/mushroomDisplayUtils";
+
+/** Virtual collection card on Collection screen — opens Catalogue Near You tab. */
+export const NEAR_YOU_COLLECTION_NAME = "Near You";
+
+export async function fetchNearYouCollectionPreview(): Promise<{
+  count: number;
+  images: string[];
+}> {
+  try {
+    const discovery = await resolveBirdDiscoveryLocation();
+    if (!discovery) return { count: 0, images: [] };
+
+    const { data } = await archetypeService.stepByStep(
+      {
+        location: {
+          lat: discovery.coords[0],
+          lng: discovery.coords[1],
+        },
+        seenDate: new Date().toISOString().slice(0, 10),
+        region: discovery.source !== "gps" ? discovery.regionId : undefined,
+      },
+      { pageNo: 0, pageSize: 4 }
+    );
+
+    const images: string[] = [];
+    for (const item of data) {
+      const normalized = normalizeArchetypeListItem(
+        item as unknown as Record<string, unknown>
+      );
+      const nameHint =
+        normalized.canonicalName?.trim() ||
+        normalized.scientificName?.trim() ||
+        getPrimaryCommonName(normalized);
+      const urls = resolveMushroomImageUrlsForDisplay(
+        nameHint,
+        normalized.imageUrls,
+        nameHint
+      );
+      const url = urls.find((u) => u.trim().length > 0);
+      if (url) images.push(url);
+      if (images.length >= 4) break;
+    }
+
+    return { count: data.length, images };
+  } catch {
+    return { count: 0, images: [] };
+  }
+}
 
 /** Preview URLs for a collection card (max 4). */
 export function getCollectionPreviewImages(

@@ -71,7 +71,7 @@ export const SubscriptionSuccessModal: React.FC<
             size="medium"
             style={[styles.description, { color: colors.textSecondary }]}
           >
-            Unlock unlimited mushroom IDs, expert details, personal
+            Unlock unlimited bird IDs, expert details, personal
             collections, and AI answers — all in one place.
           </Text>
 

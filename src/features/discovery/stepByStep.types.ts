@@ -2,8 +2,6 @@ export const WIZARD_QUESTIONS = [
   "location",
   "date",
   "size",
-  "colors",
-  "habitat",
 ] as const;
 
 export type WizardQuestion = (typeof WIZARD_QUESTIONS)[number];

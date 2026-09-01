@@ -63,7 +63,7 @@ export const IdentificationWarningPopup: React.FC<
                 </TouchableOpacity>
 
                 <AppImage
-                  source={Images.mushroomIdentificationDisclaimer}
+                  source={Images.identificationDisclaimer}
                   style={styles.heroIcon}
                   resizeMode="contain"
                   preferRNImage

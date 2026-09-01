@@ -1,5 +1,5 @@
 export { default as ToolCard } from "./ToolCard";
-export { HomeMushroomCornerSection } from "./HomeMushroomCornerSection";
+export { HomeBirdCornerSection } from "./HomeBirdCornerSection";
 export { HomeIdentifyBanner } from "./HomeIdentifyBanner";
 export { HomeIdentifyCardsSection } from "./HomeIdentifyCardsSection";
 export { HomeWizardBanner } from "./HomeWizardBanner";

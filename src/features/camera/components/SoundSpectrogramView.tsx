@@ -1,50 +1,104 @@
+/**
+ * Static / file-based spectrogram (Figma placeholder scroll).
+ * Used on SoundCropScreen for crop window UI.
+ *
+ * Live recording uses {@link LiveSpectrogramView} + PCM FFT instead (no Expo).
+ */
+
 import { AppImage } from "@/components/AppImage";
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { Images } from "../../../assets";
-import { SoundWaveformBars } from "./SoundWaveformBars";
 
 type Props = {
   height?: number;
+  /** @deprecated Live recording — use LiveSpectrogramView */
+  liveProgress?: number;
   playheadRatio?: number;
+  playheadCenter?: boolean;
   windowStartRatio?: number;
   windowEndRatio?: number;
-  live?: boolean;
-  liveColor?: string;
 };
+
+const PLAYHEAD_COLOR = "#EF4444";
+const TILE_COUNT = 3;
 
 export function SoundSpectrogramView({
   height = 100,
+  liveProgress,
   playheadRatio,
+  playheadCenter = false,
   windowStartRatio,
   windowEndRatio,
-  live = false,
-  liveColor = "#725481",
 }: Props) {
+  const [trackWidth, setTrackWidth] = useState(0);
+
+  const onLayout = useCallback((event: LayoutChangeEvent) => {
+    setTrackWidth(event.nativeEvent.layout.width);
+  }, []);
+
   const hasWindow =
     windowStartRatio != null &&
     windowEndRatio != null &&
     windowEndRatio > windowStartRatio;
 
+  /* --- Static Figma texture scroll (commented out for live recording) ---
+  const scrollProgress = Math.min(1, Math.max(0, liveProgress ?? 0));
+  const stripWidth = trackWidth * TILE_COUNT;
+  const maxScroll = Math.max(0, stripWidth - trackWidth);
+  const scrollX = -scrollProgress * maxScroll;
+  --- end static scroll --- */
+
+  const scrollProgress = Math.min(1, Math.max(0, liveProgress ?? 0));
+  const stripWidth = trackWidth * TILE_COUNT;
+  const maxScroll = Math.max(0, stripWidth - trackWidth);
+  const scrollX = -scrollProgress * maxScroll;
+
+  const showCenterPlayhead =
+    !hasWindow && (playheadCenter || liveProgress != null);
+  const showRatioPlayhead =
+    !hasWindow && !showCenterPlayhead && playheadRatio != null;
+
+  const tiles = useMemo(
+    () => Array.from({ length: TILE_COUNT }, (_, index) => index),
+    []
+  );
+
   return (
-    <View style={[styles.wrap, { height }]}>
-      <AppImage
-        source={Images.soundSpectrogram}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      />
-      {live ? (
-        <View style={styles.liveOverlay} pointerEvents="none">
-          <SoundWaveformBars active color={liveColor} height={height - 16} />
+    <View style={[styles.wrap, { height }]} onLayout={onLayout}>
+      {liveProgress != null && trackWidth > 0 ? (
+        <View style={styles.clip}>
+          <View
+            style={[
+              styles.strip,
+              { width: stripWidth, height, transform: [{ translateX: scrollX }] },
+            ]}
+          >
+            {tiles.map((index) => (
+              <AppImage
+                key={index}
+                source={Images.soundSpectrogram}
+                style={[styles.tile, { width: trackWidth, height, left: trackWidth * index }]}
+                resizeMode="stretch"
+              />
+            ))}
+          </View>
         </View>
-      ) : null}
+      ) : (
+        <AppImage
+          source={Images.soundSpectrogram}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+        />
+      )}
+
       {hasWindow ? (
         <>
           <View
             pointerEvents="none"
             style={[
               styles.dim,
-              { left: 0, width: `${Math.max(windowStartRatio, 0) * 100}%` },
+              { left: 0, width: `${Math.max(windowStartRatio!, 0) * 100}%` },
             ]}
           />
           <View
@@ -52,7 +106,7 @@ export function SoundSpectrogramView({
             style={[
               styles.dim,
               {
-                left: `${Math.min(windowEndRatio, 1) * 100}%`,
+                left: `${Math.min(windowEndRatio!, 1) * 100}%`,
                 right: 0,
               },
             ]}
@@ -62,8 +116,8 @@ export function SoundSpectrogramView({
             style={[
               styles.window,
               {
-                left: `${windowStartRatio * 100}%`,
-                width: `${(windowEndRatio - windowStartRatio) * 100}%`,
+                left: `${windowStartRatio! * 100}%`,
+                width: `${(windowEndRatio! - windowStartRatio!) * 100}%`,
               },
             ]}
           >
@@ -71,28 +125,39 @@ export function SoundSpectrogramView({
             <View style={[styles.handle, styles.handleRight]} />
           </View>
         </>
-      ) : playheadRatio != null ? (
+      ) : null}
+
+      {showCenterPlayhead ? (
+        <View pointerEvents="none" style={styles.playheadCenter} />
+      ) : null}
+
+      {showRatioPlayhead ? (
         <View
           pointerEvents="none"
-          style={[styles.playhead, { left: `${playheadRatio * 100}%` }]}
+          style={[styles.playhead, { left: `${playheadRatio! * 100}%` }]}
         />
       ) : null}
     </View>
   );
 }
 
-const HANDLE_COLOR = "#EF4444";
-
 const styles = StyleSheet.create({
   wrap: {
     width: "100%",
     borderRadius: 8,
     overflow: "hidden",
-    backgroundColor: "#1A1A1A",
+    backgroundColor: "#E8E8E8",
   },
-  liveOverlay: {
+  clip: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
+    overflow: "hidden",
+  },
+  strip: {
+    position: "relative",
+  },
+  tile: {
+    position: "absolute",
+    top: 0,
   },
   dim: {
     position: "absolute",
@@ -106,7 +171,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderLeftWidth: 2,
     borderRightWidth: 2,
-    borderColor: HANDLE_COLOR,
+    borderColor: PLAYHEAD_COLOR,
   },
   handle: {
     position: "absolute",
@@ -115,7 +180,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 20,
     borderRadius: 40,
-    backgroundColor: HANDLE_COLOR,
+    backgroundColor: PLAYHEAD_COLOR,
   },
   handleLeft: {
     left: -6,
@@ -129,6 +194,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 2,
     marginLeft: -1,
-    backgroundColor: HANDLE_COLOR,
+    backgroundColor: PLAYHEAD_COLOR,
+  },
+  playheadCenter: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: "50%",
+    width: 2,
+    marginLeft: -1,
+    backgroundColor: PLAYHEAD_COLOR,
   },
 });

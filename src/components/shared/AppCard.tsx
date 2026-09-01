@@ -143,8 +143,8 @@ const AppCard: React.FC<Props> = React.memo(
                 key={starred ? "star-filled" : "star-empty"}
                 source={
                   starred
-                    ? Images.mushroomWishlistStarFilled
-                    : Images.mushroomWishlistStar
+                    ? Images.wishlistStarFilled
+                    : Images.wishlistStar
                 }
                 style={styles.starIcon}
                 resizeMode="contain"
@@ -161,7 +161,11 @@ const AppCard: React.FC<Props> = React.memo(
               style={[
                 styles.overlayButton,
                 styles.soundButton,
-                { backgroundColor: colors.surfacePrimary },
+                {
+                  backgroundColor: soundPlaying
+                    ? "transparent"
+                    : colors.surfacePrimary,
+                },
               ]}
               activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -175,11 +179,19 @@ const AppCard: React.FC<Props> = React.memo(
               }
             >
               {hasSound ? (
-                <CatalogueVolumeIcon
-                  width={24}
-                  height={24}
-                  color={soundPlaying ? colors.primaryCTA : colors.textPrimary}
-                />
+                soundPlaying ? (
+                  <AppImage
+                    source={Images.soundPause}
+                    style={styles.soundPauseIcon}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <CatalogueVolumeIcon
+                    width={24}
+                    height={24}
+                    color={colors.textPrimary}
+                  />
+                )
               ) : (
                 <AppImage
                   source={Images.noSound}
@@ -317,6 +329,10 @@ const styles = StyleSheet.create({
   soundIcon: {
     width: 24,
     height: 24,
+  },
+  soundPauseIcon: {
+    width: 32,
+    height: 32,
   },
   starIcon: {
     width: 24,

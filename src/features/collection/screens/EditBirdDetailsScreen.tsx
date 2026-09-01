@@ -302,7 +302,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
         null;
 
       if (!newSpecimenId) {
-        showToast("Failed to save mushroom", "error");
+        showToast("Failed to save bird", "error");
         return;
       }
 
@@ -311,7 +311,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
         mushroomId,
         specimenData: added as unknown as Record<string, unknown>,
       });
-      showToast("Mushroom details saved successfully", "success");
+      showToast("Bird details saved successfully", "success");
       analyticsService.logEvent(EVENTS.bird_edit, {
         mushroom_id: mushroomId,
         source: source ?? "unknown",
@@ -338,7 +338,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
         mushroomId: isFromCollection ? undefined : mushroomId,
         specimenData: updated as unknown as Record<string, unknown>,
       });
-      showToast("Mushroom details updated successfully", "success");
+      showToast("Bird details updated successfully", "success");
       analyticsService.logEvent(EVENTS.bird_edit, {
         mushroom_id: idToUpdate,
         source: source ?? "unknown",
@@ -397,7 +397,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
         showToast("Session expired. Please sign in again.", "error");
         return;
       }
-      showToast(error.message || "Failed to save mushroom details", "error");
+      showToast(error.message || "Failed to save bird details", "error");
     }
   }, [
     formData,
@@ -532,7 +532,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
         <View style={styles.centered}>
           <Text variant="body" size="medium" color="textSecondary">
             {mushroomId && !paramsInitialData
-              ? "Open this mushroom from its details screen to edit."
+              ? "Open this bird from its details screen to edit."
               : "Loading..."}
           </Text>
           {mushroomId && !paramsInitialData && (

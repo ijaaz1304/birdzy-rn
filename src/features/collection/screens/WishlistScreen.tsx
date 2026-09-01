@@ -344,7 +344,7 @@ export const WishlistScreen: React.FC = () => {
             value={searchQuery}
             onChangeText={setSearchQuery}
             onClear={() => setSearchQuery("")}
-            placeholder="Find mushroom by name"
+            placeholder="Find bird by name"
             showFilterButton={false}
           />
         </View>

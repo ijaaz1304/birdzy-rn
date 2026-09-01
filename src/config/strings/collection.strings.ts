@@ -96,6 +96,11 @@ export const COLLECTION_STRINGS = {
     editCollection: "Edit Collection",
     renameCollection: "Rename collection",
     deleteCollection: "Delete Collection",
+    goToSoundLibrary: "Go to Sound Library",
+  },
+  collections: {
+    nearYou: "Near You",
+    nearYouSubtitle: "Nearby",
   },
   renameCollection: {
     title: "Rename collection",

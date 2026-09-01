@@ -30,7 +30,7 @@ export const CollectionIconCard: React.FC<CollectionIconCardProps> = React.memo(
       item.subtitle ??
       (item.count !== undefined
         ? `${item.count} items`
-        : "Your saved mushrooms");
+        : "Your saved birds");
 
     return (
       <TouchableOpacity

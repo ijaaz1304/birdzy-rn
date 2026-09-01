@@ -32,18 +32,16 @@ import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { FONTS } from "../../../common/typography";
 import { Radius } from "../../../design";
-import { FindYourBirdBackground } from "../../bird-personality/components/FindYourMushroomBackground";
+import { FindYourBirdBackground } from "../../bird-personality/components/FindYourBirdBackground";
 import { useTheme } from "../../../hooks/useTheme";
 import { HomeStackParamList } from "../../../navigation/types";
 import { getCurrentLocation } from "../../../utils/locationService";
 import { resolveLocationAddress } from "../../camera/resolveLocationAddress";
 import type { IdentificationLocation } from "../../camera/identificationLocation.store";
-import { WIZARD_HABITAT_OPTIONS } from "../stepByStep.constants";
 import { useStepByStepStore } from "../stepByStep.store";
 import { WIZARD_QUESTIONS } from "../stepByStep.types";
 import type { WizardRecentLocation } from "../stepByStep.types";
 import { WizardCalendar } from "../components/WizardCalendar";
-import { WizardColorGrid } from "../components/WizardColorGrid";
 import { WizardProgressHeader } from "../components/WizardProgressHeader";
 import { WizardSizePicker } from "../components/WizardSizePicker";
 import {
@@ -78,8 +76,6 @@ export const StepByStepScreen: React.FC = () => {
   const setLocation = useStepByStepStore((s) => s.setLocation);
   const setSeenDate = useStepByStepStore((s) => s.setSeenDate);
   const setSizeIndex = useStepByStepStore((s) => s.setSizeIndex);
-  const toggleColor = useStepByStepStore((s) => s.toggleColor);
-  const setHabitat = useStepByStepStore((s) => s.setHabitat);
   const rememberLocation = useStepByStepStore((s) => s.rememberLocation);
 
   const [phase, setPhase] = useState<"intro" | "question">("intro");
@@ -321,62 +317,6 @@ export const StepByStepScreen: React.FC = () => {
             </View>
           </View>
         );
-      case "colors":
-        return (
-          <View style={styles.questionBlock}>
-            <Text style={[styles.questionTitle, { color: colors.textPrimary }]}>
-              {wizardQuestionTitle(3, strings.questions.colors)}
-            </Text>
-            <WizardColorGrid
-              selected={answers.colors}
-              onToggle={toggleColor}
-            />
-          </View>
-        );
-      case "habitat":
-        return (
-          <View style={styles.questionBlock}>
-            <Text style={[styles.questionTitle, { color: colors.textPrimary }]}>
-              {wizardQuestionTitle(4, strings.questions.habitat)}
-            </Text>
-            <View style={styles.habitatList}>
-              {WIZARD_HABITAT_OPTIONS.map((option) => {
-                const active = answers.habitat === option;
-                return (
-                  <TouchableOpacity
-                    key={option}
-                    onPress={() => setHabitat(option)}
-                    style={[
-                      styles.habitatRow,
-                      {
-                        backgroundColor: active
-                          ? `${colors.primaryCTA}18`
-                          : colors.surfacePrimary,
-                        borderColor: active
-                          ? colors.primaryCTA
-                          : colors.border0,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.habitatLabel,
-                        {
-                          color: active
-                            ? colors.primaryCTA
-                            : colors.textPrimary,
-                          fontFamily: active ? FONTS.bold : FONTS.regular,
-                        },
-                      ]}
-                    >
-                      {option}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        );
       default:
         return null;
     }
@@ -598,19 +538,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     minHeight: 280,
     justifyContent: "center",
-  },
-  habitatList: {
-    gap: 8,
-  },
-  habitatRow: {
-    borderWidth: 1,
-    borderRadius: Radius.md,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  habitatLabel: {
-    fontSize: 16,
-    lineHeight: 24,
   },
   footer: {
     paddingHorizontal: 16,

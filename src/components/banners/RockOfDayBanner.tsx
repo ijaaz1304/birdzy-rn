@@ -123,7 +123,7 @@ export const RockOfDayBanner = ({ onOpen, onClose }: Props) => {
 
           <View style={styles.rightIcons}>
             <AppImage
-              source={isDark ? Images.mushroomGiftDark : Images.mushroomGift}
+              source={isDark ? Images.birdOfDayGiftDark : Images.birdOfDayGift}
               style={{
                 width: rockGiftWidth,
                 height: rockGiftHeight,

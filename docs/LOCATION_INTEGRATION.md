@@ -593,8 +593,8 @@ if (options?.userLocation?.length === 2) {
 |-----------|-------------------|
 | `MapPreview` | Checks permission; fetches user location for map marker overlay |
 | `CustomLocationInput` | Editable address + static map; “use my location” button |
-| `MushroomDetailsScrollSections` | `checkLocationPermission` for map section |
-| `EditMushroomDetailsScreen` | Uses `CustomLocationInput` for saved specimen location |
+| `BirdDetailsScrollSections` | `checkLocationPermission` for map section |
+| `EditBirdDetailsScreen` | Uses `CustomLocationInput` for saved specimen location |
 
 These reuse `permission.service` + `locationService` but **do not** use the identification Zustand store.
 

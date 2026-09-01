@@ -164,8 +164,8 @@ Hundreds of files still use **mineral/rock** naming for types, screens, and stor
 
 | Area | Examples |
 |------|----------|
-| Screens | `MushroomDetailsScreen`, `MyMushroomsScreen`, `MineralGuideScreen` |
-| Components | `MushroomCard`, `MineralOfTheDay`, `RockOfDayBanner` |
+| Screens | `BirdDetailsScreen`, `MyBirdsScreen`, `MineralGuideScreen` |
+| Components | `BirdCard`, `MineralOfTheDay`, `RockOfDayBanner` |
 | State / API | `useMineralsStore`, `minerals.api.ts`, `minerals.types.ts` |
 | Navigation routes | `MineralDetails`, `rockOfTheDay`, `RockPersonalityStack` |
 | Constants | `MINERALS_API_BASE_URL`, `mineralOptions.ts`, color tokens `mineralGreen` |

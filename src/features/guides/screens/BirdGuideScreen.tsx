@@ -39,13 +39,13 @@ export const BirdGuideScreen: React.FC = () => {
   const displayGuide: BirdGuide = {
     id: `guide-${guideType}`,
     guideType: guideType as GuideType,
-    mushroomName: mushroomName || "Mushroom",
+    mushroomName: mushroomName || "Bird",
     hero: {
       image: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6",
       title: `${guideType.charAt(0).toUpperCase() + guideType.slice(1)} Guide`,
-      subtitle: mushroomName || "Mushroom",
+      subtitle: mushroomName || "Bird",
       description: `Learn how to properly care for your ${
-        mushroomName || "mushroom"
+        mushroomName || "bird"
       } with this ${guideType} guide.`,
     },
     sections: [

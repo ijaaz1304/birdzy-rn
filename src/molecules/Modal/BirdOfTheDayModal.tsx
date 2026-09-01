@@ -22,16 +22,16 @@ import { Images } from "../../assets";
 import { GlowingWaveSpecimenCard } from "../GlowingWaveSpecimenCard/GlowingWaveSpecimenCard";
 import { FONTS } from "../../common/typography";
 import {
-  computeMushroomOfTheDayModalLayout,
+  computeBirdOfTheDayModalLayout,
   MUSHROOM_OF_DAY_HEADER_LIGHT_ASPECT,
   MUSHROOM_OF_DAY_MODAL_LAYOUT,
-} from "./mushroomOfTheDayModal.config";
+} from "./birdOfTheDayModal.config";
 
 const GOLD_NAME = "#FFC13B";
 const GOLD_GLOW = "#FFDD24";
 const LABEL_GREY = "#E7E7E7";
 
-export interface MushroomOfTheDayModalProps {
+export interface BirdOfTheDayModalProps {
   visible: boolean;
   mushroomId?: string;
   mushroomName: string;
@@ -49,7 +49,7 @@ export interface MushroomOfTheDayModalProps {
   isRefreshing?: boolean;
 }
 
-export const MushroomOfTheDayModal = ({
+export const BirdOfTheDayModal = ({
   visible,
   mushroomId,
   mushroomName,
@@ -63,7 +63,7 @@ export const MushroomOfTheDayModal = ({
   showRefreshButton = true,
   isPremium = false,
   isRefreshing = false,
-}: MushroomOfTheDayModalProps) => {
+}: BirdOfTheDayModalProps) => {
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [measuredFooterHeight, setMeasuredFooterHeight] = useState(0);
@@ -76,7 +76,7 @@ export const MushroomOfTheDayModal = ({
 
   const layout = useMemo(
     () =>
-      computeMushroomOfTheDayModalLayout({
+      computeBirdOfTheDayModalLayout({
         windowWidth,
         windowHeight,
         safeTop: insets.top,
@@ -194,7 +194,7 @@ export const MushroomOfTheDayModal = ({
             ]}
           >
             <AppImage
-              source={isDark ? Images.mushroomTodayDark : Images.mushroomToday}
+              source={isDark ? Images.birdOfDayPopupDark : Images.birdOfDayPopup}
               style={{
                 width: layout.headerWidth,
                 height: isDark ? layout.headerHeight : lightHeaderHeight,
@@ -473,3 +473,8 @@ const styles = StyleSheet.create({
     width: undefined,
   },
 });
+
+/** @deprecated Use BirdOfTheDayModal */
+export const MushroomOfTheDayModal = BirdOfTheDayModal;
+/** @deprecated Use BirdOfTheDayModalProps */
+export type MushroomOfTheDayModalProps = BirdOfTheDayModalProps;

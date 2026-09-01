@@ -125,8 +125,8 @@ export const assessImageQuality = async (
     }
 
     if (!banknoteDetected) {
-      issues.push("No mushroom detected in image");
-      suggestions.push("Ensure the mushroom is clearly visible and centered");
+      issues.push("No bird detected in image");
+      suggestions.push("Ensure the bird is clearly visible and centered");
     }
 
     return {

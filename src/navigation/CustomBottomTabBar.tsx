@@ -14,10 +14,9 @@ import {
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppImage } from "@/components/AppImage";
-import { IdentifyTabIcon, Images } from "../assets";
+import { Images } from "../assets";
 import { NAVIGATION_STRINGS } from "../config/navigation.strings";
 import { TAB_BAR_COLORS as TAB_BAR_COLORS_CONST } from "../constants/colorConstants";
-import { APP_COLORS } from "../config/colors";
 import { spacing } from "../design-system/spacing";
 import { useTheme } from "../hooks/useTheme";
 import { useTabBarLayout } from "../contexts/TabBarLayoutContext";
@@ -200,7 +199,7 @@ export function CustomBottomTabBar({
               styles.activeLine,
               {
                 opacity: focused ? 1 : 0,
-                backgroundColor: focused ? tabLineColor : theme.colors.textPrimary,
+                backgroundColor: tabLineColor,
               },
             ]}
           />
@@ -243,18 +242,11 @@ export function CustomBottomTabBar({
         style={styles.centerTab}
       >
         <View style={styles.tabIconWrap}>
-          <View
-            style={[
-              styles.middleTabCircle,
-              { backgroundColor: APP_COLORS.ctaPrimary },
-            ]}
-          >
-            <IdentifyTabIcon
-              width={CENTER_TAB_ICON_SIZE}
-              height={CENTER_TAB_ICON_SIZE}
-              color="#FFFFFF"
-            />
-          </View>
+          <AppImage
+            source={Images.bottomTabIdentify}
+            style={styles.identifyTabIcon}
+            resizeMode="contain"
+          />
         </View>
       </MeasuredTabTarget>
 
@@ -328,12 +320,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 1,
     fontFamily: "Satoshi-Regular",
   },
-  middleTabCircle: {
+  identifyTabIcon: {
     width: CENTER_TAB_CIRCLE_SIZE,
     height: CENTER_TAB_CIRCLE_SIZE,
-    borderRadius: CENTER_TAB_CIRCLE_SIZE / 2,
-    alignItems: "center",
-    justifyContent: "center",
     marginTop: 4,
   },
   tabPressable: {

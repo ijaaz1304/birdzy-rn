@@ -1,6 +1,6 @@
 import { ImageSourcePropType } from "react-native";
 import { QUIZ_MUSHROOM_IMAGE_DEFAULTS } from "../../../config/mushroomImageUrls.config";
-import { QUIZ_MUSHROOM_LOCAL_IMAGES } from "../../../assets";
+import { QUIZ_BIRD_LOCAL_IMAGES } from "../../../assets";
 import { getRemoteConfig } from "../../../services/remoteConfig/remoteConfig.service";
 
 function isRemoteImageUrl(value: string | undefined): value is string {
@@ -43,8 +43,8 @@ export function getQuizArchetypeImageMap(): Record<string, string> {
 export function getQuizLocalImageSource(
   mushroomId: string
 ): ImageSourcePropType | undefined {
-  return QUIZ_MUSHROOM_LOCAL_IMAGES[
-    mushroomId as keyof typeof QUIZ_MUSHROOM_LOCAL_IMAGES
+  return QUIZ_BIRD_LOCAL_IMAGES[
+    mushroomId as keyof typeof QUIZ_BIRD_LOCAL_IMAGES
   ];
 }
 
@@ -68,12 +68,12 @@ export function getQuizArchetypeImageSources(): Record<
 > {
   const remoteMap = getQuizArchetypeImageMap();
   const sources: Record<string, ImageSourcePropType> = {
-    ...QUIZ_MUSHROOM_LOCAL_IMAGES,
+    ...QUIZ_BIRD_LOCAL_IMAGES,
   };
 
   (
-    Object.keys(QUIZ_MUSHROOM_LOCAL_IMAGES) as Array<
-      keyof typeof QUIZ_MUSHROOM_LOCAL_IMAGES
+    Object.keys(QUIZ_BIRD_LOCAL_IMAGES) as Array<
+      keyof typeof QUIZ_BIRD_LOCAL_IMAGES
     >
   ).forEach((key) => {
     const remoteUrl = remoteMap[key];

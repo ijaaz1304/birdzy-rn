@@ -72,7 +72,7 @@ export const DiscountBanner: React.FC<DiscountBannerProps> = ({
             weight="bold"
             style={{ color: colors.textPrimary, marginTop: spacing[1] }}
           >
-            Say hello to today's featured mushroom!
+            Say hello to today's featured bird!
           </Text>
         </View>
 

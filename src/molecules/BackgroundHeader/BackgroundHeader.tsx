@@ -1,7 +1,7 @@
 /**
  * Shared background header for modals and bottom sheets.
  * Used by: full-screen modals (e.g. Congratulations), bottom sheets (Rate Us, Feedback, Notification, Version Update).
- * NOT used by: Mushroom of the Day (MushroomOfTheDayModal).
+ * NOT used by: Mushroom of the Day (BirdOfTheDayModal).
  */
 
 import React from "react";

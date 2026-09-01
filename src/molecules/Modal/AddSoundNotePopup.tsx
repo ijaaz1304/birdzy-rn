@@ -8,9 +8,9 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   StyleSheet,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { Text } from "../../atoms";
@@ -61,74 +61,67 @@ export const AddSoundNotePopup: React.FC<AddSoundNotePopupProps> = ({
     >
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
       >
-        <TouchableWithoutFeedback onPress={onClose}>
-          <View
-            style={[
-              styles.overlay,
-              { backgroundColor: OVERLAY_COLORS.MODAL_BACKDROP },
-            ]}
-          >
-            <TouchableWithoutFeedback>
-              <View style={[styles.card, getPopupChromeStyle(theme)]}>
-                <View style={styles.header}>
-                  <Text
-                    style={[styles.title, { color: colors.textPrimary }]}
-                  >
-                    {copy.addNoteTitle}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={onClose}
-                    style={[
-                      styles.closeButton,
-                      {
-                        backgroundColor: colors.surfaceSecondary,
-                        borderRadius: radius.xl,
-                      },
-                    ]}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <CloseIcon isDark={false} style={styles.closeIcon} />
-                  </TouchableOpacity>
-                </View>
+        <View
+          style={[
+            styles.overlay,
+            { backgroundColor: OVERLAY_COLORS.MODAL_BACKDROP },
+          ]}
+        >
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+          <View style={[styles.card, getPopupChromeStyle(theme)]}>
+            <View style={styles.header}>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>
+                {copy.addNoteTitle}
+              </Text>
+              <TouchableOpacity
+                onPress={onClose}
+                style={[
+                  styles.closeButton,
+                  {
+                    backgroundColor: colors.surfaceSecondary,
+                    borderRadius: radius.xl,
+                  },
+                ]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                disabled={busy}
+              >
+                <CloseIcon isDark={theme.mode === "dark"} style={styles.closeIcon} />
+              </TouchableOpacity>
+            </View>
 
-                <Text
-                  style={[styles.subtitle, { color: colors.textSecondary }]}
-                >
-                  {copy.addNoteSubtitle}
-                </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {copy.addNoteSubtitle}
+            </Text>
 
-                <TextArea
-                  value={note}
-                  onChangeText={setNote}
-                  placeholder={copy.addNotePlaceholder}
-                  minHeight={120}
-                />
+            <TextArea
+              value={note}
+              onChangeText={setNote}
+              placeholder={copy.addNotePlaceholder}
+              minHeight={120}
+            />
 
-                <TouchableOpacity
-                  style={[
-                    styles.continue,
-                    getPopupPrimaryCtaStyle(theme),
-                    { borderRadius: radius.xl, opacity: busy ? 0.6 : 1 },
-                  ]}
-                  onPress={() => {
-                    if (busy) return;
-                    onContinue(note.trim());
-                  }}
-                  activeOpacity={0.85}
-                  disabled={busy}
-                >
-                  <Text
-                    style={[styles.continueLabel, { color: colors.onPrimary }]}
-                  >
-                    {busy ? "Saving..." : copy.addNoteContinue}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableWithoutFeedback>
+            <TouchableOpacity
+              style={[
+                styles.continue,
+                getPopupPrimaryCtaStyle(theme),
+                { borderRadius: radius.xl, opacity: busy ? 0.6 : 1 },
+              ]}
+              onPress={() => {
+                if (busy) return;
+                onContinue(note.trim());
+              }}
+              activeOpacity={0.85}
+              disabled={busy}
+            >
+              <Text style={[styles.continueLabel, { color: colors.onPrimary }]}>
+                {busy ? "Saving..." : copy.addNoteContinue}
+              </Text>
+            </TouchableOpacity>
           </View>
-        </TouchableWithoutFeedback>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -147,6 +140,7 @@ const styles = StyleSheet.create({
     maxWidth: 335,
     padding: 20,
     gap: 12,
+    zIndex: 1,
   },
   header: {
     flexDirection: "row",

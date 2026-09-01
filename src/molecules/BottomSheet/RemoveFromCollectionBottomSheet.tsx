@@ -205,7 +205,7 @@ export const RemoveFromCollectionBottomSheet: React.FC<
         ) : collections.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text variant="body" size="medium" color="textSecondary">
-              This mushroom is not in any collections
+              This bird is not in any collections
             </Text>
           </View>
         ) : (

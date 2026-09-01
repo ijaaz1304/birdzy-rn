@@ -274,8 +274,10 @@ export const UI_COLORS = {
   WARN_AMBER: "#f59e0b",
   /** Filter modal selected category background fallback */
   FILTER_SELECTED_BG: "#DEE7E4",
-  /** Step-by-step wizard progress fill — Figma brand-2 olive */
-  WIZARD_PROGRESS: "#747E3B",
+  /** Step-by-step wizard progress fill — Figma brand teal */
+  WIZARD_PROGRESS: "#01474F",
+  /** Bottom tab selected indicator line */
+  TAB_BAR_ACTIVE: APP_COLORS.ctaPrimary,
   /** Size-scale selected pill border — Figma 8890:124449 */
   WIZARD_SIZE_PILL_BORDER: "#41EDE9",
 } as const;
@@ -514,17 +516,17 @@ export const CAMERA_MATCH_COLORS = {
   BADGE_OVERLAY_DARK: "rgba(255,255,255,0.3)",
 } as const;
 
-// Tab bar (MainTabs) – selected/unselected match Shroom (#111 / #888); line = brand CTA
+// Tab bar (MainTabs) – selected icon/label #111; active line #725481
 export const TAB_BAR_COLORS = {
   LIGHT: {
-    line: APP_COLORS.ctaPrimary,
+    line: UI_COLORS.TAB_BAR_ACTIVE,
     selected: SEMANTIC_LIGHT.content.primary,
     unselected: SEMANTIC_LIGHT.content.tertiary,
     border: SEMANTIC_LIGHT.border.zero,
     background: SEMANTIC_LIGHT.surface.primary,
   },
   DARK: {
-    line: APP_COLORS.ctaPrimary,
+    line: UI_COLORS.TAB_BAR_ACTIVE,
     selected: SEMANTIC_DARK.content.primary,
     unselected: SEMANTIC_DARK.content.tertiary,
     border: SEMANTIC_DARK.border.zero,

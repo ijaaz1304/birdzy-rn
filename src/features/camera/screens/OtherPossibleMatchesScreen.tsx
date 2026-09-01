@@ -48,7 +48,7 @@ import { AddSoundNotePopup } from "../../../molecules/Modal";
 import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
 import { useIdentificationEntryStore } from "../identificationEntry.store";
-import { FindYourBirdBackground } from "../../bird-personality/components/FindYourMushroomBackground";
+import { FindYourBirdBackground } from "../../bird-personality/components/FindYourBirdBackground";
 import { useCatalogueCardSound } from "../../catalogue/hooks/useCatalogueCardSound";
 import { formatSoundStamp } from "../utils/soundCrop";
 import { canAddAudioGalleryClip } from "../../../services/session/audioGalleryLimit.service";
@@ -661,8 +661,8 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
                 key={isWishlisted ? "star-filled" : "star-empty"}
                 source={
                   isWishlisted
-                    ? Images.mushroomWishlistStarFilled
-                    : Images.mushroomWishlistStar
+                    ? Images.wishlistStarFilled
+                    : Images.wishlistStar
                 }
                 style={styles.starIcon}
                 resizeMode="contain"

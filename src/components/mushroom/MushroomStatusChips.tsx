@@ -18,22 +18,22 @@ const CHIP_CONFIG: Record<
 > = {
   edible: {
     label: EDIBILITY_LABELS.edible,
-    icon: Images.mushroomEdible,
+    icon: Images.birdEdibleBadge,
     borderColor: "#4CAF50",
   },
   toxic: {
     label: EDIBILITY_LABELS.toxic,
-    icon: Images.mushroomToxic,
+    icon: Images.birdToxicBadge,
     borderColor: "#9E9E9E",
   },
   psychoactive: {
     label: "Psychoactive",
-    icon: Images.mushroomPsychoactive,
+    icon: Images.birdPsychoactiveBadge,
     borderColor: "#E91E63",
   },
   inedible: {
     label: EDIBILITY_LABELS.inedible,
-    icon: Images.mushroomInedible,
+    icon: Images.birdInedibleBadge,
     borderColor: "#F44336",
   },
 };

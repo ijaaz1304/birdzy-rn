@@ -62,15 +62,15 @@ const CornerCard: React.FC<CornerCardProps> = ({
 );
 
 type Props = {
-  onMushroomOfTheDay: () => void;
+  onBirdOfTheDay: () => void;
   onAskAi: () => void;
   onBirdSoundLibrary: () => void;
   /** @deprecated Personality quiz — hidden from Figma home; kept for API compat */
   onFindMushroom?: () => void;
 };
 
-export const HomeMushroomCornerSection: React.FC<Props> = ({
-  onMushroomOfTheDay,
+export const HomeBirdCornerSection: React.FC<Props> = ({
+  onBirdOfTheDay,
   onAskAi,
   onBirdSoundLibrary,
 }) => {
@@ -94,7 +94,7 @@ export const HomeMushroomCornerSection: React.FC<Props> = ({
           title={corner.birdOfTheDay}
           description={corner.birdOfTheDayDescription}
           background={Images.homeBirdOfDayCard}
-          onPress={onMushroomOfTheDay}
+          onPress={onBirdOfTheDay}
           textPrimary={textPrimary}
           textSecondary={textSecondary}
         />
@@ -195,3 +195,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
 });
+
+/** @deprecated Use HomeBirdCornerSection */
+export const HomeMushroomCornerSection = HomeBirdCornerSection;

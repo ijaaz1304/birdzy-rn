@@ -76,6 +76,11 @@ export function shouldShowIdentificationLocationGate(): boolean {
 }
 
 /** Valid GPS/manual coords for POST /core/ai/identify `userLocation: [lat, lng]`. */
+/**
+ * Location is read at identify time (crop/loading screen), not frozen at recording start.
+ * Product decision required: capture location at recording start vs identify time.
+ * UI copy ("location where you spotted this bird") suggests recording-time semantics.
+ */
 export function getIdentificationUserLocationForApi():
   | [number, number]
   | undefined {

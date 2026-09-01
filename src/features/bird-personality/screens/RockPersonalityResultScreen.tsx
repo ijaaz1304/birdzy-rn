@@ -29,7 +29,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 
 import { FONTS } from "../../../common/typography";
 
-import { WhichMushroomResultBackground } from "../components/WhichMushroomResultBackground";
+import { WhichBirdResultBackground } from "../components/WhichBirdResultBackground";
 import { APP_COLORS } from "../../../config/colors";
 
 /** Circle sizes: pixel-safe radii; INNER_RADIUS = OUTER_RADIUS - BORDER - 0.5 to remove anti-aliasing bleed */
@@ -137,7 +137,7 @@ export const BirdPersonalityResultScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <WhichMushroomResultBackground isDark={isDark} />
+      <WhichBirdResultBackground isDark={isDark} />
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         {/* Close — top-right header row (matches Find Your Mushroom flow) */}
         <View

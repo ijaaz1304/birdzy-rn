@@ -42,7 +42,7 @@ const FEATURE_ICONS_LIGHT: Record<string, ImageSourcePropType> = {
   Collections: Images.subscriptionListCollection,
   Details: Images.subscriptionListDetails,
   Feed: Images.subscriptionListFeed,
-  "Mushrooms of the day": Images.subscriptionListMushroomOfDay,
+  "Bird of the Day": Images.subscriptionListBirdOfDay,
   "AI Chat": Images.subscriptionListAiChat,
 };
 
@@ -51,7 +51,7 @@ const FEATURE_ICONS_DARK: Record<string, ImageSourcePropType> = {
   Collections: Images.subscriptionListCollectionDark,
   Details: Images.subscriptionListDetailsDark,
   Feed: Images.subscriptionListFeedDark,
-  "Mushrooms of the day": Images.subscriptionListMushroomOfDayDark,
+  "Bird of the Day": Images.subscriptionListBirdOfDayDark,
   "AI Chat": Images.subscriptionListAiChatDark,
 };
 

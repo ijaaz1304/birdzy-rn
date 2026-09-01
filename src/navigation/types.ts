@@ -56,9 +56,11 @@ export type BirdSoundsScreenParams = {
 
 export type HomeStackParamList = {
   HomeMain: undefined;
-  BirdOfTheDay: { mushroomId?: string };
+  BirdOfTheDay: { birdId?: string; /** @deprecated Use birdId */ mushroomId?: string };
   BirdDetails: {
-    mushroomId: string;
+    birdId?: string;
+    /** @deprecated Use birdId */
+    mushroomId?: string;
     source?:
       | "birdOfTheDay"
       | "home"
@@ -93,7 +95,9 @@ export type OtherPossibleMatchesReturnTo = {
   tab: "Catalogue";
   screen: "BirdDetails";
   params: {
-    mushroomId: string;
+    birdId?: string;
+    /** @deprecated Use birdId */
+    mushroomId?: string;
     source: "catalogue";
   };
 };
@@ -102,7 +106,7 @@ export type OtherPossibleMatchesScreenParams = {
   matches: any[];
   title?: string;
   returnTo?: OtherPossibleMatchesReturnTo;
-  /** User photo from identify flow — shown on Mushroom Details hero. */
+  /** User photo from identify flow — shown on bird details hero. */
   identificationImage?: { uri: string };
   /** Step-by-step wizard results — shows Your Answers + extra CTAs. */
   fromStepByStep?: boolean;
@@ -156,6 +160,7 @@ export type CameraStackParamList = {
     audioUri: string;
     durationSec: number;
     recordedAt: number;
+    spectrogramColumns?: number[][];
   };
   IdentifyHub: undefined;
   OtherPossibleMatches: OtherPossibleMatchesScreenParams;

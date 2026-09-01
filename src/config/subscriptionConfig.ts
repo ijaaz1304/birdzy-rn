@@ -81,7 +81,7 @@ const subscriptionConfigBase: SubscriptionConfigPayload = {
     { feature: "Collections", free: "2 max", premium: "Unlimited" },
     { feature: "Details", free: "Basic", premium: "Advanced" },
     { feature: "Feed", free: "Limited", premium: "Unlimited" },
-    { feature: "Mushrooms of the day", free: "1/day", premium: "Unlimited" },
+    { feature: "Bird of the Day", free: "1/day", premium: "Unlimited" },
     { feature: "AI Chat", free: "5/day", premium: "Unlimited" },
   ],
   appName: DEFAULT_APP_DISPLAY_NAME,

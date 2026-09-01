@@ -1,5 +1,5 @@
 import type { ImageSourcePropType } from "react-native";
-import { Images, QUIZ_MUSHROOM_LOCAL_IMAGES } from "../assets";
+import { Images, QUIZ_BIRD_LOCAL_IMAGES } from "../assets";
 import { prefetchBundledSources } from "./prefetchBundledSources";
 
 let didWarmBundledCache = false;
@@ -16,14 +16,14 @@ export function warmBundledImageCache(): void {
     Images.onboardingBg1,
     Images.onboardingBg1Dark,
     Images.commonBg,
-    Images.mushroomPersonalityImage,
-    ...Object.values(QUIZ_MUSHROOM_LOCAL_IMAGES),
-    Images.homeFindShrooms,
-    Images.homeFindShroomsDark,
+    Images.birdPersonalityImage,
+    ...Object.values(QUIZ_BIRD_LOCAL_IMAGES),
+    Images.homeFindSpecies,
+    Images.homeFindSpeciesDark,
     Images.homeAskAiCard,
     Images.homeAskAiCardDark,
-    Images.homeMushroomOfDay,
-    Images.homeMushroomOfDayDark,
+    Images.homeBirdOfDay,
+    Images.homeBirdOfDayDark,
     Images.commonBg,
     Images.subscriptionCarousel0,
     Images.subscriptionCarousel1,
@@ -35,7 +35,7 @@ export function warmBundledImageCache(): void {
     Images.rateUsSheetBgDark,
     Images.popUp50Light,
     Images.popUp50Dark,
-    Images.mushroomSubsToPremium,
+    Images.birdSubsToPremium,
     Images.subscriptionBackgroundDark,
     Images.popUp70Light,
     Images.popUp70Dark,
@@ -57,8 +57,8 @@ export function warmBundledImageCache(): void {
     Images.subscriptionPopupIconSoundGalleryDark,
     Images.subscriptionPopupIconSoundIdentification,
     Images.subscriptionPopupIconSoundIdentificationDark,
-    Images.subscriptionPopupIconMushroomOfDay,
-    Images.subscriptionPopupIconMushroomOfDayDark,
+    Images.subscriptionPopupIconBirdOfDay,
+    Images.subscriptionPopupIconBirdOfDayDark,
     Images.subscriptionPopupIconAiChat,
     Images.subscriptionPopupIconAiChatDark,
     Images.collectionAltBgLight,

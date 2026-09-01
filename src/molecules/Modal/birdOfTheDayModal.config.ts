@@ -32,7 +32,7 @@ export const MUSHROOM_OF_DAY_MODAL_LAYOUT = {
   priceLineHeight: 22,
 } as const;
 
-export type MushroomOfTheDayModalLayoutInput = {
+export type BirdOfTheDayModalLayoutInput = {
   windowWidth: number;
   windowHeight: number;
   safeTop: number;
@@ -44,7 +44,7 @@ export type MushroomOfTheDayModalLayoutInput = {
   platform?: "ios" | "android" | "web" | "windows" | "macos";
 };
 
-export type MushroomOfTheDayModalComputedLayout = {
+export type BirdOfTheDayModalComputedLayout = {
   contentWidth: number;
   contentLeft: number;
   closeRight: number;
@@ -81,9 +81,9 @@ function estimateFooterHeight(
  * Responsive mushroom-of-the-day layout (ported from plant-app PlantOfTheDayModal).
  * Footer stays pinned to the bottom; hero sits in the band between header art and footer.
  */
-export function computeMushroomOfTheDayModalLayout(
-  input: MushroomOfTheDayModalLayoutInput
-): MushroomOfTheDayModalComputedLayout {
+export function computeBirdOfTheDayModalLayout(
+  input: BirdOfTheDayModalLayoutInput
+): BirdOfTheDayModalComputedLayout {
   const {
     windowWidth,
     windowHeight,

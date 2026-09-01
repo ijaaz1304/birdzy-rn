@@ -1,0 +1,508 @@
+diff --git a/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/results.bin b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/results.bin
+new file mode 100644
+index 0000000..7ed749e
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/results.bin
+@@ -0,0 +1 @@
++o/bundleLibRuntimeToDirDebug
+diff --git a/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/BuildConfig.dex b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/BuildConfig.dex
+new file mode 100644
+index 0000000..757ab22
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/BuildConfig.dex differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule$RecordThread.dex b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule$RecordThread.dex
+new file mode 100644
+index 0000000..090ea63
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule$RecordThread.dex differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.dex b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.dex
+new file mode 100644
+index 0000000..9125daf
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.dex differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamPackage.dex b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamPackage.dex
+new file mode 100644
+index 0000000..4a2a57a
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/bundleLibRuntimeToDirDebug_dex/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamPackage.dex differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/desugar_graph.bin b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/desugar_graph.bin
+new file mode 100644
+index 0000000..b50749e
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/.transforms/c7c4d201a5f672e00dc9635690ae9bb1/transformed/bundleLibRuntimeToDirDebug/desugar_graph.bin differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/.transforms/f06c267f1ba0b5038095c28ad2cf392b/results.bin b/node_modules/react-native-live-audio-fft/android/build/.transforms/f06c267f1ba0b5038095c28ad2cf392b/results.bin
+new file mode 100644
+index 0000000..0d259dd
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/.transforms/f06c267f1ba0b5038095c28ad2cf392b/results.bin
+@@ -0,0 +1 @@
++o/classes
+diff --git a/node_modules/react-native-live-audio-fft/android/build/.transforms/f06c267f1ba0b5038095c28ad2cf392b/transformed/classes/classes_dex/classes.dex b/node_modules/react-native-live-audio-fft/android/build/.transforms/f06c267f1ba0b5038095c28ad2cf392b/transformed/classes/classes_dex/classes.dex
+new file mode 100644
+index 0000000..a0fb94d
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/.transforms/f06c267f1ba0b5038095c28ad2cf392b/transformed/classes/classes_dex/classes.dex differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/generated/source/buildConfig/debug/com/imxiqi/rnliveaudiostream/BuildConfig.java b/node_modules/react-native-live-audio-fft/android/build/generated/source/buildConfig/debug/com/imxiqi/rnliveaudiostream/BuildConfig.java
+new file mode 100644
+index 0000000..b3a2397
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/generated/source/buildConfig/debug/com/imxiqi/rnliveaudiostream/BuildConfig.java
+@@ -0,0 +1,10 @@
++/**
++ * Automatically generated file. DO NOT MODIFY
++ */
++package com.imxiqi.rnliveaudiostream;
++
++public final class BuildConfig {
++  public static final boolean DEBUG = Boolean.parseBoolean("true");
++  public static final String LIBRARY_PACKAGE_NAME = "com.imxiqi.rnliveaudiostream";
++  public static final String BUILD_TYPE = "debug";
++}
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml b/node_modules/react-native-live-audio-fft/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+new file mode 100644
+index 0000000..9e16e2e
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="com.imxiqi.rnliveaudiostream" >
++
++    <uses-sdk android:minSdkVersion="26" />
++
++    <uses-permission android:name="android.permission.RECORD_AUDIO" />
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json b/node_modules/react-native-live-audio-fft/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+new file mode 100644
+index 0000000..e58d7c1
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+@@ -0,0 +1,18 @@
++{
++  "version": 3,
++  "artifactType": {
++    "type": "AAPT_FRIENDLY_MERGED_MANIFESTS",
++    "kind": "Directory"
++  },
++  "applicationId": "com.imxiqi.rnliveaudiostream",
++  "variantName": "debug",
++  "elements": [
++    {
++      "type": "SINGLE",
++      "filters": [],
++      "attributes": [],
++      "outputFile": "AndroidManifest.xml"
++    }
++  ],
++  "elementType": "File"
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties b/node_modules/react-native-live-audio-fft/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+new file mode 100644
+index 0000000..1211b1e
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+@@ -0,0 +1,6 @@
++aarFormatVersion=1.0
++aarMetadataVersion=1.0
++minCompileSdk=1
++minCompileSdkExtension=0
++minAndroidGradlePluginVersion=1.0.0
++coreLibraryDesugaringEnabled=false
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json b/node_modules/react-native-live-audio-fft/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+new file mode 100644
+index 0000000..9e26dfe
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+@@ -0,0 +1 @@
++{}
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar b/node_modules/react-native-live-audio-fft/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar
+new file mode 100644
+index 0000000..78b07e0
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar b/node_modules/react-native-live-audio-fft/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar
+new file mode 100644
+index 0000000..3001e61
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt b/node_modules/react-native-live-audio-fft/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+new file mode 100644
+index 0000000..4a3bbf2
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+@@ -0,0 +1 @@
++#Mon Aug 31 15:39:03 IST 2026
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+new file mode 100644
+index 0000000..24c9a9b
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/build/generated/res/resValues/debug"/></dataSet><mergedItems/></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/mergeDebugAssets/merger.xml b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/mergeDebugAssets/merger.xml
+new file mode 100644
+index 0000000..330afe5
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/mergeDebugAssets/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/assets"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/debug/assets"/></dataSet><dataSet config="generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/build/intermediates/shader_assets/debug/compileDebugShaders/out"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
+new file mode 100644
+index 0000000..3840ed0
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/jniLibs"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/debug/jniLibs"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/mergeDebugShaders/merger.xml b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
+new file mode 100644
+index 0000000..4f7db81
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/shaders"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/debug/shaders"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/BuildConfig.class b/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/BuildConfig.class
+new file mode 100644
+index 0000000..ab7b797
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/BuildConfig.class differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule$RecordThread.class b/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule$RecordThread.class
+new file mode 100644
+index 0000000..58b00f7
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule$RecordThread.class differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.class b/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.class
+new file mode 100644
+index 0000000..c1e72fd
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.class differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamPackage.class b/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamPackage.class
+new file mode 100644
+index 0000000..7a96287
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamPackage.class differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt b/node_modules/react-native-live-audio-fft/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+new file mode 100644
+index 0000000..78ac5b8
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+@@ -0,0 +1,2 @@
++R_DEF: Internal format may change without notice
++local
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt b/node_modules/react-native-live-audio-fft/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+new file mode 100644
+index 0000000..836ca08
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+@@ -0,0 +1,11 @@
++1<?xml version="1.0" encoding="utf-8"?>
++2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++3    package="com.imxiqi.rnliveaudiostream" >
++4
++5    <uses-sdk android:minSdkVersion="26" />
++6
++7    <uses-permission android:name="android.permission.RECORD_AUDIO" />
++7-->/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml:4:5-70
++7-->/Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml:4:22-68
++8
++9</manifest>
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml b/node_modules/react-native-live-audio-fft/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+new file mode 100644
+index 0000000..9e16e2e
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="com.imxiqi.rnliveaudiostream" >
++
++    <uses-sdk android:minSdkVersion="26" />
++
++    <uses-permission android:name="android.permission.RECORD_AUDIO" />
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json b/node_modules/react-native-live-audio-fft/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+new file mode 100644
+index 0000000..0637a08
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+@@ -0,0 +1 @@
++[]
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt b/node_modules/react-native-live-audio-fft/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+new file mode 100644
+index 0000000..08f4ebe
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+@@ -0,0 +1 @@
++0 Warning/Error
+\ No newline at end of file
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/BuildConfig.class b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/BuildConfig.class
+new file mode 100644
+index 0000000..ab7b797
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/BuildConfig.class differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule$RecordThread.class b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule$RecordThread.class
+new file mode 100644
+index 0000000..58b00f7
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule$RecordThread.class differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.class b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.class
+new file mode 100644
+index 0000000..c1e72fd
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.class differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamPackage.class b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamPackage.class
+new file mode 100644
+index 0000000..7a96287
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamPackage.class differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar
+new file mode 100644
+index 0000000..6671222
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar differ
+diff --git a/node_modules/react-native-live-audio-fft/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt b/node_modules/react-native-live-audio-fft/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+new file mode 100644
+index 0000000..6962f85
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+@@ -0,0 +1 @@
++com.imxiqi.rnliveaudiostream
+diff --git a/node_modules/react-native-live-audio-fft/android/build/outputs/logs/manifest-merger-debug-report.txt b/node_modules/react-native-live-audio-fft/android/build/outputs/logs/manifest-merger-debug-report.txt
+new file mode 100644
+index 0000000..20888d4
+--- /dev/null
++++ b/node_modules/react-native-live-audio-fft/android/build/outputs/logs/manifest-merger-debug-report.txt
+@@ -0,0 +1,21 @@
++-- Merging decision tree log ---
++manifest
++ADDED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml:2:1-5:12
++INJECTED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml:2:1-5:12
++	package
++		ADDED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml:3:11-49
++		INJECTED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml
++	xmlns:android
++		ADDED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml:2:11-69
++uses-permission#android.permission.RECORD_AUDIO
++ADDED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml:4:5-70
++	android:name
++		ADDED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml:4:22-68
++uses-sdk
++INJECTED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml reason: use-sdk injection requested
++INJECTED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml
++INJECTED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml
++	android:targetSdkVersion
++		INJECTED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml
++	android:minSdkVersion
++		INJECTED from /Users/apple/TrackzioApps/Birdzy/node_modules/react-native-live-audio-fft/android/src/main/AndroidManifest.xml
+diff --git a/node_modules/react-native-live-audio-fft/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin b/node_modules/react-native-live-audio-fft/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin
+new file mode 100644
+index 0000000..4a416c0
+Binary files /dev/null and b/node_modules/react-native-live-audio-fft/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin differ
+diff --git a/node_modules/react-native-live-audio-fft/android/src/main/java/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.java b/node_modules/react-native-live-audio-fft/android/src/main/java/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.java
+index 490a226..5596e16 100644
+--- a/node_modules/react-native-live-audio-fft/android/src/main/java/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.java
++++ b/node_modules/react-native-live-audio-fft/android/src/main/java/com/imxiqi/rnliveaudiostream/RNLiveAudioStreamModule.java
+@@ -4,20 +4,31 @@ import android.media.AudioFormat;
+ import android.media.AudioRecord;
+ import android.media.MediaRecorder.AudioSource;
+ import android.util.Base64;
+-import android.util.Log;
+ 
++import com.facebook.react.bridge.Promise;
+ import com.facebook.react.bridge.ReactApplicationContext;
+ import com.facebook.react.bridge.ReactContextBaseJavaModule;
+ import com.facebook.react.bridge.ReactMethod;
+ import com.facebook.react.bridge.ReadableMap;
+ import com.facebook.react.modules.core.DeviceEventManagerModule;
+ 
+-import java.lang.Math;
++import java.io.ByteArrayOutputStream;
++import java.io.File;
++import java.io.FileOutputStream;
++import java.io.IOException;
++import java.nio.ByteBuffer;
++import java.nio.ByteOrder;
+ 
+ public class RNLiveAudioStreamModule extends ReactContextBaseJavaModule {
+ 
+     private final ReactApplicationContext reactContext;
+     private RecordThread recordThread;
++    private final ByteArrayOutputStream recordingPcmBytes = new ByteArrayOutputStream();
++    private int sampleRateInHz = 44100;
++    private int channelCount = 1;
++    private int bitsPerSample = 16;
++    /** Emit every N buffers to JS — full PCM always retained natively for WAV. */
++    private static final int JS_EMIT_INTERVAL = 2;
+ 
+     public RNLiveAudioStreamModule(ReactApplicationContext reactContext) {
+         super(reactContext);
+@@ -31,23 +42,15 @@ public class RNLiveAudioStreamModule extends ReactContextBaseJavaModule {
+ 
+     @ReactMethod
+     public void init(ReadableMap options) {
+-        int sampleRateInHz = 44100;
+-        if (options.hasKey("sampleRate")) {
+-            sampleRateInHz = options.getInt("sampleRate");
++        sampleRateInHz = options.hasKey("sampleRate") ? options.getInt("sampleRate") : 44100;
++        channelCount = 1;
++        if (options.hasKey("channels") && options.getInt("channels") == 2) {
++            channelCount = 2;
+         }
+ 
+-        int channelConfig = AudioFormat.CHANNEL_IN_MONO;
+-        if (options.hasKey("channels")) {
+-            if (options.getInt("channels") == 2) {
+-                channelConfig = AudioFormat.CHANNEL_IN_STEREO;
+-            }
+-        }
+-
+-        int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+-        if (options.hasKey("bitsPerSample")) {
+-            if (options.getInt("bitsPerSample") == 8) {
+-                audioFormat = AudioFormat.ENCODING_PCM_8BIT;
+-            }
++        bitsPerSample = 16;
++        if (options.hasKey("bitsPerSample") && options.getInt("bitsPerSample") == 8) {
++            bitsPerSample = 8;
+         }
+ 
+         int audioSource = AudioSource.VOICE_RECOGNITION;
+@@ -55,30 +58,110 @@ public class RNLiveAudioStreamModule extends ReactContextBaseJavaModule {
+             audioSource = options.getInt("audioSource");
+         }
+ 
+-        int bufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
++        int channelConfig = channelCount == 2
++            ? AudioFormat.CHANNEL_IN_STEREO
++            : AudioFormat.CHANNEL_IN_MONO;
++        int audioFormat = bitsPerSample == 8
++            ? AudioFormat.ENCODING_PCM_8BIT
++            : AudioFormat.ENCODING_PCM_16BIT;
+ 
++        int bufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+         if (options.hasKey("bufferSize")) {
+             bufferSize = Math.max(bufferSize, options.getInt("bufferSize"));
+         }
+ 
++        recordingPcmBytes.reset();
+         recordThread = new RecordThread(audioSource, sampleRateInHz, channelConfig, audioFormat, bufferSize, reactContext);
+     }
+ 
++    @ReactMethod
++    public void resetRecordingBuffer() {
++        recordingPcmBytes.reset();
++    }
++
++    @ReactMethod
++    public void getRecordedSampleCount(Promise promise) {
++        int bytesPerSample = bitsPerSample / 8;
++        int sampleCount = bytesPerSample > 0 && channelCount > 0
++            ? recordingPcmBytes.size() / bytesPerSample / channelCount
++            : 0;
++        promise.resolve(sampleCount);
++    }
++
++    @ReactMethod
++    public void finalizeWav(String fileName, Promise promise) {
++        try {
++            byte[] pcm = recordingPcmBytes.toByteArray();
++            if (pcm.length == 0) {
++                promise.reject("NO_PCM", "No audio captured");
++                return;
++            }
++            File outFile = new File(reactContext.getCacheDir(), fileName);
++            writeWav(outFile, pcm, sampleRateInHz, channelCount, bitsPerSample);
++            recordingPcmBytes.reset();
++            promise.resolve("file://" + outFile.getAbsolutePath());
++        } catch (Exception e) {
++            promise.reject("WAV_ERROR", e.getMessage(), e);
++        }
++    }
++
++    private static void writeWav(
++        File file,
++        byte[] pcm,
++        int sampleRate,
++        int channels,
++        int bitsPerSample
++    ) throws IOException {
++        int dataSize = pcm.length;
++        int blockAlign = channels * bitsPerSample / 8;
++        ByteBuffer header = ByteBuffer.allocate(44);
++        header.order(ByteOrder.LITTLE_ENDIAN);
++        header.put("RIFF".getBytes());
++        header.putInt(36 + dataSize);
++        header.put("WAVE".getBytes());
++        header.put("fmt ".getBytes());
++        header.putInt(16);
++        header.putShort((short) 1);
++        header.putShort((short) channels);
++        header.putInt(sampleRate);
++        header.putInt(sampleRate * blockAlign);
++        header.putShort((short) blockAlign);
++        header.putShort((short) bitsPerSample);
++        header.put("data".getBytes());
++        header.putInt(dataSize);
++        try (FileOutputStream fos = new FileOutputStream(file)) {
++            fos.write(header.array());
++            fos.write(pcm);
++        }
++    }
++
+     private class RecordThread extends Thread {
+ 
+         private DeviceEventManagerModule.RCTDeviceEventEmitter eventEmitter;
+         private AudioRecord recorder = null;
+         private int bufferSize;
+         public boolean isRecording = false;
+-
+-        public RecordThread(int audioSource, int sampleRateInHz, int channelConfig, int audioFormat, int bufferSize, ReactApplicationContext reactContext) {
++        private int bufferEmitCounter = 0;
++
++        public RecordThread(
++            int audioSource,
++            int sampleRateInHz,
++            int channelConfig,
++            int audioFormat,
++            int bufferSize,
++            ReactApplicationContext reactContext
++        ) {
+             super();
+-
+             eventEmitter = reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
+-
+             this.bufferSize = bufferSize;
+             int recordingBufferSize = bufferSize * 3;
+-            recorder = new AudioRecord(audioSource, sampleRateInHz, channelConfig, audioFormat, recordingBufferSize);
++            recorder = new AudioRecord(
++                audioSource,
++                sampleRateInHz,
++                channelConfig,
++                audioFormat,
++                recordingBufferSize
++            );
+         }
+ 
+         public void run() {
+@@ -93,10 +176,18 @@ public class RNLiveAudioStreamModule extends ReactContextBaseJavaModule {
+                 while (isRecording) {
+                     bytesRead = recorder.read(buffer, 0, buffer.length);
+ 
+-                    // skip first 2 buffers to eliminate "click sound"
+                     if (bytesRead > 0 && ++count > 2) {
+-                        base64Data = Base64.encodeToString(buffer, Base64.NO_WRAP);
+-                        eventEmitter.emit("data", base64Data);
++                        recordingPcmBytes.write(buffer, 0, bytesRead);
++                        bufferEmitCounter += 1;
++                        if (bufferEmitCounter % JS_EMIT_INTERVAL == 0) {
++                            base64Data = Base64.encodeToString(
++                                buffer,
++                                0,
++                                bytesRead,
++                                Base64.NO_WRAP
++                            );
++                            eventEmitter.emit("data", base64Data);
++                        }
+                     }
+                 }
+                 recorder.stop();

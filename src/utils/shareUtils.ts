@@ -180,7 +180,7 @@ export const shareApp = async (): Promise<void> => {
   try {
     await waitForIosShareSlot(log);
     const store = getAppStoreUrl();
-    const msg = `Check out the ${DEFAULT_APP_DISPLAY_NAME} app! Discover and identify mushrooms.\n\n${store}`;
+    const msg = `Check out the ${DEFAULT_APP_DISPLAY_NAME} app! Discover and identify birds.\n\n${store}`;
     const result =
       Platform.OS === "ios"
         ? await Share.share({ message: msg })

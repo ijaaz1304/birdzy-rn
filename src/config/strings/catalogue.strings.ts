@@ -6,8 +6,9 @@ export const CATALOGUE_STRINGS = {
   screen: {
     title: "Catalogue",
     search: "Search",
-    totalMushroomsLabel: "birds in database",
+    totalBirdsLabel: "birds in database",
     results: "Results",
+    exploreNearYou: "Explore Near You",
   },
   removeFavorite: {
     title: "Do you want to remove from your wishlist?",

@@ -14,7 +14,7 @@ import { Text, Button } from "../../../atoms";
 import { Images } from "../../../assets";
 import { aiService } from "../../../services";
 import { CameraStackParamList } from "../../../navigation/types";
-import { FindYourBirdBackground } from "../../bird-personality/components/FindYourMushroomBackground";
+import { FindYourBirdBackground } from "../../bird-personality/components/FindYourBirdBackground";
 import { AskAIScreenBackground } from "../../ask-ai/components/AskAIScreenBackground";
 import {
   useSubscriptionStore,
@@ -203,6 +203,17 @@ export const DiagnosisLoadingScreen: React.FC = () => {
         try {
           const possibleMatches = await fetchStepByStepMatches();
           if (cancelled || !isMountedRef.current) return;
+
+          if (possibleMatches.length === 0) {
+            analyticsService.logEvent(EVENTS.identify_result_fail);
+            analyticsService.logEvent(EVENTS.identification_done_failure);
+            analyticsService.logEvent(EVENTS.identify_result, { result: "fail" });
+            await stopIdentificationTrace("failure");
+            if (!cancelled && isMountedRef.current) {
+              setShowErrorModal(true);
+            }
+            return;
+          }
 
           const thumbnailUris = possibleMatches
             .map((match) => getPossibleMatchThumbnailUri(match))
@@ -401,10 +412,10 @@ export const DiagnosisLoadingScreen: React.FC = () => {
                   <View
                     style={[
                       styles.soundPreview,
-                      { backgroundColor: `${colors.primary}14` },
+                      { backgroundColor: `${colors.primaryCTA}14` },
                     ]}
                   >
-                    <MaterialIcons name="graphic-eq" size={72} color={colors.primary} />
+                    <MaterialIcons name="graphic-eq" size={72} color={colors.primaryCTA} />
                   </View>
                 ) : (
                   <IdentificationScannerFrame
@@ -416,7 +427,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
                   />
                 )}
                 <View style={styles.loaderContainer}>
-                  <ActivityIndicator size="large" color={colors.primary} />
+                  <ActivityIndicator size="large" color={colors.primaryCTA} />
                 </View>
                 <Text
                   variant="body"
@@ -469,6 +480,9 @@ export const DiagnosisLoadingScreen: React.FC = () => {
             screen: "AskAIMain",
           });
         }}
+        retryLabel={
+          isStepByStepMode ? CAMERA_STRINGS.buttons.tryAgain : undefined
+        }
         errorMessage={undefined}
       />
 
@@ -485,7 +499,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
           setShowUpgradeSheet(false);
           navigateToSubscriptionMain();
         }}
-        limitType="identification"
+        limitType={isSoundMode ? "soundIdentification" : "identification"}
       />
 
       <NoBirdDetectedModal

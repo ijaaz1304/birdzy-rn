@@ -6,7 +6,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { GuidesStackParamList } from "./types";
 import { GuidesScreen } from "../features/guides/screens/GuidesScreen";
-import { BirdGuideScreen } from "../features/guides/screens/MushroomGuideScreen";
+import { BirdGuideScreen } from "../features/guides/screens/BirdGuideScreen";
 import { WateringGuideScreen } from "../features/guides/screens/WateringGuideScreen";
 import { LightGuideScreen } from "../features/guides/screens/LightGuideScreen";
 import { SoilGuideScreen } from "../features/guides/screens/SoilGuideScreen";

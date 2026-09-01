@@ -13,14 +13,14 @@ import { Card } from "../Card";
 import { useStrings } from "../../hooks/useStrings";
 import { getDarkPopupBorderStyle, getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
 
-export interface MushroomOfTheDayRefreshModalProps {
+export interface BirdOfTheDayRefreshModalProps {
   visible: boolean;
   onClose: () => void;
   onUpgrade: () => void;
 }
 
-export const MushroomOfTheDayRefreshModal: React.FC<
-  MushroomOfTheDayRefreshModalProps
+export const BirdOfTheDayRefreshModal: React.FC<
+  BirdOfTheDayRefreshModalProps
 > = ({ visible, onClose, onUpgrade }) => {
   const theme = useTheme();
   const _colors = theme.colors;
