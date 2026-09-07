@@ -85,7 +85,7 @@ describe("parseDeepLinkUrl", () => {
     });
   });
 
-  it("maps quiz to Find Your Mushroom", () => {
+  it("maps quiz to Find Your Bird", () => {
     const target = parseDeepLinkUrl("birdzy://quiz");
     expect(target?.screen).toBe("BirdPersonalityStack");
     expect(target?.params).toMatchObject({
@@ -93,12 +93,11 @@ describe("parseDeepLinkUrl", () => {
     });
   });
 
-  it("maps settings, ask-ai, guides, and subs to overlay stacks", () => {
+  it("maps settings, ask-ai, and subs to overlay stacks", () => {
     expect(parseDeepLinkUrl("birdzy://settings")?.screen).toBe(
       "SettingsStack"
     );
     expect(parseDeepLinkUrl("birdzy://ask-ai")?.screen).toBe("AskAIStack");
-    expect(parseDeepLinkUrl("birdzy://guides")?.screen).toBe("GuidesStack");
     expect(parseDeepLinkUrl("birdzy://subscription")?.screen).toBe(
       "SubscriptionStack"
     );

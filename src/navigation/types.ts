@@ -167,9 +167,6 @@ export type CameraStackParamList = {
     /** Set when CameraScreen already unmounted VisionCamera before navigate. */
     cameraAlreadyReleased?: boolean;
   };
-  DiagnoseEntry: undefined;
-  CameraPermissionGate: { mode?: "diagnose" | "identify" };
-  CameraCaptureScreen: { mode?: "diagnose" | "identify" };
   DiagnosisLoading: {
     /** Image sent to the identification API. */
     image?: { uri: string; width?: number; height?: number };
@@ -343,16 +340,6 @@ export type SettingsStackParamList = {
   AppLogs: undefined;
 };
 
-export type GuidesStackParamList = {
-  GuidesMain: undefined;
-  BirdGuide: { guideType: string; mushroomName?: string };
-  WateringGuide: undefined;
-  LightGuide: undefined;
-  SoilGuide: undefined;
-  FertilizerGuide: undefined;
-  RepottingGuide: undefined;
-};
-
 export type SubscriptionStackParamList = {
   SubscriptionMain:
     | {
@@ -398,10 +385,6 @@ export type ModalStackParamList = {
   BottomSheet: { content: string };
 };
 
-export type QuizStackParamList = {
-  QuizMain: undefined;
-};
-
 export type BirdPersonalityStackParamList = {
   BirdPersonalityIntro: undefined;
   PhotoSelection: undefined;
@@ -429,8 +412,6 @@ export type RootStackParamList = {
   SubscriptionStack: NavigatorScreenParams<SubscriptionStackParamList>;
   // Plant-specific calculators and light meter removed - not needed for rocks/minerals app
   AskAIStack: NavigatorScreenParams<AskAIStackParamList>;
-  GuidesStack: NavigatorScreenParams<GuidesStackParamList>;
-  QuizStack: NavigatorScreenParams<QuizStackParamList>;
   BirdPersonalityStack: NavigatorScreenParams<BirdPersonalityStackParamList>;
   // Note: Feature stacks (Home, Camera, Catalogue, Collection, Feed) are nested inside MainTabs
   // Access them via: navigation.navigate('MainTabs', { screen: 'Home', params: {...} })

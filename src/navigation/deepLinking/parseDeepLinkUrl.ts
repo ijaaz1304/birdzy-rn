@@ -204,12 +204,6 @@ function resolveStaticRoute(segment: string): ResolvedRootNavigation | null {
         params: { screen: "AskAIMain" },
       };
 
-    case "guides":
-      return {
-        screen: "GuidesStack",
-        params: { screen: "GuidesMain" },
-      };
-
     case "quiz":
     case "personality":
     case "bird-personality":

@@ -28,7 +28,7 @@ export interface RockPersonalityResult {
 
 /**
  * Calculate bird personality result from answers using quiz logic (4 buckets, 8 bird personas).
- * Uses same logic as QuizScreen — no API, local only.
+ * Local-only scoring — no API.
  */
 export function calculateRockPersonality(
   answers: Record<string, string>,

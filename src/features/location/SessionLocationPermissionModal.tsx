@@ -1,19 +1,13 @@
 /**
  * Session-based location permission prompt (home flow, after subscription).
- * Uses the same custom → native → manage-settings flow as the rest of the app.
+ * First-session prompt is informational only — no native OS dialog and no custom
+ * location entry until that flow ships. Native permission is requested later
+ * from the identification flow when the user opts in.
  */
 
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  LocationManageAccessPopup,
-  LocationPermissionPopup,
-} from "../../molecules/Modal";
-import {
-  completeCustomThenNativeFlow,
-  getLocationPermissionEntryAction,
-} from "../../services/permissions/locationPermissionFlow.service";
-import { openDeviceSettings } from "../../services/permissions";
-import { useLocationPermissionUiStore } from "../camera/locationPermissionUi.store";
+import React, { useCallback, useEffect } from "react";
+import { LocationPermissionPopup } from "../../molecules/Modal";
+import { getLocationPermissionEntryAction } from "../../services/permissions/locationPermissionFlow.service";
 
 export interface SessionLocationPermissionModalProps {
   visible: boolean;
@@ -23,23 +17,12 @@ export interface SessionLocationPermissionModalProps {
 export const SessionLocationPermissionModal: React.FC<
   SessionLocationPermissionModalProps
 > = ({ visible, onClose }) => {
-  const [loading, setLoading] = useState(false);
-  const [showManagePopup, setShowManagePopup] = useState(false);
-  const awaitingNative = useLocationPermissionUiStore((s) => s.awaitingNative);
-  const setAwaitingNative = useLocationPermissionUiStore(
-    (s) => s.setAwaitingNative
-  );
-
   const finish = useCallback(() => {
-    setShowManagePopup(false);
     onClose();
   }, [onClose]);
 
   useEffect(() => {
-    if (!visible) {
-      setShowManagePopup(false);
-      return;
-    }
+    if (!visible) return;
     let mounted = true;
     void getLocationPermissionEntryAction().then((entry) => {
       if (!mounted) return;
@@ -52,56 +35,13 @@ export const SessionLocationPermissionModal: React.FC<
     };
   }, [visible, finish]);
 
-  const handleContinueLocation = useCallback(async () => {
-    const entry = await getLocationPermissionEntryAction();
-    if (entry === "granted") {
-      finish();
-      return;
-    }
-    if (entry === "manage_settings") {
-      finish();
-      return;
-    }
-
-    setLoading(true);
-    setAwaitingNative(true);
-    try {
-      const outcome = await completeCustomThenNativeFlow();
-      if (outcome.granted) {
-        finish();
-        return;
-      }
-      if (outcome.showManageSettings) {
-        finish();
-      } else {
-        finish();
-      }
-    } finally {
-      setAwaitingNative(false);
-      setLoading(false);
-    }
-  }, [finish, setAwaitingNative]);
-
-  const handleOpenSettings = useCallback(() => {
-    void openDeviceSettings();
-    finish();
-  }, [finish]);
-
   return (
-    <>
-      <LocationPermissionPopup
-        visible={visible && !showManagePopup && !awaitingNative}
-        onClose={finish}
-        onAllowLocation={handleContinueLocation}
-        onCustomLocation={finish}
-        loading={loading}
-      />
-      <LocationManageAccessPopup
-        visible={visible && showManagePopup}
-        onClose={finish}
-        onCustomLocation={finish}
-        onGoToSettings={handleOpenSettings}
-      />
-    </>
+    <LocationPermissionPopup
+      visible={visible}
+      onClose={finish}
+      onAllowLocation={finish}
+      onCustomLocation={finish}
+      showCustomLocationButton={false}
+    />
   );
 };

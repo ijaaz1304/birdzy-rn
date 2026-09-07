@@ -119,8 +119,6 @@ export const MainTabs: React.FC = () => {
         "BirdSounds",
       ],
       Camera: [
-        "CameraPermissionGate",
-        "CameraCaptureScreen",
         "DiagnosisLoading",
         "OtherPossibleMatches",
         "GalleryPicker",

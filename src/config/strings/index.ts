@@ -14,7 +14,6 @@ export * from "./catalogue.strings";
 export * from "./auth.strings";
 export * from "./feed.strings";
 export * from "./camera.strings";
-export * from "./guides.strings";
 export * from "./home.strings";
 // Reminders strings removed - not needed for rocks/minerals app
 export * from "./discount.strings";
@@ -40,7 +39,6 @@ import { CATALOGUE_STRINGS } from "./catalogue.strings";
 import { AUTH_STRINGS } from "./auth.strings";
 import { FEED_STRINGS } from "./feed.strings";
 import { CAMERA_STRINGS } from "./camera.strings";
-import { GUIDES_STRINGS } from "./guides.strings";
 import { HOME_STRINGS } from "./home.strings";
 // Reminders strings removed - not needed for rocks/minerals app
 import { DISCOUNT_STRINGS } from "./discount.strings";
@@ -62,7 +60,6 @@ export const APP_STRINGS = {
   auth: AUTH_STRINGS,
   feed: FEED_STRINGS,
   camera: CAMERA_STRINGS,
-  guides: GUIDES_STRINGS,
   home: HOME_STRINGS,
   // reminders removed - not needed for rocks/minerals app
   discount: DISCOUNT_STRINGS,

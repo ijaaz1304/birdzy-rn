@@ -54,7 +54,6 @@ export const DEEP_LINK_SUPPORTED_ROUTE_NAMES = [
   "settings",
   "ask-ai",
   "askai",
-  "guides",
   "quiz",
   "personality",
   "bird-personality",

@@ -26,6 +26,8 @@ export interface LocationPermissionPopupProps {
   onAllowLocation: () => void;
   onCustomLocation: () => void;
   loading?: boolean;
+  /** Hide while custom location entry is not shipped (e.g. first-session home prompt). */
+  showCustomLocationButton?: boolean;
 }
 
 export const LocationPermissionPopup: React.FC<
@@ -36,6 +38,7 @@ export const LocationPermissionPopup: React.FC<
   onAllowLocation,
   onCustomLocation,
   loading = false,
+  showCustomLocationButton = true,
 }) => {
   const theme = useTheme();
   const isDark = useIsDark();
@@ -138,23 +141,25 @@ export const LocationPermissionPopup: React.FC<
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.secondaryButton,
-              {
-                borderColor: colors.border,
-                borderRadius: radius.xl,
-                marginTop: spacing[3],
-              },
-            ]}
-            onPress={onCustomLocation}
-            activeOpacity={0.85}
-            disabled={loading}
-          >
-            <Text variant="body" size="medium" weight="semibold">
-              {copy.customLocationButton}
-            </Text>
-          </TouchableOpacity>
+          {showCustomLocationButton ? (
+            <TouchableOpacity
+              style={[
+                styles.secondaryButton,
+                {
+                  borderColor: colors.border,
+                  borderRadius: radius.xl,
+                  marginTop: spacing[3],
+                },
+              ]}
+              onPress={onCustomLocation}
+              activeOpacity={0.85}
+              disabled={loading}
+            >
+              <Text variant="body" size="medium" weight="semibold">
+                {copy.customLocationButton}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
     </Modal>

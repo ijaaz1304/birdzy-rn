@@ -34,8 +34,6 @@ import { SettingsStack } from "./SettingsStack";
 import { SubscriptionStack } from "./SubscriptionStack";
 // Plant-specific calculators and light meter removed - not needed for rocks/minerals app (historical note)
 import { AskAIStack } from "./AskAIStack";
-import { GuidesStack } from "./GuidesStack";
-import { QuizStack } from "./QuizStack";
 import { BirdPersonalityStack } from "./BirdPersonalityStack";
 import { useAuthStore } from "../features/auth/auth.store";
 // Reminders removed - not needed for rocks/minerals app
@@ -1002,24 +1000,6 @@ export const RootNavigator: React.FC<RootNavigatorProps> = ({
           <Stack.Screen
             name="AskAIStack"
             component={AskAIStack}
-            options={{
-              presentation: "card",
-              animation: "slide_from_right",
-              animationDuration: 300,
-            }}
-          />
-          <Stack.Screen
-            name="GuidesStack"
-            component={GuidesStack}
-            options={{
-              presentation: "modal",
-              animation: "fade",
-              animationDuration: 180,
-            }}
-          />
-          <Stack.Screen
-            name="QuizStack"
-            component={QuizStack}
             options={{
               presentation: "card",
               animation: "slide_from_right",

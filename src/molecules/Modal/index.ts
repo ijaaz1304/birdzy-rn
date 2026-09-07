@@ -87,8 +87,6 @@ export type {
 } from "./CouldNotIdentifyModal";
 export { SubscriptionDiscountSheet } from "./SubscriptionDiscountSheet";
 export type { SubscriptionDiscountSheetProps } from "./SubscriptionDiscountSheet";
-export { EnableLocationBottomSheet } from "./EnableLocationBottomSheet";
-export type { EnableLocationBottomSheetProps } from "./EnableLocationBottomSheet";
 export { LocationPermissionPopup } from "./LocationPermissionPopup";
 export type { LocationPermissionPopupProps } from "./LocationPermissionPopup";
 export { CameraPermissionPopup } from "./CameraPermissionPopup";

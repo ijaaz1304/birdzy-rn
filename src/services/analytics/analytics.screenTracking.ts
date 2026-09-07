@@ -21,7 +21,7 @@ export const SCREEN_TO_EVENT: Record<string, string> = {
   CatalogueMain: EVENTS.global_catalogue_screen,
   BirdOfTheDay: EVENTS.bird_of_the_day_screen,
   Login: EVENTS.login_screen,
-  // QuizMain: which_mushroom_screen_1 is logged inside QuizScreen
+  // BirdPersonality questionnaire: which_bird_screen_* events are logged in quizAnalytics
 };
 
 /**

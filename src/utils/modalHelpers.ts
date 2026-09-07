@@ -11,7 +11,6 @@
  * - getUnlimitedMushroomsModalConfig   → <UpgradeModal visible {...config} />
  * - getFreeCollectionModalConfig   → <UpgradeModal visible {...config} />
  * - getAdvancedMushroomDetailsModalConfig → <UpgradeModal visible {...config} />
- * - getEnableLocationBottomSheetConfig → <EnableLocationBottomSheet visible {...config} />
  * - getEnableGalleryPopupConfig    → <PermissionModal visible permissionType="storage" {...config} />
  * - getEnableCameraPopupConfig     → <PermissionModal visible permissionType="camera" {...config} />
  * - getRateUsBottomSheetConfig     → Use <RateUsModal /> (stars + onLowRating/onHighRating)
@@ -26,7 +25,6 @@ import type {
   CouldNotIdentifyModalButton,
 } from "../molecules/Modal/CouldNotIdentifyModal";
 import type { UpgradeModalProps } from "../molecules/Modal/UpgradeModal";
-import type { EnableLocationBottomSheetProps } from "../molecules/Modal/EnableLocationBottomSheet";
 import type { PermissionModalProps } from "../molecules/Modal/PermissionModal";
 import { MODAL_STRINGS } from "../config/strings/modals.strings";
 import {
@@ -153,15 +151,6 @@ export const getCouldNotIdentifyModalConfig = (
     buttons,
   };
 };
-
-/** Config for EnableLocationBottomSheet (onClose, onSuccess). Component uses MODAL_STRINGS internally. */
-export const getEnableLocationBottomSheetConfig = (
-  onClose: () => void,
-  onSuccess?: () => void
-): Pick<EnableLocationBottomSheetProps, "onClose" | "onSuccess"> => ({
-  onClose,
-  onSuccess,
-});
 
 /** Config for NotificationPermissionPopup-style flow. Use <NotificationPermissionPopup /> for UI. */
 export const getEnablePushNotificationsBottomSheetConfig = (

@@ -8,9 +8,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { CameraStackParamList } from "./types";
 import { CameraScreen } from "../features/camera/CameraScreen";
 import { GalleryPickerScreen } from "../features/camera/screens/GalleryPickerScreen";
-import { DiagnoseEntryScreen } from "../features/camera/screens/DiagnoseEntryScreen";
-import { CameraPermissionGateScreen } from "../features/camera/screens/CameraPermissionGateScreen";
-import { CameraCaptureScreen } from "../features/camera/screens/CameraCaptureScreen";
 import { DiagnosisLoadingScreen } from "../features/camera/screens/DiagnosisLoadingScreen";
 import { SoundIdentifyScreen } from "../features/camera/screens/SoundIdentifyScreen";
 import { SoundCropScreen } from "../features/camera/screens/SoundCropScreen";
@@ -49,15 +46,6 @@ export const CameraStack: React.FC = () => {
         name="IdentifyImageCrop"
         component={IdentifyImageCropScreen}
         options={IDENTIFY_CROP_HOST_OPTIONS}
-      />
-      <Stack.Screen name="DiagnoseEntry" component={DiagnoseEntryScreen} />
-      <Stack.Screen
-        name="CameraPermissionGate"
-        component={CameraPermissionGateScreen}
-      />
-      <Stack.Screen
-        name="CameraCaptureScreen"
-        component={CameraCaptureScreen}
       />
       <Stack.Screen
         name="DiagnosisLoading"

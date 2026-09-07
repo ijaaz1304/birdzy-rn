@@ -11,8 +11,6 @@ const OVERLAY_ROOT_STACKS = new Set<string>([
   "SettingsStack",
   "SubscriptionStack",
   "AskAIStack",
-  "GuidesStack",
-  "QuizStack",
   "BirdPersonalityStack",
 ]);
 

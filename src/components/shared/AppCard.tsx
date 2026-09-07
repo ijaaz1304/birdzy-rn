@@ -2,7 +2,7 @@ import { AppImage } from "@/components/AppImage";
 import React from "react";
 import { View, StyleSheet, TouchableOpacity, ImageSourcePropType } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { CatalogueVolumeIcon, Images } from "../../assets";
+import { Images } from "../../assets";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Space } from "../../design";
 import AppText from "./AppText";
@@ -23,9 +23,9 @@ type Props = {
   remindersCount?: number;
   onPress?: () => void;
   onStarPress?: () => void;
-  /** Figma 8609:40912 — speaker on photo (bottom-right). */
+  /** Figma 8609:40912 — speaker on photo (bottom-right). Shown only when `hasSound`. */
   showSoundButton?: boolean;
-  /** When false, catalogue speaker uses the mute/no-sound glyph. */
+  /** When true, card shows the sound control; when false, no sound icon is rendered. */
   hasSound?: boolean;
   soundPlaying?: boolean;
   onSoundPress?: () => void;
@@ -152,7 +152,7 @@ const AppCard: React.FC<Props> = React.memo(
             </TouchableOpacity>
           )}
 
-          {showSoundButton ? (
+          {showSoundButton && hasSound ? (
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation?.();
@@ -167,34 +167,16 @@ const AppCard: React.FC<Props> = React.memo(
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityRole="button"
               accessibilityLabel={
-                !hasSound
-                  ? "No bird sound available"
-                  : soundPlaying
-                    ? "Stop bird sound"
-                    : "Play bird sound"
+                soundPlaying ? "Stop bird sound" : "Play bird sound"
               }
             >
-              {hasSound ? (
-                soundPlaying ? (
-                  <AppImage
-                    source={Images.noSound}
-                    style={styles.soundIcon}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <CatalogueVolumeIcon
-                    width={24}
-                    height={24}
-                    color={colors.textPrimary}
-                  />
-                )
-              ) : (
-                <AppImage
-                  source={Images.noSound}
-                  style={styles.soundIcon}
-                  resizeMode="contain"
-                />
-              )}
+              <AppImage
+                source={
+                  soundPlaying ? Images.noSound : Images.soundVolumeHigh
+                }
+                style={styles.soundIcon}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           ) : null}
         </View>

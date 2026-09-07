@@ -2,9 +2,6 @@
  * Camera feature exports
  */
 
-export { CameraPermissionGate } from "./CameraPermissionGate";
-export type { CameraPermissionGateProps } from "./CameraPermissionGate";
-
 export { CameraScreen } from "./CameraScreen";
 
 export { CameraOverlay } from "./CameraOverlay";

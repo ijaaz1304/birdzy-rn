@@ -1,7 +1,7 @@
 /**
  * Example Usage of Individual Modals with Helper Functions
  *
- * Use individual modal components (CongratulationsModal, EnableLocationBottomSheet, etc.)
+ * Use individual modal components (CongratulationsModal, LocationPermissionPopup, etc.)
  * with configs from modalHelpers. Do not use DynamicModal/DynamicBottomSheet in new code.
  */
 
@@ -9,11 +9,9 @@ import React, { useState } from "react";
 import { Button } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { CongratulationsModal } from "../molecules/Modal/CongratulationsModal";
-import { EnableLocationBottomSheet } from "../molecules/Modal/EnableLocationBottomSheet";
 import { UpgradeModal } from "../molecules/Modal/UpgradeModal";
 import {
   getCongratulationsModalConfig,
-  getEnableLocationBottomSheetConfig,
   getUnlimitedChatsModalConfig,
 } from "./modalHelpers";
 
@@ -39,29 +37,6 @@ export const ExampleCongratulationsModalUsage = () => {
       <CongratulationsModal
         visible={showModal}
         onClose={() => setShowModal(false)}
-        {...config}
-      />
-    </>
-  );
-};
-
-/**
- * Example: Using EnableLocationBottomSheet with helper config
- */
-export const ExampleEnableLocationBottomSheetUsage = () => {
-  const [showSheet, setShowSheet] = useState(false);
-
-  const config = getEnableLocationBottomSheetConfig(
-    () => setShowSheet(false),
-    () => console.log("Location enabled")
-  );
-
-  return (
-    <>
-      <Button title="Show Enable Location" onPress={() => setShowSheet(true)} />
-      <EnableLocationBottomSheet
-        visible={showSheet}
-        onClose={() => setShowSheet(false)}
         {...config}
       />
     </>

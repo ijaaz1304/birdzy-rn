@@ -11,7 +11,6 @@ import {
   FeedbackModal,
   NotificationPermissionPopup,
   // CameraPermissionPopup,
-  // EnableLocationBottomSheet, // 50% sheet disabled for now
 } from "../../../molecules/Modal";
 import { sendRatingFeedback } from "../../../services/rating/ratingFeedback.service";
 import { useToast } from "../../../hooks";
