@@ -5,5 +5,6 @@
 
 export const UPGRADE_MODAL = {
   CTA_FREE_TRIAL: "Get 7 Days Free Trial",
+  CTA_SUBSCRIBE: "Subscribe",
   BUTTON_UPGRADE: "Upgrade",
 } as const;

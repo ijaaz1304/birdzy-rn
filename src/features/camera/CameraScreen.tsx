@@ -5,7 +5,7 @@
  * Implements:
  * - VisionCamera readiness gating (onInitialized/onError)
  * - Camera permission gate with "go to settings" only when blocked/after attempts
- * - Gallery multi-pick (max 2) via react-native-image-crop-picker
+ * - Gallery pick → crop → add to camera slots (max 2) before identify submit
  * - Crop + processing pipeline
  * - Selected images preview (thumbnails, remove, submit)
  * - AppState re-check on returning from Settings
@@ -57,6 +57,8 @@ import { CameraWarnings } from "./CameraWarnings";
 import { CameraTipsModal, LimitReachedBottomSheet } from "../../molecules/Modal";
 import { IdentificationLocationBanner } from "./components/IdentificationLocationBanner";
 import { CameraImageSlots } from "./components/CameraImageSlots";
+import { CameraIdentifyReview } from "./components/CameraIdentifyReview";
+import { CameraPermissionInlineState } from "./components/CameraPermissionInlineState";
 import { CameraDailyScanBanner } from "./components/CameraDailyScanBanner";
 import { usePhotoIdentificationLimit } from "./hooks/usePhotoIdentificationLimit";
 import {
@@ -68,9 +70,15 @@ import { useLocationPermissionUiStore } from "./locationPermissionUi.store";
 import { createCameraStyles } from "./camera.styles";
 import {
   checkCameraPermission,
-  checkStoragePermission,
 } from "../../services/permissions";
-import { GalleryAccessPopup } from "../../components/GalleryAccessPopup";
+import { useIdentifyCameraPermissionFlow } from "./useIdentifyCameraPermissionFlow";
+import {
+  buildGalleryPickerParams,
+  CAMERA_FLOW_CHILD_ROUTES,
+  externalReturnFlagsForTarget,
+  resolveActiveExternalReturnTarget,
+  syncExternalCameraSessionOnFocus,
+} from "./identifyCameraNavigation";
 import { CroppedImageObject, getMimeType } from "./cropImageAndReturnObject";
 import {
   copyCaptureToStableCache,
@@ -120,7 +128,8 @@ export const CameraScreen: React.FC = () => {
   const isCropRouteActive = useNavigationState(
     (state) => state.routes[state.index]?.name === "IdentifyImageCrop"
   );
-  const returnImageToAskAI = route.params?.returnImageToAskAI === true;
+  const cameraReturnTarget = resolveActiveExternalReturnTarget(route.params);
+  const isExternalCameraReturn = cameraReturnTarget != null;
   const [isAppActive, setIsAppActive] = useState(
     AppState.currentState === "active"
   );
@@ -132,8 +141,21 @@ export const CameraScreen: React.FC = () => {
   const hasShownTipsRef = useRef(false);
   const selectedImagesRef = useRef<CroppedImageObject[]>([]);
 
-  const [hasPermission, setHasPermission] = useState(false);
-  const [permissionChecked, setPermissionChecked] = useState(false);
+  const {
+    hasPermission,
+    permissionChecked,
+    cameraPermissionInline,
+    isNativeDialogActive,
+    cameraPermissionLoading,
+    runEntryPermissionFlow,
+    resetEntryFlow,
+    syncPermissionFromOs,
+    handleCameraPermissionAction,
+  } = useIdentifyCameraPermissionFlow(!!device);
+  const [tipsCheckDone, setTipsCheckDone] = useState(false);
+  const [screenFocused, setScreenFocused] = useState(false);
+  const isCameraUiReady = tipsCheckDone && permissionChecked;
+
   const [zoomUi, setZoomUi] = useState(CAPTURE_ZOOM_UI_MIN);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
@@ -141,8 +163,6 @@ export const CameraScreen: React.FC = () => {
   const [selectedImages, setSelectedImages] = useState<CroppedImageObject[]>(
     []
   );
-  const [showPhotosPopup, setShowPhotosPopup] = useState(false);
-  const [photosBlocked, setPhotosBlocked] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [showUpgradeSheet, setShowUpgradeSheet] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -154,6 +174,8 @@ export const CameraScreen: React.FC = () => {
   const [capturePreviewUri, setCapturePreviewUri] = useState<string | null>(
     null
   );
+  /** When true, show live camera again so the user can capture a second photo. */
+  const [isAddingAnotherPhoto, setIsAddingAnotherPhoto] = useState(false);
   const isPremium = useSubscriptionStore(selectIsPremium);
   const { limit: photoLimit, refresh: refreshPhotoLimit } =
     usePhotoIdentificationLimit(!isPremium);
@@ -168,6 +190,7 @@ export const CameraScreen: React.FC = () => {
   });
   const isCapturingRef = useRef(false);
   const isCameraReadyRef = useRef(false);
+  const isAddingAnotherPhotoRef = useRef(false);
   /** Guard: navigate() → stack update gap must not remount VisionCamera before crop host opens. */
   const pendingCropNavigationRef = useRef(false);
   const {
@@ -228,15 +251,48 @@ export const CameraScreen: React.FC = () => {
     selectedImagesRef.current = selectedImages;
   }, [selectedImages]);
 
+  useEffect(() => {
+    isAddingAnotherPhotoRef.current = isAddingAnotherPhoto;
+  }, [isAddingAnotherPhoto]);
+
   const pendingCropUri = route.params?.pendingCrop?.uri;
   const pendingCropDisplayUri = route.params?.pendingCrop?.displayUri;
   const pendingCropWidth = route.params?.pendingCrop?.width;
   const pendingCropHeight = route.params?.pendingCrop?.height;
   const resetCapture = route.params?.resetCapture === true;
 
+  const showIdentifyReview =
+    selectedImages.length === 1 &&
+    !isAddingAnotherPhoto &&
+    !isExternalCameraReturn;
+
+  const showCameraPermissionInline =
+    !!cameraPermissionInline && !hasPermission;
+
+  const formatImageCounter = useCallback(
+    (current: number, max: number) =>
+      strings.camera.multiPhoto.imageCounter
+        .replace("{current}", String(current))
+        .replace("{max}", String(max)),
+    [strings.camera.multiPhoto.imageCounter]
+  );
+
+  const formatSubmitToast = useCallback(
+    (count: number) =>
+      (count === 1
+        ? strings.camera.multiPhoto.submitPhotoToast
+        : strings.camera.multiPhoto.submitPhotosToast
+      ).replace("{count}", String(count)),
+    [
+      strings.camera.multiPhoto.submitPhotoToast,
+      strings.camera.multiPhoto.submitPhotosToast,
+    ]
+  );
+
   useEffect(() => {
     if (!resetCapture) return;
     setSelectedImages([]);
+    setIsAddingAnotherPhoto(false);
     navigation.setParams({ resetCapture: undefined });
   }, [navigation, resetCapture]);
 
@@ -261,6 +317,7 @@ export const CameraScreen: React.FC = () => {
       };
       return [...prev, nextImage].slice(0, MAX_CAMERA_IDENTIFY_IMAGES);
     });
+    setIsAddingAnotherPhoto(false);
     navigation.setParams({ pendingCrop: undefined });
     identifyFlowLog("preview_ready", { uriPrefix: uri.slice(0, 32) });
   }, [
@@ -331,10 +388,11 @@ export const CameraScreen: React.FC = () => {
     restoreCameraSession,
   ]);
 
-  // After permission is granted, show tips once (if not disabled).
+  // After permission is granted, show tips once (if not disabled) — not during multi-photo add.
   useEffect(() => {
     if (!hasPermission) return;
     if (hasShownTipsRef.current) return;
+    if (selectedImages.length > 0 || isAddingAnotherPhoto) return;
     hasShownTipsRef.current = true;
     (async () => {
       try {
@@ -348,7 +406,7 @@ export const CameraScreen: React.FC = () => {
         setShowTipsModal(true);
       }
     })();
-  }, [hasPermission]);
+  }, [hasPermission, isAddingAnotherPhoto, selectedImages.length]);
 
   const photoScreenEnterTimeRef = useRef(0);
   useFocusEffect(
@@ -390,17 +448,25 @@ export const CameraScreen: React.FC = () => {
   const isCameraSessionActive =
     hasPermission &&
     !showTipsModal &&
-    !showPhotosPopup &&
     !showUpgradeSheet &&
+    !isNativeDialogActive &&
     !isLocationPermissionFlowActive &&
-    isFocused &&
+    !showIdentifyReview &&
+    screenFocused &&
     !isCropRouteActive &&
     isAppActive &&
     isCameraActive &&
     shouldRenderCamera;
 
   const showCameraHardware =
-    shouldRenderCamera && !isCropRouteActive && !!device && !showUpgradeSheet;
+    hasPermission &&
+    shouldRenderCamera &&
+    !isCropRouteActive &&
+    !!device &&
+    !showUpgradeSheet &&
+    !showCameraPermissionInline &&
+    !showTipsModal &&
+    !showIdentifyReview;
 
   useEffect(() => {
     if (!__DEV__) return;
@@ -455,27 +521,70 @@ export const CameraScreen: React.FC = () => {
     };
   }, [isCameraSessionActive, cameraFacing]);
 
-  // Resolve camera permission once on mount so returning users skip the gate immediately.
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await checkCameraPermission();
-        if (!cancelled) {
-          setHasPermission(res.granted);
+  // Resolve camera permission on focus — inline recovery on CameraMain.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+
+      const startEntryFlow = async () => {
+        if (!device) {
+          void syncPermissionFromOs();
+          if (!cancelled) setTipsCheckDone(true);
+          return;
         }
-      } catch {
-        // fall through — permission flow handles request
-      } finally {
-        if (!cancelled) {
-          setPermissionChecked(true);
+
+        try {
+          if (isExternalCameraReturn) {
+            const current = await checkCameraPermission();
+            if (current.granted) {
+              await syncPermissionFromOs();
+              if (!cancelled) setTipsCheckDone(true);
+              return;
+            }
+          }
+          await runEntryPermissionFlow();
+        } catch {
+          // permission flow handles inline states
+        } finally {
+          if (!cancelled) setTipsCheckDone(true);
         }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      };
+
+      void startEntryFlow();
+
+      return () => {
+        cancelled = true;
+        resetEntryFlow();
+      };
+    }, [
+      device,
+      isExternalCameraReturn,
+      resetEntryFlow,
+      runEntryPermissionFlow,
+      syncPermissionFromOs,
+    ])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      setScreenFocused(true);
+      syncExternalCameraSessionOnFocus(navigation, route.params);
+      return () => {
+        setScreenFocused(false);
+        const state = navigation.getState();
+        const topRoute = state.routes[state.index]?.name;
+        if (
+          !CAMERA_FLOW_CHILD_ROUTES.includes(
+            topRoute as (typeof CAMERA_FLOW_CHILD_ROUTES)[number]
+          )
+        ) {
+          useIdentificationEntryStore
+            .getState()
+            .setExternalCameraReturnTarget(null);
+        }
+      };
+    }, [navigation, route.params])
+  );
 
   // Re-check camera permission when app becomes active (returning from Settings).
   useEffect(() => {
@@ -485,35 +594,29 @@ export const CameraScreen: React.FC = () => {
         setTorchOn(false);
         return;
       }
-      try {
-        const res = await checkCameraPermission();
-        setHasPermission(res.granted);
-        setPermissionChecked(true);
-      } catch {
-        // ignore
-      }
+      await syncPermissionFromOs();
     });
     return () => sub.remove();
-  }, []);
+  }, [syncPermissionFromOs]);
 
-  // Hint tooltip after short delay.
+  // Hint tooltip after short delay — only on empty first capture.
   useEffect(() => {
+    if (selectedImages.length > 0 || isAddingAnotherPhoto) {
+      setShowHint(false);
+      return;
+    }
     const t1 = setTimeout(() => setShowHint(true), 900);
     const t2 = setTimeout(() => setShowHint(false), 4200);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, []);
+  }, [selectedImages.length, isAddingAnotherPhoto]);
 
   // Back handling for overlays + selection state.
   const handleBackPress = useCallback(() => {
     if (showTipsModal) {
       setShowTipsModal(false);
-      return true;
-    }
-    if (showPhotosPopup) {
-      setShowPhotosPopup(false);
       return true;
     }
     if (showUpgradeSheet) {
@@ -532,8 +635,13 @@ export const CameraScreen: React.FC = () => {
       setShowManagePopup(false);
       return true;
     }
+    if (isAddingAnotherPhotoRef.current && selectedImagesRef.current.length) {
+      setIsAddingAnotherPhoto(false);
+      return true;
+    }
     if (selectedImagesRef.current.length) {
       setSelectedImages([]);
+      setIsAddingAnotherPhoto(false);
       return true;
     }
     if (navigation.canGoBack()) {
@@ -546,7 +654,6 @@ export const CameraScreen: React.FC = () => {
   }, [
     navigation,
     showTipsModal,
-    showPhotosPopup,
     showUpgradeSheet,
     showChangeLocationSheet,
     showCustomPopup,
@@ -572,30 +679,40 @@ export const CameraScreen: React.FC = () => {
 
   // Identify flow supports up to two preview images before submit.
 
-  const openGallery = useCallback(async () => {
+  const openGallery = useCallback(() => {
+    if (isNativeDialogActive) return;
+
     analyticsService.logEvent(EVENTS.identify_photo, { source: "gallery" });
 
-    if (Platform.OS === "android") {
-      navigation.navigate("GalleryPicker");
+    if (selectedImagesRef.current.length >= MAX_CAMERA_IDENTIFY_IMAGES) {
+      setWarning(strings.camera.limits.maxPhotosSelected);
+      setTimeout(() => setWarning(null), 3000);
       return;
     }
 
-    const storage = await checkStoragePermission();
-    if (!storage.granted) {
-      setPhotosBlocked(!!storage.blocked);
-      setShowPhotosPopup(true);
-      return;
-    }
-    // Always use the in-app GalleryPicker on iOS (location banner + Next).
-    // Native UIImagePicker has no location UI and was used only as a no-camera fallback.
-    navigation.navigate("GalleryPicker");
-  }, [navigation]);
+    navigation.navigate(
+      "GalleryPicker",
+      buildGalleryPickerParams(cameraReturnTarget, {
+        feedDraft: route.params?.feedDraft,
+        currentImageCount: selectedImagesRef.current.length,
+      })
+    );
+  }, [
+    cameraReturnTarget,
+    isNativeDialogActive,
+    navigation,
+    route.params?.feedDraft,
+    strings.camera.limits.maxPhotosSelected,
+  ]);
 
   const capture = useCallback(async () => {
     if (isCapturingRef.current) {
       identifyFlowLog("shutter_blocked", { reason: "already_capturing" });
       return;
     }
+
+    if (!hasPermission) return;
+
     if (!cameraRef.current) {
       identifyFlowLog("shutter_blocked", {
         hasRef: false,
@@ -694,10 +811,13 @@ export const CameraScreen: React.FC = () => {
         pathPrefix: uriForCrop.slice(0, 32),
       });
       pendingCropNavigationRef.current = true;
+      const activeExternal = resolveActiveExternalReturnTarget(route.params);
+      const returnTarget = activeExternal ?? "camera";
       navigation.navigate("IdentifyImageCrop", {
         imageUri: uriForCrop,
-        returnTarget: returnImageToAskAI ? "askAi" : "camera",
-        returnImageToAskAI,
+        returnTarget,
+        ...externalReturnFlagsForTarget(activeExternal),
+        feedDraft: route.params?.feedDraft,
         cameraAlreadyReleased: true,
       });
     } catch (error) {
@@ -721,15 +841,45 @@ export const CameraScreen: React.FC = () => {
     isCameraReady,
     isCameraSessionActive,
     isCapturing,
+    hasPermission,
     navigation,
-    returnImageToAskAI,
+    route.params,
     torchOn,
     strings.camera.limits.maxPhotosSelected,
   ]);
 
   const removePhoto = (idx: number) => {
-    setSelectedImages((prev) => prev.filter((_, i) => i !== idx));
+    setSelectedImages((prev) => {
+      const next = prev.filter((_, i) => i !== idx);
+      if (next.length === 0) {
+        setIsAddingAnotherPhoto(false);
+      }
+      return next;
+    });
   };
+
+  const handleAddAnotherPhoto = useCallback(() => {
+    if (selectedImagesRef.current.length >= MAX_CAMERA_IDENTIFY_IMAGES) {
+      setWarning(strings.camera.limits.maxPhotosSelected);
+      setTimeout(() => setWarning(null), 3000);
+      return;
+    }
+    const galleryOnly = !device || !hasPermission;
+    if (galleryOnly) {
+      void openGallery();
+      return;
+    }
+    restoreCameraSession();
+    setShowHint(false);
+    setShowTipsModal(false);
+    setIsAddingAnotherPhoto(true);
+  }, [
+    device,
+    hasPermission,
+    openGallery,
+    restoreCameraSession,
+    strings.camera.limits.maxPhotosSelected,
+  ]);
 
   const submit = async () => {
     const imgs = selectedImagesRef.current;
@@ -751,7 +901,7 @@ export const CameraScreen: React.FC = () => {
   };
 
   // Wait for permission check before choosing camera vs gallery-only UI.
-  if (!permissionChecked) {
+  if (!isCameraUiReady) {
     return (
       <View
         style={[
@@ -762,10 +912,142 @@ export const CameraScreen: React.FC = () => {
     );
   }
 
-  // No camera hardware (simulator) or no permission → gallery upload path.
-  const galleryOnlyMode =
-    (permissionChecked && !device) || !hasPermission;
-  if (galleryOnlyMode) {
+  // No camera hardware (simulator) → gallery upload path.
+  const noDeviceMode = permissionChecked && !device;
+  const reviewTopInset = insets.top + 120;
+
+  if (noDeviceMode) {
+    if (showIdentifyReview) {
+      return (
+        <View
+          style={[
+            cameraStyles.cameraContainer,
+            { backgroundColor: APP_COLORS.surfaceDark },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={handleBackPress}
+            style={[
+              styles.topNavButton,
+              styles.topNavButtonLeft,
+              styles.topNavButtonBack,
+              { top: insets.top + 12 },
+            ]}
+            activeOpacity={0.8}
+            hitSlop={HIT_SLOP.CLOSE}
+          >
+            <NavBackIcon color="#FFFFFF" size={CAPTURE_TOP_ICON_SIZE} />
+          </TouchableOpacity>
+
+          <View style={[styles.locationBannerWrap, { top: insets.top + 68 }]}>
+            <IdentificationLocationBanner
+              variant="camera"
+              permissionGranted={shouldShowLocationBannerAsGranted(
+                locationPermissionGranted,
+                location
+              )}
+              locationLabel={locationLabel}
+              onToggleLocation={handleLocationToggle}
+              onPressLocation={() => openCustomLocationSheet()}
+            />
+          </View>
+
+          <CameraIdentifyReview
+            images={selectedImages}
+            topInset={reviewTopInset}
+            addAnotherLabel={strings.camera.buttons.addAnotherPhoto}
+            identifyLabel={strings.camera.buttons.identifyBird}
+            imageCounterLabel={formatImageCounter}
+            submitToastLabel={formatSubmitToast}
+            isProcessing={isProcessing}
+            onRemove={removePhoto}
+            onAddAnother={handleAddAnotherPhoto}
+            onIdentify={submit}
+          />
+
+          {warning && <CameraWarnings text={warning} />}
+        </View>
+      );
+    }
+
+    if (selectedImages.length >= MAX_CAMERA_IDENTIFY_IMAGES) {
+      return (
+        <View
+          style={[
+            cameraStyles.cameraContainer,
+            { backgroundColor: APP_COLORS.surfaceDark },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={handleBackPress}
+            style={[
+              styles.topNavButton,
+              styles.topNavButtonLeft,
+              styles.topNavButtonBack,
+              { top: insets.top + 12 },
+            ]}
+            activeOpacity={0.8}
+            hitSlop={HIT_SLOP.CLOSE}
+          >
+            <NavBackIcon color="#FFFFFF" size={CAPTURE_TOP_ICON_SIZE} />
+          </TouchableOpacity>
+
+          <View style={[styles.locationBannerWrap, { top: insets.top + 68 }]}>
+            <IdentificationLocationBanner
+              variant="camera"
+              permissionGranted={shouldShowLocationBannerAsGranted(
+                locationPermissionGranted,
+                location
+              )}
+              locationLabel={locationLabel}
+              onToggleLocation={handleLocationToggle}
+              onPressLocation={() => openCustomLocationSheet()}
+            />
+          </View>
+
+          <View style={styles.galleryOnlyReadyContent}>
+            <CameraImageSlots
+              images={selectedImages}
+              maxImages={MAX_CAMERA_IDENTIFY_IMAGES}
+              onRemove={removePhoto}
+            />
+            <Text variant="body" size="small" style={styles.captureImageCounter}>
+              {formatImageCounter(
+                selectedImages.length,
+                MAX_CAMERA_IDENTIFY_IMAGES
+              )}
+            </Text>
+            <TouchableOpacity
+              onPress={submit}
+              activeOpacity={0.85}
+              disabled={isProcessing}
+              style={[
+                styles.submitBtn,
+                {
+                  backgroundColor: APP_COLORS.createButtonFg,
+                  borderRadius: theme.radius.lg,
+                  opacity: isProcessing ? 0.7 : 1,
+                },
+              ]}
+            >
+              <Text
+                variant="body"
+                size="medium"
+                weight="semibold"
+                style={{ color: APP_COLORS.modalTextOnPrimary }}
+              >
+                {isProcessing
+                  ? "Preparing…"
+                  : strings.camera.buttons.identifyBird}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {warning && <CameraWarnings text={warning} />}
+        </View>
+      );
+    }
+
     return (
       <AppImageBackground
         source={identifyBackground}
@@ -817,107 +1099,32 @@ export const CameraScreen: React.FC = () => {
               ? "This device has no camera. Upload an image from your gallery to identify a bird."
               : "Turn on camera access to take photos, or upload an image from your gallery to identify a bird."}
           </Text>
-          {selectedImages.length === 0 ? (
-            <TouchableOpacity
-              onPress={openGallery}
-              style={[
-                styles.galleryCta,
-                { backgroundColor: theme.colors.primary },
-              ]}
-              activeOpacity={0.8}
+          <TouchableOpacity
+            onPress={openGallery}
+            style={[
+              styles.galleryCta,
+              { backgroundColor: theme.colors.primary },
+            ]}
+            activeOpacity={0.8}
+          >
+            <AppImage
+              source={Images.iconfixUpload}
+              style={[styles.controlIconWhite]}
+              resizeMode="contain"
+              preferRNImage
+            />
+            <Text
+              variant="body"
+              size="medium"
+              weight="semibold"
+              color="surface"
             >
-              <AppImage
-                source={Images.iconfixUpload}
-                style={[styles.controlIconWhite]}
-                resizeMode="contain"
-                preferRNImage
-              />
-              <Text
-                variant="body"
-                size="medium"
-                weight="semibold"
-                color="surface"
-              >
-                Upload image
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <View
-              style={styles.noDevicePreviewSection}
-              pointerEvents="box-none"
-            >
-              <View style={styles.thumbsRow}>
-                {selectedImages.map((img, idx) => (
-                  <View key={img.previewUri} style={styles.thumbWrap}>
-                    <View
-                      style={[
-                        styles.thumbImageClip,
-                        { borderColor: theme.colors.border },
-                      ]}
-                    >
-                      <AppImage
-                        source={{ uri: img.previewUri }}
-                        style={styles.thumbImage}
-                      />
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => removePhoto(idx)}
-                      style={[
-                        styles.thumbRemove,
-                        { backgroundColor: theme.colors.surface + "F2" },
-                      ]}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <MaterialIcons
-                        name="close"
-                        size={16}
-                        color={theme.colors.textPrimary}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-              <TouchableOpacity
-                onPress={submit}
-                activeOpacity={0.85}
-                style={[
-                  styles.submitBtn,
-                  {
-                    backgroundColor: theme.colors.primary,
-                    borderRadius: theme.radius.lg,
-                  },
-                ]}
-              >
-                <MaterialIcons
-                  name="search"
-                  size={20}
-                  color={theme.colors.onPrimary}
-                />
-                <Text
-                  variant="body"
-                  size="medium"
-                  weight="semibold"
-                  color="surface"
-                >
-                  {strings.camera.buttons.startSearching}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
+              Upload image
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {warning && <CameraWarnings text={warning} />}
-
-        <GalleryAccessPopup
-          visible={showPhotosPopup}
-          onClose={() => setShowPhotosPopup(false)}
-          onAccessGranted={() => {
-            setShowPhotosPopup(false);
-            void openGallery();
-          }}
-          photosBlocked={photosBlocked}
-          onBlockedChange={setPhotosBlocked}
-        />
       </AppImageBackground>
     );
   }
@@ -991,7 +1198,9 @@ export const CameraScreen: React.FC = () => {
 
       {/* Controls above the native Camera view so shutter taps aren't swallowed. */}
       <View style={styles.controlsLayer} pointerEvents="box-none">
-      <CameraCaptureOverlay layout={captureFrameLayout} />
+      {!showIdentifyReview && (
+        <CameraCaptureOverlay layout={captureFrameLayout} />
+      )}
 
       {/* Top-left: back — circular bg matches flash control */}
       <TouchableOpacity
@@ -1000,6 +1209,7 @@ export const CameraScreen: React.FC = () => {
           styles.topNavButton,
           styles.topNavButtonLeft,
           styles.topNavButtonBack,
+          showIdentifyReview && styles.topNavButtonRaised,
           {
             top: insets.top + 12,
           },
@@ -1011,6 +1221,7 @@ export const CameraScreen: React.FC = () => {
       </TouchableOpacity>
 
       {/* Top-right: sound identify */}
+      {!showIdentifyReview && (
       <TouchableOpacity
         onPress={() => {
           const startSound =
@@ -1037,9 +1248,10 @@ export const CameraScreen: React.FC = () => {
       >
         <MaterialIcons name="mic" size={26} color="#FFFFFF" />
       </TouchableOpacity>
+      )}
 
       {/* Top-right: flash (torch) — same 44px circle + 26px icon in both states */}
-      {device?.hasTorch && (
+      {!showIdentifyReview && device?.hasTorch && (
         <TouchableOpacity
           onPress={() => setTorchOn((prev) => !prev)}
           style={[
@@ -1064,7 +1276,13 @@ export const CameraScreen: React.FC = () => {
 
       {warning && <CameraWarnings text={warning} />}
 
-      <View style={[styles.locationBannerWrap, { top: insets.top + 68 }]}>
+      <View
+        style={[
+          styles.locationBannerWrap,
+          showIdentifyReview && styles.locationBannerWrapRaised,
+          { top: insets.top + 68 },
+        ]}
+      >
         <IdentificationLocationBanner
           variant="camera"
           permissionGranted={shouldShowLocationBannerAsGranted(
@@ -1077,8 +1295,42 @@ export const CameraScreen: React.FC = () => {
         />
       </View>
 
+      {showCameraPermissionInline ? (
+        <View
+          style={[
+            styles.cameraPermissionInlineHost,
+            {
+              top: insets.top + 120,
+              bottom: Math.max(insets.bottom, 8) + 76,
+            },
+          ]}
+          pointerEvents="box-none"
+        >
+          <CameraPermissionInlineState
+            variant={cameraPermissionInline!}
+            loading={cameraPermissionLoading}
+            onAction={() => void handleCameraPermissionAction()}
+          />
+        </View>
+      ) : null}
+
+      {showIdentifyReview ? (
+        <CameraIdentifyReview
+          images={selectedImages}
+          topInset={reviewTopInset}
+          addAnotherLabel={strings.camera.buttons.addAnotherPhoto}
+          identifyLabel={strings.camera.buttons.identifyBird}
+          imageCounterLabel={formatImageCounter}
+          submitToastLabel={formatSubmitToast}
+          isProcessing={isProcessing}
+          onRemove={removePhoto}
+          onAddAnother={handleAddAnotherPhoto}
+          onIdentify={submit}
+        />
+      ) : null}
+
       {/* Hint tooltip */}
-      {showHint && (
+      {!showIdentifyReview && showHint && !showCameraPermissionInline && !isAddingAnotherPhoto && selectedImages.length === 0 && (
         <View
           style={[
             styles.hintPill,
@@ -1108,6 +1360,7 @@ export const CameraScreen: React.FC = () => {
       )}
 
       {/* Two-image slots, daily scan banner, and zoom — below viewfinder (Figma) */}
+      {!showIdentifyReview && (
       <View
         style={[
           styles.captureContentColumn,
@@ -1122,6 +1375,15 @@ export const CameraScreen: React.FC = () => {
           maxImages={MAX_CAMERA_IDENTIFY_IMAGES}
           onRemove={removePhoto}
         />
+
+        {selectedImages.length > 0 ? (
+          <Text variant="body" size="small" style={styles.captureImageCounter}>
+            {formatImageCounter(
+              selectedImages.length,
+              MAX_CAMERA_IDENTIFY_IMAGES
+            )}
+          </Text>
+        ) : null}
 
         {!isPremium && (
           <CameraDailyScanBanner
@@ -1140,7 +1402,7 @@ export const CameraScreen: React.FC = () => {
           />
         </View>
 
-        {selectedImages.length > 0 && (
+        {selectedImages.length >= MAX_CAMERA_IDENTIFY_IMAGES ? (
           <TouchableOpacity
             onPress={submit}
             activeOpacity={0.85}
@@ -1148,33 +1410,40 @@ export const CameraScreen: React.FC = () => {
             style={[
               styles.submitBtn,
               {
-                backgroundColor: theme.colors.primary,
+                backgroundColor: APP_COLORS.createButtonFg,
                 borderRadius: theme.radius.lg,
                 opacity: isProcessing ? 0.7 : 1,
                 marginTop: SUBMIT_BELOW_ZOOM_GAP,
               },
             ]}
           >
-            <MaterialIcons
-              name="search"
-              size={20}
-              color={theme.colors.onPrimary}
-            />
-            <Text
-              variant="body"
-              size="medium"
-              weight="semibold"
-              color="surface"
-            >
-              {isProcessing
-                ? "Preparing…"
-                : strings.camera.buttons.startSearching}
-            </Text>
+            {isProcessing ? (
+              <Text
+                variant="body"
+                size="medium"
+                weight="semibold"
+                style={{ color: APP_COLORS.modalTextOnPrimary }}
+              >
+                Preparing…
+              </Text>
+            ) : (
+              <Text
+                variant="body"
+                size="medium"
+                weight="semibold"
+                style={{ color: APP_COLORS.modalTextOnPrimary }}
+              >
+                {strings.camera.buttons.identifyBird}
+              </Text>
+            )}
           </TouchableOpacity>
-        )}
+        ) : null}
+
       </View>
+      )}
 
       {/* Bottom controls: Gallery (left) | Capture (center) | Tips (right) */}
+      {!showIdentifyReview && (
       <View
         style={[
           styles.bottomBar,
@@ -1186,8 +1455,12 @@ export const CameraScreen: React.FC = () => {
         <View style={styles.controls}>
           <TouchableOpacity
             onPress={openGallery}
-            style={styles.sideIconOnly}
+            style={[
+              styles.sideIconOnly,
+              isNativeDialogActive && styles.sideIconDisabled,
+            ]}
             activeOpacity={0.8}
+            disabled={isNativeDialogActive}
             hitSlop={HIT_SLOP.CLOSE}
           >
             <AppImage
@@ -1220,6 +1493,9 @@ export const CameraScreen: React.FC = () => {
             </View>
           </TouchableOpacity>
 
+          {isAddingAnotherPhoto || selectedImages.length > 0 ? (
+            <View style={styles.sideBtn} />
+          ) : (
           <TouchableOpacity
             onPress={() => setShowTipsModal(true)}
             style={styles.sideBtn}
@@ -1234,8 +1510,10 @@ export const CameraScreen: React.FC = () => {
               resizeMode="contain"
             />
           </TouchableOpacity>
+          )}
         </View>
       </View>
+      )}
       </View>
         </>
       )}
@@ -1245,17 +1523,6 @@ export const CameraScreen: React.FC = () => {
         onClose={handleTipsClose}
         onDontShowAgain={handleDontShowTipsAgain}
         overlay
-      />
-
-      <GalleryAccessPopup
-        visible={showPhotosPopup}
-        onClose={() => setShowPhotosPopup(false)}
-        onAccessGranted={() => {
-          setShowPhotosPopup(false);
-          void openGallery();
-        }}
-        photosBlocked={photosBlocked}
-        onBlockedChange={setPhotosBlocked}
       />
 
       <LimitReachedBottomSheet
@@ -1298,6 +1565,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 10,
   },
+  topNavButtonRaised: {
+    zIndex: 30,
+    elevation: 30,
+  },
   topNavButtonLeft: {
     left: 20,
   },
@@ -1319,6 +1590,10 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 11,
   },
+  locationBannerWrapRaised: {
+    zIndex: 30,
+    elevation: 30,
+  },
   captureContentColumn: {
     position: "absolute",
     left: 20,
@@ -1329,6 +1604,18 @@ const styles = StyleSheet.create({
   },
   dailyScanBanner: {
     marginTop: 0,
+  },
+  captureImageCounter: {
+    color: "#888888",
+    textAlign: "center",
+  },
+  galleryOnlyReadyContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 20,
+    paddingTop: 120,
   },
   zoomSliderInline: {
     width: "100%",
@@ -1364,6 +1651,17 @@ const styles = StyleSheet.create({
   sideIconOnly: {
     width: CAPTURE_SIDE_BUTTON_SIZE,
     height: CAPTURE_SIDE_BUTTON_SIZE,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sideIconDisabled: {
+    opacity: 0.45,
+  },
+  cameraPermissionInlineHost: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    zIndex: 9,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1427,6 +1725,11 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     marginTop: 24,
   },
+  galleryCtaSecondary: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    marginTop: 16,
+  },
   /** Preview + submit for "Camera not available" only; does not affect camera-available UI */
   noDevicePreviewSection: {
     marginTop: 24,
@@ -1487,11 +1790,10 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     alignSelf: "center",
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
     paddingHorizontal: 20,
     paddingVertical: 12,
+    minWidth: 200,
   },
 });

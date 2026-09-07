@@ -26,6 +26,8 @@ export const SCREEN_STORAGE_KEYS = {
   HAS_SEEN_CAMERA_TIPS: "hasSeenCameraTips",
   /** Camera permission attempt count */
   CAMERA_PERMISSION_ATTEMPT_COUNT: "cameraPermissionAttemptCount",
+  /** Gallery permission native-dialog attempt count */
+  GALLERY_PERMISSION_ATTEMPT_COUNT: "galleryPermissionAttemptCount",
   /** Location permission native-dialog denial count */
   LOCATION_PERMISSION_DENIAL_COUNT: "locationPermissionDenialCount",
   /** Native notification dialog already shown (Allow or Don't Allow) */

@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { PostAuthOnboardingBackground } from "../utils/background";
+import { PostAuthOnboardingBackground, PostAuthSubscriptionSkyBackground } from "../utils/background";
 import { Images } from "../../../assets";
 import { APP_COLORS } from "../../../config/colors";
 import { FONTS } from "../../../common/typography";
@@ -47,6 +47,7 @@ import { PostAuthHorizontalPlanCard, HORIZONTAL_PLAN_ROW_STYLE } from "../compon
 import { PostAuthLegalFooter } from "../components/PostAuthLegalFooter";
 import { PostAuthLegalModal } from "../components/PostAuthLegalModal";
 import { PostAuthSubscriptionFeatureCarousel } from "../components/PostAuthSubscriptionFeatureCarousel";
+import { PostAuthSubscriptionPaywallHeader } from "../components/PostAuthSubscriptionPaywallHeader";
 import { PostAuthLocationAccessSlide } from "../components/PostAuthLocationAccessSlide";
 import { PostAuthSubscriptionDisclosure } from "../components/PostAuthSubscriptionDisclosure";
 import { SubscriptionSuccessModal } from "../../../molecules/Modal";
@@ -209,9 +210,8 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         isPurchasing,
         selectedPlan,
         has50Discount: isDiscountSlide,
-        useTrialCta: currentSlide === POST_AUTH_ONBOARDING_STEPS.SUBSCRIPTION,
       }),
-    [currentSlide, isDiscountSlide, isPurchasing, selectedPlan]
+    [isDiscountSlide, isPurchasing, selectedPlan]
   );
 
   const finishToMainApp = useCallback(() => {
@@ -443,9 +443,15 @@ export const PostAuthOnboardingScreen: React.FC = () => {
           title={getPlanDisplayTitle(duration, plan.title)}
           priceAmount={priceView.amount}
           priceSuffix={priceView.suffix}
-          billingNote={priceView.billingNote}
+          billingNote={
+            priceView.hasStorePrice ? priceView.billingNote : undefined
+          }
           duration={duration}
-          trialDays={getPlanCardTrialDays(duration, plan.trialDays)}
+          trialDays={
+            priceView.hasStorePrice
+              ? getPlanCardTrialDays(duration, plan.trialDays)
+              : undefined
+          }
           showPopular={isYearly}
           selected={effectiveSelectedPlanId === plan.id}
           onPress={() => setSelectedPlanId(plan.id as PlanId)}
@@ -473,10 +479,16 @@ export const PostAuthOnboardingScreen: React.FC = () => {
           title={getPlanDisplayTitle(duration, plan.title)}
           priceAmount={priceView.amount}
           priceSuffix={priceView.suffix}
-          billingNote={priceView.billingNote}
+          billingNote={
+            priceView.hasStorePrice ? priceView.billingNote : undefined
+          }
           originalPrice={originalPrice}
           duration={duration}
-          trialDays={getPlanCardTrialDays(duration, plan.trialDays)}
+          trialDays={
+            priceView.hasStorePrice
+              ? getPlanCardTrialDays(duration, plan.trialDays)
+              : undefined
+          }
           showPopular={isYearly}
           selected={effectiveSelectedPlanId === plan.id}
           onPress={() => setSelectedPlanId(plan.id as PlanId)}
@@ -566,6 +578,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         ]}
       >
         <View style={styles.subscriptionCenterBlock}>
+          <PostAuthSubscriptionPaywallHeader colors={colors} />
           <PostAuthSubscriptionFeatureCarousel
             isDark={isDark}
             colors={colors}
@@ -705,9 +718,17 @@ export const PostAuthOnboardingScreen: React.FC = () => {
     }
   };
 
+  const isSubscriptionPaywallSlide =
+    currentSlide === POST_AUTH_ONBOARDING_STEPS.SUBSCRIPTION ||
+    currentSlide === POST_AUTH_ONBOARDING_STEPS.DISCOUNT;
+
   return (
     <View style={styles.background}>
-      <PostAuthOnboardingBackground isDark={isDark} />
+      {isSubscriptionPaywallSlide && !isDark ? (
+        <PostAuthSubscriptionSkyBackground />
+      ) : (
+        <PostAuthOnboardingBackground isDark={isDark} />
+      )}
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={[styles.slide, { width: windowWidth }]}>
           <PostAuthPhoneLayout>

@@ -121,6 +121,14 @@ export type CameraStackParamList = {
   IdentificationLocationGate: undefined;
   CameraMain: {
     returnImageToAskAI?: boolean;
+    returnImageToFeed?: boolean;
+    returnImageToQuiz?: boolean;
+    feedDraft?: {
+      title?: string;
+      content?: string;
+      itemName?: string;
+      postId?: string;
+    };
     pendingCrop?: {
       uri: string;
       displayUri?: string;
@@ -129,11 +137,33 @@ export type CameraStackParamList = {
     };
     resetCapture?: boolean;
   } | undefined;
-  GalleryPicker: { returnImageToAskAI?: boolean } | undefined;
+  GalleryPicker:
+    | {
+        returnImageToAskAI?: boolean;
+        returnImageToFeed?: boolean;
+        returnImageToQuiz?: boolean;
+        feedDraft?: {
+          title?: string;
+          content?: string;
+          itemName?: string;
+          postId?: string;
+        };
+        /** Photos already queued on CameraMain (0–2). Gallery adds one more slot. */
+        currentImageCount?: number;
+      }
+    | undefined;
   IdentifyImageCrop: {
     imageUri: string;
-    returnTarget: "camera" | "analysis" | "askAi";
+    returnTarget: "camera" | "analysis" | "askAi" | "feed" | "quiz";
     returnImageToAskAI?: boolean;
+    returnImageToFeed?: boolean;
+    returnImageToQuiz?: boolean;
+    feedDraft?: {
+      title?: string;
+      content?: string;
+      itemName?: string;
+      postId?: string;
+    };
     /** Set when CameraScreen already unmounted VisionCamera before navigate. */
     cameraAlreadyReleased?: boolean;
   };

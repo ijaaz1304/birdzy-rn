@@ -113,7 +113,6 @@ describe("parseDeepLinkUrl", () => {
     expect(target?.screen).toBe("MainTabs");
     expect(target?.params).toMatchObject({
       screen: "Home",
-      params: { screen: "HomeMain" },
     });
   });
 
@@ -122,7 +121,6 @@ describe("parseDeepLinkUrl", () => {
     expect(target?.screen).toBe("MainTabs");
     expect(target?.params).toMatchObject({
       screen: "Home",
-      params: { screen: "HomeMain" },
     });
   });
 

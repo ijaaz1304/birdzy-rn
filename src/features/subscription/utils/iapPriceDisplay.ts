@@ -1,5 +1,13 @@
 import { NativeModules, Platform } from "react-native";
 import { hasRealStorePrice } from "./storePlanPricing";
+import {
+  selectAndroidSubscriptionOffer,
+  getAndroidSelectedOfferPricingPhases,
+  type SelectedAndroidSubscriptionOffer,
+} from "./subscriptionOfferDetails";
+
+export type { SelectedAndroidSubscriptionOffer };
+export { selectAndroidSubscriptionOffer };
 
 type ProductLike = Record<string, unknown>;
 
@@ -261,6 +269,10 @@ function collectAndroidSubscriptionPhaseLists(
 export function getAndroidSubscriptionFormattedPrice(
   product: ProductLike
 ): string | null {
+  const selectedPhases = getAndroidSelectedOfferPricingPhases(product);
+  const selectedPrice = pickBestPaidPhaseFormattedPrice(selectedPhases);
+  if (selectedPrice) return selectedPrice;
+
   for (const phases of collectAndroidSubscriptionPhaseLists(product)) {
     const price = pickBestPaidPhaseFormattedPrice(phases);
     if (price) return price;
@@ -301,60 +313,14 @@ export function getAndroidOneTimeFormattedPrice(
   return null;
 }
 
-/** Offer token for Android subscription purchase (v14 subscriptionOffers or legacy details). */
+/** Offer token for Android subscription purchase (trial-aware selection). */
 export function getAndroidSubscriptionOfferToken(
   product: ProductLike
 ): string | null {
-  const productId = (product.id as string | undefined) ?? "unknown";
-  const standardized = product.subscriptionOffers as
-    | Array<{ offerTokenAndroid?: string | null }>
-    | undefined;
-  console.log("[IAP-DEBUG] getAndroidSubscriptionOfferToken", {
-    productId,
-    subscriptionOffersCount: standardized?.length ?? 0,
-    offerTokenAndroidValues: (standardized ?? []).map(
-      (o) => o.offerTokenAndroid?.slice(0, 12) ?? null
-    ),
-  });
-  for (const offer of standardized ?? []) {
-    const token = offer.offerTokenAndroid?.trim();
-    if (token) {
-      console.log("[IAP-DEBUG] offer token from subscriptionOffers", {
-        productId,
-        source: "subscriptionOffers.offerTokenAndroid",
-      });
-      return token;
-    }
-  }
-
-  for (const key of [
-    "subscriptionOfferDetailsAndroid",
-    "subscriptionOfferDetails",
-  ] as const) {
-    const offers = product[key] as Array<{ offerToken?: string }> | undefined;
-    console.log("[IAP-DEBUG] checking legacy offer key", {
-      productId,
-      key,
-      count: offers?.length ?? 0,
-      offerTokens: (offers ?? []).map((o) => o.offerToken?.slice(0, 12) ?? null),
-    });
-    for (const offer of offers ?? []) {
-      const token = offer.offerToken?.trim();
-      if (token) {
-        console.log("[IAP-DEBUG] offer token from legacy key", {
-          productId,
-          source: `${key}.offerToken`,
-        });
-        return token;
-      }
-    }
-  }
-
-  console.warn("[IAP-DEBUG] no Android subscription offer token found", {
-    productId,
-    keys: Object.keys(product),
-  });
-  return null;
+  return (
+    selectAndroidSubscriptionOffer(product, { logSelection: false })
+      ?.offerToken ?? null
+  );
 }
 
 function readOfferPrices(product: ProductLike): string[] {

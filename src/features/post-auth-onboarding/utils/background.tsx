@@ -1,6 +1,6 @@
 import { AppImage } from "@/components/AppImage";
 import React from "react";
-import { StyleSheet, useWindowDimensions } from "react-native";
+import { Dimensions, StyleSheet, View, useWindowDimensions } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { Images } from "../../../assets";
 import { getPostAuthContentLayout } from "./postAuthContentLayout";
@@ -10,6 +10,9 @@ const COMMON_BG_ASPECT = 3248 / 1500;
 
 /** post_onboarding background.webp is 1500×2880 — anchor to bottom like onboarding art */
 const POST_AUTH_BG_ASPECT = COMMON_BG_ASPECT;
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const SKY_HEIGHT = 320;
 
 export function getPostAuthBackgroundLayout(
   windowWidth: number,
@@ -65,6 +68,34 @@ export function PostAuthOnboardingBackground({
   );
 }
 
+/** Figma 8327:72643 — mint sky + bird silhouettes at top of subscription paywall. */
+export function PostAuthSubscriptionSkyBackground() {
+  return (
+    <View style={styles.skyHost} pointerEvents="none">
+      <AppImage
+        source={Images.askAiSkyBg}
+        style={styles.skyImage}
+        resizeMode="cover"
+        preferRNImage
+        fadeDuration={0}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={["rgba(239,251,251,0.3)", "#FFFFFF"]}
+        locations={[0.034, 0.655]}
+        style={styles.skyTint}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={["rgba(255,255,255,0)", "#FFFFFF"]}
+        locations={[0, 0.691]}
+        style={styles.bottomFade}
+        pointerEvents="none"
+      />
+    </View>
+  );
+}
+
 /** Location slide — full-screen cream gradient (Figma 8660:94885). */
 export function PostAuthLocationBackground() {
   return (
@@ -82,5 +113,33 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     zIndex: 0,
+  },
+  skyHost: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+  },
+  skyImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: SCREEN_WIDTH,
+    height: SKY_HEIGHT,
+    opacity: 0.8,
+  },
+  skyTint: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: SCREEN_WIDTH,
+    height: SKY_HEIGHT,
+  },
+  bottomFade: {
+    position: "absolute",
+    top: 194,
+    left: 0,
+    width: SCREEN_WIDTH,
+    height: 236,
   },
 });

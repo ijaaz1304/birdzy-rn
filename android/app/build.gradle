@@ -66,7 +66,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
-        freeCompilerArgs += "-opt-in=androidx.photopicker.ExperimentalPhotoPickerApi"
     }
 
     defaultConfig {
@@ -189,10 +188,6 @@ dependencies {
     // Google Play In-App Review API (required for react-native-in-app-review on Android)
     implementation("com.google.android.play:review:2.0.2")
     implementation("com.google.android.play:review-ktx:2.0.2")
-
-    // Android embedded photo picker (API 34+, SDK extension 15+)
-    implementation("androidx.photopicker:photopicker:1.0.0-alpha02")
-
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {

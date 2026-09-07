@@ -39,10 +39,17 @@ import { hasRealStorePrice } from "../utils/storePlanPricing";
 import {
   formattedPriceMatchesExpectedCurrency,
   getAndroidSubscriptionFormattedPrice,
-  getAndroidSubscriptionOfferToken,
   resolveProductCurrency,
   resolveProductDisplayPrice,
+  selectAndroidSubscriptionOffer,
 } from "../utils/iapPriceDisplay";
+import { getStoreTrialDaysFromProduct } from "../utils/subscriptionOfferDetails";
+import {
+  getUserSubscriptionTrialState,
+  logTrialEligibilityDebug,
+  resolveTrialUiState,
+  shouldPreferPaidAndroidOffer,
+} from "../utils/trialEligibility";
 import { APPLE_RECEIPT_SHARED_SECRET } from "../../../constants/env";
 
 export type { Purchase, PurchaseError };
@@ -163,16 +170,19 @@ export async function disconnectIap(): Promise<boolean> {
   return endConnection();
 }
 
+export type PlanStorePricing = {
+  priceDisplay: string;
+  trialDays: number;
+};
+
 /**
- * Fetch all IAP products for the given plan IDs and return planId -> displayPrice map.
- * - SUBS (recurring): fetchProducts(type='subs'); map keyed only by product id returned by store.
- * - IAP (one-time): fetchProducts(type='in-app'); map keyed only by product id returned by store.
- * Each plan's price is set only when the store returns that exact product id; no cross-plan assignment.
+ * Fetch all IAP products for the given plan IDs and return planId -> store pricing map.
+ * Prices and trial length come from Play / App Store product details only.
  */
 export async function fetchAllProductPrices(
   planIds: PlanId[]
-): Promise<Map<string, string>> {
-  const priceMap = new Map<string, string>();
+): Promise<Map<string, PlanStorePricing>> {
+  const priceMap = new Map<string, PlanStorePricing>();
   if (planIds.length === 0) return priceMap;
 
   const log = useAppLogsStore.getState();
@@ -221,7 +231,14 @@ export async function fetchAllProductPrices(
           product as unknown as Record<string, unknown>
         );
         const planId = storeSkuToPlanId.get(productId) ?? productId;
-        if (hasRealStorePrice(price)) priceMap.set(planId, price);
+        if (hasRealStorePrice(price)) {
+          priceMap.set(planId, {
+            priceDisplay: price,
+            trialDays: getStoreTrialDaysFromProduct(
+              product as unknown as Record<string, unknown>
+            ),
+          });
+        }
       }
       log.info(
         "[IAP] fetchAllProductPrices getSubscriptions (type=subs) returned",
@@ -246,7 +263,14 @@ export async function fetchAllProductPrices(
           product as unknown as Record<string, unknown>
         );
         const planId = storeSkuToPlanId.get(productId) ?? productId;
-        if (hasRealStorePrice(price)) priceMap.set(planId, price);
+        if (hasRealStorePrice(price)) {
+          priceMap.set(planId, {
+            priceDisplay: price,
+            trialDays: getStoreTrialDaysFromProduct(
+              product as unknown as Record<string, unknown>
+            ),
+          });
+        }
       }
       log.info(
         "[IAP] fetchAllProductPrices getProducts (type=in-app) returned",
@@ -439,17 +463,43 @@ export async function requestPlanPurchase(planId: PlanId): Promise<void> {
         found: Boolean(sub),
         keys: subRecord ? Object.keys(subRecord) : [],
       });
-      const offerToken = subRecord
-        ? getAndroidSubscriptionOfferToken(subRecord)
+      const userState = getUserSubscriptionTrialState();
+      const preferPaidOffer = shouldPreferPaidAndroidOffer(userState);
+      const playEligibleOffer = subRecord
+        ? selectAndroidSubscriptionOffer(subRecord, {
+            logSelection: false,
+            preferPaidOffer: false,
+          })
         : null;
+      const selectedOffer = subRecord
+        ? selectAndroidSubscriptionOffer(subRecord, {
+            logSelection: true,
+            preferPaidOffer,
+          })
+        : null;
+      const offerToken = selectedOffer?.offerToken ?? null;
+      const eligibility = resolveTrialUiState({
+        productId,
+        playOfferIsTrial: playEligibleOffer?.isTrial ?? false,
+        playTrialDays: playEligibleOffer?.trialDays ?? 0,
+        ...userState,
+      });
+      logTrialEligibilityDebug(productId, eligibility);
       console.log("[IAP-DEBUG] resolved Android offer token", {
         productId,
         hasOfferToken: Boolean(offerToken),
-        offerTokenPreview: offerToken ? `${offerToken.slice(0, 12)}…` : null,
+        isTrial: selectedOffer?.isTrial ?? false,
+        trialDays: selectedOffer?.trialDays ?? 0,
+        basePlanId: selectedOffer?.basePlanId ?? null,
+        offerId: selectedOffer?.offerId ?? null,
       });
-      log.info("[IAP-DEBUG] resolved Android offer token", {
+      log.info("[IAP-DEBUG] resolved Android subscription offer", {
         productId,
         hasOfferToken: Boolean(offerToken),
+        isTrial: selectedOffer?.isTrial ?? false,
+        trialDays: selectedOffer?.trialDays ?? 0,
+        basePlanId: selectedOffer?.basePlanId ?? null,
+        offerId: selectedOffer?.offerId ?? null,
       });
       if (!offerToken) {
         const errMsg =
@@ -469,9 +519,20 @@ export async function requestPlanPurchase(planId: PlanId): Promise<void> {
       }
       console.log("[IAP-DEBUG] calling requestPurchase(subs)", {
         productId,
-        offerTokenPreview: `${offerToken.slice(0, 12)}…`,
+        basePlanId: selectedOffer?.basePlanId ?? null,
+        offerId: selectedOffer?.offerId ?? null,
+        isTrial: selectedOffer?.isTrial ?? false,
+        trialDays: selectedOffer?.trialDays ?? 0,
+        hasOfferToken: Boolean(offerToken),
       });
-      log.info("[IAP-DEBUG] calling requestPurchase(subs)", { productId });
+      log.info("[IAP-DEBUG] calling requestPurchase(subs)", {
+        productId,
+        basePlanId: selectedOffer?.basePlanId ?? null,
+        offerId: selectedOffer?.offerId ?? null,
+        isTrial: selectedOffer?.isTrial ?? false,
+        trialDays: selectedOffer?.trialDays ?? 0,
+        hasOfferToken: Boolean(offerToken),
+      });
       await requestPurchase({
         request: {
           google: {
@@ -583,36 +644,25 @@ export async function detectAndroidTrialFromProductDetails(
       return false;
     }
 
-    const phaseLists: Array<
-      Array<{ priceAmountMicros?: string; billingCycleCount?: number }>
-    > = [];
-
-    for (const offer of sub.subscriptionOffers ?? []) {
-      const phases = offer.pricingPhasesAndroid?.pricingPhaseList ?? [];
-      if (phases.length) phaseLists.push(phases);
-    }
-    for (const offer of sub.subscriptionOfferDetailsAndroid ?? []) {
-      const phases = offer.pricingPhases?.pricingPhaseList ?? [];
-      if (phases.length) phaseLists.push(phases);
-    }
-
-    if (!phaseLists.length) return false;
-
-    for (const phases of phaseLists) {
-      for (const phase of phases) {
-        if (
-          String(phase.priceAmountMicros) === "0" &&
-          phase.billingCycleCount === 1
-        ) {
-          log.info("[IAP] detectAndroidTrial: trial phase found", {
-            productId: purchase.productId,
-          });
-          return true;
-        }
+    const selected = selectAndroidSubscriptionOffer(
+      sub as unknown as Record<string, unknown>,
+      {
+        logSelection: false,
+        preferPaidOffer: shouldPreferPaidAndroidOffer(),
       }
+    );
+    if (selected?.isTrial) {
+      log.info("[IAP] detectAndroidTrial: selected offer is trial", {
+        productId: purchase.productId,
+        trialDays: selected.trialDays,
+        basePlanId: selected.basePlanId,
+      });
+      return true;
     }
-    log.debug("[IAP] detectAndroidTrial: no trial phase", {
+
+    log.debug("[IAP] detectAndroidTrial: selected offer is not trial", {
       productId: purchase.productId,
+      basePlanId: selected?.basePlanId ?? null,
     });
     return false;
   } catch (e) {

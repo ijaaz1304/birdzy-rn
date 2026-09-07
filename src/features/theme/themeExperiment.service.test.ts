@@ -11,6 +11,10 @@ jest.mock("../../services/analytics/analytics.service", () => ({
   },
 }));
 
+jest.mock("../../constants/featureFlags", () => ({
+  isDarkModeEnabledForApp: jest.fn(() => true),
+}));
+
 jest.mock("./theme.store", () => ({
   useThemeStore: {
     getState: jest.fn(),

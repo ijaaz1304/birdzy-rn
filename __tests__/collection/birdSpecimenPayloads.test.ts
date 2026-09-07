@@ -1,3 +1,27 @@
+jest.mock("../../src/features/collection/collection.utils", () => {
+  const looksLikeMongoCollectionId = (id: string) =>
+    /^[a-f0-9]{24}$/i.test(id);
+
+  return {
+    normalizeCollectionIds: (
+      ...sources: Array<string | string[] | undefined | null>
+    ) => {
+      const out: string[] = [];
+      const seen = new Set<string>();
+      for (const src of sources) {
+        const list = Array.isArray(src) ? src : src != null ? [src] : [];
+        for (const raw of list) {
+          const id = String(raw ?? "").trim();
+          if (!id || !looksLikeMongoCollectionId(id) || seen.has(id)) continue;
+          seen.add(id);
+          out.push(id);
+        }
+      }
+      return out;
+    },
+  };
+});
+
 import {
   buildMushroomSpecimenAddPayload,
   buildMushroomUpdatePayload,

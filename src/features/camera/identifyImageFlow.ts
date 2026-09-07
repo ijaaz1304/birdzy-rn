@@ -13,9 +13,19 @@ import { canIdentifyPhoto } from "../../services/session/usageLimit.service";
 import { analyticsService } from "../../services/analytics/analytics.service";
 import { EVENTS } from "../../services/analytics/analytics.events";
 import { identifyFlowLog } from "./identifyFlowLog";
+import {
+  getAppRootNavigation,
+  navigateExternalCameraReturnResult,
+  resetCameraStackAfterExternalReturn,
+  type CropReturnTarget,
+  type ExternalCameraReturnTarget,
+  type FeedCameraDraft,
+} from "./identifyCameraNavigation";
+
+export type { CropReturnTarget } from "./identifyCameraNavigation";
 
 /** Native cropper dismiss can drop navigate; InteractionManager can also hang on iOS. */
-const navigateAfterNativeUi = (navigate: () => void) =>
+export const navigateAfterNativeUi = (navigate: () => void) =>
   new Promise<void>((resolve) => {
     const delayMs = Platform.OS === "ios" ? 250 : 50;
     let done = false;
@@ -101,6 +111,9 @@ export const submitProcessedImageForIdentify = async (params: {
   isPremium: boolean;
   onLimitReached: () => void;
   returnImageToAskAI?: boolean;
+  returnImageToFeed?: boolean;
+  returnImageToQuiz?: boolean;
+  feedDraft?: FeedCameraDraft;
   /** Prefer replace when leaving GalleryPicker so back skips the picker. */
   replace?: boolean;
 }): Promise<void> => {
@@ -112,17 +125,27 @@ export const submitProcessedImageForIdentify = async (params: {
     isPremium,
     onLimitReached,
     returnImageToAskAI,
+    returnImageToFeed,
+    returnImageToQuiz,
+    feedDraft,
     replace = false,
   } = params;
 
-  if (returnImageToAskAI) {
-    const rootNav = navigation.getParent()?.getParent()?.getParent();
-    if (rootNav && typeof (rootNav as any).navigate === "function") {
-      (rootNav as any).navigate("AskAIStack", {
-        screen: "AskAIMain",
-        params: { selectedImageUri: image.uri },
-      });
-    }
+  const externalReturnTarget = returnImageToAskAI
+    ? ("askAi" as const)
+    : returnImageToFeed
+    ? ("feed" as const)
+    : returnImageToQuiz
+    ? ("quiz" as const)
+    : null;
+
+  if (externalReturnTarget) {
+    completeExternalCameraReturn(
+      navigation as CropResultNavigation,
+      externalReturnTarget,
+      image.uri,
+      feedDraft
+    );
     return;
   }
 
@@ -174,57 +197,105 @@ export const submitProcessedImageForIdentify = async (params: {
   identifyFlowLog("navigation_to_analysis_completed");
 };
 
-export type CropReturnTarget = "camera" | "analysis" | "askAi";
+/** Return a gallery crop to CameraMain so the user can add a second photo or submit. */
+export function returnGalleryCropToCamera(
+  navigation: SubmitNavigation,
+  cropped: CroppedImageObject
+): void {
+  const displayUri = cropped.previewUri ?? cropped.uri;
+  identifyFlowLog("gallery_return_to_camera", {
+    uriPrefix: cropped.uri.slice(0, 32),
+  });
+
+  const pendingCrop = {
+    uri: cropped.uri,
+    displayUri,
+    width: cropped.width,
+    height: cropped.height,
+  };
+
+  if (typeof navigation.popTo === "function") {
+    navigation.popTo("CameraMain", { pendingCrop });
+    return;
+  }
+
+  navigation.navigate({
+    name: "CameraMain",
+    params: { pendingCrop },
+    merge: true,
+  });
+  if (navigation.canGoBack()) {
+    navigation.goBack();
+  }
+}
 
 type CropResultNavigation = NativeStackNavigationProp<
   CameraStackParamList,
   "IdentifyImageCrop" | "CameraMain" | "GalleryPicker"
 >;
 
+/** Navigate to Ask AI / Feed / Quiz after native crop dismisses, then reset camera stack. */
+export function completeExternalCameraReturn(
+  navigation: CropResultNavigation,
+  target: ExternalCameraReturnTarget,
+  imageUri: string,
+  feedDraft?: FeedCameraDraft
+): void {
+  void navigateAfterNativeUi(() => {
+    navigateExternalCameraReturnResult(
+      getAppRootNavigation(navigation),
+      target,
+      imageUri,
+      feedDraft
+    );
+    resetCameraStackAfterExternalReturn(navigation);
+  });
+}
+
 /** Route cropped image after IdentifyImageCrop. */
 export function navigateProcessedImageResult(
   navigation: CropResultNavigation,
   processed: CroppedImageObject,
-  options: { returnTarget: CropReturnTarget }
+  options: {
+    returnTarget: CropReturnTarget;
+    feedDraft?: FeedCameraDraft;
+  }
 ): void {
   const displayUri = processed.previewUri ?? processed.uri;
-  const { returnTarget } = options;
+  const { returnTarget, feedDraft } = options;
 
   if (returnTarget === "analysis") {
     identifyFlowLog("diagnosis_navigation_started", { source: "crop_host" });
-    navigation.replace("DiagnosisLoading", {
-      image: {
-        uri: processed.uri,
-        width: processed.width,
-        height: processed.height,
-      },
-      displayImage: {
-        uri: displayUri,
-        width: processed.width,
-        height: processed.height,
-      },
+    void navigateAfterNativeUi(() => {
+      navigation.replace("DiagnosisLoading", {
+        image: {
+          uri: processed.uri,
+          width: processed.width,
+          height: processed.height,
+        },
+        displayImage: {
+          uri: displayUri,
+          width: processed.width,
+          height: processed.height,
+        },
+      });
+      identifyFlowLog("diagnosis_navigation_completed", { source: "crop_host" });
     });
-    identifyFlowLog("diagnosis_navigation_completed", { source: "crop_host" });
     return;
   }
 
-  if (returnTarget === "askAi") {
-    const rootNav = navigation.getParent()?.getParent()?.getParent();
-    if (typeof navigation.popTo === "function") {
-      navigation.popTo("CameraMain", { resetCapture: true });
-    } else {
-      navigation.navigate({
-        name: "CameraMain",
-        params: { resetCapture: true },
-        merge: true,
-      });
-    }
-    if (rootNav && typeof (rootNav as any).navigate === "function") {
-      (rootNav as any).navigate("AskAIStack", {
-        screen: "AskAIMain",
-        params: { selectedImageUri: processed.uri },
-      });
-    }
+  if (
+    returnTarget === "askAi" ||
+    returnTarget === "feed" ||
+    returnTarget === "quiz"
+  ) {
+    identifyFlowLog("external_return_after_crop", { target: returnTarget });
+    completeExternalCameraReturn(
+      navigation,
+      returnTarget as ExternalCameraReturnTarget,
+      processed.uri,
+      feedDraft
+    );
     return;
   }
 
@@ -250,6 +321,9 @@ export function navigateProcessedImageResult(
       },
       merge: true,
     });
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   }
   identifyFlowLog("returned_to_camera");
   identifyFlowLog("preview_ready", { uriPrefix: processed.uri.slice(0, 32) });

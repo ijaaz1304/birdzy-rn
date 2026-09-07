@@ -287,7 +287,7 @@ export const birdsAppConfig: AppConfig = {
       defaultAvatar: Images.appIcon,
       giftBox: Images.giftBox,
       appIcon: Images.appIcon,
-      mushroomSample: Images.homeFindSpecies,
+      birdSample: Images.homeFindSpecies,
     },
   },
 

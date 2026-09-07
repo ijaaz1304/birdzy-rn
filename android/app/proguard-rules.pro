@@ -26,7 +26,3 @@
 -keep class com.reactnativegooglesignin.** { *; }
 -keep class com.google.android.libraries.identity.googleid.** { *; }
 -dontwarn com.google.android.gms.**
-
-# Android embedded photo picker
--keep class androidx.photopicker.** { *; }
--keep class android.widget.photopicker.** { *; }

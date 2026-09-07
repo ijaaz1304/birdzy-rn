@@ -1,5 +1,6 @@
 import { SUBSCRIPTION_CTA_COLOR } from "../../constants/subscriptionColors";
 import { FIGMA_TOKENS } from "../../design-system/colors/figmaTokens";
+import { APP_COLORS } from "../../../theme/colors";
 import { DARK_SURFACE_BRAND_1 } from "../../theme/colors/dark";
 
 export type PostAuthOnboardingColors = {
@@ -22,7 +23,11 @@ export type PostAuthOnboardingColors = {
   popularBadgeText: string;
 };
 
-/** Light mushroom post-auth — black text, brand CTA (Figma 8380+, 8253+, 8289+) */
+/** Figma 8327:72643 — selected plan teal ring, CTA/badge plum. */
+const POST_AUTH_PAYWALL_CTA = APP_COLORS.createButtonFg;
+const POST_AUTH_PAYWALL_SELECTED_BORDER = "#41EDE9";
+
+/** Light bird post-auth — black text, Figma subscription paywall */
 export const POST_AUTH_ONBOARDING_COLORS_LIGHT: PostAuthOnboardingColors = {
   textPrimary: "#111111",
   textSecondary: "#5D5D5D",
@@ -31,23 +36,23 @@ export const POST_AUTH_ONBOARDING_COLORS_LIGHT: PostAuthOnboardingColors = {
   textDisabled: "#888888",
   ctaTextDark: "#FFFFFF",
   discountRed: "#EF4444",
-  planBorderSelected: SUBSCRIPTION_CTA_COLOR,
+  planBorderSelected: POST_AUTH_PAYWALL_SELECTED_BORDER,
   planBorderUnselected: "rgba(114, 84, 129, 0.12)",
   planCardBackground: "rgba(255, 255, 255, 0.15)",
   planCardBackgroundSelected: "rgba(255, 255, 255, 0.24)",
   ctaGradient: [
-    SUBSCRIPTION_CTA_COLOR,
-    SUBSCRIPTION_CTA_COLOR,
-    SUBSCRIPTION_CTA_COLOR,
+    POST_AUTH_PAYWALL_CTA,
+    POST_AUTH_PAYWALL_CTA,
+    POST_AUTH_PAYWALL_CTA,
   ],
-  ctaSolidBackground: SUBSCRIPTION_CTA_COLOR,
+  ctaSolidBackground: POST_AUTH_PAYWALL_CTA,
   useSolidCta: true,
   popularBadgeGradient: [
-    SUBSCRIPTION_CTA_COLOR,
-    SUBSCRIPTION_CTA_COLOR,
-    SUBSCRIPTION_CTA_COLOR,
+    POST_AUTH_PAYWALL_CTA,
+    POST_AUTH_PAYWALL_CTA,
+    POST_AUTH_PAYWALL_CTA,
   ],
-  popularBadgeBg: SUBSCRIPTION_CTA_COLOR,
+  popularBadgeBg: POST_AUTH_PAYWALL_CTA,
   popularBadgeText: "#FFFFFF",
 };
 
@@ -60,7 +65,7 @@ export const POST_AUTH_ONBOARDING_COLORS_DARK: PostAuthOnboardingColors = {
   textDisabled: FIGMA_TOKENS.dark.text.disabled,
   ctaTextDark: "#111111",
   discountRed: "#EF4444",
-  planBorderSelected: SUBSCRIPTION_CTA_COLOR,
+  planBorderSelected: POST_AUTH_PAYWALL_SELECTED_BORDER,
   planBorderUnselected: "rgba(114, 84, 129, 0.12)",
   planCardBackground: "rgba(255, 255, 255, 0.15)",
   planCardBackgroundSelected: "rgba(255, 255, 255, 0.24)",
@@ -101,5 +106,6 @@ export const POST_AUTH_LAYOUT = {
   horizontalPadding: 20,
   contentWidth: 335,
   ctaHeight: 44,
+  ctaBorderRadius: 24,
   planGap: 8,
 } as const;

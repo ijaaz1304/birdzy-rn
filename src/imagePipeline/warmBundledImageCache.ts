@@ -67,7 +67,6 @@ export function warmBundledImageCache(): void {
     Images.splashBgLight,
     Images.splashBgDark,
     Images.splashDark,
-    Images.authBgDark,
     Images.discountCountdownStickyBgDark,
     Images.bottomTabHome,
     Images.bottomTabCatalogue,

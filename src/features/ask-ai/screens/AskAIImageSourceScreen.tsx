@@ -11,6 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { showAlert } from "../../../store/alert.store";
 import ImagePicker from "react-native-image-crop-picker";
+import { navigateToIdentifyCameraScreen } from "../../camera/identifyCameraNavigation";
 import { asIdentifyImage } from "../../camera/identifyImageFlow";
 import { AI_CROPPER_OPTIONS } from "../../../constants/imagePipeline.constants";
 import { useTheme } from "../../../hooks/useTheme";
@@ -46,39 +47,9 @@ export const AskAIImageSourceScreen: React.FC = () => {
   const [showGalleryPopup, setShowGalleryPopup] = useState(false);
   const [photosBlocked, setPhotosBlocked] = useState(false);
 
-  const handleCapture = async () => {
-    try {
-      analyticsService.logEvent(EVENTS.ask_ai_camera_used);
-      const picked = await ImagePicker.openCamera({
-        mediaType: "photo",
-        includeBase64: false,
-        cropping: true,
-        ...CROP_OPTIONS,
-      });
-      if ((picked as any)?.path) {
-        const uri = normalizeLocalUri((picked as any).path);
-        const processed = await asIdentifyImage(uri);
-        if (!processed) return;
-        navigation.navigate("AskAIMain", { selectedImageUri: processed.uri });
-      }
-    } catch (error: any) {
-      const msg = String(error?.message ?? "");
-      if (msg.toLowerCase().includes("permission")) {
-        showAlert(
-          "Camera permission needed",
-          "To capture a photo we need camera access. Open settings to allow camera?",
-          {
-            secondaryText: "Cancel",
-            primaryText: "Open Settings",
-            onPrimary: () => openDeviceSettings(),
-          }
-        );
-        return;
-      }
-      if (!msg.toLowerCase().includes("cancel"))
-        console.error("Ask AI image source: camera failed", error);
-      navigation.goBack();
-    }
+  const handleCapture = () => {
+    analyticsService.logEvent(EVENTS.ask_ai_camera_used);
+    navigateToIdentifyCameraScreen("askAi");
   };
 
   const openGalleryPicker = async () => {

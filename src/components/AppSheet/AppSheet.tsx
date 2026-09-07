@@ -46,6 +46,8 @@ import {
   SUBSCRIPTION_TEXTS,
 } from "../../config/subscription.config";
 import { UPGRADE_MODAL } from "../../constants/modals.constants";
+import { getSubscriptionCtaLabel } from "../../features/post-auth-onboarding/utils/planDisplay";
+import { useSubscriptionPlansWithPrices } from "../../features/subscription/hooks/useSubscriptionPlansWithPrices";
 import { getBottomSheetChromeStyle } from "../../design-system/modalTokens";
 import { collectionService } from "../../services/collection/collection.service";
 import { mushroomSpecimenService } from "../../services/specimen/mushroomSpecimen.service";
@@ -102,7 +104,6 @@ import { formatCountdownSegment } from "../../utils";
 import { PostAuthSubscriptionDisclosure } from "../../features/post-auth-onboarding/components/PostAuthSubscriptionDisclosure";
 import { getPostAuthOnboardingColors } from "../../features/post-auth-onboarding/constants";
 import { usePostAuthOnboardingIsDark } from "../../features/post-auth-onboarding/utils/theme";
-import { useSubscriptionPlansWithPrices } from "../../features/subscription/hooks/useSubscriptionPlansWithPrices";
 import { COMPARISON_TABLE_COLORS } from "../../constants/subscriptionColors";
 import { FREE_VS_PREMIUM_COMPARISON } from "../../data/subscription";
 
@@ -2462,6 +2463,15 @@ function LimitReachedContent({
   insets?: { bottom: number };
 }) {
   const item = getCarouselItemForLimitType(limitType);
+  const { plans, defaultSelectedPlanId } = useSubscriptionPlansWithPrices();
+  const selectedPlan =
+    plans.find((p) => p.id === defaultSelectedPlanId) ?? plans[0] ?? null;
+  const upgradeCtaLabel = useMemo(
+    () =>
+      getSubscriptionCtaLabel({ selectedPlan }) ||
+      UPGRADE_MODAL.CTA_SUBSCRIBE,
+    [selectedPlan]
+  );
   const bottomPadding = CONTENT_PADDING_V + (insets?.bottom ?? 0);
   const isCollectionLimit = isCollectionLimitType(limitType);
   const isIdentificationLimit = limitType === "identification";
@@ -2505,7 +2515,7 @@ function LimitReachedContent({
         <View style={sheetStyles.limitCtaWrap}>
           <View style={sheetStyles.limitCtaBtnWrap}>
             <Button
-              title={UPGRADE_MODAL.CTA_FREE_TRIAL}
+              title={upgradeCtaLabel}
               variant="primary"
               size="large"
               fullWidth

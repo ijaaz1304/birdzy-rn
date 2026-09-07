@@ -5,7 +5,7 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useState, useRef, useEffect } from "react";
-import { View, StyleSheet, FlatList, TouchableOpacity, TextInput, Keyboard, Platform, Animated, ScrollView, Dimensions, type KeyboardEvent } from "react-native";
+import { View, StyleSheet, FlatList, TouchableOpacity, TextInput, Keyboard, Platform, Animated, Dimensions, type KeyboardEvent } from "react-native";
 import { showAlert } from "../../../store/alert.store";
 import { LimitReachedBottomSheet } from "../../../molecules/Modal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -25,7 +25,7 @@ import { aiService } from "../../../services";
 import { AskAIStackParamList } from "../../../navigation/types";
 import { Images, UploadIconSvg, AskAiCameraIconSvg, AskAiSendIconSvg } from "../../../assets";
 import { LoadingImage } from "../../../components/LoadingImage";
-import { ACCENT_COLORS, AI_CHAT_COLORS, UI_COLORS } from "../../../constants/colorConstants";
+import { ACCENT_COLORS, UI_COLORS } from "../../../constants/colorConstants";
 import { FEATURE_USAGE_KEYS } from "../../../constants/storageConstants";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
@@ -34,7 +34,8 @@ import { GalleryAccessPopup } from "../../../components/GalleryAccessPopup";
 import { navigateToSubscriptionMain } from "../../../utils/navigation";
 import { checkStoragePermission, openDeviceSettings } from "../../../services/permissions";
 import { useAskAIImagePipeline } from "../hooks/useAskAIImagePipeline";
-import { AskAIScreenBackground } from "../components/AskAIScreenBackground";
+import { navigateToIdentifyCameraScreen } from "../../camera/identifyCameraNavigation";
+import { AskAIScreenBackground, AskAIEmptyState, type AskAiPromptItem } from "../components";
 import { AI_CROPPER_OPTIONS } from "../../../constants/imagePipeline.constants";
 import { ASK_AI_STRINGS } from "../../../config/strings/ask-ai.strings";
 
@@ -49,11 +50,6 @@ const INPUT_BORDER_RADIUS = 24;
 const SEND_BUTTON_SIZE = 48;
 const MEDIA_ICON_SIZE = 20;
 const SEND_ICON_SIZE = 24;
-
-const ASK_AI_SUGGESTED_QUESTIONS = [...ASK_AI_STRINGS.suggestedQuestions];
-
-/** Figma: Radius xl = 24px */
-const SUGGESTED_CHIP_BORDER_RADIUS = 24;
 
 const ASK_AI_DAILY_LIMIT = 5;
 const ASK_AI_DATE_KEY = FEATURE_USAGE_KEYS.ASK_AI_DATE;
@@ -98,11 +94,6 @@ interface Message {
   image?: boolean;
   imageUri?: string;
 }
-
-const WELCOME_MESSAGE_ID = "1";
-
-const withoutWelcomeMessage = (msgs: Message[]) =>
-  msgs.filter((m) => m.id !== WELCOME_MESSAGE_ID);
 
 type AskAIScreenNavigationProp = NativeStackNavigationProp<
   AskAIStackParamList,
@@ -150,16 +141,7 @@ export const AskAIScreen: React.FC = () => {
   const styles = createStyles(theme);
   const isDark = useIsDark();
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: WELCOME_MESSAGE_ID,
-      text: isGotBittenAssistant
-        ? ASK_AI_STRINGS.gotBittenWelcome
-        : ASK_AI_STRINGS.welcomeMessage,
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [showLimitSheet, setShowLimitSheet] = useState(false);
   const [showGalleryPopup, setShowGalleryPopup] = useState(false);
   const [photosBlocked, setPhotosBlocked] = useState(false);
@@ -245,7 +227,7 @@ export const AskAIScreen: React.FC = () => {
         isUser: true,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...withoutWelcomeMessage(prev), userMessage]);
+      setMessages((prev) => [...prev, userMessage]);
       setIsAiTyping(true);
 
       try {
@@ -312,10 +294,7 @@ export const AskAIScreen: React.FC = () => {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [
-      ...(source === "suggestion" ? withoutWelcomeMessage(prev) : prev),
-      userMessage,
-    ]);
+    setMessages((prev) => [...prev, userMessage]);
     setIsAiTyping(true);
 
     try {
@@ -366,14 +345,22 @@ export const AskAIScreen: React.FC = () => {
     sendTextMessage(question, "suggestion");
   };
 
-  const showSuggestedQuestions =
-    (messages.length === 0 ||
-      (messages.length === 1 && messages[0].id === WELCOME_MESSAGE_ID)) &&
-    !isAiTyping;
+  const showEmptyState = messages.length === 0 && !isAiTyping;
 
-  const suggestedQuestions = isGotBittenAssistant
-    ? [ASK_AI_STRINGS.gotBittenPrompt, ...ASK_AI_STRINGS.suggestedQuestions]
-    : ASK_AI_SUGGESTED_QUESTIONS;
+  const emptyStatePrompts: readonly AskAiPromptItem[] = isGotBittenAssistant
+    ? [
+        { id: "brain", question: ASK_AI_STRINGS.gotBittenPrompt },
+        ...ASK_AI_STRINGS.suggestedPrompts,
+      ]
+    : ASK_AI_STRINGS.suggestedPrompts;
+
+  const emptyStateHeroTitle = isGotBittenAssistant
+    ? ASK_AI_STRINGS.gotBittenHeroTitle
+    : ASK_AI_STRINGS.heroTitle;
+
+  const emptyStateHeroSubtitle = isGotBittenAssistant
+    ? ASK_AI_STRINGS.gotBittenHeroSubtitle
+    : ASK_AI_STRINGS.heroSubtitle;
 
   const IMAGE_PICKER_OPTIONS = AI_CROPPER_OPTIONS;
 
@@ -465,37 +452,13 @@ export const AskAIScreen: React.FC = () => {
     }
   };
 
-  const handleCameraPress = async () => {
+  const handleCameraPress = () => {
     Keyboard.dismiss();
-    if (await blockIfAskAiLimitReached()) return;
-    try {
+    void (async () => {
+      if (await blockIfAskAiLimitReached()) return;
       analyticsService.logEvent(EVENTS.ask_ai_camera_used);
-      const picked = await ImagePicker.openCamera(IMAGE_PICKER_OPTIONS);
-      const path = (picked as { path?: string })?.path;
-      if (!path) return;
-      const imageUri = path.startsWith("file://") ? path : `file://${path}`;
-      const processed = await processImage(imageUri, { alreadyCropped: true });
-      if (!processed) return;
-      await sendImageFromUri(processed.uri);
-    } catch (error: unknown) {
-      const msg = String((error as Error)?.message ?? "");
-      if (msg.toLowerCase().includes("permission")) {
-        showAlert(
-          "Camera permission needed",
-          "To capture a photo we need camera access. Open settings to allow camera?",
-          {
-            secondaryText: "Cancel",
-            primaryText: "Open Settings",
-            onPrimary: () => openDeviceSettings(),
-          }
-        );
-        return;
-      }
-      if (!msg.toLowerCase().includes("cancel")) {
-        console.error("Ask AI camera error:", error);
-        showAlert("Error", "Could not open camera. Please try again.");
-      }
-    }
+      navigateToIdentifyCameraScreen("askAi");
+    })();
   };
 
   const handleUploadPress = async () => {
@@ -571,23 +534,23 @@ export const AskAIScreen: React.FC = () => {
   return (
     <>
       <SafeAreaView style={styles.container} edges={["top"]}>
-        <AskAIScreenBackground />
+        <AskAIScreenBackground isDark={isDark} />
 
         <View style={styles.screenContent}>
           <View
             style={[
               styles.header,
               {
-                paddingHorizontal: spacing[4],
-                paddingTop: spacing[4],
-                paddingBottom: spacing[2],
+                paddingLeft: spacing[5],
+                paddingRight: spacing[3],
+                paddingVertical: spacing[3],
               },
             ]}
           >
             <Text
               variant="title"
               size="medium"
-              weight="semibold"
+              weight="bold"
               style={{ flex: 1, color: colors.text }}
             >
               {ASK_AI_STRINGS.title}
@@ -595,7 +558,7 @@ export const AskAIScreen: React.FC = () => {
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
-              style={{ padding: 4 }}
+              style={styles.closeButton}
             >
               <AppImage
                 source={Images.navCancel}
@@ -609,32 +572,41 @@ export const AskAIScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <FlatList
-            style={styles.messagesListContainer}
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={[
-              styles.messagesList,
-              {
-                paddingHorizontal: spacing[4],
-                paddingVertical: spacing[4],
-                flexGrow: 1,
-                justifyContent: "flex-end",
-              },
-            ]}
-            renderItem={renderMessage}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode={
-              Platform.OS === "ios" ? "interactive" : "on-drag"
-            }
-            ListFooterComponent={
-              isAiTyping ? (
-                <TypingIndicator theme={theme} styles={styles} />
-              ) : null
-            }
-          />
+          {showEmptyState ? (
+            <AskAIEmptyState
+              heroTitle={emptyStateHeroTitle}
+              heroSubtitle={emptyStateHeroSubtitle}
+              prompts={isKeyboardVisible ? [] : emptyStatePrompts}
+              onSelectQuestion={handleSuggestedQuestion}
+            />
+          ) : (
+            <FlatList
+              style={styles.messagesListContainer}
+              ref={flatListRef}
+              data={messages}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={[
+                styles.messagesList,
+                {
+                  paddingHorizontal: spacing[4],
+                  paddingVertical: spacing[4],
+                  flexGrow: 1,
+                  justifyContent: "flex-end",
+                },
+              ]}
+              renderItem={renderMessage}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={
+                Platform.OS === "ios" ? "interactive" : "on-drag"
+              }
+              ListFooterComponent={
+                isAiTyping ? (
+                  <TypingIndicator theme={theme} styles={styles} />
+                ) : null
+              }
+            />
+          )}
 
           <View
             style={[
@@ -649,51 +621,6 @@ export const AskAIScreen: React.FC = () => {
                 : null,
             ]}
           >
-            {showSuggestedQuestions && !isKeyboardVisible ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.suggestedQuestionsScroll}
-                contentContainerStyle={[
-                  styles.suggestedQuestionsContent,
-                  {
-                    paddingHorizontal: spacing[4],
-                    paddingTop: spacing[3],
-                    paddingBottom: spacing[2],
-                  },
-                ]}
-                keyboardShouldPersistTaps="handled"
-              >
-                {suggestedQuestions.map((question) => (
-                  <TouchableOpacity
-                    key={question}
-                    activeOpacity={0.7}
-                    onPress={() => handleSuggestedQuestion(question)}
-                    style={[
-                      styles.suggestedQuestionChip,
-                      {
-                        borderColor: isDark
-                          ? AI_CHAT_COLORS.SUGGESTED_QUESTION_BORDER_DARK
-                          : colors.border0,
-                        backgroundColor: isDark
-                          ? AI_CHAT_COLORS.SUGGESTED_QUESTION_BG_DARK
-                          : colors.surfacePrimary,
-                        marginRight: spacing[2],
-                      },
-                    ]}
-                  >
-                    <Text
-                      variant="body"
-                      size="small"
-                      style={{ color: colors.textPrimary }}
-                    >
-                      {question}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            ) : null}
-
             <View
               style={[
                 styles.bottomComposer,
@@ -751,7 +678,7 @@ export const AskAIScreen: React.FC = () => {
                   </View>
                   <TextInput
                     style={[styles.input, { color: colors.text }]}
-                    placeholder="Hello, how I can help you?"
+                    placeholder={ASK_AI_STRINGS.inputPlaceholder}
                     placeholderTextColor={colors.textTertiary}
                     value={inputText}
                     onChangeText={setInputText}
@@ -937,6 +864,10 @@ const createStyles = (theme: any) =>
     header: {
       flexDirection: "row",
       alignItems: "center",
+      minHeight: 52,
+    },
+    closeButton: {
+      padding: 8,
     },
     messagesList: {
       gap: 12,
@@ -998,20 +929,6 @@ const createStyles = (theme: any) =>
     plantImage: {
       width: "100%",
       height: "100%",
-    },
-    suggestedQuestionsScroll: {
-      flexGrow: 0,
-      flexShrink: 0,
-    },
-    suggestedQuestionsContent: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    suggestedQuestionChip: {
-      borderRadius: SUGGESTED_CHIP_BORDER_RADIUS,
-      borderWidth: 1,
-      paddingVertical: 10,
-      paddingHorizontal: 16,
     },
     inputContainer: {
       flexDirection: "row",

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { ExternalCameraReturnTarget } from "./identifyCameraNavigation";
 
 type IdentificationEntryStore = {
   pendingFromBottomTab: boolean;
@@ -15,6 +16,10 @@ type IdentificationEntryStore = {
   setStartEntryHandler: (handler: (() => void) | null) => void;
   startSoundEntryHandler: (() => void) | null;
   setStartSoundEntryHandler: (handler: (() => void) | null) => void;
+  externalCameraReturnTarget: ExternalCameraReturnTarget | null;
+  setExternalCameraReturnTarget: (
+    target: ExternalCameraReturnTarget | null
+  ) => void;
 };
 
 export const useIdentificationEntryStore = create<IdentificationEntryStore>(
@@ -36,5 +41,8 @@ export const useIdentificationEntryStore = create<IdentificationEntryStore>(
     startSoundEntryHandler: null,
     setStartSoundEntryHandler: (handler) =>
       set({ startSoundEntryHandler: handler }),
+    externalCameraReturnTarget: null,
+    setExternalCameraReturnTarget: (target) =>
+      set({ externalCameraReturnTarget: target }),
   })
 );

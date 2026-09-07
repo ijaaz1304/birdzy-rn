@@ -7,15 +7,42 @@ import {
 import { MushroomPhoto } from "../../types/mushroom-media.types";
 import { getArchetypeImageUrls } from "../../utils/mushroomApiMappers";
 import { getPrimaryCommonName } from "../../utils/mushroomDisplayUtils";
+import { extractBirdProfile } from "../../utils/birdApiMappers";
+import { COLLECTION_STRINGS } from "../../config/strings/collection.strings";
 import { normalizeCollectionIds } from "./collection.utils";
 
-export type EditMushroomTabId = "overview" | "physical" | "habitat";
+export type EditMushroomTabId =
+  | "overview"
+  | "sounds"
+  | "characteristics"
+  | "behavior"
+  | "habitat"
+  | "feeding"
+  | "breeding"
+  | "migration";
 
-export const EDIT_BIRD_TABS: { id: EditMushroomTabId; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "physical", label: "Identification" },
-  { id: "habitat", label: "Habitat & Diet" },
+const BIRD_SECTIONS = COLLECTION_STRINGS.birdDetails.sections;
+
+export const EDIT_BIRD_TABS: {
+  id: EditMushroomTabId;
+  label: string;
+  premium?: boolean;
+}[] = [
+  { id: "overview", label: BIRD_SECTIONS.overview },
+  { id: "sounds", label: "Bird Sounds" },
+  {
+    id: "characteristics",
+    label: BIRD_SECTIONS.characteristics,
+    premium: true,
+  },
+  { id: "behavior", label: BIRD_SECTIONS.behavior, premium: true },
+  { id: "habitat", label: BIRD_SECTIONS.habitat, premium: true },
+  { id: "feeding", label: BIRD_SECTIONS.feeding, premium: true },
+  { id: "breeding", label: BIRD_SECTIONS.breeding, premium: true },
+  { id: "migration", label: BIRD_SECTIONS.migration, premium: true },
 ];
+
+export const EDIT_BIRD_SAVE_COLOR = "#402122";
 
 export type EditableMushroomData = {
   commonName?: string;
@@ -49,7 +76,7 @@ export type EditableMushroomData = {
   lengthRange?: string;
   wingspanRange?: string;
   weightRange?: string;
-  dominantColors?: string;
+  dominantColors?: string[];
   flightPattern?: string;
   flightAltitude?: string;
   conservationStatus?: string;
@@ -58,6 +85,29 @@ export type EditableMushroomData = {
   keyIdentificationMarks?: string;
   bestTimeToWatch?: string;
   preferredLocations?: string;
+  /** Figma overview size dropdown (maps to profile.size) */
+  sizeCategory?: string;
+  sizeScaleIndex?: number | null;
+  familyDescription?: string;
+  shape?: string;
+  beak?: string;
+  tailShape?: string;
+  legCharacteristics?: string;
+  feedingBehavior?: string;
+  vocalBehavior?: string;
+  territoriality?: string;
+  socialBehavior?: string;
+  dietType?: string;
+  feedingStyle?: string;
+  breedingSeason?: string;
+  nestType?: string;
+  nestingMaterial?: string;
+  parentalCare?: string;
+  residentStatus?: string;
+  migrationPath?: string;
+  seasonalPresence?: string;
+  soundUrls?: string[];
+  userCapturedSounds?: string[];
   _archetype?: string;
   _collection?: string;
   _collections?: string[];
@@ -77,6 +127,21 @@ function splitList(text?: string): string[] | undefined {
     .map((s) => s.trim())
     .filter(Boolean);
   return parts.length > 0 ? parts : undefined;
+}
+
+function splitListValue(value?: string[] | string | null): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return splitList(value) ?? [];
+}
+
+function sizeLabelToIndex(label?: string): number | null {
+  if (!label?.trim()) return null;
+  const labels = COLLECTION_STRINGS.birdDetails.sizeScale;
+  const index = labels.findIndex(
+    (entry) => entry.toLowerCase() === label.trim().toLowerCase()
+  );
+  return index >= 0 ? index : null;
 }
 
 function formatFruitingSeason(fs?: FruitingSeason | null): string {
@@ -118,6 +183,16 @@ export function parseEditableMushroomData(
     typeof raw.scientificClassification === "object"
       ? (raw.scientificClassification as ScientificClassification)
       : undefined;
+  const profile = {
+    ...(extractBirdProfile(raw) ?? {}),
+    ...((raw.profile &&
+    typeof raw.profile === "object" &&
+    !Array.isArray(raw.profile)
+      ? raw.profile
+      : {}) as Record<string, unknown>),
+  };
+  const sizeCategory =
+    typeof profile.size === "string" ? profile.size : undefined;
 
   return {
     commonName:
@@ -188,9 +263,77 @@ export function parseEditableMushroomData(
       typeof raw.wingspanRange === "string" ? raw.wingspanRange : undefined,
     weightRange:
       typeof raw.weightRange === "string" ? raw.weightRange : undefined,
-    dominantColors: joinList(
+    dominantColors: splitListValue(
       raw.dominantColors as string[] | string | undefined
     ),
+    sizeCategory,
+    sizeScaleIndex: sizeLabelToIndex(sizeCategory),
+    familyDescription:
+      typeof profile.familyDescription === "string"
+        ? profile.familyDescription
+        : undefined,
+    shape: typeof profile.shape === "string" ? profile.shape : undefined,
+    beak: typeof profile.beak === "string" ? profile.beak : undefined,
+    tailShape:
+      typeof profile.tailShape === "string" ? profile.tailShape : undefined,
+    legCharacteristics:
+      typeof profile.legCharacteristics === "string"
+        ? profile.legCharacteristics
+        : undefined,
+    feedingBehavior:
+      typeof profile.feedingBehavior === "string"
+        ? profile.feedingBehavior
+        : undefined,
+    vocalBehavior:
+      typeof profile.vocalBehavior === "string"
+        ? profile.vocalBehavior
+        : undefined,
+    territoriality:
+      typeof profile.territoriality === "string"
+        ? profile.territoriality
+        : undefined,
+    socialBehavior:
+      typeof profile.socialBehavior === "string"
+        ? profile.socialBehavior
+        : undefined,
+    dietType:
+      typeof profile.dietType === "string" ? profile.dietType : undefined,
+    feedingStyle:
+      typeof profile.feedingStyle === "string"
+        ? profile.feedingStyle
+        : undefined,
+    breedingSeason:
+      typeof profile.breedingSeason === "string"
+        ? profile.breedingSeason
+        : undefined,
+    nestType:
+      typeof profile.nestType === "string" ? profile.nestType : undefined,
+    nestingMaterial:
+      typeof profile.nestingMaterial === "string"
+        ? profile.nestingMaterial
+        : undefined,
+    parentalCare:
+      typeof profile.parentalCare === "string"
+        ? profile.parentalCare
+        : undefined,
+    residentStatus:
+      typeof profile.residentStatus === "string"
+        ? profile.residentStatus
+        : undefined,
+    migrationPath:
+      typeof profile.migrationPath === "string"
+        ? profile.migrationPath
+        : undefined,
+    seasonalPresence:
+      typeof profile.seasonalPresence === "string"
+        ? profile.seasonalPresence
+        : undefined,
+    soundUrls: Array.isArray(raw.soundUrls)
+      ? (raw.soundUrls as string[]).filter(Boolean)
+      : [],
+    userCapturedSounds: Array.isArray(raw.userCapturedSounds)
+      ? (raw.userCapturedSounds as string[]).filter(Boolean)
+      : [],
     flightPattern: joinList(
       raw.flightPattern as string[] | string | undefined
     ),
@@ -248,6 +391,7 @@ export function flattenBirdSpecimenUpdate(
     "birdWatchingTips",
     "rangeDetails",
     "potentialHazards",
+    "profile",
   ] as const;
 
   const allowed = new Set([
@@ -293,6 +437,25 @@ export function flattenBirdSpecimenUpdate(
     "rangeDetails.migration",
     "rangeDetails.breeding",
     "rangeDetails.nonBreeding",
+    "profile.size",
+    "profile.familyDescription",
+    "profile.shape",
+    "profile.beak",
+    "profile.tailShape",
+    "profile.legCharacteristics",
+    "profile.feedingBehavior",
+    "profile.vocalBehavior",
+    "profile.territoriality",
+    "profile.socialBehavior",
+    "profile.dietType",
+    "profile.feedingStyle",
+    "profile.breedingSeason",
+    "profile.nestType",
+    "profile.nestingMaterial",
+    "profile.parentalCare",
+    "profile.residentStatus",
+    "profile.migrationPath",
+    "profile.seasonalPresence",
   ]);
 
   const out: Record<string, unknown> = {};
@@ -345,6 +508,35 @@ export function buildMushroomUpdatePayload(
       (v) => typeof v === "string" && v.trim()
     );
 
+  const sizeLabel =
+    formData.sizeCategory?.trim() ||
+    (formData.sizeScaleIndex != null
+      ? COLLECTION_STRINGS.birdDetails.sizeScale[formData.sizeScaleIndex]
+      : undefined);
+
+  const profileEntries = {
+    size: sizeLabel,
+    familyDescription: formData.familyDescription?.trim() || undefined,
+    shape: formData.shape?.trim() || undefined,
+    beak: formData.beak?.trim() || undefined,
+    tailShape: formData.tailShape?.trim() || undefined,
+    legCharacteristics: formData.legCharacteristics?.trim() || undefined,
+    feedingBehavior: formData.feedingBehavior?.trim() || undefined,
+    vocalBehavior: formData.vocalBehavior?.trim() || undefined,
+    territoriality: formData.territoriality?.trim() || undefined,
+    socialBehavior: formData.socialBehavior?.trim() || undefined,
+    dietType: formData.dietType?.trim() || undefined,
+    feedingStyle: formData.feedingStyle?.trim() || undefined,
+    breedingSeason: formData.breedingSeason?.trim() || undefined,
+    nestType: formData.nestType?.trim() || undefined,
+    nestingMaterial: formData.nestingMaterial?.trim() || undefined,
+    parentalCare: formData.parentalCare?.trim() || undefined,
+    residentStatus: formData.residentStatus?.trim() || undefined,
+    migrationPath: formData.migrationPath?.trim() || undefined,
+    seasonalPresence: formData.seasonalPresence?.trim() || undefined,
+  };
+  const hasProfile = Object.values(profileEntries).some(Boolean);
+
   return flattenBirdSpecimenUpdate({
     commonName: formData.commonName?.trim() || undefined,
     scientificName: formData.scientificName?.trim() || undefined,
@@ -355,7 +547,10 @@ export function buildMushroomUpdatePayload(
     lengthRange: formData.lengthRange?.trim() || undefined,
     wingspanRange: formData.wingspanRange?.trim() || undefined,
     weightRange: formData.weightRange?.trim() || undefined,
-    dominantColors: splitList(formData.dominantColors),
+    dominantColors:
+      formData.dominantColors && formData.dominantColors.length > 0
+        ? formData.dominantColors
+        : undefined,
     flightPattern: splitList(formData.flightPattern),
     flightAltitude: splitList(formData.flightAltitude),
     conservationStatus: formData.conservationStatus?.trim() || undefined,
@@ -376,6 +571,7 @@ export function buildMushroomUpdatePayload(
         }
       : {}),
     ...(hasClassification ? { scientificClassification: classification } : {}),
+    ...(hasProfile ? { profile: profileEntries } : {}),
   });
 }
 

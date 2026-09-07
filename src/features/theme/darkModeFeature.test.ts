@@ -1,5 +1,9 @@
 const mockIsAppearanceSettingsEnabled = jest.fn(() => true);
 
+jest.mock("../../constants/featureFlags", () => ({
+  isDarkModeEnabledForApp: jest.fn(() => true),
+}));
+
 jest.mock("./themeExperiment.service", () => ({
   isAppearanceSettingsEnabled: () => mockIsAppearanceSettingsEnabled(),
 }));

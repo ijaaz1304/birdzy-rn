@@ -63,7 +63,6 @@ describe("deepLinkManager subscription resolution", () => {
     expect(resolved.screen).toBe("MainTabs");
     expect(resolved.params).toMatchObject({
       screen: "Home",
-      params: { screen: "HomeMain" },
     });
   });
 

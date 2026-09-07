@@ -1,6 +1,6 @@
 /**
  * Assets exports
- * Bird app WebP assets live under src/assets/ (askai, home, popUp/mushroom, etc.).
+ * Bird app WebP assets live under src/assets/ (askai, home, popup/sheet, etc.).
  * Prefer .webp requires where a WebP file exists (iOS decodes via SDWebImageWebPCoder).
  */
 
@@ -22,14 +22,8 @@ export { default as AiBannerFullSvg } from "./home/ask_ai.webp";
 export { default as DiscountBannerSvg } from "./home/images/banner/light/discount_banner.webp";
 export { default as DiscountBannerDarkSvg } from "./home/images/banner/dark/discount_banner.png";
 export { default as BirdOfTheDayBannerSvg } from "./home/species_of_day.webp";
-export { default as BirdOfTheDayBannerDarkSvg } from "./home/popup/mushroom/dark/mushroom_of_the_day_header.webp";
-export { default as BirdOfTheDayBgSvg } from "./home/popup/mushroom/light/mushroom_of_the_day.webp";
-/** @deprecated Use BirdOfTheDayBannerSvg */
-export { default as MushroomOfTheDayBannerSvg } from "./home/species_of_day.webp";
-/** @deprecated Use BirdOfTheDayBannerDarkSvg */
-export { default as MushroomOfTheDayBannerDarkSvg } from "./home/popup/mushroom/dark/mushroom_of_the_day_header.webp";
-/** @deprecated Use BirdOfTheDayBgSvg */
-export { default as MushroomOfTheDayBgSvg } from "./home/popup/mushroom/light/mushroom_of_the_day.webp";
+export { default as BirdOfTheDayBannerDarkSvg } from "./home/popup/sheet/dark/bird_of_the_day_header.webp";
+export { default as BirdOfTheDayBgSvg } from "./home/popup/sheet/light/bird_of_the_day_sheet.webp";
 export { default as Banner1Svg } from "./home/images/banner/light/identify_banner.webp";
 export { default as Banner1DarkSvg } from "./home/images/banner/dark/identify_banner.png";
 export { default as Banner2Svg } from "./home/images/banner/light/identify_banner.webp";
@@ -74,22 +68,22 @@ export { default as RateMatchStarFaceDark } from "./collection/details/rateMatch
 
 /** Local bundled quiz archetype images keyed by quiz bird archetype id. */
 export const QUIZ_BIRD_LOCAL_IMAGES = {
-  porcini: require("./quiz/which_shroom/porcini.webp"),
-  reishi: require("./quiz/which_shroom/reishi.webp"),
-  oyster_mushroom: require("./quiz/which_shroom/oyster_mushroom.webp"),
-  wild_enoki: require("./quiz/which_shroom/wild_enoki.webp"),
-  fly_agaric: require("./quiz/which_shroom/fly_agaric.webp"),
-  lions_mane: require("./quiz/which_shroom/lions_mane.webp"),
-  morel: require("./quiz/which_shroom/morel.webp"),
-  winter_chanterelle: require("./quiz/which_shroom/winter_chanterelle.webp"),
+  porcini: require("./quiz/which_bird/porcini.webp"),
+  reishi: require("./quiz/which_bird/reishi.webp"),
+  oyster_mushroom: require("./quiz/which_bird/oyster_bird.webp"),
+  wild_enoki: require("./quiz/which_bird/wild_enoki.webp"),
+  fly_agaric: require("./quiz/which_bird/fly_agaric.webp"),
+  lions_mane: require("./quiz/which_bird/lions_mane.webp"),
+  morel: require("./quiz/which_bird/morel.webp"),
+  winter_chanterelle: require("./quiz/which_bird/winter_chanterelle.webp"),
 } as const;
 
 export const Images = {
-  birdSample: require("./catalogue/icons/species/no_mushroom.webp"),
+  birdSample: require("./catalogue/icons/species/no_bird.webp"),
   /** @deprecated Use birdSample */
-  plantSample: require("./catalogue/icons/species/no_mushroom.webp"),
+  plantSample: require("./catalogue/icons/species/no_bird.webp"),
   /** @deprecated Use birdSample */
-  mineralSample: require("./catalogue/icons/species/no_mushroom.webp"),
+  mineralSample: require("./catalogue/icons/species/no_bird.webp"),
   plantCardsDark: require("./onboarding/dark/background_1.webp"),
   /** @deprecated Use plantCardsDark */
   mineralCardsDark: require("./onboarding/dark/background_1.webp"),
@@ -102,9 +96,10 @@ export const Images = {
   mineralsLight: require("./home/species_of_day.webp"),
   diagnoseAi: require("./home/identify.webp"),
   authIdentifyIllustration: require("./home/identify.webp"),
-  authBgLight: require("./onboarding/post_auth/light/background.webp"),
-  authBgDark: require("./branding/splash/background/dark/auth_bg.webp"),
-  authScreenBg: require("./onboarding/light/auth.webp"),
+  /** Login / sign-up full-screen backgrounds — bird common_bg (not Shroomzy post_auth/auth.webp). */
+  authBgLight: require("./home/common_bg.webp"),
+  authBgDark: require("./home/common_bg.webp"),
+  authScreenBg: require("./home/common_bg.webp"),
 
   appIcon: require("./branding/app-icon/app_icon.webp"),
 
@@ -131,13 +126,13 @@ export const Images = {
   subscriptionIconCollection: require("./subscription/carousel/light/collection.webp"),
   subscriptionIconDetails: require("./subscription/carousel/light/detail.webp"),
   subscriptionIconFeed: require("./subscription/carousel/light/feed.webp"),
-  subscriptionIconBirdOfDay: require("./subscription/carousel/light/shroom_of_the_day.webp"),
+  subscriptionIconBirdOfDay: require("./subscription/carousel/light/bird_of_the_day.webp"),
   subscriptionIconAiChat: require("./subscription/carousel/light/ai.webp"),
   subscriptionIconIdentificationDark: require("./subscription/carousel/dark/identify.webp"),
   subscriptionIconCollectionDark: require("./subscription/carousel/dark/collection.webp"),
   subscriptionIconDetailsDark: require("./subscription/carousel/dark/detail.webp"),
   subscriptionIconFeedDark: require("./subscription/carousel/dark/feed.webp"),
-  subscriptionIconBirdOfDayDark: require("./subscription/carousel/dark/shroom_of_the_day.webp"),
+  subscriptionIconBirdOfDayDark: require("./subscription/carousel/dark/bird_of_the_day.webp"),
   subscriptionIconAiChatDark: require("./subscription/carousel/dark/ai.webp"),
   /** Subscription paywall / post-auth feature carousel (subs_0…subs_5 PNGs). */
   subscriptionCarousel0: require("./subscription/carousel_png/subs_0.png"),
@@ -167,7 +162,9 @@ export const Images = {
   subscriptionListAiChatDark: require("./subscription/list/dark/6.webp"),
 
   modalNotification: require("./common/modal/notification.png"),
-  speciesTrash: require("./catalogue/icons/species/trash.webp"),
+  modalTrashLight: require("./common/modal/trash_light.webp"),
+  modalTrashDark: require("./common/modal/trash_dark.png"),
+  speciesTrash: require("./common/modal/trash_light.webp"),
   discountTimer: require("./catalogue/icons/species/discount_timer.webp"),
   speciesLocation: require("./catalogue/icons/species/location.webp"),
   speciesLocationDark: require("./catalogue/icons/species/dark/location.webp"),
@@ -192,11 +189,17 @@ export const Images = {
   socialGoogle: require("./common/social/google.webp"),
   socialEmail: require("./catalogue/icons/species/email.png"),
 
-  aiChatCenterImage: require("./askai/find_mushroom_center_image.webp"),
+  aiChatCenterImage: require("./askai/find_bird_center_image.webp"),
   aiChatIcon: require("./askai/chat_avatar.webp"),
   aiChatSend: require("./askai/send.png"),
+  askAiSkyBg: require("./askai/figma/ask_ai_sky_bg.png"),
+  askAiHeroMascot: require("./askai/figma/hero_mascot_clean.png"),
+  askAiPromptIconParrot: require("./askai/figma/icon_parrot.png"),
+  askAiPromptIconWeather: require("./askai/figma/icon_weather.png"),
+  askAiPromptIconBrain: require("./askai/figma/icon_brain.png"),
+  askAiPromptIconFlamingo: require("./askai/figma/icon_flamingo.png"),
 
-  emptyCatalogue: require("./catalogue/icons/species/no_mushroom.webp"),
+  emptyCatalogue: require("./catalogue/icons/species/no_bird.webp"),
   noCatalogue: require("./catalogue/icons/species/no_catalogue.png"),
   emptyCatalogueLight: require("./catalogue/icons/empty_catalogue_lights.webp"),
   emptyCatalogueDark: require("./catalogue/icons/empty_catalogue_darks.webp"),
@@ -227,7 +230,7 @@ export const Images = {
   arrowDown: require("./onboarding/auth/light/icons/arrow_down.png"),
   arrowDownLight: require("./onboarding/auth/light/icons/arrow_down.png"),
   arrowDownDark: require("./home/popup/icons/arrow_down_dark.png"),
-  birdPersonalityImage: require("./askai/find_mushroom_center_image.webp"),
+  birdPersonalityImage: require("./askai/find_bird_center_image.webp"),
   uploadIconDark: require("./common/iconfix/upload_dark.png"),
 
   /** Wishlist stars — iconfix/home (catalogue, collection, top matches). */
@@ -246,38 +249,38 @@ export const Images = {
   banner1: require("./home/images/banner/light/identify_banner.webp"),
   banner1Dark: require("./home/images/banner/dark/identify_banner.png"),
 
-  rateUsPopupIllustration: require("./home/popup/mushroom/light/rate_us_popup.webp"),
-  rateUsSheetBgLight: require("./home/popup/mushroom/light/rate_us.webp"),
+  rateUsPopupIllustration: require("./home/popup/sheet/light/rate_us_popup.webp"),
+  rateUsSheetBgLight: require("./home/popup/sheet/light/rate_us.webp"),
   /** Dark Rate Us + Feedback share the same pop_up sheet art. */
-  rateUsSheetBgDark: require("./home/popup/mushroom/dark/pop_up.webp"),
-  popUp50Light: require("./home/popup/mushroom/light/pop_up.webp"),
-  popUp50Dark: require("./home/popup/mushroom/dark/pop_up.webp"),
-  popUp70Light: require("./home/popup/mushroom/light/subs_offer_bg.webp"),
+  rateUsSheetBgDark: require("./home/popup/sheet/dark/pop_up.webp"),
+  popUp50Light: require("./home/popup/sheet/light/pop_up.webp"),
+  popUp50Dark: require("./home/popup/sheet/dark/pop_up.webp"),
+  popUp70Light: require("./home/popup/sheet/light/subs_offer_bg.webp"),
   popUp70Dark: require("./subscription/background/dark/popup_70.png"),
 
-  subscriptionPopup50Light: require("./home/popup/mushroom/light/subs_pop_org.webp"),
-  subscriptionPopup50Dark: require("./home/popup/mushroom/dark/pop_up.webp"),
-  subscriptionPopup70Light: require("./home/popup/mushroom/light/subs_offer_bg.webp"),
+  subscriptionPopup50Light: require("./home/popup/sheet/light/subs_pop_org.webp"),
+  subscriptionPopup50Dark: require("./home/popup/sheet/dark/pop_up.webp"),
+  subscriptionPopup70Light: require("./home/popup/sheet/light/subs_offer_bg.webp"),
   subscriptionPopup70Dark: require("./subscription/background/dark/popup_70.png"),
 
   /** Limit-reached upgrade sheet — full-bleed popup artwork (bg + illustration). */
-  subscriptionPopupIconCollection: require("./home/popup/mushroom/light/collection.webp"),
-  subscriptionPopupIconCollectionDark: require("./home/popup/mushroom/dark/collection.webp"),
-  subscriptionPopupIconIdentification: require("./home/popup/mushroom/light/identify_popup_bg.webp"),
-  subscriptionPopupIconIdentificationDark: require("./home/popup/mushroom/dark/identify_popup_bg.webp"),
-  subscriptionPopupIconDetails: require("./home/popup/mushroom/light/detail.webp"),
-  subscriptionPopupIconDetailsDark: require("./home/popup/mushroom/dark/detail.webp"),
-  subscriptionPopupIconFeed: require("./home/popup/mushroom/light/feed_popup_bg.png"),
-  subscriptionPopupIconFeedDark: require("./home/popup/mushroom/dark/feed_popup_bg.png"),
+  subscriptionPopupIconCollection: require("./home/popup/sheet/light/collection.webp"),
+  subscriptionPopupIconCollectionDark: require("./home/popup/sheet/dark/collection.webp"),
+  subscriptionPopupIconIdentification: require("./home/popup/sheet/light/identify_popup_bg.webp"),
+  subscriptionPopupIconIdentificationDark: require("./home/popup/sheet/dark/identify_popup_bg.webp"),
+  subscriptionPopupIconDetails: require("./home/popup/sheet/light/detail.webp"),
+  subscriptionPopupIconDetailsDark: require("./home/popup/sheet/dark/detail.webp"),
+  subscriptionPopupIconFeed: require("./home/popup/sheet/light/feed_popup_bg.png"),
+  subscriptionPopupIconFeedDark: require("./home/popup/sheet/dark/feed_popup_bg.png"),
   /** Sound library storage limit — full-bleed upgrade sheet. */
-  subscriptionPopupIconSoundGallery: require("./home/popup/mushroom/light/sound_popup_bg.webp"),
-  subscriptionPopupIconSoundGalleryDark: require("./home/popup/mushroom/dark/sound_popup_bg.webp"),
+  subscriptionPopupIconSoundGallery: require("./home/popup/sheet/light/sound_popup_bg.webp"),
+  subscriptionPopupIconSoundGalleryDark: require("./home/popup/sheet/dark/sound_popup_bg.webp"),
   /** Daily sound ID limit — full-bleed upgrade sheet (not the 550px icon crop). */
-  subscriptionPopupIconSoundIdentification: require("./home/popup/mushroom/light/sound_popup_bg.webp"),
-  subscriptionPopupIconSoundIdentificationDark: require("./home/popup/mushroom/dark/sound_popup_bg.webp"),
+  subscriptionPopupIconSoundIdentification: require("./home/popup/sheet/light/sound_popup_bg.webp"),
+  subscriptionPopupIconSoundIdentificationDark: require("./home/popup/sheet/dark/sound_popup_bg.webp"),
   /** Bird of the Day refresh limit — full-bleed sheet (not the 1340px header banner). */
-  subscriptionPopupIconBirdOfDay: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
-  subscriptionPopupIconBirdOfDayDark: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  subscriptionPopupIconBirdOfDay: require("./home/popup/sheet/light/bird_of_the_day_sheet.webp"),
+  subscriptionPopupIconBirdOfDayDark: require("./home/popup/sheet/light/bird_of_the_day_sheet.webp"),
   /** AI chat limit — full-bleed sheet (not the 375px carousel icon). */
   subscriptionPopupIconAiChat: require("./askai/ask_ai_bg.webp"),
   subscriptionPopupIconAiChatDark: require("./askai/dark/ask_ai_bg.webp"),
@@ -293,8 +296,8 @@ export const Images = {
   /** Figma 8975:41033 — full light banner (gradient + bird), 335×160 */
   homeDiscountBannerLight: require("./home/images/banner/light/discount_banner_figma.png"),
 
-  trashLight: require("./catalogue/icons/species/trash.webp"),
-  trashDark: require("./catalogue/icons/species/dark/trash.webp"),
+  trashLight: require("./common/modal/trash_light.webp"),
+  trashDark: require("./common/modal/trash_dark.png"),
   detailPinned: require("./collection/details/pinned.png"),
   detailOverview: require("./collection/details/overview.png"),
   detailLeftArrow: require("./collection/details/left_arrow.png"),
@@ -333,22 +336,22 @@ export const Images = {
   onboarding50PercentDark: require("./onboarding/post_auth/light/50_off.webp"),
   analyseAi: require("./askai/ask_ai_bg.webp"),
   analyseAiDark: require("./askai/dark/ask_ai_bg.webp"),
-  whichBirdAreYouBg: require("./askai/which_mushroom_are_you_bg.png"),
-  findYourBirdBg: require("./askai/find_your_mushroom_bg.png"),
+  whichBirdAreYouBg: require("./askai/which_bird_are_you_bg.png"),
+  findYourBirdBg: require("./askai/find_your_bird_bg.png"),
   identifyBg: require("./identification/light/identification_bg.webp"),
   identifyBgDark: require("./identification/dark/identification_bg.webp"),
-  whichBirdResultBg: require("./askai/which_shroom_result_bg.png"),
-  whichBirdResultBgDark: require("./askai/dark/which_mushroom_are_you_bg.webp"),
-  findYourBirdBgDark: require("./askai/dark/find_your_mushroom_bg.png"),
-  collectionBgLight: require("./home/popup/mushroom/light/collection.webp"),
-  collectionBgDark: require("./home/popup/mushroom/dark/collection.webp"),
-  collectionAltBgLight: require("./home/popup/mushroom/light/collection_1.webp"),
-  collectionAltBgDark: require("./home/popup/mushroom/dark/collection_1.webp"),
+  whichBirdResultBg: require("./askai/which_bird_result_bg.png"),
+  whichBirdResultBgDark: require("./askai/dark/which_bird_are_you_bg.webp"),
+  findYourBirdBgDark: require("./askai/dark/find_your_bird_bg.png"),
+  collectionBgLight: require("./home/popup/sheet/light/collection.webp"),
+  collectionBgDark: require("./home/popup/sheet/dark/collection.webp"),
+  collectionAltBgLight: require("./home/popup/sheet/light/collection_1.webp"),
+  collectionAltBgDark: require("./home/popup/sheet/dark/collection_1.webp"),
 
   cameraIcon: require("./home/identify.webp"),
-  askAiCaptureBird: require("./askai/capture_mushroom.png"),
-  findYourBirdCamera: require("./askai/find_mush_camera.png"),
-  askAiUploadBird: require("./askai/upload_mushroom.png"),
+  askAiCaptureBird: require("./askai/capture_bird.png"),
+  findYourBirdCamera: require("./askai/find_bird_camera.png"),
+  askAiUploadBird: require("./askai/upload_bird.png"),
 
   bottomTabHome: require("./common/bottomTab/home.png"),
   bottomTabCatalogue: require("./common/bottomTab/catalogue.png"),
@@ -415,25 +418,25 @@ export const Images = {
   uploadFeed: require("./common/iconfix/upload_feed.png"),
   uploadFeedDark: require("./common/iconfix/upload_feed_dark.png"),
   /** Permission sheets — full-bleed art (same approach as upgrade/limit-reached). */
-  popupNotificationPermissionBg: require("./home/popup/mushroom/light/notification_permission_bg.webp"),
-  popupNotificationPermissionBgDark: require("./home/popup/mushroom/dark/notification_permission_bg.webp"),
-  popupLocationPermissionBg: require("./home/popup/mushroom/light/location_permission_bg.webp"),
-  popupLocationPermissionBgDark: require("./home/popup/mushroom/dark/location_permission_bg.webp"),
-  popupCongratulationsBg: require("./home/popup/mushroom/light/congratulations_bg.webp"),
-  popupCongratulationsBgDark: require("./home/popup/mushroom/dark/congratulations_bg.webp"),
-  popupStoragePermissionBg: require("./home/popup/mushroom/light/storage_permission_bg.webp"),
-  popupStoragePermissionBgDark: require("./home/popup/mushroom/dark/storage_permission_bg.webp"),
-  birdEdibleBadge: require("./collection/details/mushroom/edible.webp"),
-  birdInedibleBadge: require("./collection/details/mushroom/inedible.webp"),
-  birdToxicBadge: require("./collection/details/mushroom/toxic.webp"),
-  birdPsychoactiveBadge: require("./collection/details/mushroom/psychoactive.webp"),
-  birdGoPro: require("./collection/details/mushroom/go_pro.webp"),
-  birdSubsToPremium: require("./collection/details/mushroom/subs_to_premium.webp"),
-  birdBlurredLocation: require("./collection/details/mushroom/blurred_location.webp"),
-  birdOfDayPopup: require("./home/popup/mushroom/light/bird_of_the_day_popup.webp"),
-  birdOfDayPopupDark: require("./home/popup/mushroom/dark/mushroom_of_the_day_header.webp"),
-  birdOfDayPopupBg: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
-  birdOfDayPopupBgDark: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
+  popupNotificationPermissionBg: require("./home/popup/sheet/light/notification_permission_bg.webp"),
+  popupNotificationPermissionBgDark: require("./home/popup/sheet/dark/notification_permission_bg.webp"),
+  popupLocationPermissionBg: require("./home/popup/sheet/light/location_permission_bg.webp"),
+  popupLocationPermissionBgDark: require("./home/popup/sheet/dark/location_permission_bg.webp"),
+  popupCongratulationsBg: require("./home/popup/sheet/light/congratulations_bg.webp"),
+  popupCongratulationsBgDark: require("./home/popup/sheet/dark/congratulations_bg.webp"),
+  popupStoragePermissionBg: require("./home/popup/sheet/light/storage_permission_bg.webp"),
+  popupStoragePermissionBgDark: require("./home/popup/sheet/dark/storage_permission_bg.webp"),
+  birdEdibleBadge: require("./collection/details/bird/edible.webp"),
+  birdInedibleBadge: require("./collection/details/bird/inedible.webp"),
+  birdToxicBadge: require("./collection/details/bird/toxic.webp"),
+  birdPsychoactiveBadge: require("./collection/details/bird/psychoactive.webp"),
+  birdGoPro: require("./collection/details/bird/go_pro.webp"),
+  birdSubsToPremium: require("./collection/details/bird/subs_to_premium.webp"),
+  birdBlurredLocation: require("./collection/details/bird/blurred_location.webp"),
+  birdOfDayPopup: require("./home/popup/sheet/light/bird_of_the_day_popup.webp"),
+  birdOfDayPopupDark: require("./home/popup/sheet/dark/bird_of_the_day_header.webp"),
+  birdOfDayPopupBg: require("./home/popup/sheet/light/bird_of_the_day_sheet.webp"),
+  birdOfDayPopupBgDark: require("./home/popup/sheet/light/bird_of_the_day_sheet.webp"),
   homeGlowingStar: require("./home/glowing_star.webp"),
   homeOuterCard: require("./home/outer_card.webp"),
   homeFindSpecies: require("./home/find_species.webp"),
@@ -457,55 +460,6 @@ export const Images = {
   passwordEye: require("./catalogue/icons/species/eye.webp"),
   passwordEyeOff: require("./catalogue/icons/species/eye_off.webp"),
   filterIcon: require("./catalogue/icons/species/filter.png"),
-
-  /** @deprecated Mushroom-era aliases — use bird/species keys above */
-  mushroomSample: require("./catalogue/icons/species/no_mushroom.webp"),
-  subscriptionIconMushroomOfDay: require("./subscription/carousel/light/shroom_of_the_day.webp"),
-  subscriptionIconMushroomOfDayDark: require("./subscription/carousel/dark/shroom_of_the_day.webp"),
-  subscriptionListMushroomOfDay: require("./subscription/list/light/5.webp"),
-  subscriptionListMushroomOfDayDark: require("./subscription/list/dark/5.webp"),
-  mushroomTrash: require("./catalogue/icons/species/trash.webp"),
-  mushroomLocation: require("./catalogue/icons/species/location.webp"),
-  mushroomLocationDark: require("./catalogue/icons/species/dark/location.webp"),
-  mushroomCapturePopup: require("./catalogue/icons/species/capture_popup.webp"),
-  mushroomLocationLock: require("./catalogue/icons/species/location_lock.webp"),
-  mushroomSetting: require("./catalogue/icons/species/setting.webp"),
-  mushroomSettingDark: require("./catalogue/icons/species/dark/setting.webp"),
-  mushroomStayUpdated: require("./catalogue/icons/species/stay_updated.webp"),
-  mushroomIdentificationDisclaimer: require("./catalogue/icons/species/identification_disclaimer.png"),
-  mushroomIdentificationDisclaimerDark: require("./common/iconfix/disclaimer_dark.png"),
-  mushroomPersonalityImage: require("./askai/find_mushroom_center_image.webp"),
-  mushroomWishlistStar: require("./common/iconfix/home/star.png"),
-  mushroomWishlistStarFilled: require("./common/iconfix/home/star_filled.png"),
-  subscriptionPopupIconMushroomOfDay: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
-  subscriptionPopupIconMushroomOfDayDark: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
-  mushroomGift: require("./home/species_of_day.webp"),
-  mushroomGiftDark: require("./home/species_of_day.webp"),
-  whichMushroomAreYouBg: require("./askai/which_mushroom_are_you_bg.png"),
-  findYourMushroomBg: require("./askai/find_your_mushroom_bg.png"),
-  whichMushroomLightBg: require("./askai/which_shroom_result_bg.png"),
-  whichMushroomDarkBg: require("./askai/dark/which_mushroom_are_you_bg.webp"),
-  findYourMushroomBgDark: require("./askai/dark/find_your_mushroom_bg.png"),
-  askAiCaptureMushroom: require("./askai/capture_mushroom.png"),
-  findYourMushCamera: require("./askai/find_mush_camera.png"),
-  askAiUploadMushroom: require("./askai/upload_mushroom.png"),
-  mushroomEdible: require("./collection/details/mushroom/edible.webp"),
-  mushroomInedible: require("./collection/details/mushroom/inedible.webp"),
-  mushroomToxic: require("./collection/details/mushroom/toxic.webp"),
-  mushroomPsychoactive: require("./collection/details/mushroom/psychoactive.webp"),
-  mushroomGoPro: require("./collection/details/mushroom/go_pro.webp"),
-  mushroomSubsToPremium: require("./collection/details/mushroom/subs_to_premium.webp"),
-  mushroomBlurredLocation: require("./collection/details/mushroom/blurred_location.webp"),
-  mushroomToday: require("./home/popup/mushroom/light/bird_of_the_day_popup.webp"),
-  mushroomTodayDark: require("./home/popup/mushroom/dark/mushroom_of_the_day_header.webp"),
-  mushroomOfTheDayPopupBg: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
-  mushroomOfTheDayPopupBgDark: require("./home/popup/mushroom/light/mushroom_of_the_day.webp"),
-  mushroomGlowingStar: require("./home/glowing_star.webp"),
-  mushroomOuterCard: require("./home/outer_card.webp"),
-  homeFindShrooms: require("./home/find_species.webp"),
-  homeFindShroomsDark: require("./home/dark/find_species.png"),
-  homeMushroomOfDay: require("./home/species_of_day.webp"),
-  homeMushroomOfDayDark: require("./home/dark/species_of_day.png"),
 };
 
 /** Standard render size for back-navigation arrows (wrapper + hit target). */
@@ -528,6 +482,3 @@ export { default as DetailsMoreReportDark } from "./common/iconfix/details_more/
 export { default as DetailsMoreRemoveLight } from "./common/iconfix/details_more/light/remove.svg";
 export { default as DetailsMoreRemoveDark } from "./common/iconfix/details_more/dark/remove.svg";
 export { default as DualLineSvg } from "./common/iconfix/dual_line.svg";
-
-/** @deprecated Use QUIZ_BIRD_LOCAL_IMAGES */
-export const QUIZ_MUSHROOM_LOCAL_IMAGES = QUIZ_BIRD_LOCAL_IMAGES;

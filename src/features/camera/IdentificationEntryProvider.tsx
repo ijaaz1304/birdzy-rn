@@ -16,7 +16,6 @@ import React, {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
-  CameraPermissionPopup,
   ChangeLocationBottomSheet,
   ChooseMethodPopup,
   LocationManageAccessPopup,
@@ -27,7 +26,6 @@ import { RootStackParamList } from "../../navigation/types";
 import {
   checkCameraPermission,
   openDeviceSettings,
-  requestCameraPermission,
   requestMicrophonePermission,
 } from "../../services/permissions";
 import { shouldSkipLocationPermissionPrompt } from "../../services/permissions/permissionPromptSkip";
@@ -36,6 +34,7 @@ import { useIdentificationLocationStore } from "./identificationLocation.store";
 import { useLocationPermissionUiStore } from "./locationPermissionUi.store";
 import { useLocationToggleFlow } from "./useLocationToggleFlow";
 import { useIdentificationEntryStore } from "./identificationEntry.store";
+import { CLEAR_EXTERNAL_CAMERA_ROUTE_PARAMS } from "./identifyCameraNavigation";
 
 type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -82,9 +81,6 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
 
   const awaitingNative = useLocationPermissionUiStore((s) => s.awaitingNative);
 
-  const [showCameraPopup, setShowCameraPopup] = useState(false);
-  const [cameraLoading, setCameraLoading] = useState(false);
-  const [cameraBlocked, setCameraBlocked] = useState(false);
   const [showMicrophonePopup, setShowMicrophonePopup] = useState(false);
   const [microphoneLoading, setMicrophoneLoading] = useState(false);
   const [microphoneBlocked, setMicrophoneBlocked] = useState(false);
@@ -103,9 +99,13 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
 
   const navigateToCamera = useCallback(() => {
     flowActiveRef.current = false;
+    useIdentificationEntryStore.getState().setExternalCameraReturnTarget(null);
     navigation.navigate("MainTabs", {
       screen: "Camera",
-      params: { screen: "CameraMain" },
+      params: {
+        screen: "CameraMain",
+        params: { ...CLEAR_EXTERNAL_CAMERA_ROUTE_PARAMS },
+      },
     });
   }, [navigation]);
 
@@ -125,12 +125,7 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
 
     const camera = await checkCameraPermission();
     setCameraPermissionGranted(camera.granted);
-    if (camera.granted) {
-      navigateToCamera();
-      return;
-    }
-    setCameraBlocked(!!camera.blocked);
-    setShowCameraPopup(true);
+    navigateToCamera();
   }, [navigateToCamera, navigateToSoundIdentify, setCameraPermissionGranted]);
 
   const beginIdentificationEntry = useCallback(
@@ -138,7 +133,6 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
       flowActiveRef.current = true;
       flowKindRef.current = kind;
       setShowMicrophonePopup(false);
-      setShowCameraPopup(false);
 
       const skipLocation = await shouldSkipLocationPermissionPrompt();
       if (skipLocation) {
@@ -206,33 +200,6 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
     setShowEnableLocationPopup(false);
     openCustomLocationSheet();
   }, [openCustomLocationSheet, setShowEnableLocationPopup]);
-
-  const handleAllowCamera = useCallback(() => {
-    if (cameraBlocked) {
-      void openDeviceSettings();
-      return;
-    }
-
-    setCameraLoading(true);
-    void (async () => {
-      try {
-        const result = await requestCameraPermission();
-        setCameraBlocked(!!result.blocked);
-        if (result.granted) {
-          setCameraPermissionGranted(true);
-          setShowCameraPopup(false);
-          navigateToCamera();
-        }
-      } finally {
-        setCameraLoading(false);
-      }
-    })();
-  }, [cameraBlocked, navigateToCamera, setCameraPermissionGranted]);
-
-  const handleCameraPopupClose = useCallback(() => {
-    setShowCameraPopup(false);
-    flowActiveRef.current = false;
-  }, []);
 
   const handleAllowMicrophone = useCallback(() => {
     if (microphoneBlocked) {
@@ -334,14 +301,6 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
             void proceedAfterLocationResolved();
           }
         }}
-      />
-
-      <CameraPermissionPopup
-        visible={showCameraPopup}
-        onClose={handleCameraPopupClose}
-        onAllowCamera={handleAllowCamera}
-        loading={cameraLoading}
-        openSettings={cameraBlocked}
       />
 
       <MicrophonePermissionPopup

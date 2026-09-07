@@ -1,41 +1,33 @@
 import { AppImage } from "@/components/AppImage";
-import React, { useEffect, useMemo } from "react";
-import { ActivityIndicator, Platform, StyleSheet, TouchableOpacity, View, processColor } from "react-native";
+import React, { useEffect } from "react";
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { useTheme } from "../../../hooks/useTheme";
 import { Text } from "../../../atoms";
 import { IdentificationLocationBanner } from "./IdentificationLocationBanner";
 import { useLocationToggleFlow } from "../useLocationToggleFlow";
+import { shouldShowLocationBannerAsGranted } from "../locationToggle.helpers";
 import { useGalleryPickerSelectionStore } from "../galleryPickerSelection.store";
 import { resolvePreviewImageUri } from "../camera.utils";
 
 type GalleryPickerFooterProps = {
   bottomInset: number;
-  showAndroidSystemFallback: boolean;
-  androidPickerLoading: boolean;
   submitting: boolean;
-  onOpenAndroidSystemPicker: () => void;
   onNext: () => void;
-  /** Android embedded picker: footer below grid (not overlaid). iOS keeps overlay. */
   layout?: "overlay" | "stacked";
 };
 
-export function useGalleryAccentColor() {
-  const theme = useTheme();
-  return useMemo(() => {
-    const value = processColor(theme.colors.primary);
-    return typeof value === "number" ? value : undefined;
-  }, [theme.colors.primary]);
-}
-
 export const GalleryPickerFooter = React.memo(function GalleryPickerFooter({
   bottomInset,
-  showAndroidSystemFallback,
-  androidPickerLoading,
   submitting,
-  onOpenAndroidSystemPicker,
   onNext,
-  layout = Platform.OS === "ios" ? "overlay" : "stacked",
+  layout = "overlay",
 }: GalleryPickerFooterProps) {
   const theme = useTheme();
   const selected = useGalleryPickerSelectionStore((s) => s.selected);
@@ -44,9 +36,13 @@ export const GalleryPickerFooter = React.memo(function GalleryPickerFooter({
   const setThumbUri = useGalleryPickerSelectionStore((s) => s.setThumbUri);
 
   const {
+    location,
     permissionGranted: locationPermissionGranted,
     locationLabel,
     openCustomLocationSheet,
+    promptForLocation,
+    refreshFromDevice,
+    hasExistingLocation,
   } = useLocationToggleFlow();
 
   useEffect(() => {
@@ -76,8 +72,36 @@ export const GalleryPickerFooter = React.memo(function GalleryPickerFooter({
 
   const handleLocationToggle = (enabled: boolean) => {
     if (!enabled) return;
-    openCustomLocationSheet();
+    if (Platform.OS === "ios") {
+      openCustomLocationSheet();
+      return;
+    }
+    if (locationPermissionGranted) {
+      void refreshFromDevice();
+      return;
+    }
+    void promptForLocation();
   };
+
+  const handlePressLocation = () => {
+    if (Platform.OS === "ios") {
+      openCustomLocationSheet();
+      return;
+    }
+    if (locationPermissionGranted || hasExistingLocation) {
+      openCustomLocationSheet();
+      return;
+    }
+    void promptForLocation();
+  };
+
+  const bannerGranted =
+    Platform.OS === "android"
+      ? shouldShowLocationBannerAsGranted(
+          locationPermissionGranted,
+          location
+        )
+      : locationPermissionGranted;
 
   const isStacked = layout === "stacked";
 
@@ -95,38 +119,29 @@ export const GalleryPickerFooter = React.memo(function GalleryPickerFooter({
     >
       <IdentificationLocationBanner
         variant="gallery"
-        permissionGranted={locationPermissionGranted}
+        permissionGranted={bannerGranted}
         locationLabel={locationLabel}
         onToggleLocation={handleLocationToggle}
-        onPressLocation={openCustomLocationSheet}
+        onPressLocation={handlePressLocation}
       />
 
       {selected ? (
         <View style={styles.footerActions}>
           <View style={styles.thumbWrap}>
-            <AppImage
-              source={{ uri: thumbUri ?? selected.uri }}
-              style={styles.thumbImage}
-            />
+            <View style={styles.thumbImageClip}>
+              <AppImage
+                source={{ uri: thumbUri ?? selected.uri }}
+                style={styles.thumbImage}
+              />
+            </View>
             <TouchableOpacity
               style={styles.thumbRemove}
               onPress={() => setSelected(null)}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
-              <MaterialIcons name="close" size={14} color="#FFFFFF" />
+              <MaterialIcons name="close" size={12} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-
-          {showAndroidSystemFallback ? (
-            <TouchableOpacity
-              style={styles.changePhotoButton}
-              onPress={onOpenAndroidSystemPicker}
-              disabled={androidPickerLoading}
-            >
-              <Text variant="body" size="small" color="textSecondary">
-                Change photo
-              </Text>
-            </TouchableOpacity>
-          ) : null}
 
           <TouchableOpacity
             style={[styles.nextButton, { backgroundColor: theme.colors.primary }]}
@@ -148,52 +163,49 @@ export const GalleryPickerFooter = React.memo(function GalleryPickerFooter({
             )}
           </TouchableOpacity>
         </View>
-      ) : layout === "overlay" ? (
-        <View style={styles.footerSpacer} />
       ) : null}
     </View>
   );
 });
 
 /** Space reserved above home indicator for the overlay footer. */
-export const GALLERY_FOOTER_RESERVE = Platform.OS === "android" ? 168 : 176;
+export const GALLERY_FOOTER_RESERVE = 118;
 
 const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 20,
-    paddingTop: 16,
-    gap: 12,
+    paddingTop: 10,
+    gap: 8,
   },
   footerOverlay: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    minHeight: GALLERY_FOOTER_RESERVE,
-    zIndex: 4,
-    elevation: 8,
+    zIndex: 8,
+    elevation: 12,
   },
   footerStacked: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "rgba(0,0,0,0.08)",
   },
-  footerSpacer: {
-    height: 52,
-  },
   footerActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    minHeight: 52,
-  },
-  changePhotoButton: {
-    marginLeft: "auto",
-    marginRight: 4,
+    gap: 10,
+    minHeight: 44,
+    overflow: "visible",
   },
   thumbWrap: {
-    width: 62,
-    height: 62,
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    overflow: "visible",
+  },
+  thumbImageClip: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
     overflow: "hidden",
   },
   thumbImage: {
@@ -202,12 +214,12 @@ const styles = StyleSheet.create({
   },
   thumbRemove: {
     position: "absolute",
-    top: 5,
-    right: 5,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "rgba(17,17,17,0.3)",
+    top: -5,
+    right: -5,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "rgba(17,17,17,0.45)",
     alignItems: "center",
     justifyContent: "center",
   },

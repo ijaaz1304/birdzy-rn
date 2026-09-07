@@ -32,6 +32,7 @@ import {
   InputField as BaseInputField,
   CustomLocationInput,
   Dropdown,
+  MultiSelectDropdown,
 } from "../../../molecules";
 import { CollectionStackParamList } from "../../../navigation/types";
 import { MushroomPhoto } from "../../../types/mushroom-media.types";
@@ -53,6 +54,7 @@ import { Radius } from "../../../design";
 import { spacing } from "../../../design-system/spacing";
 import {
   EDIT_BIRD_TABS,
+  EDIT_BIRD_SAVE_COLOR,
   EditMushroomTabId,
   EditableMushroomData,
   buildMushroomUpdatePayload,
@@ -65,6 +67,11 @@ import {
   BIRD_TYPE_LABELS,
   CONSERVATION_STATUS_LABELS,
 } from "../../../constants/birdOptions";
+import { DIET_FILTER_OPTIONS } from "../../../constants/filterOptions";
+import { WIZARD_COLOR_OPTIONS } from "../../discovery/stepByStep.constants";
+import { WizardSizePicker } from "../../discovery/components/WizardSizePicker";
+import { BirdSoundsSection } from "../components/BirdDetailSections";
+import { navigateToSoundIdentify } from "../../../utils/navigation";
 
 type EditBirdDetailsScreenRouteProp = RouteProp<
   CollectionStackParamList,
@@ -80,6 +87,38 @@ type FilterOptions = Record<string, string[]>;
 const LAYOUT_MARGIN = 20;
 const SECTION_GAP = 12;
 const MARK_ON_MAP_COLOR = "#c7630c";
+const TAB_ACTIVE_COLOR = EDIT_BIRD_SAVE_COLOR;
+
+const SIZE_OPTIONS = COLLECTION_STRINGS.birdDetails.sizeScale.map((label) => ({
+  label,
+  value: label,
+}));
+
+const COLOR_OPTIONS = WIZARD_COLOR_OPTIONS.map((option) => ({
+  label: option.id,
+  value: option.id,
+}));
+
+const DIET_TYPE_OPTIONS = [
+  { label: "Omnivore", value: "Omnivore" },
+  { label: "Herbivore", value: "Herbivore" },
+  { label: "Insectivore", value: "Insectivore" },
+  { label: "Carnivore", value: "Carnivore" },
+  ...DIET_FILTER_OPTIONS.map((option) => ({
+    label: option.label,
+    value: option.label,
+  })),
+];
+
+const TAXONOMY_FIELDS = [
+  ["Kingdom", "kingdom"],
+  ["Phylum", "phylum"],
+  ["Class", "class"],
+  ["Order", "order"],
+  ["Family", "family"],
+  ["Genus", "genus"],
+  ["Species", "species"],
+] as const;
 
 export const EditBirdDetailsScreen: React.FC = () => {
   const theme = useTheme();
@@ -175,13 +214,19 @@ export const EditBirdDetailsScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<EditMushroomTabId>("overview");
 
   const editTabs = EDIT_BIRD_TABS;
-  const birdStrings = COLLECTION_STRINGS.birdDetails.traits;
+  const birdStrings = COLLECTION_STRINGS.birdDetails;
+  const sectionStrings = birdStrings.sections;
 
   const scrollViewRef = useRef<ScrollView>(null);
   const sectionYOffsets = useRef<Record<EditMushroomTabId, number>>({
     overview: 0,
-    physical: 0,
+    sounds: 0,
+    characteristics: 0,
+    behavior: 0,
     habitat: 0,
+    feeding: 0,
+    breeding: 0,
+    migration: 0,
   });
 
   const DEFAULT_LOCATION = DEFAULT_COORDINATES;
@@ -472,8 +517,76 @@ export const EditBirdDetailsScreen: React.FC = () => {
         label,
       }));
     }
+    if (optionKey === "habitat") {
+      return toDropdownOptions(filterOptions.habitat);
+    }
     return [];
   };
+
+  const getTaxonomyOptions = (
+    key: string,
+    currentValue?: string
+  ): { label: string; value: string }[] => {
+    const apiKey = `scientificClassification.${key}`;
+    const fromApi =
+      filterOptions[apiKey] ?? filterOptions[key] ?? ([] as string[]);
+    const options = toDropdownOptions(fromApi);
+    if (currentValue?.trim()) {
+      const trimmed = currentValue.trim();
+      if (!options.some((option) => option.value === trimmed)) {
+        options.unshift({ label: trimmed, value: trimmed });
+      }
+    }
+    return options;
+  };
+
+  const renderTaxonomyDropdown = (
+    label: string,
+    key: keyof NonNullable<EditableMushroomData["scientificClassification"]>
+  ) => {
+    const currentValue =
+      formData?.scientificClassification?.[key] || "";
+    const options = getTaxonomyOptions(key, currentValue);
+    if (options.length === 0) {
+      return (
+        <BaseInputField
+          {...inputFieldThemeProps}
+          label={label}
+          value={currentValue}
+          onChangeText={(text) => updateClassification(key, text)}
+          placeholder={`Enter ${label.toLowerCase()}`}
+        />
+      );
+    }
+    return (
+      <Dropdown
+        {...dropdownThemeProps}
+        label={label}
+        value={currentValue}
+        onSelect={(value) => updateClassification(key, value)}
+        options={options}
+        placeholder={`Select ${label.toLowerCase()}`}
+      />
+    );
+  };
+
+  const renderTextArea = (
+    label: string,
+    value: string | undefined,
+    onChange: (text: string) => void,
+    placeholder: string,
+    minHeight = 100
+  ) => (
+    <BaseTextArea
+      {...textAreaThemeProps}
+      label={label}
+      value={value || ""}
+      onChangeText={onChange}
+      placeholder={placeholder}
+      numberOfLines={4}
+      minHeight={minHeight}
+    />
+  );
 
   const renderDropdown = (
     label: string,
@@ -554,7 +667,9 @@ export const EditBirdDetailsScreen: React.FC = () => {
     );
   }
 
-  const classification = formData.scientificClassification ?? {};
+  const hasSounds =
+    (formData.soundUrls?.length ?? 0) > 0 ||
+    (formData.userCapturedSounds?.length ?? 0) > 0;
 
   return (
     <SafeAreaView
@@ -578,7 +693,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
             style={{ color: colors.textPrimary }}
             numberOfLines={1}
           >
-            Edit sighting
+            {COLLECTION_STRINGS.screens.editBird}
           </Text>
         </View>
         <View style={{ width: 48 }} />
@@ -605,8 +720,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
                   styles.tabItem,
                   isActive && {
                     borderBottomWidth: 2,
-                    borderBottomColor:
-                      detailsSpec.TAB_ACTIVE_UNDERLINE ?? colors.primary,
+                    borderBottomColor: TAB_ACTIVE_COLOR,
                   },
                 ]}
               >
@@ -617,19 +731,19 @@ export const EditBirdDetailsScreen: React.FC = () => {
                   numberOfLines={1}
                   style={{
                     color: isActive
-                      ? detailsSpec.TAB_ACTIVE_UNDERLINE ?? colors.primary
+                      ? TAB_ACTIVE_COLOR
                       : detailsSpec.TAB_INACTIVE_TEXT ?? colors.textSecondary,
                   }}
                 >
                   {tab.label}
                 </Text>
-                {tab.id !== "overview" && (
+                {tab.premium ? (
                   <AppImage
                     source={Images.tabBatch}
                     style={styles.tabBadge}
                     resizeMode="contain"
                   />
-                )}
+                ) : null}
               </TouchableOpacity>
             );
           })}
@@ -645,7 +759,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
       >
         {renderSectionCard(
           "overview",
-          "Overview",
+          sectionStrings.overview,
           <>
             <BaseInputField
               {...inputFieldThemeProps}
@@ -661,22 +775,20 @@ export const EditBirdDetailsScreen: React.FC = () => {
               onChangeText={(text) => updateField("scientificName", text)}
               placeholder="Enter scientific name"
             />
-            <BaseTextArea
-              {...textAreaThemeProps}
-              label="Summary"
-              value={formData.detailedDescription || ""}
-              onChangeText={(text) => {
+            {renderTextArea(
+              "Summary",
+              formData.detailedDescription,
+              (text) => {
                 setIsDirty(true);
                 setFormData((prev) =>
                   prev
                     ? { ...prev, detailedDescription: text, summary: text }
                     : prev
                 );
-              }}
-              placeholder="Enter description"
-              numberOfLines={6}
-              minHeight={100}
-            />
+              },
+              "Enter description",
+              100
+            )}
             <View>
               <Text
                 variant="label"
@@ -739,150 +851,287 @@ export const EditBirdDetailsScreen: React.FC = () => {
                 Scientific classification (Taxonomy)
               </Text>
               <View style={styles.taxonomyFields}>
-                {(
-                  [
-                    ["Kingdom", "kingdom"],
-                    ["Phylum", "phylum"],
-                    ["Class", "class"],
-                    ["Order", "order"],
-                    ["Family", "family"],
-                    ["Genus", "genus"],
-                    ["Species", "species"],
-                  ] as const
-                ).map(([label, key]) => (
-                  <BaseInputField
-                    key={key}
-                    {...inputFieldThemeProps}
-                    label={label}
-                    value={classification[key] || ""}
-                    onChangeText={(text) => updateClassification(key, text)}
-                    placeholder={`Enter ${label.toLowerCase()}`}
-                  />
+                {TAXONOMY_FIELDS.map(([label, key]) => (
+                  <React.Fragment key={key}>
+                    {renderTaxonomyDropdown(label, key)}
+                  </React.Fragment>
                 ))}
               </View>
             </View>
+            <Dropdown
+              {...dropdownThemeProps}
+              label={birdStrings.overview.size}
+              value={formData.sizeCategory || ""}
+              onSelect={(value) => {
+                updateField("sizeCategory", value);
+                const index = SIZE_OPTIONS.findIndex(
+                  (option) => option.value === value
+                );
+                updateField("sizeScaleIndex", index >= 0 ? index : null);
+              }}
+              options={SIZE_OPTIONS}
+              placeholder="Select size"
+            />
+            <MultiSelectDropdown
+              label={birdStrings.overview.colors}
+              labelTextColor={LABEL_COLOR}
+              inputBackgroundColor={INPUT_BG}
+              options={COLOR_OPTIONS}
+              selectedValues={formData.dominantColors ?? []}
+              onSelectionChange={(values) =>
+                updateField("dominantColors", values)
+              }
+              placeholder="Select colors"
+            />
+            {renderTextArea(
+              birdStrings.overview.family,
+              formData.familyDescription,
+              (text) => updateField("familyDescription", text),
+              "Enter family description",
+              80
+            )}
           </>
         )}
 
         {renderSectionCard(
-          "physical",
-          "Identification",
+          "sounds",
+          "Bird Sounds",
           <>
-            <BaseInputField
-              {...inputFieldThemeProps}
-              label={birdStrings.length}
-              value={formData.lengthRange || ""}
-              onChangeText={(text) => updateField("lengthRange", text)}
-              placeholder="e.g. 18–25 cm"
+            {hasSounds ? (
+              <BirdSoundsSection
+                soundUrls={formData.soundUrls ?? []}
+                userCapturedSounds={formData.userCapturedSounds}
+                customLocation={formData.customLocation}
+                textPrimary={colors.textPrimary}
+                textSecondary={colors.textSecondary}
+                surfaceSecondary={PAGE_BG}
+              />
+            ) : (
+              <Text variant="body" size="medium" color="textSecondary">
+                No bird sounds available for this sighting yet.
+              </Text>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.soundLibraryButton,
+                { borderColor: INPUT_BORDER, backgroundColor: INPUT_BG },
+              ]}
+              onPress={() => navigateToSoundIdentify(navigation)}
+              activeOpacity={0.8}
+            >
+              <Text
+                variant="label"
+                size="medium"
+                weight="semibold"
+                style={{ color: TAB_ACTIVE_COLOR }}
+              >
+                {COLLECTION_STRINGS.buttons.goToSoundLibrary}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {renderSectionCard(
+          "characteristics",
+          sectionStrings.characteristics,
+          <>
+            <WizardSizePicker
+              selectedIndex={formData.sizeScaleIndex ?? null}
+              onSelect={(index) => {
+                setIsDirty(true);
+                setFormData((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        sizeScaleIndex: index,
+                        sizeCategory:
+                          COLLECTION_STRINGS.birdDetails.sizeScale[index],
+                      }
+                    : prev
+                );
+              }}
             />
-            <BaseInputField
-              {...inputFieldThemeProps}
-              label={birdStrings.wingspan}
-              value={formData.wingspanRange || ""}
-              onChangeText={(text) => updateField("wingspanRange", text)}
-              placeholder="e.g. 32–40 cm"
-            />
-            <BaseInputField
-              {...inputFieldThemeProps}
-              label={birdStrings.weight}
-              value={formData.weightRange || ""}
-              onChangeText={(text) => updateField("weightRange", text)}
-              placeholder="e.g. 30–45 g"
-            />
-            <BaseTextArea
-              {...textAreaThemeProps}
-              label={birdStrings.colors}
-              value={formData.dominantColors || ""}
-              onChangeText={(text) => updateField("dominantColors", text)}
-              placeholder="Comma-separated colors"
-              numberOfLines={3}
-              minHeight={80}
-            />
-            <BaseTextArea
-              {...textAreaThemeProps}
-              label={birdStrings.flightPattern}
-              value={formData.flightPattern || ""}
-              onChangeText={(text) => updateField("flightPattern", text)}
-              placeholder="e.g. Direct, undulating"
-              numberOfLines={3}
-              minHeight={80}
-            />
-            <BaseTextArea
-              {...textAreaThemeProps}
-              label={birdStrings.flightAltitude}
-              value={formData.flightAltitude || ""}
-              onChangeText={(text) => updateField("flightAltitude", text)}
-              placeholder="e.g. Low, canopy"
-              numberOfLines={3}
-              minHeight={80}
-            />
-            <BaseTextArea
-              {...textAreaThemeProps}
-              label={birdStrings.keyMarks}
-              value={formData.keyIdentificationMarks || ""}
-              onChangeText={(text) =>
-                updateField("keyIdentificationMarks", text)
-              }
-              placeholder="Field marks for ID"
-              numberOfLines={4}
-              minHeight={100}
-            />
-            {renderDropdown(birdStrings.birdType, "birdType", "birdType")}
-            {renderDropdown(
-              birdStrings.conservation,
-              "conservationStatus",
-              "conservationStatus"
+            {renderTextArea(
+              birdStrings.characteristics.shape,
+              formData.shape,
+              (text) => updateField("shape", text),
+              "Describe shape and silhouette"
+            )}
+            {renderTextArea(
+              birdStrings.characteristics.beak,
+              formData.beak,
+              (text) => updateField("beak", text),
+              "Describe beak shape and size"
+            )}
+            {renderTextArea(
+              birdStrings.characteristics.tail,
+              formData.tailShape,
+              (text) => updateField("tailShape", text),
+              "Describe tail shape"
+            )}
+            {renderTextArea(
+              birdStrings.characteristics.legs,
+              formData.legCharacteristics,
+              (text) => updateField("legCharacteristics", text),
+              "Describe leg and foot characteristics"
+            )}
+          </>
+        )}
+
+        {renderSectionCard(
+          "behavior",
+          sectionStrings.behavior,
+          <>
+            {renderTextArea(
+              birdStrings.behavior.feeding,
+              formData.feedingBehavior,
+              (text) => updateField("feedingBehavior", text),
+              "Describe feeding behavior"
+            )}
+            {renderTextArea(
+              birdStrings.behavior.flight,
+              formData.flightPattern,
+              (text) => updateField("flightPattern", text),
+              "e.g. Direct, undulating"
+            )}
+            {renderTextArea(
+              birdStrings.behavior.vocal,
+              formData.vocalBehavior,
+              (text) => updateField("vocalBehavior", text),
+              "Describe vocal behavior"
+            )}
+            {renderTextArea(
+              birdStrings.behavior.territoriality,
+              formData.territoriality,
+              (text) => updateField("territoriality", text),
+              "Describe territorial behavior"
+            )}
+            {renderTextArea(
+              birdStrings.behavior.social,
+              formData.socialBehavior,
+              (text) => updateField("socialBehavior", text),
+              "Describe social behavior"
             )}
           </>
         )}
 
         {renderSectionCard(
           "habitat",
-          "Habitat & Diet",
+          sectionStrings.habitat,
           <>
-            <BaseTextArea
-              {...textAreaThemeProps}
-              label={COLLECTION_STRINGS.birdDetails.habitat.habitat}
-              value={formData.habitatType || ""}
-              onChangeText={(text) => updateField("habitatType", text)}
-              placeholder="Enter habitat"
-              numberOfLines={4}
-              minHeight={100}
-            />
-            <BaseTextArea
-              {...textAreaThemeProps}
-              label={COLLECTION_STRINGS.birdDetails.habitat.diet}
-              value={formData.diet || ""}
-              onChangeText={(text) => updateField("diet", text)}
-              placeholder="What this bird eats"
-              numberOfLines={4}
-              minHeight={100}
-            />
-            <BaseTextArea
-              {...textAreaThemeProps}
-              label={COLLECTION_STRINGS.birdDetails.habitat.distribution}
-              value={formData.geographicDistribution || ""}
-              onChangeText={(text) =>
-                updateField("geographicDistribution", text)
-              }
-              placeholder="Regions where found"
-              numberOfLines={4}
-              minHeight={100}
-            />
+            {renderTextArea(
+              birdStrings.habitat.habitat,
+              formData.habitatType,
+              (text) => updateField("habitatType", text),
+              "Enter habitat"
+            )}
+            {renderTextArea(
+              birdStrings.traits.preferredLocations,
+              formData.preferredLocations,
+              (text) => updateField("preferredLocations", text),
+              "Preferred locations"
+            )}
             <BaseInputField
               {...inputFieldThemeProps}
-              label={birdStrings.bestTime}
+              label={birdStrings.traits.bestTime}
               value={formData.bestTimeToWatch || ""}
               onChangeText={(text) => updateField("bestTimeToWatch", text)}
               placeholder="Best time to watch"
             />
-            <BaseInputField
-              {...inputFieldThemeProps}
-              label={birdStrings.preferredLocations}
-              value={formData.preferredLocations || ""}
-              onChangeText={(text) => updateField("preferredLocations", text)}
-              placeholder="Preferred locations"
+            {renderDropdown(
+              birdStrings.habitat.conservation,
+              "conservationStatus",
+              "conservationStatus"
+            )}
+            {renderTextArea(
+              birdStrings.habitat.distribution,
+              formData.geographicDistribution,
+              (text) => updateField("geographicDistribution", text),
+              "Regions where found"
+            )}
+          </>
+        )}
+
+        {renderSectionCard(
+          "feeding",
+          sectionStrings.feeding,
+          <>
+            <Dropdown
+              {...dropdownThemeProps}
+              label={birdStrings.feeding.dietType}
+              value={formData.dietType || ""}
+              onSelect={(value) => updateField("dietType", value)}
+              options={DIET_TYPE_OPTIONS}
+              placeholder="Select diet type"
             />
+            {renderTextArea(
+              birdStrings.feeding.feedingStyle,
+              formData.feedingStyle,
+              (text) => updateField("feedingStyle", text),
+              "Describe feeding style"
+            )}
+            {renderTextArea(
+              birdStrings.feeding.diet,
+              formData.diet,
+              (text) => updateField("diet", text),
+              "What this bird eats"
+            )}
+          </>
+        )}
+
+        {renderSectionCard(
+          "breeding",
+          sectionStrings.breeding,
+          <>
+            {renderTextArea(
+              birdStrings.breeding.season,
+              formData.breedingSeason,
+              (text) => updateField("breedingSeason", text),
+              "Breeding season timeline"
+            )}
+            {renderTextArea(
+              birdStrings.breeding.nestType,
+              formData.nestType,
+              (text) => updateField("nestType", text),
+              "Describe nest type"
+            )}
+            {renderTextArea(
+              birdStrings.breeding.material,
+              formData.nestingMaterial,
+              (text) => updateField("nestingMaterial", text),
+              "Nesting materials used"
+            )}
+            {renderTextArea(
+              birdStrings.breeding.parentalCare,
+              formData.parentalCare,
+              (text) => updateField("parentalCare", text),
+              "Parental care notes"
+            )}
+          </>
+        )}
+
+        {renderSectionCard(
+          "migration",
+          sectionStrings.migration,
+          <>
+            {renderTextArea(
+              birdStrings.migration.resident,
+              formData.residentStatus,
+              (text) => updateField("residentStatus", text),
+              "Resident or migratory status"
+            )}
+            {renderTextArea(
+              birdStrings.migration.path,
+              formData.migrationPath,
+              (text) => updateField("migrationPath", text),
+              "Migration path notes"
+            )}
+            {renderTextArea(
+              birdStrings.migration.seasonal,
+              formData.seasonalPresence,
+              (text) => updateField("seasonalPresence", text),
+              "Seasonal presence near you"
+            )}
           </>
         )}
       </ScrollView>
@@ -903,7 +1152,7 @@ export const EditBirdDetailsScreen: React.FC = () => {
             styles.saveButtonBottom,
             {
               backgroundColor: isFormValid
-                ? colors.primaryCTA
+                ? EDIT_BIRD_SAVE_COLOR
                 : colors.surfaceVariant,
             },
           ]}
@@ -1115,5 +1364,12 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.1)",
+  },
+  soundLibraryButton: {
+    borderWidth: 1,
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
   },
 });

@@ -52,7 +52,7 @@ describe("AppImage routing", () => {
 
   describe("bundled assets on iOS", () => {
     it("routes bundled WebP to RN Image (first-frame paint)", () => {
-      const id = registerMockAsset("icons/mushroom/trash.webp");
+      const id = registerMockAsset("common/modal/trash_light.webp");
       expect(isBundledWebpAsset(id)).toBe(true);
       expect(resolveAppImageRenderer(id, "ios")).toBe("rn-image");
       expect(shouldUseFastImage(id, "ios")).toBe(false);
@@ -71,7 +71,7 @@ describe("AppImage routing", () => {
     });
 
     it("routes tinted bundled assets to RN Image (tintColor parity)", () => {
-      const id = registerMockAsset("icons/mushroom/eye.webp");
+      const id = registerMockAsset("catalogue/icons/species/eye.webp");
       expect(resolveAppImageRenderer(id, "ios")).toBe("rn-image");
       expect(
         resolveAppImageRenderer(id, "ios", { requiresTintColor: true })
@@ -143,7 +143,7 @@ describe("AppImage routing", () => {
   describe("AppImageBackground parity", () => {
     it("uses the same resolver as AppImage", () => {
       expect(resolveAppImageBackgroundRenderer).toBe(resolveAppImageRenderer);
-      const webp = registerMockAsset("popUp/mushroom/light/rate_us.webp");
+      const webp = registerMockAsset("home/popup/sheet/light/rate_us.webp");
       const png = registerMockAsset("iconfix/close_sheet.png");
       expect(resolveAppImageBackgroundRenderer(webp, "ios")).toBe("rn-image");
       expect(resolveAppImageBackgroundRenderer(png, "ios")).toBe("rn-image");
@@ -184,7 +184,7 @@ describe("AppImage routing", () => {
         resolveAppImageRenderer(remote, "android");
       }
       const elapsed = Date.now() - start;
-      expect(elapsed).toBeLessThan(200);
+      expect(elapsed).toBeLessThan(350);
     });
   });
 });

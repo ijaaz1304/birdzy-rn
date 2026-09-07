@@ -65,6 +65,7 @@ import {
   logAndroidPurchaseAnalyticsAfterAcknowledge,
   logIosPurchaseAnalyticsAfterBackendSuccess,
 } from "../iapPurchaseAnalytics";
+import { markCurrentUserHasUsedTrial } from "../utils/trialEligibility";
 import {
   APPLE_SUBSCRIPTIONS_DISABLED_MESSAGE,
   isAppleSubscriptionsEnabled,
@@ -1669,6 +1670,9 @@ export function useIapPurchase(
               planId,
             });
             setLocalPremiumOverride(true);
+            if (includesTrial) {
+              markCurrentUserHasUsedTrial();
+            }
             syncFromAuthStore();
             refreshProfileSilent().catch(() => {});
             notifyPurchaseSuccess(
@@ -1703,6 +1707,9 @@ export function useIapPurchase(
             planId,
           });
           setLocalPremiumOverride(true);
+          if (payload.includesTrial) {
+            markCurrentUserHasUsedTrial();
+          }
           logPremiumStateSnapshot("android_after_local_override_before_sync", {
             planId,
             productId: purchase.productId,

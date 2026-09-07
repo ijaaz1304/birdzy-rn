@@ -72,7 +72,7 @@ function buildPlanFromPackItem(item: RemotePackItem): LoadedSubscriptionPlan {
     price: 0,
     priceDisplay: "", // Filled from IAP store (useSubscriptionPlansWithPrices)
     duration,
-    trialDays: recurring && duration === "year" ? 7 : 0,
+    trialDays: 0,
     recurring,
     productIdIos: id,
     productIdAndroid: item.androidName?.trim() || id,

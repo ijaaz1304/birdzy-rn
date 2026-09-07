@@ -38,13 +38,11 @@ function getRenewalPriceDisplay(
   return formatPlanCardPrimaryPrice(parsed.amount, parsed.suffix, duration);
 }
 
-/** Trial length for CTA-adjacent Apple disclosure (cards use getPlanCardTrialDays). */
+/** Trial length for CTA-adjacent disclosure — store offer only; lifetime excluded. */
 function getDisclosureTrialDays(duration: string, trialDays?: number): number {
   const normalized = duration.toLowerCase();
   if (normalized === "lifetime") return 0;
   if (trialDays != null && trialDays > 0) return trialDays;
-  if (normalized === "week" || normalized === "month") return 3;
-  if (normalized === "year") return 7;
   return 0;
 }
 
@@ -283,14 +281,54 @@ export function getPlanBillingNote(
   }
 }
 
+/** Durations that may show free-trial UI (weekly, yearly, yearly half-price). */
+export function isTrialMessagingEligibleDuration(duration: string): boolean {
+  const d = duration.toLowerCase();
+  return d === "week" || d === "year";
+}
+
+/** Bullet line for subscription sheet plan descriptions. */
+export function formatPlanTrialBulletLine(trialDays: number): string {
+  if (trialDays === 7) return "7 days free trial";
+  if (trialDays === 1) return "1 day free trial";
+  return `${trialDays} days free trial`;
+}
+
+/** Recurring plan feature bullets — trial line only when store offer includes trial. */
+export function getRecurringPlanDescriptionLines(
+  duration: string,
+  trialDays: number
+): string[] {
+  const d = duration.toLowerCase();
+  const cadence =
+    d === "week" ? "weekly" : d === "month" ? "monthly" : "yearly";
+  const lines: string[] = [];
+
+  if (Platform.OS === "ios" && trialDays <= 0 && d !== "year") {
+    lines.push("No free trial");
+  }
+
+  lines.push(`Billed and reoccurring ${cadence}`);
+
+  const effectiveTrialDays =
+    trialDays > 0 && isTrialMessagingEligibleDuration(d) ? trialDays : 0;
+
+  if (effectiveTrialDays > 0) {
+    lines.push(formatPlanTrialBulletLine(effectiveTrialDays));
+  }
+
+  lines.push("Cancel anytime");
+  return lines;
+}
+
 export function getDefaultTrialDays(
   duration: string,
   trialDays?: number
 ): number {
+  if (duration.toLowerCase() === "lifetime") return 0;
+  if (!isTrialMessagingEligibleDuration(duration)) return 0;
   if (trialDays != null && trialDays > 0) return trialDays;
-  const normalized = duration.toLowerCase();
-  if (normalized === "week" || normalized === "lifetime") return 0;
-  return normalized === "month" ? 3 : 7;
+  return 0;
 }
 
 /** Trial days for horizontal plan cards — lifetime never shows a trial block. */
@@ -313,25 +351,23 @@ export function getSubscriptionCtaLabel(options: {
   has50Discount?: boolean;
   isPremium?: boolean;
   disableSubscribe?: boolean;
-  /** Post-auth subscription slide — prefer trial CTA over price label. */
+  /** @deprecated Trial CTA is driven by store trialDays on the selected plan. */
   useTrialCta?: boolean;
 }): string {
   const {
     isPurchasing,
     selectedPlan,
-    has50Discount = false,
     isPremium = false,
     disableSubscribe = false,
-    useTrialCta = false,
   } = options;
 
   if (isPurchasing) return "Processing…";
   if (disableSubscribe) return "You're already subscribed";
   if (isPremium) return "Upgrade";
-  if (!selectedPlan) return "Start my free trial";
+  if (!selectedPlan) return "Continue";
 
   const duration = (selectedPlan.duration ?? "").toLowerCase();
-  if (duration === "week" || duration === "lifetime") {
+  if (duration === "lifetime") {
     return "Continue";
   }
 
@@ -339,8 +375,11 @@ export function getSubscriptionCtaLabel(options: {
   const hasPrice = hasRealStorePrice(priceDisplay);
   const trialDays = getDefaultTrialDays(duration, selectedPlan.trialDays);
 
-  if ((useTrialCta || has50Discount) && trialDays > 0) {
-    return `Try free for ${trialDays} days`;
+  if (trialDays > 0) {
+    return `Get ${trialDays} Days Free Trial`;
+  }
+  if (duration === "week") {
+    return "Continue";
   }
   if (hasPrice && duration === "year") {
     return `Subscribe for ${priceDisplay}/year`;
@@ -349,7 +388,7 @@ export function getSubscriptionCtaLabel(options: {
     return `Subscribe for ${priceDisplay}/month`;
   }
 
-  return "Start my free trial";
+  return "Continue";
 }
 
 export function getPlanDisplayTitle(

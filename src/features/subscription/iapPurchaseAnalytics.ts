@@ -22,7 +22,9 @@ import {
 import {
   getAndroidOneTimeFormattedPrice,
   getAndroidSubscriptionFormattedPrice,
+  selectAndroidSubscriptionOffer,
 } from "./utils/iapPriceDisplay";
+import { shouldPreferPaidAndroidOffer } from "./utils/trialEligibility";
 import { useAppLogsStore } from "../app-logs/app-logs.store";
 
 const LOG = "[IAP PurchaseAnalytics]";
@@ -246,13 +248,13 @@ async function fallbackPriceSnapshotFromLoadedStoreMap(
 ): Promise<PriceSnapshot | null> {
   try {
     const map = await fetchAllProductPrices([planId]);
-    const display = map.get(planId);
-    if (!display) return null;
-    const value = parseAnalyticsPriceString(display);
+    const details = map.get(planId);
+    if (!details?.priceDisplay) return null;
+    const value = parseAnalyticsPriceString(details.priceDisplay);
     if (!(value > 0)) return null;
     return {
       value,
-      currency: inferCurrencyFromFormattedPrice(display),
+      currency: inferCurrencyFromFormattedPrice(details.priceDisplay),
       source: "android_product_display_price",
     };
   } catch {
@@ -367,10 +369,10 @@ function isAndroidPurchasePurchased(purchase: Purchase): boolean {
 }
 
 /**
- * True when the first pricing phase of the first subscription offer is a free trial.
- * Avoids treating "direct paid" subs as trial when another offer in the product lists a trial.
+ * True when the subscription offer selected for purchase starts with a free trial.
+ * Uses the same selection logic as requestPlanPurchase — not subscriptionOfferDetails[0].
  */
-async function isDefaultOfferFirstPhaseFreeTrialAndroid(
+async function isSelectedAndroidOfferFreeTrial(
   productId: string
 ): Promise<boolean> {
   if (!productId) return false;
@@ -381,14 +383,15 @@ async function isDefaultOfferFirstPhaseFreeTrialAndroid(
       (s: { type?: string; id?: string }) =>
         s.type === "subs" && s.id === productId
     ) as ProductSubscriptionAndroid | undefined;
-    const offer = sub?.subscriptionOfferDetailsAndroid?.[0];
-    const first = offer?.pricingPhases?.pricingPhaseList?.[0] as
-      | { priceAmountMicros?: string; billingCycleCount?: number }
-      | undefined;
-    if (!first) return false;
-    return (
-      String(first.priceAmountMicros) === "0" && first.billingCycleCount === 1
+    if (!sub) return false;
+    const selected = selectAndroidSubscriptionOffer(
+      sub as unknown as Record<string, unknown>,
+      {
+        logSelection: false,
+        preferPaidOffer: shouldPreferPaidAndroidOffer(),
+      }
     );
+    return selected?.isTrial ?? false;
   } catch {
     return false;
   }
@@ -891,14 +894,13 @@ export async function logAndroidPurchaseAnalyticsAfterAcknowledge(params: {
   const productListsTrialPhase = await detectAndroidTrialFromProductDetails(
     purchase
   );
-  const defaultOfferStartsFreeTrial =
-    await isDefaultOfferFirstPhaseFreeTrialAndroid(productId);
+  const selectedOfferIsTrial = await isSelectedAndroidOfferFreeTrial(productId);
   /** After trial_started, pending stores product id; next charge must be paid_purchase, not trial again. */
   const isPostTrialConversion = pendingTrialPid === productId;
   const useTrialAnalyticsPath =
     !isPostTrialConversion &&
     productListsTrialPhase &&
-    defaultOfferStartsFreeTrial;
+    selectedOfferIsTrial;
 
   tracePaidPurchase("02_evaluate trial vs paid path", {
     platform: "android",
@@ -908,7 +910,7 @@ export async function logAndroidPurchaseAnalyticsAfterAcknowledge(params: {
     planId,
     flags: {
       productListsTrialPhase,
-      defaultOfferStartsFreeTrial,
+      selectedOfferIsTrial,
       pendingTrialPid,
     },
     ifTrialPathMeans:
@@ -968,7 +970,7 @@ export async function logAndroidPurchaseAnalyticsAfterAcknowledge(params: {
         includesTrial: true,
         isPostTrialConversion,
         pendingTrialPid,
-        defaultOfferStartsFreeTrial,
+        selectedOfferIsTrial,
       });
     await logTrialPurchaseAnalytics(purchase, "android");
     await logPaidPurchaseAnalyticsAndroidIfNeeded(
@@ -997,7 +999,7 @@ export async function logAndroidPurchaseAnalyticsAfterAcknowledge(params: {
         isPostTrialConversion,
         pendingTrialPid,
         productListsTrialPhase,
-        defaultOfferStartsFreeTrial,
+        selectedOfferIsTrial,
       });
     await logPaidPurchaseAnalyticsAndroidIfNeeded(
       purchase,

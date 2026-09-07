@@ -56,12 +56,23 @@ export function useLocationToggleFlow() {
     (variant?: "add" | "custom") => {
       const currentLocation =
         useIdentificationLocationStore.getState().location;
+      setShowCustomPopup(false);
+      setShowManagePopup(false);
+      setLoading(false);
+      setAwaitingNative(false);
       setChangeLocationVariant(
         variant ?? resolveChangeLocationVariant(currentLocation)
       );
       setShowChangeLocationSheet(true);
     },
-    [setChangeLocationVariant, setShowChangeLocationSheet]
+    [
+      setAwaitingNative,
+      setChangeLocationVariant,
+      setLoading,
+      setShowChangeLocationSheet,
+      setShowCustomPopup,
+      setShowManagePopup,
+    ]
   );
 
   /** Step 1: show custom popup, manage popup, or refresh if already granted. */
@@ -77,6 +88,7 @@ export function useLocationToggleFlow() {
       return;
     }
     if (entry === "manage_settings") {
+      setShowManagePopup(true);
       return;
     }
     setShowCustomPopup(true);
@@ -115,7 +127,7 @@ export function useLocationToggleFlow() {
         return;
       }
       if (outcome.showManageSettings) {
-        return;
+        setShowManagePopup(true);
       }
     } finally {
       setAwaitingNative(false);

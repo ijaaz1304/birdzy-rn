@@ -13,7 +13,8 @@ export const POST_AUTH_SUBSCRIPTION_FEATURES: PostAuthSubscriptionFeature[] = [
     iconLight: Images.subscriptionCarousel0,
     iconDark: Images.subscriptionCarousel0Dark,
     title: "Identify Without Limits",
-    subtitle: "Get unlimited, instant bird identification anytime.",
+    subtitle:
+      "Experience the thrill of identifying birds anytime, right at your fingertips!",
   },
   {
     iconLight: Images.subscriptionCarousel1,

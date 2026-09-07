@@ -26,6 +26,13 @@ export const CAMERA_STRINGS = {
     continue: "Continue",
     openSettings: "Open Settings",
     uploadFromGalleryInstead: "Upload from gallery instead",
+    addAnotherPhoto: "Add Another Photo",
+    identifyBird: "Identify Bird",
+  },
+  multiPhoto: {
+    imageCounter: "Image {current}/{max}",
+    submitPhotoToast: "Submit {count} photo",
+    submitPhotosToast: "Submit {count} photos",
   },
   galleryAccess: {
     title: "Choose Photos From Your Gallery",

@@ -1,25 +1,26 @@
 /**
  * Photo Selection Screen
- * Full screen: select/capture image, then crop, then continue to questionnaire.
- * Camera: requests permission before capture; shows permission popup if denied.
+ * Select/capture image, crop, then continue to questionnaire.
+ * Camera uses the shared identify camera; gallery permission recovery is inline.
  */
 
 import { AppImage } from "@/components/AppImage";
-import React, { useState } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { AppState, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import ImagePicker from "react-native-image-crop-picker";
+import { navigateToIdentifyCameraScreen } from "../../camera/identifyCameraNavigation";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { AppText } from "../../../components/shared";
 import { Images, CancelIconLight, CancelIconDark } from "../../../assets";
-import { CameraAccessPopup } from "../../../components/CameraAccessPopup";
-import { GalleryAccessPopup } from "../../../components/GalleryAccessPopup";
+import { PermissionRecoveryState } from "../../../components/PermissionRecoveryState";
 import {
-  checkCameraPermission,
   checkStoragePermission,
+  openDeviceSettings,
 } from "../../../services/permissions";
+import { getGalleryPermissionUiCopy } from "../../../services/permissions/permissionUiCopy";
 import { BirdPersonalityStackParamList } from "../../../navigation/types";
 
 import { FONTS } from "../../../common/typography";
@@ -34,6 +35,19 @@ type NavigationProp = NativeStackNavigationProp<
 const normalizeLocalUri = (uri: string) =>
   uri.startsWith("file://") || uri.includes("://") ? uri : `file://${uri}`;
 
+const IMAGE_PICKER_OPTIONS = {
+  mediaType: "photo" as const,
+  includeBase64: false,
+  cropping: true,
+  width: 1080,
+  height: 1080,
+  freeStyleCropEnabled: true,
+  compressImageQuality: 0.8,
+  compressImageMaxWidth: 1280,
+  compressImageMaxHeight: 1280,
+  cropperToolbarTitle: "Crop Image",
+};
+
 export const PhotoSelectionScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const theme = useTheme();
@@ -41,86 +55,60 @@ export const PhotoSelectionScreen: React.FC = () => {
   const Space = theme.spacing;
   const Radius = theme.radius;
   const isDark = useIsDark();
-  const [showCameraPopup, setShowCameraPopup] = useState(false);
-  const [cameraBlocked, setCameraBlocked] = useState(false);
-  const [showGalleryPopup, setShowGalleryPopup] = useState(false);
+
   const [photosBlocked, setPhotosBlocked] = useState(false);
+  const galleryRecoveryCopy = getGalleryPermissionUiCopy();
 
-  const handleCapture = async () => {
-    try {
-      const picked = await ImagePicker.openCamera({
-        mediaType: "photo",
-        includeBase64: false,
-        cropping: true,
-        width: 1080,
-        height: 1080,
-        freeStyleCropEnabled: true,
-        compressImageQuality: 0.8,
-        compressImageMaxWidth: 1280,
-        compressImageMaxHeight: 1280,
-        cropperToolbarTitle: "Crop Image",
-      });
-      if ((picked as any)?.path) {
-        navigation.navigate("Questionnaire", {
-          photoUri: normalizeLocalUri((picked as any).path),
-        });
-      }
-    } catch (error: any) {
-      const msg = String(error?.message ?? "");
-      if (msg.toLowerCase().includes("permission")) {
-        const res = await checkCameraPermission();
-        setCameraBlocked(!!res.blocked);
-        setShowCameraPopup(true);
-        return;
-      }
-      if (!msg.toLowerCase().includes("cancel"))
-        console.error("Camera capture failed:", error);
-    }
-  };
+  const syncPhotosPermission = useCallback(async () => {
+    const storage = await checkStoragePermission();
+    setPhotosBlocked(!storage.granted && !!storage.blocked);
+  }, []);
 
-  const handleCameraAccessGranted = () => {
-    setShowCameraPopup(false);
-    handleCapture();
+  useFocusEffect(
+    useCallback(() => {
+      void syncPhotosPermission();
+    }, [syncPhotosPermission])
+  );
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      void syncPhotosPermission();
+    });
+    return () => sub.remove();
+  }, [syncPhotosPermission]);
+
+  const handleCapture = () => {
+    navigateToIdentifyCameraScreen("quiz");
   };
 
   const openGalleryPicker = async () => {
     try {
       const picked = await ImagePicker.openPicker({
-        mediaType: "photo",
+        ...IMAGE_PICKER_OPTIONS,
         multiple: false,
-        includeBase64: false,
-        cropping: true,
-        width: 1080,
-        height: 1080,
-        freeStyleCropEnabled: true,
-        compressImageQuality: 0.8,
-        compressImageMaxWidth: 1280,
-        compressImageMaxHeight: 1280,
-        cropperToolbarTitle: "Crop Image",
       });
-      if ((picked as any)?.path) {
+      if ((picked as { path?: string })?.path) {
         navigation.navigate("Questionnaire", {
-          photoUri: normalizeLocalUri((picked as any).path),
+          photoUri: normalizeLocalUri((picked as { path: string }).path),
         });
       }
-    } catch (error: any) {
-      const msg = String(error?.message ?? "");
+    } catch (error: unknown) {
+      const msg = String((error as Error)?.message ?? "");
       if (msg.toLowerCase().includes("permission")) {
-        setPhotosBlocked(true);
-        setShowGalleryPopup(true);
+        const storage = await checkStoragePermission();
+        if (storage.blocked) {
+          setPhotosBlocked(true);
+        }
       }
-      if (!msg.toLowerCase().includes("cancel"))
+      if (!msg.toLowerCase().includes("cancel")) {
         console.error("Gallery picker failed:", error);
+      }
     }
   };
 
   const handleUpload = async () => {
-    const storage = await checkStoragePermission();
-    if (!storage.granted) {
-      setPhotosBlocked(!!storage.blocked);
-      setShowGalleryPopup(true);
-      return;
-    }
+    if (photosBlocked) return;
     await openGalleryPicker();
   };
 
@@ -132,7 +120,6 @@ export const PhotoSelectionScreen: React.FC = () => {
       ]}
     >
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-        {/* Header */}
         <View
           style={[
             styles.header,
@@ -162,7 +149,6 @@ export const PhotoSelectionScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Photo tips — white card, two highlighted lines */}
         <View
           style={[
             styles.tipsOuter,
@@ -200,14 +186,12 @@ export const PhotoSelectionScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Options */}
         <View
           style={[
             styles.optionsContainer,
             { paddingHorizontal: Space[6], paddingTop: Space[4] },
           ]}
         >
-          {/* Capture Image Card — dotted border */}
           <TouchableOpacity
             style={[
               styles.optionCard,
@@ -246,52 +230,53 @@ export const PhotoSelectionScreen: React.FC = () => {
             or
           </AppText>
 
-          {/* Upload from Gallery Card — dotted border */}
-          <TouchableOpacity
-            style={[
-              styles.optionCard,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderRadius: Radius.lg ?? 16,
-                borderStyle: "dashed",
-                borderWidth: 1.5,
-              },
-            ]}
-            onPress={handleUpload}
-            activeOpacity={0.7}
-          >
-            <View style={styles.iconContainer}>
-              <AppImage
-                source={Images.askAiUploadBird}
-                style={styles.optionIcon}
-                resizeMode="contain"
+          {photosBlocked ? (
+            <View style={styles.recoveryHost}>
+              <PermissionRecoveryState
+                icon="photo-library"
+                title={
+                  galleryRecoveryCopy.deniedTitle ?? galleryRecoveryCopy.title
+                }
+                subtitle={
+                  galleryRecoveryCopy.deniedSubtitle ??
+                  galleryRecoveryCopy.subtitle
+                }
+                actionLabel={galleryRecoveryCopy.openSettingsLabel}
+                onAction={() => void openDeviceSettings()}
               />
             </View>
-            <AppText
-              variant="body16"
-              color={colors.textPrimary}
-              style={[styles.optionLabel, { marginTop: Space[3] }]}
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.optionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  borderRadius: Radius.lg ?? 16,
+                  borderStyle: "dashed",
+                  borderWidth: 1.5,
+                },
+              ]}
+              onPress={() => void handleUpload()}
+              activeOpacity={0.7}
             >
-              Upload from gallery
-            </AppText>
-          </TouchableOpacity>
+              <View style={styles.iconContainer}>
+                <AppImage
+                  source={Images.askAiUploadBird}
+                  style={styles.optionIcon}
+                  resizeMode="contain"
+                />
+              </View>
+              <AppText
+                variant="body16"
+                color={colors.textPrimary}
+                style={[styles.optionLabel, { marginTop: Space[3] }]}
+              >
+                Upload from gallery
+              </AppText>
+            </TouchableOpacity>
+          )}
         </View>
-
-        <CameraAccessPopup
-          visible={showCameraPopup}
-          onClose={() => setShowCameraPopup(false)}
-          onAccessGranted={handleCameraAccessGranted}
-          cameraBlocked={cameraBlocked}
-          onBlockedChange={setCameraBlocked}
-        />
-        <GalleryAccessPopup
-          visible={showGalleryPopup}
-          onClose={() => setShowGalleryPopup(false)}
-          onAccessGranted={openGalleryPicker}
-          photosBlocked={photosBlocked}
-          onBlockedChange={setPhotosBlocked}
-        />
       </SafeAreaView>
     </View>
   );
@@ -345,6 +330,11 @@ const styles = StyleSheet.create({
   optionsContainer: {
     flex: 1,
     alignItems: "center",
+  },
+  recoveryHost: {
+    width: "100%",
+    minHeight: 180,
+    justifyContent: "center",
   },
   orSeparator: {
     textAlign: "center",

@@ -14,6 +14,7 @@ import { getSubscriptionPlans } from "../../../data/subscription/subscriptionPla
 import { getRuntimeSubscriptionPlans } from "../runtime/subscriptionRuntime";
 import { getCachedFirstAppOpenAt } from "../utils/discountOffer";
 import { useSubscriptionStore, selectIsPremium } from "../subscription.store";
+import { useAuthStore } from "../../auth/auth.store";
 import { fetchAllProductPrices } from "../services/iap.service";
 import {
   hasRealStorePrice,
@@ -27,6 +28,11 @@ import {
 } from "../utils/iapPriceDisplay";
 import { sortPlansForDisplay } from "../utils/planDisplayOrder";
 import { useAppLogsStore } from "../../app-logs/app-logs.store";
+import {
+  logTrialEligibilityDebug,
+  getUserSubscriptionTrialState,
+  resolveTrialUiState,
+} from "../utils/trialEligibility";
 
 function parsePrice(display: string): number {
   return parseFloat(display.replace(/[^0-9.]/g, "")) || 0;
@@ -60,13 +66,19 @@ export function useSubscriptionPlansWithPrices(
   refetchPrices: () => Promise<void>;
   /** Raw IAP prices keyed by plan / product id (full + half packs). */
   storePrices: Map<string, string>;
+  /** Trial days from store offer details keyed by plan id. */
+  storeTrialDays: Map<string, number>;
 } {
   const offerActiveOverride = options?.offerActiveOverride;
   const firstAppOpenAt = getCachedFirstAppOpenAt();
   const isPremium = useSubscriptionStore(selectIsPremium);
+  const hasUsedTrial = useAuthStore((s) => s.user?.hasUsedTrial === true);
   const devDisable50Discount = useSubscriptionStore((s) => s.devDisable50Discount);
 
   const [storePrices, setStorePrices] = useState<Map<string, string>>(
+    new Map()
+  );
+  const [storeTrialDays, setStoreTrialDays] = useState<Map<string, number>>(
     new Map()
   );
   const [isLoadingPrices, setIsLoadingPrices] = useState(true);
@@ -107,6 +119,8 @@ export function useSubscriptionPlansWithPrices(
     }
   }, [planIdsKey]);
 
+  const lastLoggedTrialKey = useRef<string | null>(null);
+
   const fetchPrices = useCallback(
     async (force = false) => {
       const log = useAppLogsStore.getState();
@@ -127,9 +141,6 @@ export function useSubscriptionPlansWithPrices(
         return;
       }
       if (isFetchingPricesRef.current) {
-        // Post-auth onboarding changes the active pack between its subscription
-        // and discount slides. Do not lose a fetch request while the initial
-        // StoreKit lookup is still connecting.
         pendingPriceFetchRef.current = true;
         return;
       }
@@ -154,8 +165,15 @@ export function useSubscriptionPlansWithPrices(
         } else {
           setStorePrices((prev) => {
             const next = new Map(prev);
-            for (const [planId, price] of priceMap) {
-              next.set(planId, price);
+            for (const [planId, details] of priceMap) {
+              next.set(planId, details.priceDisplay);
+            }
+            return next;
+          });
+          setStoreTrialDays((prev) => {
+            const next = new Map(prev);
+            for (const [planId, details] of priceMap) {
+              next.set(planId, details.trialDays);
             }
             return next;
           });
@@ -203,26 +221,42 @@ export function useSubscriptionPlansWithPrices(
   }, [basePlans, fetchPrices]);
 
   const plansWithPrices = useMemo(() => {
+    const userState = getUserSubscriptionTrialState();
     const merged = basePlans.map((plan): SubscriptionPlan => {
       const storePrice = storePrices.get(plan.id);
+      const playTrialDays = storeTrialDays.get(plan.id) ?? plan.trialDays ?? 0;
+      const trialDecision = resolveTrialUiState({
+        productId: plan.id,
+        playOfferIsTrial: playTrialDays > 0,
+        playTrialDays,
+        ...userState,
+      });
+      const trialDays = trialDecision.trialDays;
       if (hasDeviceLocalizedStorePrice(storePrice)) {
         const priceDisplay = toLocalizedStorePrice(storePrice);
         return {
           ...plan,
           priceDisplay,
           price: parsePrice(storePrice!.trim()),
+          trialDays,
         };
       }
       return {
         ...plan,
         priceDisplay: isLoadingPrices ? "Loading…" : MISSING_IAP_PRICE,
         price: 0,
+        trialDays,
       };
     });
-    // Keep all configured plans visible (weekly / yearly / lifetime) even if one
-    // store SKU has not returned a price yet — hiding a plan breaks the 3-card layout.
     return sortPlansForDisplay(merged);
-  }, [basePlans, storePrices, isLoadingPrices]);
+  }, [
+    basePlans,
+    storePrices,
+    storeTrialDays,
+    isLoadingPrices,
+    isPremium,
+    hasUsedTrial,
+  ]);
 
   const defaultSelectedPlanId = useMemo(() => {
     const yearly = basePlans.find(
@@ -231,6 +265,30 @@ export function useSubscriptionPlansWithPrices(
     return yearly?.id ?? basePlans[0]?.id ?? "yearly_birdzy_pack";
   }, [basePlans]);
 
+  useEffect(() => {
+    const userState = getUserSubscriptionTrialState();
+    const key = plansWithPrices
+      .map(
+        (plan) =>
+          `${plan.id}:${plan.trialDays}:${userState.userHasConsumedTrial}:${userState.userHasActiveSubscription}`
+      )
+      .join("|");
+    if (lastLoggedTrialKey.current === key) return;
+    lastLoggedTrialKey.current = key;
+    for (const plan of plansWithPrices) {
+      const playTrialDays = storeTrialDays.get(plan.id) ?? 0;
+      logTrialEligibilityDebug(
+        plan.id,
+        resolveTrialUiState({
+          productId: plan.id,
+          playOfferIsTrial: playTrialDays > 0,
+          playTrialDays,
+          ...userState,
+        })
+      );
+    }
+  }, [plansWithPrices, storeTrialDays]);
+
   return {
     plans: plansWithPrices,
     defaultSelectedPlanId,
@@ -238,5 +296,6 @@ export function useSubscriptionPlansWithPrices(
     isLoadingPrices,
     priceLoadError,
     storePrices,
+    storeTrialDays,
   };
 }

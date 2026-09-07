@@ -149,7 +149,7 @@ export const PostAuthSubscriptionFeatureCarousel: React.FC<Props> = ({
             <Text style={[styles.title, { color: colors.textPrimary }]}>
               {item.title}
             </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            <Text style={[styles.subtitle, { color: colors.textPrimary }]}>
               {item.subtitle}
             </Text>
           </View>
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.bold,
     fontSize: 20,
     lineHeight: 28,
     textAlign: "center",

@@ -5,7 +5,7 @@ import { Images } from "../../../assets";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("screen");
 
-/** auth.webp / auth_bg.webp — anchor to bottom so mushrooms align with design */
+/** common_bg.webp — 1500×3248; anchor to bottom so bird art aligns with design */
 const AUTH_BG_ASPECT = 3248 / 1500;
 const AUTH_BG_HEIGHT = Math.max(SCREEN_HEIGHT, SCREEN_WIDTH * AUTH_BG_ASPECT);
 
@@ -16,7 +16,7 @@ type AuthScreenBackgroundProps = {
 export function AuthScreenBackground({ isDark = false }: AuthScreenBackgroundProps) {
   return (
     <AppImage
-      source={isDark ? Images.authBgDark : Images.authScreenBg}
+      source={Images.commonBg}
       style={styles.background}
       resizeMode="cover"
       pointerEvents="none"

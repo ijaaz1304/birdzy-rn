@@ -44,11 +44,11 @@ import { navigateToSubscriptionMain } from "../../../utils/navigation";
 import { Images, UploadIconSvg } from "../../../assets";
 import {
   checkStoragePermission,
-  openDeviceSettings,
 } from "../../../services/permissions";
 import { GalleryAccessPopup } from "../../../components/GalleryAccessPopup";
 import { isImageCropPickerCancelError } from "../../camera/cropImageAndReturnObject";
 import { openInteractiveCropper } from "../../camera/interactiveCrop";
+import { navigateToIdentifyCameraScreen } from "../../camera/identifyCameraNavigation";
 import { useAppLogsStore } from "../../app-logs/app-logs.store";
 import {
   hasReachedFreeFeedPostLimit,
@@ -190,6 +190,34 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
     };
   }, [postId, user?.id]);
 
+  const cameraReturnImageProcessedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const editedImageUri = route.params?.editedImageUri?.trim();
+    if (
+      !editedImageUri ||
+      cameraReturnImageProcessedRef.current === editedImageUri
+    ) {
+      return;
+    }
+    cameraReturnImageProcessedRef.current = editedImageUri;
+
+    if (route.params?.title !== undefined) setTitle(route.params.title);
+    if (route.params?.content !== undefined) setContent(route.params.content);
+    if (route.params?.itemName !== undefined) setItemName(route.params.itemName);
+
+    setSelectedImages((prev) => {
+      if (prev.length >= MAX_IMAGES) return prev;
+      if (prev.includes(editedImageUri)) return prev;
+      return [...prev, editedImageUri];
+    });
+  }, [
+    route.params?.editedImageUri,
+    route.params?.title,
+    route.params?.content,
+    route.params?.itemName,
+  ]);
+
   const cameraIcon = Images.plusIcon;
 
   const cropAndApplyImage = useCallback(
@@ -294,42 +322,6 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
     }
   };
 
-  const openCamera = async () => {
-    const log = useAppLogsStore.getState();
-    try {
-      const picked = await ImagePicker.openCamera({
-        mediaType: "photo",
-        includeBase64: false,
-      });
-      const pathOrUri = (picked as { path?: string })?.path?.trim();
-      if (!pathOrUri) {
-        log.warn(`${CREATE_POST_LOG} openCamera: empty path`);
-        showToast("Failed to capture image", "error");
-        return;
-      }
-      await cropAndApplyImage(pathOrUri, "camera");
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (isImageCropPickerCancelError(e)) {
-        log.debug(`${CREATE_POST_LOG} openCamera cancelled`);
-        return;
-      }
-      if (msg.toLowerCase().includes("permission")) {
-        Alert.alert(
-          "Camera permission needed",
-          "To capture a photo we need camera access. Open settings to allow camera?",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => openDeviceSettings() },
-          ]
-        );
-        return;
-      }
-      log.error(`${CREATE_POST_LOG} openCamera error`, { message: msg });
-      showToast("Failed to open camera", "error");
-    }
-  };
-
   const ensureCanAddImage = () => {
     if (selectedImages.length >= MAX_IMAGES) {
       useAppLogsStore
@@ -357,9 +349,16 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
     await openImageLibrary();
   };
 
-  const handleOpenCamera = async () => {
+  const handleOpenCamera = () => {
     if (!ensureCanAddImage()) return;
-    await openCamera();
+    navigateToIdentifyCameraScreen("feed", {
+      feedDraft: {
+        title,
+        content,
+        itemName,
+        postId,
+      },
+    });
   };
 
   const handleRemoveImage = (index: number) => {

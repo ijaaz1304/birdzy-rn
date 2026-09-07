@@ -21,6 +21,7 @@ export const MODAL_STRINGS = {
       subtitle:
         "To identify birds around you, we need access to your camera.",
       enableButton: "Continue",
+      allowAccessButton: "Allow Access",
       openSettings: "Open Settings",
       deniedTitle: "Manage Camera Access",
       deniedSubtitle:
@@ -179,6 +180,9 @@ export const MODAL_STRINGS = {
         "Select photos from your library to identify birds or share with the community.",
       enableButton: "Continue",
       openSettings: "Open Settings",
+      deniedTitle: "Manage Photos Access",
+      deniedSubtitle:
+        "Photo library access was previously turned off. Open Settings to choose photos for bird identification.",
     },
     enableCamera: {
       title: "Enable Camera",

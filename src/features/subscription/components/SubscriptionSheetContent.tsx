@@ -18,7 +18,7 @@ import {
   resolveStorePriceDisplay,
 } from "../utils/storePlanPricing";
 import { localizePriceDisplayForDevice } from "../utils/iapPriceDisplay";
-import { compactPriceDecimals, getSubscriptionCtaLabel } from "../../post-auth-onboarding/utils/planDisplay";
+import { compactPriceDecimals, getDefaultTrialDays, getRecurringPlanDescriptionLines, getSubscriptionCtaLabel } from "../../post-auth-onboarding/utils/planDisplay";
 
 const SELECTED_BORDER = SUBSCRIPTION_COLORS.CARD_SELECTED_BORDER;
 const UNSELECTED_LIGHT = SUBSCRIPTION_COLORS.CARD_UNSELECTED_BORDER_LIGHT;
@@ -61,21 +61,6 @@ function getOriginalPriceDisplay(
   return compactPriceDecimals(`${prefix}${formatted}${suffix}`.trim());
 }
 
-const WEEKLY_PLAN_LINES = [
-  "No free trial",
-  "Billed and reoccurring weekly",
-  "Cancel anytime",
-];
-const MONTHLY_PLAN_LINES = [
-  "No free trial",
-  "Billed and reoccurring monthly",
-  "Cancel anytime",
-];
-const YEARLY_PLAN_LINES = [
-  "7 days free trial",
-  "Billed and reoccurring yearly",
-  "Cancel anytime",
-];
 const LIFETIME_PLAN_LINES = [
   "One-time purchase",
   "Unlimited access forever",
@@ -626,14 +611,11 @@ const SubscriptionSheetContent: React.FC<Props> = ({
               const isMonthly = duration === "month";
               const isYearly = duration === "year";
               const isLifetime = duration === "lifetime";
-              const planDescriptionLines = isWeekly
-                ? WEEKLY_PLAN_LINES
-                : isMonthly
-                ? MONTHLY_PLAN_LINES
-                : isYearly
-                ? YEARLY_PLAN_LINES
-                : isLifetime
+              const trialDays = getDefaultTrialDays(duration, plan.trialDays);
+              const planDescriptionLines = isLifetime
                 ? LIFETIME_PLAN_LINES
+                : isWeekly || isMonthly || isYearly
+                ? getRecurringPlanDescriptionLines(duration, trialDays)
                 : plan.descriptionLines?.length
                 ? plan.descriptionLines
                 : ["Cancel anytime"];

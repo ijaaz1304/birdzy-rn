@@ -15,6 +15,8 @@ import { Text, Button, NavBackIcon } from "../../../atoms";
 import { SubscriptionStackParamList } from "../../../navigation/types";
 import { FREE_VS_PREMIUM_COMPARISON } from "../../../data/subscription";
 import { SUBSCRIPTION_TEXTS } from "../../../config";
+import { useAuthStore } from "../../auth/auth.store";
+import { useSubscriptionStore, selectIsPremium } from "../subscription.store";
 import { Images } from "../../../assets";
 import LinearGradient from "react-native-linear-gradient";
 import {
@@ -63,6 +65,12 @@ export const SubscriptionIntroScreen: React.FC = () => {
   const radius = theme.radius;
   const navigation = useNavigation<SubscriptionIntroScreenNavigationProp>();
   const isDark = usePostAuthOnboardingIsDark();
+  const hasUsedTrial = useAuthStore((s) => s.user?.hasUsedTrial === true);
+  const isPremium = useSubscriptionStore(selectIsPremium);
+  const introCtaLabel =
+    hasUsedTrial || isPremium
+      ? "Continue"
+      : SUBSCRIPTION_TEXTS.intro.cta.primary;
 
   const timerText = `${formatCountdownSegment(
     discountOffer.hours
@@ -327,7 +335,7 @@ export const SubscriptionIntroScreen: React.FC = () => {
           ]}
         >
           <Button
-            title={SUBSCRIPTION_TEXTS.intro.cta.primary}
+            title={introCtaLabel}
             variant="primary"
             size="large"
             onPress={() =>

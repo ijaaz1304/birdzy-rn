@@ -91,7 +91,7 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={({ pressed }) => [
+        style={({ pressed }) => [
         styles.card,
         selected ? styles.cardSelected : styles.cardUnselected,
         {
@@ -103,6 +103,9 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
             : colors.planBorderUnselected,
           opacity: pressed ? 0.85 : 1,
           zIndex: showPopular ? 3 : 1,
+          shadowColor: selected
+            ? "rgba(203, 75, 0, 0.08)"
+            : UNSELECTED_PACK_SHADOW,
         },
       ]}
     >
@@ -223,10 +226,10 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardSelected: {
-    shadowColor: "transparent",
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 4,
   },
   blurClip: {
     ...StyleSheet.absoluteFillObject,

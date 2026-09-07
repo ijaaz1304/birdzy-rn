@@ -17,6 +17,7 @@ import {
 } from "../camera.utils";
 import { identifyFlowError, identifyFlowLog } from "../identifyFlowLog";
 import { navigateProcessedImageResult } from "../identifyImageFlow";
+import { resolveCropHostReturnTarget } from "../identifyCameraNavigation";
 import { showAlert } from "../../../store/alert.store";
 import {
   useSubscriptionStore,
@@ -36,8 +37,15 @@ export const IdentifyImageCropScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const isPremium = useSubscriptionStore(selectIsPremium);
-  const { imageUri, returnTarget, returnImageToAskAI, cameraAlreadyReleased } =
-    route.params;
+  const {
+    imageUri,
+    returnTarget,
+    returnImageToAskAI,
+    returnImageToFeed,
+    returnImageToQuiz,
+    feedDraft,
+    cameraAlreadyReleased,
+  } = route.params;
   const normalizedUri = useMemo(
     () => normalizeImageUriForCrop(imageUri),
     [imageUri]
@@ -96,10 +104,13 @@ export const IdentifyImageCropScreen: React.FC = () => {
           analyticsService.logEvent(EVENTS.photo_submit_button);
           analyticsService.logEvent(EVENTS.photo_submitted);
 
-          const target =
-            returnImageToAskAI || returnTarget === "askAi"
-              ? "askAi"
-              : returnTarget;
+          const target = resolveCropHostReturnTarget({
+            returnTarget,
+            returnImageToAskAI,
+            returnImageToFeed,
+            returnImageToQuiz,
+            feedDraft,
+          });
 
           if (target === "analysis") {
             if (!isPremium) {
@@ -116,9 +127,10 @@ export const IdentifyImageCropScreen: React.FC = () => {
             return;
           }
 
-          if (target === "askAi") {
+          if (target === "askAi" || target === "feed" || target === "quiz") {
             navigateProcessedImageResult(navigation, cropped, {
-              returnTarget: "askAi",
+              returnTarget: target,
+              feedDraft,
             });
             return;
           }
@@ -148,7 +160,10 @@ export const IdentifyImageCropScreen: React.FC = () => {
       navigation,
       normalizedUri,
       returnImageToAskAI,
+      returnImageToFeed,
+      returnImageToQuiz,
       returnTarget,
+      feedDraft,
       cameraAlreadyReleased,
     ])
   );

@@ -69,12 +69,12 @@ export const PostAuthGradientButton: React.FC<Props> = ({
 const styles = StyleSheet.create({
   touchable: {
     width: "100%",
-    borderRadius: 100,
+    borderRadius: POST_AUTH_LAYOUT.ctaBorderRadius,
     overflow: "hidden",
   },
   ctaInner: {
     height: POST_AUTH_LAYOUT.ctaHeight,
-    borderRadius: 100,
+    borderRadius: POST_AUTH_LAYOUT.ctaBorderRadius,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 8,
