@@ -28,7 +28,6 @@ import { AppText, AppOtherAppCard } from "../../../components/shared";
 import { CloseIcon } from "../../../components/shared/CloseIcon";
 import { Avatar } from "../../../atoms";
 import { Images } from "../../../assets";
-import DiscountBanner from "../../../components/customui/DiscountBanner";
 import DiscountCountdownBanner from "../../../components/customui/DiscountCountdownBanner";
 import {
   HomeIdentifyCardsSection,
@@ -814,17 +813,10 @@ export const HomeScreen = () => {
 
         {!isPremium && showInlineDiscountBanner && (
           <View style={[styles.sectionBlock, styles.discountBannerSection]}>
-            {discountOffer.isActive ? (
-              <DiscountBanner
-                dynamicHeight
-                discountPercent={DISCOUNT.DEFAULT_PERCENTAGE}
-                hours={countdown.hours}
-                minutes={countdown.minutes}
-                seconds={countdown.seconds}
-                timerRunning
-                isDiscountActive
-                onClose={() => setShowInlineDiscountBanner(false)}
-                onSubscribe={() => {
+            <View style={styles.fullSubsWrap}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => {
                   analyticsService.logEvent(EVENTS.subs_discount_banner);
                   rootNavigation.navigate("SubscriptionStack", {
                     screen: "SubscriptionMain",
@@ -834,37 +826,21 @@ export const HomeScreen = () => {
                     },
                   });
                 }}
-              />
-            ) : (
-              <View style={styles.fullSubsWrap}>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => {
-                    analyticsService.logEvent(EVENTS.subs_discount_banner);
-                    rootNavigation.navigate("SubscriptionStack", {
-                      screen: "SubscriptionMain",
-                      params: {
-                        openPlanModal: true,
-                        discount50: false,
-                      },
-                    });
-                  }}
-                >
-                  <AppImage
-                    source={Images.fullSubsBanner}
-                    style={styles.fullSubsBanner}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.fullSubsClose}
-                  onPress={() => setShowInlineDiscountBanner(false)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <CloseIcon isDark={isDark} style={styles.fullSubsCloseIcon} />
-                </TouchableOpacity>
-              </View>
-            )}
+              >
+                <AppImage
+                  source={Images.fullSubsBanner}
+                  style={styles.fullSubsBanner}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.fullSubsClose}
+                onPress={() => setShowInlineDiscountBanner(false)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <CloseIcon isDark={isDark} style={styles.fullSubsCloseIcon} />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 

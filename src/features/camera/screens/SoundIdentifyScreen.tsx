@@ -294,6 +294,11 @@ export const SoundIdentifyScreen: React.FC = () => {
                 >
                   {copy.subtitle}
                 </Text>
+                <Text
+                  style={[styles.entryNote, { color: colors.textTertiary }]}
+                >
+                  {copy.noPhotoRequired}
+                </Text>
               </View>
               {locationCard}
             </View>
@@ -472,6 +477,13 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     letterSpacing: -0.16,
     textAlign: "center",
+  },
+  entryNote: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    marginTop: 4,
   },
   entryControls: {
     alignItems: "center",

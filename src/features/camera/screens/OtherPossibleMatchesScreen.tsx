@@ -6,7 +6,7 @@
 import { AppImage } from "@/components/AppImage";
 import React, { useCallback, useRef, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { View, StyleSheet, FlatList, TouchableOpacity, StatusBar } from "react-native";
+import { View, StyleSheet, FlatList, TouchableOpacity, StatusBar, Pressable } from "react-native";
 import { CachedRemoteImage } from "@/components/AppImage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -17,7 +17,7 @@ import { useToast } from "../../../hooks/useToast";
 import { useStrings } from "../../../hooks/useStrings";
 import { Text, NavBackIcon } from "../../../atoms";
 import { CameraStackParamList } from "../../../navigation/types";
-import { Images, SoundLibraryEditIcon } from "../../../assets";
+import { Images, SoundLibraryEditIcon, DetailsMoreShareLight, DetailsMoreShareDark, DetailsMoreReportLight, DetailsMoreReportDark } from "../../../assets";
 import { getDisplayName, getMushroomDisplayScientificFromFields } from "../../../utils/mushroomDisplayUtils";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
@@ -33,13 +33,13 @@ import { Radius } from "../../../design";
 import { useIdentificationResultsStore } from "../identificationResults.store";
 import { IdentificationLocationBanner } from "../components/IdentificationLocationBanner";
 import { SoundSampleCard } from "../components/SoundSampleCard";
-import { SoundMatchesFooter } from "../components/SoundMatchesFooter";
+import { SoundMatchesFooter, SoundCantFindSection } from "../components/SoundMatchesFooter";
 import { SoundPlayButton } from "../components/SoundPlayButton";
 import { useLocationToggleFlow } from "../useLocationToggleFlow";
 import { shouldShowLocationBannerAsGranted } from "../locationToggle.helpers";
 import { useBirdsStore } from "../../../features/catalogue/birds.store";
 import { RemoveFromWishlistConfirmation } from "../../../components/RemoveFromWishlistConfirmation";
-import { WizardAnswersFooter } from "../../discovery/components/WizardAnswersFooter";
+import { WizardAnswersFooter, WizardCantFindSection, WizardSectionDivider } from "../../discovery/components/WizardAnswersFooter";
 import { useStepByStepStore } from "../../discovery/stepByStep.store";
 import { buildWizardAnswerRows } from "../../discovery/utils/stepByStepAnswers";
 import type { WizardQuestion } from "../../discovery/stepByStep.types";
@@ -55,6 +55,8 @@ import { canAddAudioGalleryClip } from "../../../services/session/audioGalleryLi
 import { navigateToSubscriptionMain } from "../../../utils/navigation";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { saveUnknownSoundRecording } from "../utils/saveSoundRecording";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { shareMushroom } from "../../../utils/shareUtils";
 
 const CARD_IMAGE_WIDTH = POSSIBLE_MATCH_THUMBNAIL_WIDTH;
 const CARD_IMAGE_HEIGHT = POSSIBLE_MATCH_THUMBNAIL_HEIGHT;
@@ -98,6 +100,9 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
   const uploadedSoundUrls = useIdentificationResultsStore(
     (s) => s.uploadedSoundUrls
   );
+  const uploadedImageUrls = useIdentificationResultsStore(
+    (s) => s.uploadedImageUrls
+  );
   // Prefer in-memory store (set on analyze screen) for instant paint after navigation.
   const matches = storedMatches.length > 0 ? storedMatches : routeMatches;
   const fromStepByStep = route.params?.fromStepByStep === true;
@@ -112,6 +117,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
     : [];
   const wizardCopy = HOME_STRINGS.discovery.stepByStep;
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
   const [recordingNote, setRecordingNote] = useState("");
   const [savedToUnknown, setSavedToUnknown] = useState(false);
@@ -134,6 +140,8 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
     locationPermissionGranted,
     location
   );
+  const pinCantFindFooter =
+    matches.length <= 2 && (fromStepByStep || fromSound);
 
   const handleLocationToggle = useCallback(
     (enabled: boolean) => {
@@ -326,6 +334,27 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
     });
   }, [navigation]);
 
+  const handleShareTopMatch = useCallback(async () => {
+    setShowMenu(false);
+    const top = matches[0];
+    if (!top) {
+      showToast("No matches to share yet.", "warning");
+      return;
+    }
+    const displayName = getMatchDisplayName(top);
+    const nested = top?.match ?? {};
+    const imageUri = getPossibleMatchThumbnailUri(top);
+    try {
+      await shareMushroom(
+        displayName,
+        nested.scientificName ?? top.scientificName,
+        imageUri
+      );
+    } catch {
+      showToast("Failed to open share", "error");
+    }
+  }, [matches, showToast]);
+
   const soundStamp = formatSoundStamp(new Date(recordedAt));
   const soundPlace =
     showLocationAsGranted && locationLabel?.trim()
@@ -350,16 +379,25 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
       );
       return;
     }
-    const hasRemoteImage = matches.some((item) => {
-      const uri = getPossibleMatchThumbnailUri(item);
-      return !!uri && /^https?:\/\//i.test(uri);
-    });
-    if (!hasRemoteImage) {
-      showToast("A sample image is required to save this recording.", "error");
+    const imageUrlsFromMatches = matches
+      .map((item) => getPossibleMatchThumbnailUri(item))
+      .filter((uri): uri is string => !!uri && /^https?:\/\//i.test(uri));
+    const imageUrls = [
+      ...(uploadedImageUrls ?? []).filter((uri) =>
+        /^https?:\/\//i.test(uri.trim())
+      ),
+      ...imageUrlsFromMatches,
+    ];
+    const uniqueImageUrls = [...new Set(imageUrls)];
+    if (!uniqueImageUrls.length) {
+      showToast(
+        "Could not find a reference image for this recording. Try identifying again or pick a match first.",
+        "error"
+      );
       return;
     }
     setShowAddNote(true);
-  }, [savingRecording, uploadedSoundUrls, matches, showToast]);
+  }, [savingRecording, uploadedSoundUrls, uploadedImageUrls, matches, showToast]);
 
   const handleNoteContinue = useCallback(
     async (note: string) => {
@@ -368,15 +406,22 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
         uploadedSoundUrls?.find(
           (uri) => typeof uri === "string" && /^https?:\/\//i.test(uri.trim())
         ) ?? "";
-      const imageUrls = matches
+      const imageUrlsFromMatches = matches
         .map((item) => getPossibleMatchThumbnailUri(item))
         .filter((uri): uri is string => !!uri && /^https?:\/\//i.test(uri));
+      const imageUrls = [
+        ...(uploadedImageUrls ?? []).filter((uri) =>
+          /^https?:\/\//i.test(uri.trim())
+        ),
+        ...imageUrlsFromMatches,
+      ];
+      const uniqueImageUrls = [...new Set(imageUrls)];
       try {
         setSavingRecording(true);
         await saveUnknownSoundRecording({
           uploadedSoundUrl: uploaded,
           note,
-          imageUrls,
+          imageUrls: uniqueImageUrls,
         });
         setRecordingNote(note);
         setShowAddNote(false);
@@ -392,7 +437,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
         setSavingRecording(false);
       }
     },
-    [savingRecording, uploadedSoundUrls, matches, showToast]
+    [savingRecording, uploadedSoundUrls, uploadedImageUrls, matches, showToast]
   );
 
   const getMatchImageUri = (item: any): string | undefined =>
@@ -704,8 +749,84 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
             {screenTitle}
           </Text>
         )}
-        <View style={styles.headerSpacer} />
+        {fromSound ? (
+          <TouchableOpacity
+            onPress={() => setShowMenu((open) => !open)}
+            style={styles.backButton}
+            activeOpacity={0.7}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="More options"
+          >
+            <MaterialIcons
+              name="more-horiz"
+              size={24}
+              color={colors.textPrimary}
+            />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.headerSpacer} />
+        )}
       </View>
+
+      {fromSound && showMenu ? (
+        <View style={[StyleSheet.absoluteFillObject, styles.menuOverlay]} pointerEvents="box-none">
+          <Pressable
+            style={StyleSheet.absoluteFillObject}
+            onPress={() => setShowMenu(false)}
+          />
+          <View
+            style={[
+              styles.menu,
+              {
+                backgroundColor: isDark
+                  ? colors.surfacePrimary
+                  : APP_COLORS.surfaceWhite,
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                void handleShareTopMatch();
+              }}
+            >
+              {isDark ? (
+                <DetailsMoreShareDark width={20} height={20} />
+              ) : (
+                <DetailsMoreShareLight width={20} height={20} />
+              )}
+              <Text
+                variant="body"
+                size="medium"
+                style={[styles.menuItemLabel, { color: colors.textPrimary }]}
+              >
+                Share
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMenu(false);
+                setShowReportModal(true);
+              }}
+            >
+              {isDark ? (
+                <DetailsMoreReportDark width={20} height={20} />
+              ) : (
+                <DetailsMoreReportLight width={20} height={20} />
+              )}
+              <Text
+                variant="body"
+                size="medium"
+                style={[styles.menuItemLabel, { color: colors.textPrimary }]}
+              >
+                Report
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
 
       {showLocationBanner ? (
         <View style={styles.locationBannerWrap}>
@@ -798,7 +919,9 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
         }
         ListFooterComponent={
           fromStepByStep ? (
-            <WizardAnswersFooter
+            <>
+              <WizardSectionDivider />
+              <WizardAnswersFooter
               rows={wizardAnswerRows}
               answersTitle={wizardCopy.yourAnswers}
               answersSubtitle={wizardCopy.yourAnswersSubtitle}
@@ -810,17 +933,42 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
               onEdit={handleEditAnswer}
               onAddManually={handleAddManually}
               onReport={() => setShowReportModal(true)}
+              hideCantFind={pinCantFindFooter}
             />
+            </>
           ) : fromSound ? (
             <SoundMatchesFooter
               onSave={() => {
                 void handleSaveRecording();
               }}
               onReport={() => setShowReportModal(true)}
+              hideCantFind={pinCantFindFooter}
             />
           ) : null
         }
       />
+
+      {pinCantFindFooter ? (
+        <View style={styles.pinnedCantFindWrap}>
+          {fromStepByStep ? (
+            <WizardCantFindSection
+              cantFindTitle={wizardCopy.cantFindTitle}
+              cantFindBody={wizardCopy.cantFindBody}
+              addManuallyLabel={wizardCopy.addManually}
+              reportLabel={wizardCopy.reportNoMatches}
+              onAddManually={handleAddManually}
+              onReport={() => setShowReportModal(true)}
+            />
+          ) : (
+            <SoundCantFindSection
+              onSave={() => {
+                void handleSaveRecording();
+              }}
+              onReport={() => setShowReportModal(true)}
+            />
+          )}
+        </View>
+      ) : null}
 
     </SafeAreaView>
     {fromSound && savedToUnknown ? (
@@ -942,6 +1090,37 @@ const styles = StyleSheet.create({
   },
   listFlex: {
     flex: 1,
+  },
+  pinnedCantFindWrap: {
+    paddingHorizontal: LIST_HORIZONTAL_PADDING,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  menuOverlay: {
+    zIndex: 20,
+  },
+  menu: {
+    position: "absolute",
+    top: 52,
+    right: 12,
+    minWidth: 180,
+    borderRadius: Radius.md,
+    paddingVertical: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  menuItemLabel: {
+    marginLeft: 4,
   },
   matchCardWrap: {
     width: "100%",

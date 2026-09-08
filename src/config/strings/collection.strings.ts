@@ -181,6 +181,12 @@ export const COLLECTION_STRINGS = {
     confirm: "Changes saved successfully",
   },
   birdDetails: {
+    soundCollectionNote: {
+      title: "Note",
+      message:
+        "When you add this bird to your collection, we'll automatically save its recording to your Sound Library as well.",
+      okay: "Okay",
+    },
     sections: {
       sounds: "Calls & Songs",
       overview: "Overview",

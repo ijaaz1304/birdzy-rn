@@ -122,7 +122,7 @@ export const HOME_STRINGS = {
       edit: "Edit",
       cantFindTitle: "Still can’t find your bird?",
       cantFindBody:
-        "The species might not be in our database yet. Add it yourself or tell us so we can improve matches.",
+        "Let Birdzy know. The bird you're seeing may not be in our database yet. Your response will help improve Birdzy's accuracy.",
       addManually: "Add bird manually",
       reportNoMatches: "Report no matches",
       reportTitle: "Report no matches",

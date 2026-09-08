@@ -9,11 +9,16 @@ import { useTheme } from "../../../hooks/useTheme";
 type Props = {
   onSave: () => void;
   onReport: () => void;
+  /** When true, cant-find block is rendered elsewhere (e.g. pinned footer). */
+  hideCantFind?: boolean;
 };
 
 const copy = CAMERA_STRINGS.sound;
 
-export function SoundMatchesFooter({ onSave, onReport }: Props) {
+export function SoundCantFindSection({
+  onSave,
+  onReport,
+}: Pick<Props, "onSave" | "onReport">) {
   const theme = useTheme();
 
   return (
@@ -43,6 +48,16 @@ export function SoundMatchesFooter({ onSave, onReport }: Props) {
       </TouchableOpacity>
     </View>
   );
+}
+
+export function SoundMatchesFooter({
+  onSave,
+  onReport,
+  hideCantFind = false,
+}: Props) {
+  if (hideCantFind) return null;
+
+  return <SoundCantFindSection onSave={onSave} onReport={onReport} />;
 }
 
 const styles = StyleSheet.create({

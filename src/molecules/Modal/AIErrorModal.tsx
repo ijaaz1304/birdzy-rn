@@ -26,6 +26,8 @@ export interface AIErrorModalProps {
   /** Chat with AI: typically navigate to Ask AI. */
   onChatWithAI: () => void;
   errorMessage?: string;
+  /** Override headline (default: camera error title). */
+  title?: string;
   /** Override primary CTA label (default: Re-take photo). */
   retryLabel?: string;
   /** Override primary CTA fill (default: theme primaryCTA). */
@@ -38,6 +40,7 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
   onRetry,
   onChatWithAI,
   errorMessage,
+  title,
   retryLabel,
   primaryCtaColor,
 }) => {
@@ -114,7 +117,7 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
               weight="bold"
               style={[styles.title, { color: colors.textPrimary }]}
             >
-              {strings.camera.error.title}
+              {title ?? strings.camera.error.title}
             </Text>
 
             <Text

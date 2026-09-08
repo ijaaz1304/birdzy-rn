@@ -30,6 +30,11 @@ import { performanceService } from "../../../services/performance/performance.se
 import { rescheduleInactivityNotifications } from "../../../services/notifications/scheduledNotifications.service";
 import { useIdentificationResultsStore } from "../identificationResults.store";
 import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
+import {
+  getDevIdentificationSampleMatches,
+  getDevSoundIdentificationExtras,
+  shouldUseIdentificationDevSamples,
+} from "../identificationDevSamples";
 
 const BIRD_IDENTIFICATION_TRACE = "bird_identification";
 
@@ -70,14 +75,37 @@ export function useSoundIdentificationFlow(
     thumbPrefetchDoneRef.current = null;
   }, []);
 
+  const navigateToSoundNoMatch = useCallback(
+    (
+      input: SoundIdentificationInput,
+      extras?: { uploadedSoundUrls?: string[]; uploadedImageUrls?: string[] }
+    ) => {
+      useIdentificationResultsStore.getState().setResults([], undefined, {
+        uploadedSoundUrls: extras?.uploadedSoundUrls,
+        uploadedImageUrls: extras?.uploadedImageUrls,
+      });
+      navigation.replace("SoundNoMatch", {
+        audioUri: input.audioUri,
+        audioDurationSec: input.audioDurationSec,
+        recordedAt: input.recordedAt,
+        uploadedSoundUrls: extras?.uploadedSoundUrls,
+        uploadedImageUrls: extras?.uploadedImageUrls,
+        cropStartSec: input.cropStartSec,
+        cropDurationSec: input.cropDurationSec,
+      });
+    },
+    [navigation]
+  );
+
   const navigateToPossibleMatches = useCallback(
     (
       input: SoundIdentificationInput,
       possibleMatches: ReturnType<typeof mapIdentificationToPossibleMatch>[],
-      uploadedSoundUrls?: string[]
+      extras?: { uploadedSoundUrls?: string[]; uploadedImageUrls?: string[] }
     ) => {
       useIdentificationResultsStore.getState().setResults(possibleMatches, undefined, {
-        uploadedSoundUrls,
+        uploadedSoundUrls: extras?.uploadedSoundUrls,
+        uploadedImageUrls: extras?.uploadedImageUrls,
       });
       navigation.replace("OtherPossibleMatches", {
         title: CAMERA_STRINGS.results.possibleMatchesHeading,
@@ -144,30 +172,69 @@ export function useSoundIdentificationFlow(
       }
 
       try {
-        const crop =
-          input.cropStartSec != null && input.cropDurationSec != null
-            ? {
-                startSec: input.cropStartSec,
-                durationSec: input.cropDurationSec,
-              }
-            : undefined;
-        const userLocation = getIdentificationUserLocationForApi();
-        const soundResult = await aiService.identifyBirdSound(
-          input.audioUri,
-          crop,
-          userLocation
-        );
+        let possibleMatches: ReturnType<typeof mapIdentificationToPossibleMatch>[];
+        let uploadedSoundUrls: string[] | undefined;
+        let uploadedImageUrls: string[] | undefined;
 
-        if (isStale()) return;
+        try {
+          const crop =
+            input.cropStartSec != null && input.cropDurationSec != null
+              ? {
+                  startSec: input.cropStartSec,
+                  durationSec: input.cropDurationSec,
+                }
+              : undefined;
+          const userLocation = getIdentificationUserLocationForApi();
+          const soundResult = await aiService.identifyBirdSound(
+            input.audioUri,
+            crop,
+            userLocation
+          );
 
-        if (soundResult.matchesFoundCount === 0 || !soundResult.matches?.length) {
-          analyticsService.logEvent(EVENTS.identify_result_fail);
-          analyticsService.logEvent(EVENTS.identification_done_failure);
-          analyticsService.logEvent(EVENTS.identify_result, { result: "fail" });
-          await stopIdentificationTrace("failure");
-          setIsAnalyzing(false);
-          setSoundError("noBird");
-          return;
+          if (isStale()) return;
+
+          if (
+            soundResult.matchesFoundCount === 0 ||
+            !soundResult.matches?.length
+          ) {
+            if (!shouldUseIdentificationDevSamples()) {
+              analyticsService.logEvent(EVENTS.identify_result_fail);
+              analyticsService.logEvent(EVENTS.identification_done_failure);
+              analyticsService.logEvent(EVENTS.identify_result, {
+                result: "fail",
+              });
+              await stopIdentificationTrace("failure");
+              setIsAnalyzing(false);
+              navigateToSoundNoMatch(input, {
+                uploadedSoundUrls: soundResult.soundUrls,
+                uploadedImageUrls: soundResult.imageUrls,
+              });
+              return;
+            }
+            console.warn(
+              "[SoundIdentify] API returned no matches — using dev sample results"
+            );
+            possibleMatches = getDevIdentificationSampleMatches();
+            const devExtras = getDevSoundIdentificationExtras();
+            uploadedSoundUrls = devExtras.soundUrls;
+            uploadedImageUrls = devExtras.imageUrls;
+          } else {
+            possibleMatches = soundResult.matches.map(
+              mapIdentificationToPossibleMatch
+            );
+            uploadedSoundUrls = soundResult.soundUrls;
+            uploadedImageUrls = soundResult.imageUrls;
+          }
+        } catch (apiError) {
+          if (!shouldUseIdentificationDevSamples()) throw apiError;
+          console.warn(
+            "[SoundIdentify] API failed — using dev sample results",
+            (apiError as Error)?.message ?? apiError
+          );
+          possibleMatches = getDevIdentificationSampleMatches();
+          const devExtras = getDevSoundIdentificationExtras();
+          uploadedSoundUrls = devExtras.soundUrls;
+          uploadedImageUrls = devExtras.imageUrls;
         }
 
         analyticsService.logEvent(EVENTS.identify_result_success);
@@ -175,9 +242,6 @@ export function useSoundIdentificationFlow(
         analyticsService.logEvent(EVENTS.identify_result, { result: "success" });
         void stopIdentificationTrace("success");
 
-        const possibleMatches = soundResult.matches.map(
-          mapIdentificationToPossibleMatch
-        );
         const thumbnailUris = possibleMatches
           .map((match) => getPossibleMatchThumbnailUri(match))
           .filter((uri): uri is string => !!uri);
@@ -197,11 +261,11 @@ export function useSoundIdentificationFlow(
 
         if (isStale()) return;
 
-        navigateToPossibleMatches(
-          input,
-          possibleMatches,
-          soundResult.soundUrls
-        );
+        setIsAnalyzing(false);
+        navigateToPossibleMatches(input, possibleMatches, {
+          uploadedSoundUrls,
+          uploadedImageUrls,
+        });
 
         void (async () => {
           rescheduleInactivityNotifications().catch(() => undefined);
@@ -226,7 +290,7 @@ export function useSoundIdentificationFlow(
         }
       }
     },
-    [navigateToPossibleMatches]
+    [navigateToPossibleMatches, navigateToSoundNoMatch]
   );
 
   const cancelAnalysis = useCallback(() => {

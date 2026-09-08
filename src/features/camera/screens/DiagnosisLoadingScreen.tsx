@@ -116,6 +116,9 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   const primaryImage = isSoundMode ? undefined : previewImage;
 
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState<string | undefined>(
+    undefined
+  );
   const [soundError, setSoundError] = useState<"noBird" | "noise" | null>(null);
   const [showUpgradeSheet, setShowUpgradeSheet] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<"analyzing" | "preparing">(
@@ -126,11 +129,31 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   const thumbPrefetchDoneRef = useRef<(() => void) | null>(null);
   const [thumbPrefetchUris, setThumbPrefetchUris] = useState<string[]>([]);
 
+  const retryFromDiagnosis = () => {
+    setShowErrorModal(false);
+    setErrorModalMessage(undefined);
+    if (isStepByStepMode) {
+      navigation.getParent()?.navigate("Home", { screen: "StepByStep" });
+      return;
+    }
+    navigateHomeFromDiagnosis(navigation, isStepByStepMode);
+  };
+
+  const showStepByStepFailure = (message?: string) => {
+    setErrorModalMessage(message ?? CAMERA_STRINGS.error.stepByStep.message);
+    setShowErrorModal(true);
+  };
+
   const showIdentifyFailure = (error?: unknown) => {
     if (isSoundMode) {
       setSoundError(classifySoundIdentifyError(error));
       return;
     }
+    if (isStepByStepMode) {
+      showStepByStepFailure();
+      return;
+    }
+    setErrorModalMessage(undefined);
     setShowErrorModal(true);
   };
 
@@ -210,7 +233,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
             analyticsService.logEvent(EVENTS.identify_result, { result: "fail" });
             await stopIdentificationTrace("failure");
             if (!cancelled && isMountedRef.current) {
-              setShowErrorModal(true);
+              showStepByStepFailure();
             }
             return;
           }
@@ -238,7 +261,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
         } catch (error) {
           console.error("Step-by-step diagnosis error:", error);
           await stopIdentificationTrace("failure");
-          if (!cancelled && isMountedRef.current) setShowErrorModal(true);
+          if (!cancelled && isMountedRef.current) showStepByStepFailure();
         }
         return;
       }
@@ -277,6 +300,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
         let matches;
         let matchesFoundCount;
         let uploadedSoundUrls: string[] | undefined;
+        let uploadedImageUrls: string[] | undefined;
 
         if (isSoundMode && audioUri) {
           const crop =
@@ -292,6 +316,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
           matches = soundResult.matches;
           matchesFoundCount = soundResult.matchesFoundCount;
           uploadedSoundUrls = soundResult.soundUrls;
+          uploadedImageUrls = soundResult.imageUrls;
         } else {
           const uploadUris = uploadImages
             .map((i) => i.uri)
@@ -316,7 +341,25 @@ export const DiagnosisLoadingScreen: React.FC = () => {
             result: "fail",
           });
           await stopIdentificationTrace("failure");
-          if (!cancelled && isMountedRef.current) showIdentifyFailure();
+          if (!cancelled && isMountedRef.current) {
+            if (isSoundMode && audioUri) {
+              useIdentificationResultsStore.getState().setResults([], undefined, {
+                uploadedSoundUrls,
+                uploadedImageUrls,
+              });
+              navigation.replace("SoundNoMatch", {
+                audioUri,
+                audioDurationSec: audioDurationSec ?? 0,
+                recordedAt: recordedAt ?? Date.now(),
+                uploadedSoundUrls,
+                uploadedImageUrls,
+                cropStartSec,
+                cropDurationSec,
+              });
+              return;
+            }
+            showIdentifyFailure();
+          }
           return;
         }
         analyticsService.logEvent(EVENTS.identify_result_success);
@@ -463,16 +506,11 @@ export const DiagnosisLoadingScreen: React.FC = () => {
       {/* Identify error – AIErrorModal (AppPopup-style: Chat with AI | Re-take photo) */}
       <AIErrorModal
         visible={showErrorModal}
-        onClose={() => {
-          setShowErrorModal(false);
-          navigateHomeFromDiagnosis(navigation, isStepByStepMode);
-        }}
-        onRetry={() => {
-          setShowErrorModal(false);
-          navigateHomeFromDiagnosis(navigation, isStepByStepMode);
-        }}
+        onClose={retryFromDiagnosis}
+        onRetry={retryFromDiagnosis}
         onChatWithAI={() => {
           setShowErrorModal(false);
+          setErrorModalMessage(undefined);
           analyticsService.logEvent(EVENTS.ask_ai_banner_clicked, {
             source: "diagnosis",
           });
@@ -481,9 +519,18 @@ export const DiagnosisLoadingScreen: React.FC = () => {
           });
         }}
         retryLabel={
-          isStepByStepMode ? CAMERA_STRINGS.buttons.tryAgain : undefined
+          isStepByStepMode
+            ? CAMERA_STRINGS.error.stepByStep.retry
+            : undefined
         }
-        errorMessage={undefined}
+        title={
+          isStepByStepMode ? CAMERA_STRINGS.error.stepByStep.title : undefined
+        }
+        errorMessage={
+          isStepByStepMode
+            ? errorModalMessage ?? CAMERA_STRINGS.error.stepByStep.message
+            : errorModalMessage
+        }
       />
 
       <LimitReachedBottomSheet

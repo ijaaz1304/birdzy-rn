@@ -105,6 +105,8 @@ export const UI_STATE_KEYS = {
    * shown via Notifee on Collection focus (avoids spam / duplicates).
    */
   FEED_NOTIF_NOTIFEE_WATERMARK: "birdzy_feed_notif_watermark_v1",
+  /** First-time note after adding a sound-identified bird to collection */
+  HAS_SEEN_SOUND_COLLECTION_NOTE: "birdzy_has_seen_sound_collection_note",
 } as const;
 
 /** Feed — hidden/reported posts (per-user, device-local) */

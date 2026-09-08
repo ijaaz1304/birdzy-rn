@@ -191,6 +191,15 @@ export type CameraStackParamList = {
   };
   IdentifyHub: undefined;
   OtherPossibleMatches: OtherPossibleMatchesScreenParams;
+  SoundNoMatch: {
+    audioUri: string;
+    audioDurationSec: number;
+    recordedAt: number;
+    uploadedSoundUrls?: string[];
+    uploadedImageUrls?: string[];
+    cropStartSec?: number;
+    cropDurationSec?: number;
+  };
 };
 
 export type CatalogueStackParamList = {

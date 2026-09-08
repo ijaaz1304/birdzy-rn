@@ -6,13 +6,8 @@ import { AppText } from "../../../components/shared";
 import { Images } from "../../../assets";
 import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { FONTS } from "../../../common/typography";
-import { useTheme } from "../../../hooks/useTheme";
+import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { Radius } from "../../../design";
-
-/** Identify by sound card — rgba(1, 71, 79, 1) */
-const SOUND_CARD_BG = "#01474F";
-/** Identify by photo card — rgba(235, 228, 238, 1) */
-const PHOTO_CARD_BG = "#EBE4EE";
 
 type Props = {
   onSoundPress: () => void;
@@ -24,23 +19,26 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
   onPhotoPress,
 }) => {
   const theme = useTheme();
+  const isDark = useIsDark();
   const strings = HOME_STRINGS.discovery;
+  const cardBg = isDark ? theme.colors.surfaceSecondary : "#EBE4EE";
+  const titleColor = theme.colors.textPrimary;
 
   return (
     <View style={styles.row}>
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={onSoundPress}
-        style={[styles.card, { backgroundColor: SOUND_CARD_BG }]}
+        style={[styles.card, { backgroundColor: cardBg }]}
       >
         <View style={styles.cardHeader}>
           <AppText
             variant="body14"
-            style={[styles.cardTitle, styles.cardTitleOnDark]}
+            style={[styles.cardTitle, { color: titleColor }]}
           >
             {strings.soundIdentify.title}
           </AppText>
-          <MaterialIcons name="chevron-right" size={20} color="#FFFFFF" />
+          <MaterialIcons name="chevron-right" size={20} color={titleColor} />
         </View>
         <View style={styles.soundIllustration}>
           <AppImage
@@ -54,19 +52,19 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={onPhotoPress}
-        style={[styles.card, { backgroundColor: PHOTO_CARD_BG }]}
+        style={[styles.card, { backgroundColor: cardBg }]}
       >
         <View style={styles.cardHeader}>
           <AppText
             variant="body14"
-            style={[styles.cardTitle, { color: theme.colors.textPrimary }]}
+            style={[styles.cardTitle, { color: titleColor }]}
           >
             {strings.identifyByPhoto.title}
           </AppText>
           <MaterialIcons
             name="chevron-right"
             size={20}
-            color={theme.colors.textPrimary}
+            color={titleColor}
           />
         </View>
         <View style={styles.photoIllustration}>
@@ -105,9 +103,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     flex: 1,
     paddingRight: 4,
-  },
-  cardTitleOnDark: {
-    color: "#FFFFFF",
   },
   soundIllustration: {
     height: 72,

@@ -95,6 +95,7 @@ export { MicrophonePermissionPopup } from "./MicrophonePermissionPopup";
 export type { MicrophonePermissionPopupProps } from "./MicrophonePermissionPopup";
 export { AddSoundNotePopup } from "./AddSoundNotePopup";
 export type { AddSoundNotePopupProps } from "./AddSoundNotePopup";
+export { SoundCollectionNoteModal } from "./SoundCollectionNoteModal";
 export { ChooseMethodPopup } from "./ChooseMethodPopup";
 export type { ChooseMethodPopupProps } from "./ChooseMethodPopup";
 export { LocationManageAccessPopup } from "./LocationManageAccessPopup";

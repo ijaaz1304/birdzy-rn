@@ -8,6 +8,15 @@ import { useTheme } from "../../../hooks/useTheme";
 import type { WizardAnswerRow } from "../utils/stepByStepAnswers";
 import type { WizardQuestion } from "../stepByStep.types";
 
+export function WizardSectionDivider() {
+  const theme = useTheme();
+  return (
+    <View
+      style={[styles.divider, { backgroundColor: theme.colors.border0 }]}
+    />
+  );
+}
+
 type Props = {
   rows: WizardAnswerRow[];
   editLabel: string;
@@ -20,7 +29,61 @@ type Props = {
   onEdit: (question: WizardQuestion) => void;
   onAddManually: () => void;
   onReport: () => void;
+  /** When true, cant-find block is rendered elsewhere (e.g. pinned footer). */
+  hideCantFind?: boolean;
 };
+
+export function WizardCantFindSection({
+  cantFindTitle,
+  cantFindBody,
+  addManuallyLabel,
+  reportLabel,
+  onAddManually,
+  onReport,
+}: Pick<
+  Props,
+  | "cantFindTitle"
+  | "cantFindBody"
+  | "addManuallyLabel"
+  | "reportLabel"
+  | "onAddManually"
+  | "onReport"
+>) {
+  const theme = useTheme();
+
+  return (
+    <View
+      style={[
+        styles.cantFind,
+        { backgroundColor: theme.colors.surfaceSecondary },
+      ]}
+    >
+      <Text style={[styles.cantFindTitle, { color: theme.colors.textPrimary }]}>
+        {cantFindTitle}
+      </Text>
+      <Text
+        style={[styles.cantFindBody, { color: theme.colors.textSecondary }]}
+      >
+        {cantFindBody}
+      </Text>
+      <TouchableOpacity
+        onPress={onAddManually}
+        activeOpacity={0.85}
+        style={[
+          styles.addButton,
+          { backgroundColor: theme.colors.primaryCTA },
+        ]}
+      >
+        <Text style={styles.addButtonLabel}>{addManuallyLabel}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onReport} hitSlop={8} style={styles.reportWrap}>
+        <Text style={[styles.report, { color: theme.colors.primaryCTA }]}>
+          {reportLabel}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export function WizardAnswersFooter({
   rows,
@@ -34,6 +97,7 @@ export function WizardAnswersFooter({
   onEdit,
   onAddManually,
   onReport,
+  hideCantFind = false,
 }: Props) {
   const theme = useTheme();
 
@@ -124,41 +188,27 @@ export function WizardAnswersFooter({
         ))}
       </View>
 
-      <View
-        style={[
-          styles.cantFind,
-          { backgroundColor: theme.colors.surfaceSecondary },
-        ]}
-      >
-        <Text style={[styles.cantFindTitle, { color: theme.colors.textPrimary }]}>
-          {cantFindTitle}
-        </Text>
-        <Text
-          style={[styles.cantFindBody, { color: theme.colors.textTertiary }]}
-        >
-          {cantFindBody}
-        </Text>
-        <TouchableOpacity
-          onPress={onAddManually}
-          activeOpacity={0.85}
-          style={[
-            styles.addButton,
-            { backgroundColor: theme.colors.primaryCTA },
-          ]}
-        >
-          <Text style={styles.addButtonLabel}>{addManuallyLabel}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onReport} hitSlop={8}>
-          <Text style={[styles.report, { color: theme.colors.primaryCTA }]}>
-            {reportLabel}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {hideCantFind ? null : (
+        <WizardCantFindSection
+          cantFindTitle={cantFindTitle}
+          cantFindBody={cantFindBody}
+          addManuallyLabel={addManuallyLabel}
+          reportLabel={reportLabel}
+          onAddManually={onAddManually}
+          onReport={onReport}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    width: "100%",
+    marginTop: 24,
+    marginBottom: 8,
+  },
   wrap: {
     paddingTop: 16,
     gap: 8,
@@ -236,41 +286,44 @@ const styles = StyleSheet.create({
   },
   cantFind: {
     marginTop: 16,
-    borderRadius: Radius.md,
-    padding: 16,
+    borderRadius: Radius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
     gap: 8,
-    alignItems: "center",
+    alignItems: "stretch",
   },
   cantFindTitle: {
     fontFamily: FONTS.bold,
     fontSize: 16,
     lineHeight: 24,
-    textAlign: "center",
   },
   cantFindBody: {
     fontFamily: FONTS.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
   },
   addButton: {
     marginTop: 8,
     alignSelf: "stretch",
-    height: 44,
-    borderRadius: 24,
+    height: 48,
+    borderRadius: 48,
     alignItems: "center",
     justifyContent: "center",
   },
   addButtonLabel: {
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.bold,
     fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 16,
     color: "#FFFFFF",
   },
-  report: {
-    fontFamily: FONTS.medium,
-    fontSize: 14,
-    lineHeight: 20,
+  reportWrap: {
+    alignSelf: "center",
     paddingVertical: 8,
+  },
+  report: {
+    fontFamily: FONTS.bold,
+    fontSize: 16,
+    lineHeight: 16,
   },
 });

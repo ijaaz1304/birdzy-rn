@@ -152,7 +152,7 @@ const AppCard: React.FC<Props> = React.memo(
             </TouchableOpacity>
           )}
 
-          {showSoundButton && hasSound ? (
+          {showSoundButton ? (
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation?.();
@@ -172,7 +172,7 @@ const AppCard: React.FC<Props> = React.memo(
             >
               <AppImage
                 source={
-                  soundPlaying ? Images.noSound : Images.soundVolumeHigh
+                  soundPlaying ? Images.soundVolumeHigh : Images.noSound
                 }
                 style={styles.soundIcon}
                 resizeMode="contain"

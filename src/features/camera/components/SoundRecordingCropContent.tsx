@@ -246,6 +246,9 @@ export function SoundRecordingCropContent({
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {copy.cropBody}
         </Text>
+        <Text style={[styles.noPhotoNote, { color: colors.textTertiary }]}>
+          {copy.noPhotoRequired}
+        </Text>
 
         <View style={styles.chips}>
           {SOUND_CROP_DURATIONS.map((item) => {
@@ -437,6 +440,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     letterSpacing: -0.16,
+    textAlign: "center",
+  },
+  noPhotoNote: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: "center",
   },
   chips: {

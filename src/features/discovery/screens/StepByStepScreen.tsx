@@ -85,12 +85,22 @@ export const StepByStepScreen: React.FC = () => {
   const [locationSource, setLocationSource] = useState<
     "search" | "current" | "recent" | null
   >(null);
+  /** Snapshot on entering location step — avoids showing Recently Used on first-ever pick. */
+  const [showRecentlyUsed, setShowRecentlyUsed] = useState(false);
 
   const question = WIZARD_QUESTIONS[questionIndex] ?? "location";
   const storeEditQuestion = useStepByStepStore((s) => s.editQuestion);
   const isEditSession = Boolean(
     route.params?.editQuestion ?? storeEditQuestion
   );
+
+  useEffect(() => {
+    if (phase === "question" && question === "location") {
+      setShowRecentlyUsed(
+        useStepByStepStore.getState().hasUsedWizardLocation
+      );
+    }
+  }, [phase, question, questionIndex]);
 
   useFocusEffect(
     useCallback(() => {
@@ -259,7 +269,7 @@ export const StepByStepScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
 
-              {recentLocations.length > 0 ? (
+              {showRecentlyUsed && recentLocations.length > 0 ? (
                 <View style={styles.locationSection}>
                   <Text
                     style={[styles.fieldLabel, { color: colors.textPrimary }]}

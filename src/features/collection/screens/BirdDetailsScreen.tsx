@@ -5,6 +5,7 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, StyleSheet, ScrollView, TouchableOpacity, Platform, TextInput, ActivityIndicator, KeyboardAvoidingView, Pressable, InteractionManager } from "react-native";
 import {
   SafeAreaView,
@@ -58,6 +59,7 @@ import {
   LocationManageAccessPopup,
   LocationPermissionPopup,
   ChangeLocationBottomSheet,
+  SoundCollectionNoteModal,
 } from "../../../molecules/Modal";
 import {
   hasSeenIdentificationSafetyWarning,
@@ -120,6 +122,7 @@ import {
   useCustomLocationSectionFlow,
   type BirdScrollSectionId,
 } from "../components/BirdDetailsScrollSections";
+import { DetailsTabPremiumBadge } from "../components/DetailsTabPremiumBadge";
 import { RemoveFromWishlistConfirmation } from "../../../components/RemoveFromWishlistConfirmation";
 import { useBackHandler } from "../../../utils/backHandler";
 import { AddToCollectionBottomSheet } from "../../camera/components/AddToCollectionBottomSheet";
@@ -143,6 +146,7 @@ import {
 } from "../../../services/session/collectionLimit.service";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
+import { UI_STATE_KEYS } from "../../../constants/storageConstants";
 import { toAnalyticsSource } from "../../../services/analytics/analyticsParams";
 import {
   COLLECTION_LIMITS,
@@ -362,6 +366,7 @@ export const BirdDetailsScreen: React.FC = () => {
   const mushroomSectionsOffsetY = useRef(0);
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showSoundCollectionNote, setShowSoundCollectionNote] = useState(false);
   /** Prevents KeyboardAvoidingView from resizing while report modal closes. */
   const [reportModalKeyboardCooldown, setReportModalKeyboardCooldown] =
     useState(false);
@@ -1569,6 +1574,28 @@ export const BirdDetailsScreen: React.FC = () => {
     setActiveTab("sounds");
   }, [mushroomId]);
 
+  useEffect(() => {
+    if (!addedToCollectionInSession || source !== "identification") return;
+    void (async () => {
+      const uploaded =
+        useIdentificationResultsStore.getState().uploadedSoundUrls ?? [];
+      if (!uploaded.length) return;
+      const seen = await AsyncStorage.getItem(
+        UI_STATE_KEYS.HAS_SEEN_SOUND_COLLECTION_NOTE
+      );
+      if (seen === "true") return;
+      setShowSoundCollectionNote(true);
+    })();
+  }, [addedToCollectionInSession, source]);
+
+  const dismissSoundCollectionNote = useCallback(async () => {
+    setShowSoundCollectionNote(false);
+    await AsyncStorage.setItem(
+      UI_STATE_KEYS.HAS_SEEN_SOUND_COLLECTION_NOTE,
+      "true"
+    );
+  }, []);
+
   // Scroll to section when tab is selected (use onLayout offsets to avoid measureLayout ref errors)
   useEffect(() => {
     const scrollTabs = [
@@ -1643,6 +1670,15 @@ export const BirdDetailsScreen: React.FC = () => {
     { id: "breeding", label: birdDetailStrings.sections.breeding },
     { id: "range", label: birdDetailStrings.sections.migration },
   ];
+  const premiumDetailTabIds = new Set([
+    "morphology",
+    "behavior",
+    "habitat",
+    "feeding",
+    "breeding",
+    "range",
+  ]);
+  const showPremiumTabBadge = !isPremium && !isBirdOfTheDay;
   const tabsToShow = tabs.filter((t) => {
     if (t.id === "range") return birdHasRange;
     return true;
@@ -2563,6 +2599,12 @@ export const BirdDetailsScreen: React.FC = () => {
           }}
           plantName={getDisplayName(mushroomData ?? {})}
         />
+        <SoundCollectionNoteModal
+          visible={showSoundCollectionNote}
+          onClose={() => {
+            void dismissSoundCollectionNote();
+          }}
+        />
 
         {/* Remove From Collection Modal (Popup) */}
         {mushroomData && (
@@ -3319,6 +3361,10 @@ export const BirdDetailsScreen: React.FC = () => {
                         >
                           {tab.label}
                         </Text>
+                        {showPremiumTabBadge &&
+                        premiumDetailTabIds.has(tab.id) ? (
+                          <DetailsTabPremiumBadge />
+                        ) : null}
                       </TouchableOpacity>
                     ))}
                   </ScrollView>

@@ -20,6 +20,8 @@ const EMPTY_ANSWERS: WizardAnswers = {
 type StepByStepState = {
   answers: WizardAnswers;
   recentLocations: WizardRecentLocation[];
+  /** True after the user has picked a location at least once (persisted). */
+  hasUsedWizardLocation: boolean;
   editQuestion: WizardQuestion | null;
   setLocation: (location: WizardRecentLocation | null) => void;
   setSeenDate: (seenDate: string | null) => void;
@@ -43,6 +45,7 @@ export const useStepByStepStore = create<StepByStepState>()(
     (set) => ({
       answers: { ...EMPTY_ANSWERS, seenDate: isoToday() },
       recentLocations: [],
+      hasUsedWizardLocation: false,
       editQuestion: null,
 
       setLocation: (location) =>
@@ -88,7 +91,10 @@ export const useStepByStepStore = create<StepByStepState>()(
                 )
             ),
           ].slice(0, MAX_RECENT_LOCATIONS);
-          return { recentLocations: next };
+          return {
+            recentLocations: next,
+            hasUsedWizardLocation: true,
+          };
         }),
 
       resetAnswers: () =>
@@ -100,7 +106,10 @@ export const useStepByStepStore = create<StepByStepState>()(
     {
       name: "birdzy-step-by-step",
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ recentLocations: state.recentLocations }),
+      partialize: (state) => ({
+        recentLocations: state.recentLocations,
+        hasUsedWizardLocation: state.hasUsedWizardLocation,
+      }),
     }
   )
 );

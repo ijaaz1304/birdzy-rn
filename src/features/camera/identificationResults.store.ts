@@ -6,10 +6,12 @@ type IdentificationResultsStore = {
   identificationImage?: { uri: string };
   /** Uploaded recording URLs from POST /core/ai/identify-sound `data.soundUrls`. */
   uploadedSoundUrls?: string[];
+  /** Reference image URLs returned by identify-sound (used when saving recordings). */
+  uploadedImageUrls?: string[];
   setResults: (
     matches: PossibleMatchListItem[],
     identificationImage?: { uri: string },
-    extras?: { uploadedSoundUrls?: string[] }
+    extras?: { uploadedSoundUrls?: string[]; uploadedImageUrls?: string[] }
   ) => void;
   clear: () => void;
 };
@@ -25,12 +27,14 @@ export const useIdentificationResultsStore = create<IdentificationResultsStore>(
         matches,
         identificationImage,
         uploadedSoundUrls: extras?.uploadedSoundUrls,
+        uploadedImageUrls: extras?.uploadedImageUrls,
       }),
     clear: () =>
       set({
         matches: [],
         identificationImage: undefined,
         uploadedSoundUrls: undefined,
+        uploadedImageUrls: undefined,
       }),
   })
 );

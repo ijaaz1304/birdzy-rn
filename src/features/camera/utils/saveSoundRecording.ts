@@ -21,7 +21,9 @@ export async function saveUnknownSoundRecording(params: {
     (uri) => typeof uri === "string" && isRemoteHttpUrl(uri)
   );
   if (!imageUrls.length) {
-    throw new Error("A sample image is required to save this recording.");
+    throw new Error(
+      "Could not find a reference image for this recording. Try identifying again."
+    );
   }
   const uploadedSoundUrl = params.uploadedSoundUrl.trim();
   if (!isRemoteHttpUrl(uploadedSoundUrl)) {

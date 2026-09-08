@@ -84,6 +84,12 @@ export const CAMERA_STRINGS = {
     retry: "Try Again",
     generic: "Error",
     failedToCaptureImage: "Failed to capture image. Please try again.",
+    stepByStep: {
+      title: "We couldn't find nearby matches",
+      message:
+        "Try adjusting your location or date answers, or browse the catalogue manually.",
+      retry: "Try again",
+    },
   },
   location: {
     turnOnPrompt: "Not accurate? Turn on location.",
@@ -120,6 +126,8 @@ export const CAMERA_STRINGS = {
     title: "Identify by Sound",
     subtitle:
       "Record a bird sound. Enable location for more accurate identification.",
+    noPhotoRequired:
+      "No photo needed — record the bird call and we'll suggest species matches.",
     tapToRecord: "Tap below to start recording",
     recording: "Recording...",
     recordedSound: "Recorded sound",
@@ -168,6 +176,16 @@ export const CAMERA_STRINGS = {
     noteLabel: "Note",
     savedToUnknown: "Recording saved to Unknown.",
     undo: "Undo",
+    noMatch: {
+      title: "No match found",
+      bodyNoLocation:
+        "We couldn't identify this recording yet. Turn on location and try again to improve the results.",
+      bodyWithLocation:
+        "We couldn't identify this recording yet. Try again to improve the results.",
+      enableLocationPrompt: "Improve results by enabling location.",
+      tryAgain: "Try Again",
+      saveRecording: "Save Recording",
+    },
     liveSuggestions: "Listening for birds...",
     liveSuggestionsHint: "Possible matches may appear while you record",
     errors: {

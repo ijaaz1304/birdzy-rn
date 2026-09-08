@@ -14,6 +14,7 @@ import { SoundCropScreen } from "../features/camera/screens/SoundCropScreen";
 import { IdentifyHubScreen } from "../features/camera/screens/IdentifyHubScreen";
 import { IdentifyImageCropScreen } from "../features/camera/screens/IdentifyImageCropScreen";
 import { OtherPossibleMatchesScreen } from "../features/camera/screens/OtherPossibleMatchesScreen";
+import { SoundNoMatchScreen } from "../features/camera/screens/SoundNoMatchScreen";
 import { IdentificationLocationGateScreen } from "../features/camera/screens/IdentificationLocationGateScreen";
 import {
   IDENTIFY_CROP_HOST_OPTIONS,
@@ -57,6 +58,14 @@ export const CameraStack: React.FC = () => {
       <Stack.Screen
         name="OtherPossibleMatches"
         component={OtherPossibleMatchesScreen}
+        options={{
+          animation: "fade",
+          animationDuration: 120,
+        }}
+      />
+      <Stack.Screen
+        name="SoundNoMatch"
+        component={SoundNoMatchScreen}
         options={{
           animation: "fade",
           animationDuration: 120,
