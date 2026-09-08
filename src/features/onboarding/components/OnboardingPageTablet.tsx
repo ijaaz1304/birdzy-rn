@@ -3,6 +3,8 @@ import { Platform, View, StyleSheet } from "react-native";
 import { useTheme } from "../../../hooks/useTheme";
 import { Text } from "../../../atoms";
 import type { OnboardingPageData } from "../screens/OnboardingScreenPhone";
+import type { OnboardingPaginationProps } from "./OnboardingPage";
+import { PaginationDots } from "./PaginationDots";
 import { FONTS } from "../../../common/typography";
 import {
   TABLET_MARKETING_BODY,
@@ -21,6 +23,7 @@ export interface OnboardingPageTabletProps {
   height: number;
   pageIndex: number;
   bottomChromeHeight: number;
+  pagination?: OnboardingPaginationProps;
   onSignUp?: () => void;
   onLogIn?: () => void;
   onContinueAsGuest?: () => void;
@@ -34,6 +37,7 @@ export const OnboardingPageTablet: React.FC<OnboardingPageTabletProps> =
       height,
       pageIndex: _pageIndex,
       bottomChromeHeight,
+      pagination,
       onSignUp,
       onLogIn,
       onContinueAsGuest,
@@ -104,6 +108,14 @@ export const OnboardingPageTablet: React.FC<OnboardingPageTabletProps> =
               >
                 {data.description}
               </Text>
+              {pagination != null ? (
+                <PaginationDots
+                  totalPages={pagination.totalPages}
+                  scrollX={pagination.scrollX}
+                  pageWidth={pagination.pageWidth}
+                  containerStyle={styles.paginationDotsBelowText}
+                />
+              ) : null}
             </View>
           ) : null}
         </View>
@@ -139,5 +151,9 @@ const styles = StyleSheet.create({
   },
   description: {
     textAlign: "left",
+  },
+  paginationDotsBelowText: {
+    marginTop: 12,
+    alignSelf: "flex-start",
   },
 });

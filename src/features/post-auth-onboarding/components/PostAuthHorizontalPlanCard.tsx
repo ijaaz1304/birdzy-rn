@@ -1,10 +1,12 @@
 import React, { useMemo } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import LinearGradient from "react-native-linear-gradient";
 import { BlurView } from "@react-native-community/blur";
 import { FONTS } from "../../../common/typography";
 import {
   POST_AUTH_LAYOUT,
   POST_AUTH_ONBOARDING_COLORS_LIGHT,
+  POST_AUTH_PACK_BORDER_GRADIENT,
   type PostAuthOnboardingColors,
 } from "../constants";
 import {
@@ -45,9 +47,13 @@ export const HORIZONTAL_PLAN_ROW_STYLE = {
   width: "100%" as const,
   alignItems: "stretch" as const,
   overflow: "visible" as const,
-  paddingTop: 12,
+  paddingTop: 8,
   marginBottom: 4,
 };
+
+const CARD_RADIUS = 16;
+const CARD_INNER_RADIUS =
+  CARD_RADIUS - POST_AUTH_PACK_BORDER_GRADIENT.borderWidth;
 
 export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
   title,
@@ -91,16 +97,9 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-        style={({ pressed }) => [
-        styles.card,
-        selected ? styles.cardSelected : styles.cardUnselected,
+      style={({ pressed }) => [
+        styles.cardOuter,
         {
-          backgroundColor: selected
-            ? colors.planCardBackgroundSelected
-            : "transparent",
-          borderColor: selected
-            ? colors.planBorderSelected
-            : colors.planBorderUnselected,
           opacity: pressed ? 0.85 : 1,
           zIndex: showPopular ? 3 : 1,
           shadowColor: selected
@@ -109,131 +108,169 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
         },
       ]}
     >
-      {!selected ? (
-        <View style={styles.blurClip} pointerEvents="none">
-          {Platform.OS === "ios" ? (
-            <BlurView
-              style={StyleSheet.absoluteFillObject}
-              blurType="light"
-              blurAmount={UNSELECTED_PACK_BLUR}
-              reducedTransparencyFallbackColor={colors.planCardBackground}
-            />
-          ) : null}
-          <View
-            style={[
-              StyleSheet.absoluteFillObject,
-              { backgroundColor: colors.planCardBackground },
-            ]}
-          />
-        </View>
-      ) : null}
       {showPopular ? (
         <View style={styles.popularBadgeWrap}>
           <PostAuthPopularBadge colors={colors} />
         </View>
       ) : null}
-
-      <Text
-        style={[styles.title, { color: colors.textPrimary }]}
-        numberOfLines={1}
+      <LinearGradient
+        colors={[...POST_AUTH_PACK_BORDER_GRADIENT.colors]}
+        locations={[...POST_AUTH_PACK_BORDER_GRADIENT.locations]}
+        useAngle
+        angle={POST_AUTH_PACK_BORDER_GRADIENT.angle}
+        style={styles.gradientBorder}
       >
-        {title}
-      </Text>
-
-      <View style={styles.priceDetails}>
-        <View style={styles.priceGroup}>
-          <View style={styles.priceRow}>
-            <Text
+        <View
+          style={[
+            styles.cardInner,
+            {
+              backgroundColor: POST_AUTH_PACK_BORDER_GRADIENT.innerBackground,
+            },
+          ]}
+        >
+          {selected ? (
+            <View
+              pointerEvents="none"
               style={[
-                styles.priceAmount,
+                styles.selectedOverlay,
                 {
-                  color: colors.textPrimary,
-                  fontSize: priceAmountFontSize,
+                  backgroundColor: colors.planCardBackgroundSelected,
                 },
               ]}
-              numberOfLines={1}
-              allowFontScaling={false}
-            >
-              {priceParts.amount}
-            </Text>
-            {priceParts.suffix ? (
+            />
+          ) : (
+            <View style={styles.blurClip} pointerEvents="none">
+              {Platform.OS === "ios" ? (
+                <BlurView
+                  style={StyleSheet.absoluteFillObject}
+                  blurType="light"
+                  blurAmount={UNSELECTED_PACK_BLUR}
+                  reducedTransparencyFallbackColor={colors.planCardBackground}
+                />
+              ) : null}
+              <View
+                style={[
+                  StyleSheet.absoluteFillObject,
+                  { backgroundColor: colors.planCardBackground },
+                ]}
+              />
+            </View>
+          )}
+          <Text
+            style={[styles.title, styles.cardForeground, { color: colors.textPrimary }]}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+
+          <View style={[styles.priceDetails, styles.cardForeground]}>
+            <View style={styles.priceGroup}>
+              <View style={styles.priceRow}>
+                <Text
+                  style={[
+                    styles.priceAmount,
+                    {
+                      color: colors.textPrimary,
+                      fontSize: priceAmountFontSize,
+                    },
+                  ]}
+                  numberOfLines={1}
+                  allowFontScaling={false}
+                >
+                  {priceParts.amount}
+                </Text>
+                {priceParts.suffix ? (
+                  <Text
+                    style={[styles.priceSuffix, { color: colors.textPrimary }]}
+                    numberOfLines={1}
+                    allowFontScaling={false}
+                  >
+                    {priceParts.suffix}
+                  </Text>
+                ) : null}
+              </View>
+
+              {normalizedPriceSecondaryLine ? (
+                <Text
+                  style={[
+                    styles.billingNote,
+                    styles.strikethrough,
+                    { color: colors.textTertiary },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {normalizedPriceSecondaryLine}
+                </Text>
+              ) : null}
+
+              {billingNote ? (
+                <Text
+                  style={[styles.billingNote, { color: colors.textTertiary }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}
+                >
+                  {billingNote}
+                </Text>
+              ) : null}
+            </View>
+
+            {showTrial ? (
               <Text
-                style={[styles.priceSuffix, { color: colors.textPrimary }]}
+                style={[styles.trialLine, { color: colors.textPrimary }]}
                 numberOfLines={1}
-                allowFontScaling={false}
               >
-                {priceParts.suffix}
+                <Text style={styles.trialBold}>{trialDays} days</Text>
+                <Text style={styles.trialRegular}> free trial</Text>
               </Text>
             ) : null}
           </View>
-
-          {normalizedPriceSecondaryLine ? (
-            <Text
-              style={[
-                styles.billingNote,
-                styles.strikethrough,
-                { color: colors.textTertiary },
-              ]}
-              numberOfLines={1}
-            >
-              {normalizedPriceSecondaryLine}
-            </Text>
-          ) : null}
-
-          {billingNote ? (
-            <Text
-              style={[styles.billingNote, { color: colors.textTertiary }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.8}
-            >
-              {billingNote}
-            </Text>
-          ) : null}
         </View>
-
-        {showTrial ? (
-          <Text
-            style={[styles.trialLine, { color: colors.textPrimary }]}
-            numberOfLines={1}
-          >
-            <Text style={styles.trialBold}>{trialDays} days</Text>
-            <Text style={styles.trialRegular}> free trial</Text>
-          </Text>
-        ) : null}
-      </View>
+      </LinearGradient>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
+  cardOuter: {
     flex: 1,
     alignSelf: "stretch",
-    borderRadius: 16,
-    borderWidth: 1.5,
+    borderRadius: CARD_RADIUS,
+    minWidth: 0,
+    overflow: "visible",
+    position: "relative",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  gradientBorder: {
+    flexGrow: 1,
+    alignSelf: "stretch",
+    width: "100%",
+    borderRadius: CARD_RADIUS,
+    padding: POST_AUTH_PACK_BORDER_GRADIENT.borderWidth,
+    overflow: "hidden",
+  },
+  cardInner: {
+    alignSelf: "stretch",
+    borderRadius: CARD_INNER_RADIUS,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 12,
-    minWidth: 0,
-    overflow: "visible",
+    minHeight: 104,
+    overflow: "hidden",
   },
-  cardUnselected: {
-    shadowColor: UNSELECTED_PACK_SHADOW,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 16,
-    elevation: 4,
+  selectedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: CARD_INNER_RADIUS,
   },
-  cardSelected: {
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 16,
-    elevation: 4,
+  cardForeground: {
+    zIndex: 1,
   },
   blurClip: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 16,
+    borderRadius: CARD_INNER_RADIUS,
     overflow: "hidden",
   },
   popularBadgeWrap: {

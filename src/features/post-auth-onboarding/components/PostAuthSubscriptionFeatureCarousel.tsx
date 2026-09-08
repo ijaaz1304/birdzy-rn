@@ -107,7 +107,10 @@ export const PostAuthSubscriptionFeatureCarousel: React.FC<Props> = ({
   }, [clearAutoScrollTimer, featureCount, goToIndex]);
 
   return (
-    <View style={styles.wrapper} onLayout={handleLayout}>
+    <View
+      style={[styles.wrapper, { marginTop: layout.subscriptionCarouselMarginTop }]}
+      onLayout={handleLayout}
+    >
       <FlatList
         ref={listRef}
         data={features}
@@ -115,8 +118,8 @@ export const PostAuthSubscriptionFeatureCarousel: React.FC<Props> = ({
         keyExtractor={(_, index) => `${isDark ? "dark" : "light"}-${index}`}
         horizontal
         pagingEnabled
-        initialNumToRender={6}
-        windowSize={7}
+        initialNumToRender={7}
+        windowSize={8}
         showsHorizontalScrollIndicator={false}
         snapToInterval={featureCarouselWidth}
         snapToAlignment="start"

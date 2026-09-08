@@ -8,6 +8,7 @@ import { APP_COLORS } from "../../../config/colors";
 import { COLLECTION_STRINGS } from "../../../config/strings/collection.strings";
 import { Radius } from "../../../design";
 import { spacing } from "../../../design-system/spacing";
+import { useTheme } from "../../../hooks/useTheme";
 import type { BirdSoundListItem } from "../utils/birdSoundListItems";
 
 type Props = {
@@ -27,8 +28,8 @@ export function BirdSoundRow({
   textPrimary,
   textSecondary,
 }: Props) {
+  const theme = useTheme();
   const strings = COLLECTION_STRINGS.birdDetails.sounds;
-  const durationLabel = isPlaying ? strings.playing : item.durationLabel;
 
   return (
     <TouchableOpacity
@@ -41,6 +42,7 @@ export function BirdSoundRow({
       <View
         style={[
           styles.playButton,
+          { backgroundColor: theme.colors.primaryCTA },
           isPlaying && styles.pauseButton,
         ]}
       >
@@ -70,9 +72,13 @@ export function BirdSoundRow({
               </View>
             ) : null}
           </View>
-          {durationLabel ? (
+          {item.durationLabel ? (
             <Text style={[styles.duration, { color: textSecondary }]}>
-              {durationLabel}
+              {item.durationLabel}
+            </Text>
+          ) : isPlaying ? (
+            <Text style={[styles.duration, { color: textSecondary }]}>
+              {strings.playing}
             </Text>
           ) : null}
         </View>
@@ -104,7 +110,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: APP_COLORS.createButtonFg,
     flexShrink: 0,
   },
   pauseButton: {
@@ -122,6 +127,7 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing[2],
   },
   titleGroup: {

@@ -26,6 +26,7 @@ import {
   MUSHROOM_OF_DAY_HEADER_LIGHT_ASPECT,
   MUSHROOM_OF_DAY_MODAL_LAYOUT,
 } from "./birdOfTheDayModal.config";
+import { resolveBirdHeroImageUrls } from "../../utils/mushroomCardUtils";
 
 const GOLD_NAME = "#FFC13B";
 const GOLD_GLOW = "#FFDD24";
@@ -38,6 +39,9 @@ export interface BirdOfTheDayModalProps {
   scientificName?: string;
   price?: string;
   mushroomImage?: string | ImageSourcePropType;
+  /** Resolved carousel URLs when `mushroomImage` is missing or stale. */
+  mushroomImageUrls?: string[];
+  canonicalName?: string;
   onClose: () => void;
   /** Premium: cycle to next mushroom of the day. */
   onRefresh?: () => void;
@@ -56,6 +60,8 @@ export const BirdOfTheDayModal = ({
   scientificName,
   price,
   mushroomImage,
+  mushroomImageUrls,
+  canonicalName,
   onClose,
   onRefresh,
   onFreeRefreshBlocked,
@@ -129,13 +135,35 @@ export const BirdOfTheDayModal = ({
 
   const specimenSource = useMemo(() => {
     if (typeof mushroomImage === "string" && mushroomImage.trim()) {
-      return { uri: mushroomImage.trim() };
+      const trimmed = mushroomImage.trim();
+      if (
+        trimmed.startsWith("http://") ||
+        trimmed.startsWith("https://") ||
+        trimmed.startsWith("file://")
+      ) {
+        return { uri: trimmed };
+      }
     }
     if (mushroomImage && typeof mushroomImage === "object") {
       return mushroomImage;
     }
+
+    const resolved = resolveBirdHeroImageUrls(
+      canonicalName,
+      mushroomImageUrls,
+      scientificName
+    );
+    if (resolved[0]) {
+      return { uri: resolved[0] };
+    }
+
     return Images.mineralSample;
-  }, [mushroomImage]);
+  }, [
+    mushroomImage,
+    mushroomImageUrls,
+    canonicalName,
+    scientificName,
+  ]);
 
   const lightHeaderHeight = Math.round(
     layout.headerWidth / MUSHROOM_OF_DAY_HEADER_LIGHT_ASPECT

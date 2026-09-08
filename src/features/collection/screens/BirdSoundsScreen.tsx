@@ -17,6 +17,7 @@ import { CollectionStackParamList } from "../../../navigation/types";
 import { soundRecordingService } from "../../../services/audio/soundRecording.service";
 import { BirdSoundRow } from "../components/BirdSoundRow";
 import { buildBirdSoundListItems } from "../utils/birdSoundListItems";
+import { useBirdSoundDurations } from "../hooks/useBirdSoundDurations";
 
 type Route = RouteProp<CollectionStackParamList, "BirdSounds">;
 type Nav = NativeStackNavigationProp<CollectionStackParamList, "BirdSounds">;
@@ -30,6 +31,18 @@ export const BirdSoundsScreen: React.FC = () => {
   const strings = COLLECTION_STRINGS.birdDetails.sounds;
 
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const allUrls = useMemo(
+    () => [
+      ...(route.params.soundUrls ?? []),
+      ...(route.params.userCapturedSounds ?? []),
+    ],
+    [route.params.soundUrls, route.params.userCapturedSounds]
+  );
+  const probedDurations = useBirdSoundDurations(allUrls);
+  const durationsSec = useMemo(
+    () => ({ ...route.params.durationsSec, ...probedDurations }),
+    [route.params.durationsSec, probedDurations]
+  );
 
   const items = useMemo(
     () =>
@@ -39,9 +52,16 @@ export const BirdSoundsScreen: React.FC = () => {
         customLocation: route.params.customLocation,
         createdAt: route.params.createdAt,
         updatedAt: route.params.updatedAt,
-        durationsSec: route.params.durationsSec,
+        durationsSec,
       }),
-    [route.params]
+    [
+      route.params.soundUrls,
+      route.params.userCapturedSounds,
+      route.params.customLocation,
+      route.params.createdAt,
+      route.params.updatedAt,
+      durationsSec,
+    ]
   );
 
   useEffect(() => {

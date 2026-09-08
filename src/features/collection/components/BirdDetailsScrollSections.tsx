@@ -13,7 +13,7 @@ import { InfoRow } from "../../../atoms";
 import { MapPreview } from "../../../molecules";
 import { BlurOverlay } from "../../../components/BlurOverlay";
 import { Images } from "../../../assets";
-import { SubscribeToPremiumCard } from "./SubscribeToPremiumCard";
+import { GoProGateButton } from "./GoProGateButton";
 import { APP_COLORS } from "../../../config/colors";
 import { FONTS } from "../../../common/typography";
 import { Radius } from "../../../design";
@@ -625,14 +625,8 @@ function PremiumLockedSection({
               pointerEvents="none"
               style={StyleSheet.absoluteFillObject}
             />
-            {!isDark ? (
-              <View
-                pointerEvents="none"
-                style={[StyleSheet.absoluteFillObject, styles.premiumGateBorder]}
-              />
-            ) : null}
-            <View style={styles.premiumCardWrap} pointerEvents="box-none">
-              <SubscribeToPremiumCard isDark={isDark} onPress={onGetPremium} />
+            <View style={styles.premiumGoProWrap} pointerEvents="box-none">
+              <GoProGateButton onPress={onGetPremium} />
             </View>
           </>
         ) : null}
@@ -1374,14 +1368,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   premiumContentLocked: {
-    minHeight: 260,
+    minHeight: 206,
   },
-  premiumGateBorder: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    borderColor: APP_COLORS.blurOverlayBorder,
-  },
-  premiumCardWrap: {
+  premiumGoProWrap: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",

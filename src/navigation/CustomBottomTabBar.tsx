@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   },
   activeLine: {
     position: "absolute",
-    top: -4,
+    top: -10,
     height: 3,
     width: 32,
     borderRadius: 2,

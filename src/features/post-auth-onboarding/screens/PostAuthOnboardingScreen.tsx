@@ -1,5 +1,5 @@
 /**
- * Post-auth onboarding: location → notifications → subscription → surprise → 50% offer.
+ * Post-auth onboarding: location → notifications → subscription (timer) → surprise → especially-for-you discount.
  * Skips permission slides when already granted/blocked; premium skips subscription promos.
  * Five slides advanced only via CTAs (no swipe paging).
  */
@@ -12,15 +12,16 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import { StyleSheet, Text as RNText, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { PostAuthOnboardingBackground, PostAuthSubscriptionSkyBackground } from "../utils/background";
+import { PostAuthOnboardingBackground } from "../utils/background";
 import { Images } from "../../../assets";
 import { APP_COLORS } from "../../../config/colors";
 import { FONTS } from "../../../common/typography";
+import { Text } from "../../../atoms";
 import { ROUTES } from "../../../constants";
 import {
   getPrivacyPolicyUrl,
@@ -48,6 +49,7 @@ import { PostAuthLegalFooter } from "../components/PostAuthLegalFooter";
 import { PostAuthLegalModal } from "../components/PostAuthLegalModal";
 import { PostAuthSubscriptionFeatureCarousel } from "../components/PostAuthSubscriptionFeatureCarousel";
 import { PostAuthSubscriptionPaywallHeader } from "../components/PostAuthSubscriptionPaywallHeader";
+import { PostAuthDiscountTimerPill } from "../components/PostAuthDiscountTimerPill";
 import { PostAuthLocationAccessSlide } from "../components/PostAuthLocationAccessSlide";
 import { PostAuthSubscriptionDisclosure } from "../components/PostAuthSubscriptionDisclosure";
 import { SubscriptionSuccessModal } from "../../../molecules/Modal";
@@ -416,7 +418,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       style={styles.skipButton}
     >
-      <Text style={[styles.skipText, { color: colors.textPrimary }]}>Skip</Text>
+      <RNText style={[styles.skipText, { color: colors.textPrimary }]}>Skip</RNText>
     </TouchableOpacity>
   );
 
@@ -503,9 +505,9 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         onPress={() => void refetchPrices()}
         style={styles.retryBanner}
       >
-        <Text style={[styles.retryText, { color: colors.textSecondary }]}>
+        <RNText style={[styles.retryText, { color: colors.textSecondary }]}>
           Couldn&apos;t load prices. Tap to retry.
-        </Text>
+        </RNText>
       </TouchableOpacity>
     ) : null;
 
@@ -577,8 +579,15 @@ export const PostAuthOnboardingScreen: React.FC = () => {
           },
         ]}
       >
+        <View
+          style={[
+            styles.discountTimerOverlay,
+            { top: layout.subscriptionDiscountTimerTop },
+          ]}
+        >
+          <PostAuthDiscountTimerPill />
+        </View>
         <View style={styles.subscriptionCenterBlock}>
-          <PostAuthSubscriptionPaywallHeader colors={colors} />
           <PostAuthSubscriptionFeatureCarousel
             isDark={isDark}
             colors={colors}
@@ -610,17 +619,19 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       <View
         style={[
           styles.surpriseBody,
-          { paddingTop: layout.discountSlideTopPadding },
+          { paddingTop: layout.contentTopPadding },
         ]}
       >
         <Text
+          variant="title"
+          size="small"
+          weight="semibold"
           style={[
-            styles.discountTitle,
+            styles.surpriseTitle,
             {
-              color: isDark ? colors.textPrimary : "#000000",
-              fontSize: layout.discountTitleFontSize,
-              lineHeight: layout.discountTitleLineHeight,
-              marginBottom: layout.isCompact ? 4 : 8,
+              color: colors.textPrimary,
+              fontSize: layout.slideTitleFontSize,
+              lineHeight: layout.slideTitleLineHeight,
             },
           ]}
         >
@@ -675,6 +686,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         ]}
       >
         <View style={styles.subscriptionCenterBlock}>
+          <PostAuthSubscriptionPaywallHeader colors={colors} />
           <PostAuthSubscriptionFeatureCarousel
             isDark={isDark}
             colors={colors}
@@ -718,17 +730,9 @@ export const PostAuthOnboardingScreen: React.FC = () => {
     }
   };
 
-  const isSubscriptionPaywallSlide =
-    currentSlide === POST_AUTH_ONBOARDING_STEPS.SUBSCRIPTION ||
-    currentSlide === POST_AUTH_ONBOARDING_STEPS.DISCOUNT;
-
   return (
     <View style={styles.background}>
-      {isSubscriptionPaywallSlide && !isDark ? (
-        <PostAuthSubscriptionSkyBackground />
-      ) : (
-        <PostAuthOnboardingBackground isDark={isDark} />
-      )}
+      <PostAuthOnboardingBackground isDark={isDark} />
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={[styles.slide, { width: windowWidth }]}>
           <PostAuthPhoneLayout>
@@ -773,7 +777,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     minHeight: 52,
     paddingHorizontal: POST_AUTH_LAYOUT.horizontalPadding,
-    paddingTop: 4,
+    paddingTop: 12,
     zIndex: 2,
   },
   skipButton: {
@@ -800,10 +804,25 @@ const styles = StyleSheet.create({
     minHeight: 0,
     paddingBottom: 8,
     zIndex: 1,
+    position: "relative",
+  },
+  discountTimerOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 2,
   },
   subscriptionCenterBlock: {
     width: "100%",
     alignItems: "center",
+  },
+  surpriseTitle: {
+    textAlign: "center",
+    width: POST_AUTH_LAYOUT.contentWidth,
+    maxWidth: "100%",
+    flexShrink: 0,
+    marginBottom: 8,
   },
   surpriseBody: {
     flex: 1,
@@ -874,7 +893,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   horizontalPlanRow: {
-    marginTop: 16,
+    marginTop: 0,
     marginBottom: 8,
     flexShrink: 0,
     zIndex: 3,

@@ -131,7 +131,7 @@ export function getSwitchSheetPlansForCurrentKind<
     currentPlanKind === "week" || currentPlanKind === "month"
       ? ["year", "lifetime"]
       : currentPlanKind === "year"
-      ? ["week", "lifetime"]
+      ? ["month", "lifetime"]
       : null;
 
   if (!targetDurations) return [];

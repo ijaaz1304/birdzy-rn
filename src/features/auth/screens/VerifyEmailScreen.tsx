@@ -22,6 +22,10 @@ import { PrimaryButton } from "../../../atoms/PrimaryButton/PrimaryButton";
 import { Text } from "../../../atoms/Text/Text";
 import { NavBackIcon } from "../../../atoms";
 import { ScreenContainer } from "../../../molecules";
+import {
+  AuthScreenBackground,
+  AuthScreenStatusBar,
+} from "../components/AuthScreenBackground";
 import { useTheme } from "../../../hooks/useTheme";
 import { SCREEN_COLORS } from "../../../constants/colorConstants";
 import { useAuthStore } from "../auth.store";
@@ -32,7 +36,7 @@ import { TOOLTIP_ELIGIBLE_FOR_SIGNUP_KEY } from "../../../components/AppLogsTool
 import { FONTS } from "../../../common/typography";
 import { APP_COLORS } from "../../../config/colors";
 import { useFeatureConfig } from "../../../config/context";
-import { AUTH_TEXT_FIELD_RADIUS } from "../constants/authFormLayout";
+import { AUTH_TEXT_FIELD_RADIUS, AUTH_BACK_BUTTON_LEFT_OFFSET } from "../constants/authFormLayout";
 
 type VerifyEmailScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -62,9 +66,7 @@ export const VerifyEmailScreen = () => {
   const subtitleColor = isDark
     ? SCREEN_COLORS.DARK.textSecondary
     : SCREEN_COLORS.LIGHT.textSecondary;
-  const linkColor = isDark
-    ? SCREEN_COLORS.DARK.text
-    : APP_COLORS.brandPrimaryDark;
+  const linkColor = APP_COLORS.ctaPrimary;
 
   useFocusEffect(
     useCallback(() => {
@@ -165,8 +167,10 @@ export const VerifyEmailScreen = () => {
   };
 
   return (
-    <ScreenContainer showBackground={false} backgroundColor={authBg}>
-      <View style={[styles.backRow, { paddingTop: insets.top + 8 }]}>
+    <ScreenContainer showBackground={false} backgroundColor={authBg} edges={[]}>
+      <AuthScreenStatusBar isDark={isDark} />
+      <AuthScreenBackground isDark={isDark} />
+      <View style={[styles.backRow, styles.authFormLayer, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
@@ -180,7 +184,7 @@ export const VerifyEmailScreen = () => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.flex}
+        style={[styles.flex, styles.authFormLayer]}
         keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
       >
         <ScrollView
@@ -289,6 +293,9 @@ export const VerifyEmailScreen = () => {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  authFormLayer: {
+    zIndex: 1,
+  },
   backRow: {
     paddingHorizontal: 20,
     zIndex: 10,
@@ -298,6 +305,7 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "center",
     alignItems: "flex-start",
+    marginLeft: AUTH_BACK_BUTTON_LEFT_OFFSET,
   },
   scrollContent: {
     paddingHorizontal: 24,

@@ -120,6 +120,51 @@ class SoundRecordingService {
     AudioRecorderPlayer.removePlaybackEndListener();
   }
 
+  /** Read clip length without audible playback (volume 0, then stop). */
+  async probeDurationSec(uri: string): Promise<number | undefined> {
+    if (!uri?.trim()) return undefined;
+    try {
+      await this.stopPlayback();
+      await AudioRecorderPlayer.setVolume(0);
+      await AudioRecorderPlayer.startPlayer(uri);
+      const durationSec = await new Promise<number | undefined>((resolve) => {
+        let settled = false;
+        const finish = async (value?: number) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
+          AudioRecorderPlayer.removePlayBackListener();
+          try {
+            await AudioRecorderPlayer.stopPlayer();
+            await AudioRecorderPlayer.setVolume(1);
+          } catch {
+            // ignore cleanup errors
+          }
+          resolve(value);
+        };
+        const timeout = setTimeout(() => {
+          void finish(undefined);
+        }, 12_000);
+        AudioRecorderPlayer.addPlayBackListener((meta) => {
+          const raw = meta.duration;
+          if (raw > 0) {
+            const sec = raw > 1000 ? raw / 1000 : raw;
+            void finish(sec);
+          }
+        });
+      });
+      return durationSec;
+    } catch {
+      try {
+        await AudioRecorderPlayer.stopPlayer();
+        await AudioRecorderPlayer.setVolume(1);
+      } catch {
+        // ignore cleanup errors
+      }
+      return undefined;
+    }
+  }
+
   mmss(seconds: number): string {
     return AudioRecorderPlayer.mmss(Math.max(0, Math.floor(seconds)));
   }

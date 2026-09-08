@@ -52,6 +52,14 @@ export {
   type OpenInteractiveCropperOptions,
 } from "../features/camera/interactiveCrop";
 
+export {
+  launchIosGalleryImage,
+  normalizeIosGalleryAssetUri,
+  usesIosPhpPickerGallery,
+  type IosGalleryPickResult,
+  type LaunchIosGalleryImageOptions,
+} from "../features/camera/iosGallerySelection";
+
 export type { CroppedImageObject } from "../features/camera/cropImageAndReturnObject";
 
 export {

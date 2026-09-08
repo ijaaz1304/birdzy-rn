@@ -12,6 +12,11 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import ImagePicker from "react-native-image-crop-picker";
 import { navigateToIdentifyCameraScreen } from "../../camera/identifyCameraNavigation";
+import { openInteractiveCropper } from "../../camera/interactiveCrop";
+import {
+  launchIosGalleryImage,
+  usesIosPhpPickerGallery,
+} from "../../camera/iosGallerySelection";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { AppText } from "../../../components/shared";
 import { Images, CancelIconLight, CancelIconDark } from "../../../assets";
@@ -84,6 +89,29 @@ export const PhotoSelectionScreen: React.FC = () => {
 
   const openGalleryPicker = async () => {
     try {
+      if (usesIosPhpPickerGallery()) {
+        const picked = await launchIosGalleryImage();
+        if (picked.status === "cancelled") return;
+        if (picked.status === "error") {
+          console.error("Gallery picker failed:", picked.message);
+          return;
+        }
+        const cropped = await openInteractiveCropper(picked.uri, {
+          width: 1080,
+          height: 1080,
+          cropperOverrides: {
+            freeStyleCropEnabled: true,
+            compressImageQuality: 0.8,
+            compressImageMaxWidth: 1280,
+            compressImageMaxHeight: 1280,
+            cropperToolbarTitle: "Crop Image",
+          },
+        });
+        if (!cropped) return;
+        navigation.navigate("Questionnaire", { photoUri: cropped.uri });
+        return;
+      }
+
       const picked = await ImagePicker.openPicker({
         ...IMAGE_PICKER_OPTIONS,
         multiple: false,
@@ -108,7 +136,7 @@ export const PhotoSelectionScreen: React.FC = () => {
   };
 
   const handleUpload = async () => {
-    if (photosBlocked) return;
+    if (!usesIosPhpPickerGallery() && photosBlocked) return;
     await openGalleryPicker();
   };
 
@@ -230,7 +258,7 @@ export const PhotoSelectionScreen: React.FC = () => {
             or
           </AppText>
 
-          {photosBlocked ? (
+          {photosBlocked && !usesIosPhpPickerGallery() ? (
             <View style={styles.recoveryHost}>
               <PermissionRecoveryState
                 icon="photo-library"

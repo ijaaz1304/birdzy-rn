@@ -1,16 +1,12 @@
 /**
  * Gallery Picker Screen
- * iOS: in-app CameraRoll grid + location footer → crop → identify.
- * Android: system picker → review UI (picked image + location footer) → crop → identify.
+ * iOS: PHPicker (react-native-image-picker) → review UI + location footer → crop → identify.
+ * Android: system picker → review UI + location footer → crop → identify.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  AppState,
-  Modal,
   Platform,
-  Pressable,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -31,14 +27,7 @@ import {
   GalleryPickerFooter,
   GALLERY_FOOTER_RESERVE,
 } from "../components/GalleryPickerFooter";
-import { GalleryPickerGrid } from "../components/GalleryPickerGrid";
 import { GalleryPickerAndroidReview } from "../components/GalleryPickerAndroidReview";
-import { PermissionRecoveryState } from "../../../components/PermissionRecoveryState";
-import { useDevicePhotoLibrary } from "../useDevicePhotoLibrary";
-import {
-  getPathForNativeCropper,
-  resolveGalleryPhotoUri,
-} from "../resolveGalleryPhotoUri";
 import { settleBeforeNativeCropper } from "../camera.utils";
 import { openInteractiveCropper } from "../interactiveCrop";
 import { CroppedImageObject } from "../cropImageAndReturnObject";
@@ -49,10 +38,8 @@ import {
   submitProcessedImageForIdentify,
 } from "../identifyImageFlow";
 import { pickAndroidGalleryImageForIdentify } from "../androidIdentifyGalleryFlow";
-import {
-  resolveIdentifyGalleryAccess,
-  runIdentifyGalleryNativeRequest,
-} from "../identifyGalleryAccessFlow";
+import { pickIosGalleryImageForIdentify } from "../iosIdentifyGalleryFlow";
+import { resolveGalleryPhotoUri } from "../resolveGalleryPhotoUri";
 import { resolveActiveExternalReturnTarget } from "../identifyCameraNavigation";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
@@ -65,7 +52,6 @@ import {
 import { showAlert } from "../../../store/alert.store";
 import { useLocationPermissionUiStore } from "../locationPermissionUi.store";
 import {
-  checkStoragePermission,
   openDeviceSettings,
 } from "../../../services/permissions";
 import { getGalleryPermissionUiCopy } from "../../../services/permissions/permissionUiCopy";
@@ -78,7 +64,6 @@ type GalleryPickerNavigationProp = NativeStackNavigationProp<
   "GalleryPicker"
 >;
 
-const isIos = Platform.OS === "ios";
 const isAndroid = Platform.OS === "android";
 
 export const GalleryPickerScreen: React.FC = () => {
@@ -97,13 +82,9 @@ export const GalleryPickerScreen: React.FC = () => {
     MAX_CAMERA_IDENTIFY_IMAGES - currentImageCount
   );
 
-  const [permissionReady, setPermissionReady] = useState(false);
-  const [photosBlocked, setPhotosBlocked] = useState(false);
-  const [permissionResolving, setPermissionResolving] = useState(isIos);
-  const [showAlbumPicker, setShowAlbumPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showUpgradeSheet, setShowUpgradeSheet] = useState(false);
-  const [androidPickerLoading, setAndroidPickerLoading] = useState(isAndroid);
+  const [pickerLoading, setPickerLoading] = useState(true);
 
   const setSelected = useGalleryPickerSelectionStore((s) => s.setSelected);
   const setThumbUri = useGalleryPickerSelectionStore((s) => s.setThumbUri);
@@ -116,17 +97,6 @@ export const GalleryPickerScreen: React.FC = () => {
   const showCustomPopup = useLocationPermissionUiStore((s) => s.showCustomPopup);
   const showManagePopup = useLocationPermissionUiStore((s) => s.showManagePopup);
 
-  const {
-    photos,
-    albums,
-    activeAlbum,
-    selectAlbum,
-    loading,
-    loadingMore,
-    loadMore,
-  } = useDevicePhotoLibrary(isIos && permissionReady);
-  const albumTitle = activeAlbum ?? "Gallery";
-
   const clearSelection = useGalleryPickerSelectionStore((s) => s.clear);
 
   useEffect(() => {
@@ -134,88 +104,6 @@ export const GalleryPickerScreen: React.FC = () => {
       clearSelection();
     };
   }, [clearSelection]);
-
-  const galleryRecoveryCopy = getGalleryPermissionUiCopy();
-
-  const resolvePhotosPermission = useCallback(async () => {
-    if (!isIos) return;
-
-    setPermissionResolving(true);
-    try {
-      const access = await resolveIdentifyGalleryAccess();
-
-      if (access.status === "granted") {
-        setPhotosBlocked(false);
-        setPermissionReady(true);
-        return;
-      }
-
-      if (access.status === "blocked") {
-        setPhotosBlocked(true);
-        setPermissionReady(false);
-        return;
-      }
-
-      const requested = await runIdentifyGalleryNativeRequest();
-      if (requested.status === "granted") {
-        setPhotosBlocked(false);
-        setPermissionReady(true);
-        return;
-      }
-
-      if (requested.status === "blocked") {
-        setPhotosBlocked(true);
-        setPermissionReady(false);
-        return;
-      }
-
-      setPhotosBlocked(false);
-      setPermissionReady(false);
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      }
-    } finally {
-      setPermissionResolving(false);
-    }
-  }, [navigation]);
-
-  useEffect(() => {
-    if (isIos) {
-      void resolvePhotosPermission();
-    }
-  }, [resolvePhotosPermission]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!isIos) return;
-      void checkStoragePermission().then((storage) => {
-        if (storage.granted) {
-          setPhotosBlocked(false);
-          setPermissionReady(true);
-        } else if (storage.blocked) {
-          setPhotosBlocked(true);
-          setPermissionReady(false);
-        }
-      });
-    }, [])
-  );
-
-  useEffect(() => {
-    if (!isIos) return;
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state !== "active") return;
-      void checkStoragePermission().then((storage) => {
-        if (storage.granted) {
-          setPhotosBlocked(false);
-          setPermissionReady(true);
-        } else if (storage.blocked) {
-          setPhotosBlocked(true);
-          setPermissionReady(false);
-        }
-      });
-    });
-    return () => sub.remove();
-  }, []);
 
   useEffect(() => {
     if (cameraReturnTarget || remainingSlots > 0) return;
@@ -290,9 +178,7 @@ export const GalleryPickerScreen: React.FC = () => {
     setSubmitting(true);
     try {
       identifyFlowLog("gallery_cropper_started");
-      const cropPath = isAndroid
-        ? await resolveGalleryPhotoUri(selected)
-        : await getPathForNativeCropper(selected);
+      const cropPath = await resolveGalleryPhotoUri(selected);
       identifyFlowLog("gallery_export_completed", {
         pathPrefix: cropPath.slice(0, 32),
       });
@@ -334,9 +220,14 @@ export const GalleryPickerScreen: React.FC = () => {
     );
   }, []);
 
-  const applyAndroidPickResult = useCallback(
+  const applyPickResult = useCallback(
     (
-      result: Awaited<ReturnType<typeof pickAndroidGalleryImageForIdentify>>
+      result: Awaited<
+        ReturnType<
+          | typeof pickAndroidGalleryImageForIdentify
+          | typeof pickIosGalleryImageForIdentify
+        >
+      >
     ) => {
       if (result.status === "success") {
         setSelected(result.photo);
@@ -352,48 +243,50 @@ export const GalleryPickerScreen: React.FC = () => {
     [navigation, setSelected, setThumbUri]
   );
 
-  const runAndroidPicker = useCallback(
+  const runGalleryPicker = useCallback(
     async (options?: { exitOnCancel?: boolean }) => {
-      setAndroidPickerLoading(true);
+      setPickerLoading(true);
       try {
-        const result = await pickAndroidGalleryImageForIdentify({
-          onGalleryBlocked: handleGalleryBlocked,
-        });
+        const result = isAndroid
+          ? await pickAndroidGalleryImageForIdentify({
+              onGalleryBlocked: handleGalleryBlocked,
+            })
+          : await pickIosGalleryImageForIdentify();
+
         if (result.status === "success") {
-          applyAndroidPickResult(result);
+          applyPickResult(result);
           return;
         }
         if (options?.exitOnCancel !== false) {
-          applyAndroidPickResult(result);
+          applyPickResult(result);
         }
       } catch (error) {
-        console.error("Android gallery pick failed:", error);
+        console.error("Gallery pick failed:", error);
         if (options?.exitOnCancel !== false && navigation.canGoBack()) {
           navigation.goBack();
         }
       } finally {
-        setAndroidPickerLoading(false);
+        setPickerLoading(false);
       }
     },
-    [applyAndroidPickResult, handleGalleryBlocked, navigation]
+    [applyPickResult, handleGalleryBlocked, navigation]
   );
 
-  const androidInitialPickDoneRef = useRef(false);
+  const initialPickDoneRef = useRef(false);
 
   useFocusEffect(
     useCallback(() => {
-      if (!isAndroid) return undefined;
       if (selectedPhoto) {
-        setAndroidPickerLoading(false);
+        setPickerLoading(false);
         return undefined;
       }
-      if (androidInitialPickDoneRef.current) return undefined;
-      androidInitialPickDoneRef.current = true;
-      void runAndroidPicker();
+      if (initialPickDoneRef.current) return undefined;
+      initialPickDoneRef.current = true;
+      void runGalleryPicker();
       return () => {
-        androidInitialPickDoneRef.current = false;
+        initialPickDoneRef.current = false;
       };
-    }, [runAndroidPicker, selectedPhoto])
+    }, [runGalleryPicker, selectedPhoto])
   );
 
   const overlayBlocksGalleryGrid =
@@ -403,13 +296,10 @@ export const GalleryPickerScreen: React.FC = () => {
     showManagePopup;
 
   const footerBottomInset = Math.max(insets.bottom, 12);
-  const showFooter = isAndroid || !permissionResolving;
   const gridFooterPadding =
-    showFooter && !showUpgradeSheet
-      ? GALLERY_FOOTER_RESERVE + footerBottomInset
-      : 0;
+    !showUpgradeSheet ? GALLERY_FOOTER_RESERVE + footerBottomInset : 0;
 
-  const renderGalleryHeader = (title: string, showAlbum: boolean) => (
+  const renderGalleryHeader = () => (
     <View style={styles.header}>
       <TouchableOpacity
         onPress={() => navigation.goBack()}
@@ -418,26 +308,9 @@ export const GalleryPickerScreen: React.FC = () => {
         <MaterialIcons name="close" size={24} color={theme.colors.textPrimary} />
       </TouchableOpacity>
 
-      {showAlbum ? (
-        <TouchableOpacity
-          style={styles.headerTitleRow}
-          onPress={() => setShowAlbumPicker(true)}
-          activeOpacity={0.7}
-        >
-          <Text variant="body" size="small" weight="medium">
-            {title}
-          </Text>
-          <MaterialIcons
-            name="keyboard-arrow-down"
-            size={16}
-            color={theme.colors.textPrimary}
-          />
-        </TouchableOpacity>
-      ) : (
-        <Text variant="body" size="small" weight="medium">
-          {title}
-        </Text>
-      )}
+      <Text variant="body" size="small" weight="medium">
+        Gallery
+      </Text>
 
       <TouchableOpacity
         onPress={() => navigation.navigate("CameraMain")}
@@ -452,61 +325,6 @@ export const GalleryPickerScreen: React.FC = () => {
     </View>
   );
 
-  if (isAndroid) {
-    return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          { backgroundColor: theme.colors.surfaceSecondary },
-        ]}
-        edges={["top", "bottom"]}
-      >
-        <View style={styles.mainColumn}>
-          {!overlayBlocksGalleryGrid ? (
-            <>
-              {renderGalleryHeader("Gallery", false)}
-              <View
-                style={[
-                  styles.gridHost,
-                  gridFooterPadding > 0 && { paddingBottom: gridFooterPadding },
-                ]}
-              >
-                <GalleryPickerAndroidReview
-                  loading={androidPickerLoading && !selectedPhoto}
-                  onChoosePhoto={() =>
-                    void runAndroidPicker({ exitOnCancel: false })
-                  }
-                />
-              </View>
-            </>
-          ) : null}
-
-          {showFooter && !showUpgradeSheet ? (
-            <GalleryPickerFooter
-              bottomInset={footerBottomInset}
-              submitting={submitting}
-              onNext={handleNext}
-              layout="overlay"
-            />
-          ) : null}
-        </View>
-
-        <LimitReachedBottomSheet
-          visible={showUpgradeSheet}
-          onClose={() => setShowUpgradeSheet(false)}
-          onUpgrade={() => {
-            analyticsService.logEvent(EVENTS.identification_limit_upgrade_click, {
-              source: "gallery_picker",
-            });
-            setShowUpgradeSheet(false);
-            navigateToSubscriptionMain();
-          }}
-          limitType="identification"
-        />
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView
       style={[
@@ -518,42 +336,24 @@ export const GalleryPickerScreen: React.FC = () => {
       <View style={styles.mainColumn}>
         {!overlayBlocksGalleryGrid ? (
           <>
-            {renderGalleryHeader(albumTitle, true)}
-
+            {renderGalleryHeader()}
             <View
               style={[
                 styles.gridHost,
                 gridFooterPadding > 0 && { paddingBottom: gridFooterPadding },
               ]}
             >
-              {photosBlocked ? (
-                <PermissionRecoveryState
-                  icon="photo-library"
-                  title={
-                    galleryRecoveryCopy.deniedTitle ?? galleryRecoveryCopy.title
-                  }
-                  subtitle={
-                    galleryRecoveryCopy.deniedSubtitle ??
-                    galleryRecoveryCopy.subtitle
-                  }
-                  actionLabel={galleryRecoveryCopy.openSettingsLabel}
-                  onAction={() => void openDeviceSettings()}
-                />
-              ) : (
-                <GalleryPickerGrid
-                  permissionReady={permissionReady}
-                  permissionResolving={permissionResolving}
-                  photos={photos}
-                  loading={loading || permissionResolving}
-                  loadingMore={loadingMore}
-                  loadMore={loadMore}
-                />
-              )}
+              <GalleryPickerAndroidReview
+                loading={pickerLoading && !selectedPhoto}
+                onChoosePhoto={() =>
+                  void runGalleryPicker({ exitOnCancel: false })
+                }
+              />
             </View>
           </>
         ) : null}
 
-        {showFooter && !showUpgradeSheet ? (
+        {!showUpgradeSheet ? (
           <GalleryPickerFooter
             bottomInset={footerBottomInset}
             submitting={submitting}
@@ -562,65 +362,6 @@ export const GalleryPickerScreen: React.FC = () => {
           />
         ) : null}
       </View>
-
-      <Modal
-        visible={showAlbumPicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowAlbumPicker(false)}
-      >
-        <Pressable
-          style={styles.albumBackdrop}
-          onPress={() => setShowAlbumPicker(false)}
-        >
-          <Pressable
-            style={[
-              styles.albumSheet,
-              { backgroundColor: theme.colors.surface },
-            ]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <Text
-              variant="title"
-              size="small"
-              weight="semibold"
-              style={styles.albumSheetTitle}
-            >
-              Albums
-            </Text>
-            <ScrollView style={styles.albumList}>
-              <TouchableOpacity
-                style={styles.albumRow}
-                onPress={() => {
-                  selectAlbum(undefined);
-                  setShowAlbumPicker(false);
-                }}
-              >
-                <Text variant="body" size="medium">
-                  Gallery
-                </Text>
-              </TouchableOpacity>
-              {albums.map((album) => (
-                <TouchableOpacity
-                  key={album.title}
-                  style={styles.albumRow}
-                  onPress={() => {
-                    selectAlbum(album.title);
-                    setShowAlbumPicker(false);
-                  }}
-                >
-                  <Text variant="body" size="medium">
-                    {album.title}
-                  </Text>
-                  <Text variant="body" size="small" color="textSecondary">
-                    {album.count}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
 
       <LimitReachedBottomSheet
         visible={showUpgradeSheet}
@@ -654,38 +395,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
-  headerTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
   gridHost: {
     flex: 1,
     minHeight: 0,
-  },
-  albumBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  albumSheet: {
-    borderRadius: 16,
-    maxHeight: "60%",
-    paddingVertical: 16,
-  },
-  albumSheetTitle: {
-    paddingHorizontal: 20,
-    marginBottom: 8,
-  },
-  albumList: {
-    paddingHorizontal: 8,
-  },
-  albumRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingVertical: 14,
   },
 });

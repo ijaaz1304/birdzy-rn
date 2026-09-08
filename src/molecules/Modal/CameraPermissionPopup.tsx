@@ -17,9 +17,12 @@ import {
 import { useTheme } from "../../hooks/useTheme";
 import { Text } from "../../atoms";
 import { Images } from "../../assets";
+import { FONTS } from "../../common/typography";
 import { MODAL_STRINGS } from "../../config/strings/modals.strings";
 import { OVERLAY_COLORS } from "../../constants/colorConstants";
 import { getPopupChromeStyle } from "../../design-system/modalTokens";
+
+const TAKE_PHOTO_ILLUSTRATION_SIZE = 64;
 
 export interface CameraPermissionPopupProps {
   visible: boolean;
@@ -89,8 +92,15 @@ export const CameraPermissionPopup: React.FC<CameraPermissionPopupProps> = ({
           </TouchableOpacity>
 
           <AppImage
-            source={Images.speciesCapturePopup}
-            style={styles.heroIcon}
+            source={
+              openSettings
+                ? Images.cameraTakePhotoIllustration
+                : Images.speciesCapturePopup
+            }
+            style={[
+              styles.heroIcon,
+              openSettings && styles.heroIconTakePhoto,
+            ]}
             resizeMode="contain"
             preferRNImage
           />
@@ -99,7 +109,10 @@ export const CameraPermissionPopup: React.FC<CameraPermissionPopupProps> = ({
             variant="headline"
             size="large"
             weight="bold"
-            style={[styles.title, { color: colors.textPrimary }]}
+            style={[
+              openSettings ? styles.deniedTitle : styles.title,
+              { color: colors.textPrimary },
+            ]}
           >
             {openSettings ? copy.deniedTitle : copy.title}
           </Text>
@@ -107,8 +120,13 @@ export const CameraPermissionPopup: React.FC<CameraPermissionPopupProps> = ({
           <Text
             variant="body"
             size="medium"
-            color="textSecondary"
-            style={[styles.subtitle, { marginTop: spacing[2] }]}
+            style={[
+              openSettings ? styles.deniedSubtitle : styles.subtitle,
+              {
+                marginTop: spacing[2],
+                color: colors.textSecondary,
+              },
+            ]}
           >
             {openSettings ? copy.deniedSubtitle : copy.subtitle}
           </Text>
@@ -119,7 +137,7 @@ export const CameraPermissionPopup: React.FC<CameraPermissionPopupProps> = ({
               {
                 backgroundColor: colors.primaryCTA,
                 borderRadius: radius.xl,
-                marginTop: spacing[4],
+                marginTop: openSettings ? spacing[4] : spacing[4],
               },
             ]}
             onPress={onAllowCamera}
@@ -176,13 +194,31 @@ const styles = StyleSheet.create({
     height: 64,
     marginBottom: 8,
   },
+  heroIconTakePhoto: {
+    width: TAKE_PHOTO_ILLUSTRATION_SIZE,
+    height: TAKE_PHOTO_ILLUSTRATION_SIZE,
+    marginBottom: 0,
+  },
   title: {
     textAlign: "center",
     lineHeight: 28,
   },
+  deniedTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 20,
+    lineHeight: 28,
+    textAlign: "center",
+  },
   subtitle: {
     textAlign: "center",
     lineHeight: 24,
+  },
+  deniedSubtitle: {
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
+    textAlign: "center",
   },
   primaryButton: {
     width: "100%",

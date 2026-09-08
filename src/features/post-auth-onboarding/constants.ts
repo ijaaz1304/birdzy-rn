@@ -1,7 +1,6 @@
 import { SUBSCRIPTION_CTA_COLOR } from "../../constants/subscriptionColors";
 import { FIGMA_TOKENS } from "../../design-system/colors/figmaTokens";
 import { APP_COLORS } from "../../../theme/colors";
-import { DARK_SURFACE_BRAND_1 } from "../../theme/colors/dark";
 
 export type PostAuthOnboardingColors = {
   textPrimary: string;
@@ -23,8 +22,8 @@ export type PostAuthOnboardingColors = {
   popularBadgeText: string;
 };
 
-/** Figma 8327:72643 — selected plan teal ring, CTA/badge plum. */
-const POST_AUTH_PAYWALL_CTA = APP_COLORS.createButtonFg;
+/** Figma 8327:72643 — selected plan teal ring, CTA/badge plum (#725481). */
+const POST_AUTH_PAYWALL_CTA = APP_COLORS.ctaPrimary;
 const POST_AUTH_PAYWALL_SELECTED_BORDER = "#41EDE9";
 
 /** Light bird post-auth — black text, Figma subscription paywall */
@@ -70,7 +69,7 @@ export const POST_AUTH_ONBOARDING_COLORS_DARK: PostAuthOnboardingColors = {
   planCardBackground: "rgba(255, 255, 255, 0.15)",
   planCardBackgroundSelected: "rgba(255, 255, 255, 0.24)",
   ctaGradient: ["#FFC27D", "#FFE5AA", "#FFBF76"],
-  ctaSolidBackground: DARK_SURFACE_BRAND_1,
+  ctaSolidBackground: APP_COLORS.ctaPrimary,
   useSolidCta: true,
   popularBadgeGradient: [
     SUBSCRIPTION_CTA_COLOR,
@@ -109,3 +108,15 @@ export const POST_AUTH_LAYOUT = {
   ctaBorderRadius: 24,
   planGap: 8,
 } as const;
+
+/** Figma pack card border — linear-gradient(127deg, …), inner fill #FFF. */
+export const POST_AUTH_PACK_BORDER_GRADIENT = {
+  colors: ["#41EDE9", "#219699", "#0F7A81", "#9E70B6"] as const,
+  locations: [0.0755, 0.1391, 0.1757, 0.9306] as const,
+  angle: 127,
+  borderWidth: 1.5,
+  innerBackground: "#FFFFFF",
+} as const;
+
+/** Post-auth subscription slide discount countdown pill. */
+export const POST_AUTH_DISCOUNT_TIMER_BG = "#01474F";

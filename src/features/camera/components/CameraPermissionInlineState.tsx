@@ -1,5 +1,6 @@
 /**
  * Inline camera permission state on the identify camera screen (not a modal).
+ * Figma 8567:1849 — manage camera access / allow access recovery.
  */
 
 import { AppImage } from "@/components/AppImage";
@@ -13,13 +14,16 @@ import {
 import { useTheme } from "../../../hooks/useTheme";
 import { Text } from "../../../atoms";
 import { Images } from "../../../assets";
+import { FONTS } from "../../../common/typography";
 import { getCameraPermissionUiCopy } from "../../../services/permissions/permissionUiCopy";
 
 export type CameraPermissionInlineVariant = "allowAccess" | "goToSettings";
 
 const PERMISSION_TITLE_COLOR = "#FFFFFF";
 const PERMISSION_DENIED_SUBTITLE_COLOR = "#D1D1D1";
-const PERMISSION_SUBTITLE_FONT_SIZE = 16;
+
+/** Figma Illustration/take photo — 64×64 including shadow */
+const TAKE_PHOTO_ILLUSTRATION_SIZE = 64;
 
 type CameraPermissionInlineStateProps = {
   variant: CameraPermissionInlineVariant;
@@ -37,42 +41,29 @@ export const CameraPermissionInlineState: React.FC<
   return (
     <View style={styles.content}>
       {isSettings ? (
-        <View style={styles.iconWrap}>
-          <AppImage
-            source={Images.speciesCapturePopup}
-            style={styles.heroIcon}
-            resizeMode="contain"
-            preferRNImage
-          />
+        <View style={styles.header}>
+          <View style={styles.iconWrap}>
+            <AppImage
+              source={Images.cameraTakePhotoIllustration}
+              style={styles.heroIcon}
+              resizeMode="contain"
+              preferRNImage
+            />
+          </View>
+
+          <Text style={styles.title}>
+            {copy.deniedTitle ?? copy.title}
+          </Text>
+
+          <Text style={styles.subtitle}>
+            {copy.deniedSubtitle ?? copy.subtitle}
+          </Text>
         </View>
-      ) : null}
-
-      {isSettings ? (
-        <Text
-          variant="headline"
-          size="medium"
-          weight="semibold"
-          style={[styles.title, { color: PERMISSION_TITLE_COLOR }]}
-        >
-          {copy.deniedTitle ?? copy.title}
+      ) : (
+        <Text style={[styles.subtitle, styles.subtitleAllowAccess]}>
+          {copy.subtitle}
         </Text>
-      ) : null}
-
-      <Text
-        variant="body"
-        size="medium"
-        style={[
-          styles.subtitle,
-          !isSettings && styles.subtitleAllowAccess,
-          {
-            fontSize: PERMISSION_SUBTITLE_FONT_SIZE,
-            lineHeight: 26,
-            color: PERMISSION_DENIED_SUBTITLE_COLOR,
-          },
-        ]}
-      >
-        {isSettings ? copy.deniedSubtitle ?? copy.subtitle : copy.subtitle}
-      </Text>
+      )}
 
       <TouchableOpacity
         onPress={onAction}
@@ -80,8 +71,11 @@ export const CameraPermissionInlineState: React.FC<
         activeOpacity={0.85}
         style={[
           styles.button,
+          isSettings && styles.buttonSettings,
           {
-            backgroundColor: theme.colors.primary,
+            backgroundColor: isSettings
+              ? theme.colors.primaryCTA
+              : theme.colors.primary,
             borderRadius: theme.radius.xl,
           },
         ]}
@@ -107,29 +101,43 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     alignItems: "stretch",
   },
+  header: {
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 20,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+  },
   iconWrap: {
     alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 8,
+    justifyContent: "center",
+    padding: 8,
   },
   heroIcon: {
-    width: 56,
-    height: 56,
+    width: TAKE_PHOTO_ILLUSTRATION_SIZE,
+    height: TAKE_PHOTO_ILLUSTRATION_SIZE,
   },
   title: {
-    textAlign: "center",
+    fontFamily: FONTS.bold,
+    fontSize: 20,
     lineHeight: 28,
-    paddingHorizontal: 20,
+    color: PERMISSION_TITLE_COLOR,
+    textAlign: "center",
+    width: "100%",
   },
   subtitle: {
-    textAlign: "center",
+    fontFamily: FONTS.regular,
+    fontSize: 16,
     lineHeight: 24,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
+    letterSpacing: -0.16,
+    color: PERMISSION_DENIED_SUBTITLE_COLOR,
+    textAlign: "center",
+    width: "100%",
   },
   subtitleAllowAccess: {
     paddingTop: 20,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
   },
   button: {
     marginHorizontal: 20,
@@ -138,5 +146,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 44,
+  },
+  buttonSettings: {
+    marginTop: 16,
+    marginBottom: 20,
+    marginHorizontal: 20,
+    width: undefined,
+    alignSelf: "stretch",
   },
 });

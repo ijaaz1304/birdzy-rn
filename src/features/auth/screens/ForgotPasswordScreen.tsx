@@ -18,6 +18,10 @@ import { AuthStackParamList } from "../../../navigation/types";
 import { useTheme } from "../../../hooks/useTheme";
 import { Text, Button, NavBackIcon } from "../../../atoms";
 import { ScreenContainer } from "../../../molecules";
+import {
+  AuthScreenBackground,
+  AuthScreenStatusBar,
+} from "../components/AuthScreenBackground";
 import { Input } from "../../../molecules/Input/Input";
 import { useAuthStore } from "../auth.store";
 import { AUTH_STRINGS } from "../../../config/strings/auth.strings";
@@ -25,7 +29,7 @@ import { typography } from "../../../design-system/typography";
 import { FONTS } from "../../../common/typography";
 import { APP_COLORS } from "../../../config/colors";
 import { useFeatureConfig } from "../../../config/context";
-import { AUTH_TEXT_FIELD_RADIUS } from "../constants/authFormLayout";
+import { AUTH_TEXT_FIELD_RADIUS, AUTH_BACK_BUTTON_LEFT_OFFSET } from "../constants/authFormLayout";
 
 type ForgotPasswordScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -97,9 +101,11 @@ export const ForgotPasswordScreen: React.FC = () => {
       backgroundColor={authBg}
       edges={[]}
     >
+      <AuthScreenStatusBar isDark={isDark} />
+      <AuthScreenBackground isDark={isDark} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.flex}
+        style={[styles.flex, styles.authFormLayer]}
         keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
       >
         <View style={[styles.page, { paddingTop: insets.top + 32 }]}>
@@ -177,12 +183,15 @@ export const ForgotPasswordScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  authFormLayer: {
+    zIndex: 1,
+  },
   backButton: {
     width: 44,
     height: 44,
     justifyContent: "center",
     alignItems: "flex-start",
-    marginLeft: -10,
+    marginLeft: AUTH_BACK_BUTTON_LEFT_OFFSET,
   },
   headerTitle: {
     ...typography.title.large,

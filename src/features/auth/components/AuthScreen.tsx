@@ -4,6 +4,7 @@ import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
+import { SUBSCRIPTION_COLORS } from "../../../constants/colorConstants";
 import { Images } from "../../../assets";
 
 import { FONTS } from "../../../common/typography";
@@ -92,7 +93,9 @@ export const AuthButton: React.FC<Props> = ({
         isDark && styles.btnDark,
         {
           backgroundColor: bg,
-          borderColor: isDark ? theme.colors.border0 : theme.colors.border,
+          borderColor: isDark
+            ? theme.colors.border0
+            : SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
           opacity: disabled ? 0.6 : 1,
         },
       ]}

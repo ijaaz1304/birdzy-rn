@@ -7,6 +7,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuthStore } from "../auth/auth.store";
+import { isDevSettingsVisible } from "../../lib/env/appEnv";
 import {
   clearLocalEntitlementSnapshot,
   getLocalEntitlementSnapshot,
@@ -244,16 +245,21 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         subscription: state.subscription,
-        // Dev toggles — not persisted (Settings dev UI disabled).
-        // devForcePremium: state.devForcePremium,
-        // devDisable50Discount: state.devDisable50Discount,
         localPremiumOverride: state.localPremiumOverride,
+        ...(isDevSettingsVisible()
+          ? {
+              devForcePremium: state.devForcePremium,
+              devDisable50Discount: state.devDisable50Discount,
+            }
+          : {}),
       }),
       onRehydrateStorage: () => (state, error) => {
-        useSubscriptionStore.setState({
-          devForcePremium: false,
-          devDisable50Discount: false,
-        });
+        if (!isDevSettingsVisible()) {
+          useSubscriptionStore.setState({
+            devForcePremium: false,
+            devDisable50Discount: false,
+          });
+        }
         if (error) {
           useAppLogsStore
             .getState()

@@ -6,7 +6,11 @@ import {
   getDisplayName,
   getMushroomDisplayScientificFromFields,
 } from "./mushroomDisplayUtils";
-import { getMushroomImageUrlFromMatch } from "../config/mushroomImageUrls.config";
+import {
+  getMushroomImageUrlFromMatch,
+  getMushroomImageUrls,
+} from "../config/mushroomImageUrls.config";
+import { sanitizeBirdImageUrl } from "./birdApiMappers";
 
 /** Mushroom-like object with optional name arrays and scientific/canonical names. */
 export interface MushroomLike {
@@ -106,6 +110,39 @@ export function resolveMushroomImageUrlsForDisplay(
     }
     return getMushroomImageUrlFromMatch(nameForPath, u) ?? u;
   });
+}
+
+/**
+ * Hero/carousel image URLs — same fallback chain as BirdDetailsScreen:
+ * resolved API URLs → sanitized defaultImageUrl → config catalogue URLs.
+ */
+export function resolveBirdHeroImageUrls(
+  canonicalName: string | undefined,
+  imageUrls: unknown[] | undefined | null,
+  fallbackMineralName?: string,
+  defaultImageUrl?: string | null
+): string[] {
+  const nameForPath = canonicalName?.trim() || fallbackMineralName?.trim();
+  const resolved = resolveMushroomImageUrlsForDisplay(
+    nameForPath,
+    imageUrls,
+    fallbackMineralName
+  );
+  const httpResolved = resolved.filter(
+    (uri) =>
+      uri.startsWith("http://") ||
+      uri.startsWith("https://") ||
+      uri.startsWith("file://")
+  );
+  if (httpResolved.length > 0) return httpResolved;
+
+  const sanitizedDefault = sanitizeBirdImageUrl(defaultImageUrl);
+  if (sanitizedDefault) return [sanitizedDefault];
+
+  const configUrls = getMushroomImageUrls(nameForPath);
+  if (configUrls?.length) return configUrls;
+
+  return [];
 }
 
 /**

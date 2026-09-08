@@ -32,9 +32,14 @@ import { EVENTS } from "../../../services/analytics/analytics.events";
 import ImagePicker from "react-native-image-crop-picker";
 import { GalleryAccessPopup } from "../../../components/GalleryAccessPopup";
 import { navigateToSubscriptionMain } from "../../../utils/navigation";
-import { checkStoragePermission, openDeviceSettings } from "../../../services/permissions";
+import { checkStoragePermission } from "../../../services/permissions";
 import { useAskAIImagePipeline } from "../hooks/useAskAIImagePipeline";
 import { navigateToIdentifyCameraScreen } from "../../camera/identifyCameraNavigation";
+import { openInteractiveCropper } from "../../camera/interactiveCrop";
+import {
+  launchIosGalleryImage,
+  usesIosPhpPickerGallery,
+} from "../../camera/iosGallerySelection";
 import { AskAIScreenBackground, AskAIEmptyState, type AskAiPromptItem } from "../components";
 import { AI_CROPPER_OPTIONS } from "../../../constants/imagePipeline.constants";
 import { ASK_AI_STRINGS } from "../../../config/strings/ask-ai.strings";
@@ -432,6 +437,24 @@ export const AskAIScreen: React.FC = () => {
     Keyboard.dismiss();
     if (await blockIfAskAiLimitReached()) return;
     try {
+      if (usesIosPhpPickerGallery()) {
+        const picked = await launchIosGalleryImage();
+        if (picked.status === "cancelled") return;
+        if (picked.status === "error") {
+          showAlert("Error", "Could not open gallery. Please try again.");
+          return;
+        }
+        const cropped = await openInteractiveCropper(picked.uri);
+        if (!cropped) return;
+        analyticsService.logEvent(EVENTS.ask_ai_image_uploaded);
+        const processed = await processImage(cropped.uri, {
+          alreadyCropped: true,
+        });
+        if (!processed) return;
+        await sendImageFromUri(processed.uri);
+        return;
+      }
+
       const picked = await ImagePicker.openPicker({
         ...IMAGE_PICKER_OPTIONS,
         multiple: false,
@@ -463,11 +486,13 @@ export const AskAIScreen: React.FC = () => {
 
   const handleUploadPress = async () => {
     if (await blockIfAskAiLimitReached()) return;
-    const storage = await checkStoragePermission();
-    if (!storage.granted) {
-      setPhotosBlocked(!!storage.blocked);
-      setShowGalleryPopup(true);
-      return;
+    if (!usesIosPhpPickerGallery()) {
+      const storage = await checkStoragePermission();
+      if (!storage.granted) {
+        setPhotosBlocked(!!storage.blocked);
+        setShowGalleryPopup(true);
+        return;
+      }
     }
     await openGalleryAndSendImage();
   };

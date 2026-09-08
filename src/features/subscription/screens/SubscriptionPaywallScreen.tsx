@@ -51,6 +51,7 @@ import { PostAuthLegalFooter } from "../../post-auth-onboarding/components/PostA
 import { PostAuthSubscriptionDisclosure } from "../../post-auth-onboarding/components/PostAuthSubscriptionDisclosure";
 import { PostAuthPhoneLayout } from "../../post-auth-onboarding/components/PostAuthPhoneLayout";
 import { getPostAuthBackgroundLayout } from "../../post-auth-onboarding/utils/background";
+import { usePostAuthLayoutMetrics } from "../../post-auth-onboarding/utils/postAuthLayout";
 import {
   getPostAuthOnboardingColors,
   POST_AUTH_LAYOUT,
@@ -103,6 +104,7 @@ export const SubscriptionPaywallScreen: React.FC = () => {
     () => getPostAuthOnboardingColors(isDark),
     [isDark]
   );
+  const layout = usePostAuthLayoutMetrics();
 
   const discountOffer = useDiscountOfferCountdown();
   const has50Discount = discountOffer.isActive;
@@ -328,114 +330,143 @@ export const SubscriptionPaywallScreen: React.FC = () => {
     >
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <PostAuthPhoneLayout>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={dismissPaywall}
-              style={styles.backButton}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            >
-              <NavBackIcon color={paywallColors.textPrimary} />
-            </TouchableOpacity>
-            <Text
-              style={[styles.headerTitle, { color: paywallColors.textPrimary }]}
-            >
-              Subscription Plans
-            </Text>
-            {/* Preview subscribed-plan screen — hidden for production UI */}
-            <View style={styles.headerAction} />
-          </View>
+          <View style={styles.stepFill}>
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={dismissPaywall}
+                style={styles.backButton}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <NavBackIcon color={paywallColors.textPrimary} />
+              </TouchableOpacity>
+              <Text
+                style={[
+                  styles.headerTitle,
+                  { color: paywallColors.textPrimary },
+                ]}
+              >
+                Subscription Plans
+              </Text>
+              <View style={styles.headerAction} />
+            </View>
 
-        <View style={styles.body}>
-          {/* Discount timer pill — visible in both discount and wait phases */}
-          {!isPremium && discountOffer.remainingMs > 0 ? (
             <View
               style={[
-                styles.discountPill,
+                styles.subscriptionBody,
                 {
-                  backgroundColor: isDark
-                    ? DISCOUNT_TIMER_PILL.backgroundDark
-                    : DISCOUNT_TIMER_PILL.background,
+                  paddingTop: layout.subscriptionTopPadding,
+                  paddingBottom: layout.subscriptionBodyPaddingBottom,
                 },
               ]}
             >
-              <View style={styles.discountPillContent}>
-                <AppImage
-                  source={Images.discountTimer}
-                  style={styles.discountPillIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.discountPillText}>
-                  {has50Discount ? "Discount ends in" : "Discount in"}{" "}
-                  {formatCountdownSegment(discountCountdown.hours)}:
-                  {formatCountdownSegment(discountCountdown.minutes)}:
-                  {formatCountdownSegment(discountCountdown.seconds)}
-                </Text>
-              </View>
-            </View>
-          ) : null}
-
-          <PostAuthSubscriptionFeatureCarousel
-            isDark={isDark}
-            colors={paywallColors}
-          />
-
-          {plansPriceError ? (
-            <TouchableOpacity
-              onPress={refetchPrices}
-              style={styles.retryBanner}
-            >
-              <Text
+              <View
                 style={[
-                  styles.retryText,
-                  { color: paywallColors.textSecondary },
+                  styles.discountTimerOverlay,
+                  { top: layout.subscriptionDiscountTimerTop },
                 ]}
               >
-                Couldn&apos;t load prices. Tap to retry.
-              </Text>
-            </TouchableOpacity>
-          ) : null}
+                {!isPremium && discountOffer.remainingMs > 0 ? (
+                  <View
+                    style={[
+                      styles.discountPill,
+                      {
+                        backgroundColor: isDark
+                          ? DISCOUNT_TIMER_PILL.backgroundDark
+                          : DISCOUNT_TIMER_PILL.background,
+                      },
+                    ]}
+                  >
+                    <View style={styles.discountPillContent}>
+                      <AppImage
+                        source={Images.discountTimer}
+                        style={styles.discountPillIcon}
+                        resizeMode="contain"
+                      />
+                      <Text style={styles.discountPillText}>
+                        {has50Discount ? "Discount ends in" : "Discount in"}{" "}
+                        {formatCountdownSegment(discountCountdown.hours)}:
+                        {formatCountdownSegment(discountCountdown.minutes)}:
+                        {formatCountdownSegment(discountCountdown.seconds)}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+              </View>
+              <View style={styles.subscriptionCenterBlock}>
+                <PostAuthSubscriptionFeatureCarousel
+                  isDark={isDark}
+                  colors={paywallColors}
+                />
 
-          <View style={[HORIZONTAL_PLAN_ROW_STYLE, styles.planRow]}>
-            {renderPlanCards()}
+                {plansPriceError ? (
+                  <TouchableOpacity
+                    onPress={refetchPrices}
+                    style={styles.retryBanner}
+                  >
+                    <Text
+                      style={[
+                        styles.retryText,
+                        { color: paywallColors.textSecondary },
+                      ]}
+                    >
+                      Couldn&apos;t load prices. Tap to retry.
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.bottomActions,
+                { paddingBottom: layout.subscriptionBottomPadding },
+              ]}
+            >
+              <View
+                style={[
+                  HORIZONTAL_PLAN_ROW_STYLE,
+                  styles.horizontalPlanRow,
+                  { marginTop: layout.subscriptionPlanRowMarginTop },
+                ]}
+              >
+                {renderPlanCards()}
+              </View>
+              <View style={styles.paywallFooter}>
+                <PostAuthSubscriptionDisclosure
+                  plan={selectedPlan}
+                  colors={paywallColors}
+                />
+                <PostAuthGradientButton
+                  title={ctaLabel}
+                  onPress={handleSubscribe}
+                  loading={isPurchasing}
+                  disabled={
+                    plansPriceLoading ||
+                    !effectiveSelectedPlanId ||
+                    disableSubscribeForAlreadyOwnedLifetime
+                  }
+                  colors={paywallColors}
+                />
+                <PostAuthLegalFooter
+                  onTerms={() =>
+                    navigation.navigate("LegalWebView", {
+                      url: getTermsOfServiceUrl(),
+                      title: "Terms of Service",
+                    })
+                  }
+                  onPrivacy={() =>
+                    navigation.navigate("LegalWebView", {
+                      url: getPrivacyPolicyUrl(),
+                      title: "Privacy Policy",
+                    })
+                  }
+                  onRestore={handleRestore}
+                  isRestoring={isRestoring}
+                  colors={paywallColors}
+                />
+              </View>
+            </View>
           </View>
-        </View>
-
-        {/* Footer CTA */}
-        <View style={styles.footer}>
-          <PostAuthSubscriptionDisclosure
-            plan={selectedPlan}
-            colors={paywallColors}
-          />
-          <PostAuthGradientButton
-            title={ctaLabel}
-            onPress={handleSubscribe}
-            loading={isPurchasing}
-            disabled={
-              plansPriceLoading ||
-              !effectiveSelectedPlanId ||
-              disableSubscribeForAlreadyOwnedLifetime
-            }
-            colors={paywallColors}
-          />
-          <PostAuthLegalFooter
-            onTerms={() =>
-              navigation.navigate("LegalWebView", {
-                url: getTermsOfServiceUrl(),
-                title: "Terms of Service",
-              })
-            }
-            onPrivacy={() =>
-              navigation.navigate("LegalWebView", {
-                url: getPrivacyPolicyUrl(),
-                title: "Privacy Policy",
-              })
-            }
-            onRestore={handleRestore}
-            isRestoring={isRestoring}
-            colors={paywallColors}
-          />
-        </View>
         </PostAuthPhoneLayout>
       </SafeAreaView>
 
@@ -457,6 +488,9 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   safeArea: {
+    flex: 1,
+  },
+  stepFill: {
     flex: 1,
   },
   header: {
@@ -484,17 +518,43 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "center",
   },
-  body: {
+  subscriptionBody: {
     flex: 1,
     paddingHorizontal: POST_AUTH_LAYOUT.horizontalPadding,
-    paddingTop: 8,
+    justifyContent: "center",
     minHeight: 0,
+    paddingBottom: 8,
+    zIndex: 1,
+    position: "relative",
+  },
+  discountTimerOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 2,
+  },
+  subscriptionCenterBlock: {
+    width: "100%",
+    alignItems: "center",
+  },
+  bottomActions: {
+    paddingHorizontal: POST_AUTH_LAYOUT.horizontalPadding,
+    paddingBottom: 4,
+    width: "100%",
+    alignItems: "center",
+    flexShrink: 0,
+    zIndex: 2,
+  },
+  paywallFooter: {
+    width: "100%",
+    maxWidth: "100%",
+    gap: 8,
   },
   discountPill: {
     alignSelf: "center",
     borderRadius: 16,
     overflow: "hidden",
-    marginBottom: 32,
   },
   discountPillContent: {
     flexDirection: "row",
@@ -513,8 +573,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: DISCOUNT_TIMER_PILL.text,
   },
-  planRow: {
-    marginTop: 32,
+  horizontalPlanRow: {
+    marginTop: 0,
+    marginBottom: 8,
+    flexShrink: 0,
+    zIndex: 3,
+    elevation: 3,
   },
   retryBanner: {
     marginTop: 12,
@@ -529,11 +593,5 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     fontSize: 12,
     textAlign: "center",
-  },
-  footer: {
-    paddingHorizontal: POST_AUTH_LAYOUT.horizontalPadding,
-    paddingTop: 12,
-    paddingBottom: 8,
-    flexShrink: 0,
   },
 });

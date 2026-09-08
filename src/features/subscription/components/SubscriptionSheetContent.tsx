@@ -451,7 +451,7 @@ const SubscriptionSheetContent: React.FC<Props> = ({
         cardBorder: SCREEN_COLORS.DARK.border,
         cardText: APP_COLORS.modalTextOnPrimary,
         cardTextSecondary: APP_COLORS.borderGray,
-        discountBg: APP_COLORS.subscriptionDiscountBg,
+        discountBg: APP_COLORS.subscriptionDiscountTimer,
         premium: APP_COLORS.subscriptionPremium,
         strike: APP_COLORS.subscriptionMuted,
         ctaBg: SUBSCRIPTION_COLORS.CTA_PRIMARY_DARK,
@@ -553,7 +553,7 @@ const SubscriptionSheetContent: React.FC<Props> = ({
 
         {!isPremium && discountOffer.remainingMs > 0 ? (
           <View
-            style={[styles.discountPill, { backgroundColor: colors.premium }]}
+            style={[styles.discountPill, { backgroundColor: colors.discountBg }]}
           >
             <Text style={styles.discountText}>
               🕒 {discountOffer.isActive ? "Discount ends in" : "Discount in"}{" "}
@@ -868,7 +868,7 @@ const styles = StyleSheet.create({
   discountText: {
     fontSize: 11,
     fontFamily: FONTS.bold,
-    color: "#111111",
+    color: APP_COLORS.modalTextOnPrimary,
   },
   cta: {
     height: 48,

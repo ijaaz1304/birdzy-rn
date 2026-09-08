@@ -14,6 +14,7 @@ export const SETTINGS_STRINGS = {
     support: "Support",
     diagnostics: "Diagnostics",
     more: "More",
+    upgradeModalsDev: "Upgrade modals (dev)",
     subscriptionFrequency: "Subscription Frequency",
     rateUs: "Rate Us",
   },
@@ -42,6 +43,9 @@ export const SETTINGS_STRINGS = {
     usePremium: "Use premium",
     disable50Discount: "Disable 50% discount",
     disable50DiscountSubtitle: "Show full-price plans for IAP testing",
+    upgradeModalsPreview: "Upgrade modals preview",
+    upgradeModalsPreviewSubtitle: "Open each limit-reached / upgrade sheet",
+    subscriptionDiscountSheet: "Subscription discount sheet",
   },
   premium: {
     card: {

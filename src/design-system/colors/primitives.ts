@@ -23,7 +23,7 @@ export const PRIMITIVES = {
     950: "#111111",
   },
   brand1: {
-    primary: "#C7630C",
+    primary: "#725481",
     light1: "#F7E6CD",
     light2: "#FDBE62",
     dark3: "#1D1B17",

@@ -73,10 +73,14 @@ export const SearchScreen: React.FC = () => {
   const colors = theme.colors;
   const Space = theme.spacing;
   const isDark = useIsDark();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const searchCardWidth = useMemo(
     () => (windowWidth - SEARCH_GRID_H_PADDING * 2 - SEARCH_GRID_GAP) / 2,
     [windowWidth]
+  );
+  const suggestionsMaxHeight = useMemo(
+    () => Math.min(300, Math.round(windowHeight * 0.38)),
+    [windowHeight]
   );
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const route = useRoute<SearchScreenRouteProp>();
@@ -88,7 +92,10 @@ export const SearchScreen: React.FC = () => {
   const initialQueryFromParams = route.params?.initialQuery;
 
   const [query, setQuery] = useState(initialQueryFromParams ?? "");
-  const [isFocused, setIsFocused] = useState(false);
+  const [suggestionsVisible, setSuggestionsVisible] = useState(false);
+  const suggestionsHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   const [filters, setFilters] = useState<FilterState>({});
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [filterApiData, setFilterApiData] = useState<
@@ -109,7 +116,22 @@ export const SearchScreen: React.FC = () => {
     name: string;
   } | null>(null);
 
-  // Defer focus on iOS to avoid crash when opening search during navigation transition
+  const clearSuggestionsHideTimeout = useCallback(() => {
+    if (suggestionsHideTimeoutRef.current) {
+      clearTimeout(suggestionsHideTimeoutRef.current);
+      suggestionsHideTimeoutRef.current = null;
+    }
+  }, []);
+
+  const scheduleHideSuggestions = useCallback(() => {
+    clearSuggestionsHideTimeout();
+    suggestionsHideTimeoutRef.current = setTimeout(() => {
+      setSuggestionsVisible(false);
+      suggestionsHideTimeoutRef.current = null;
+    }, 200);
+  }, [clearSuggestionsHideTimeout]);
+
+  useEffect(() => () => clearSuggestionsHideTimeout(), [clearSuggestionsHideTimeout]);
   useEffect(() => {
     if (Platform.OS !== "ios") return;
     const task = InteractionManager.runAfterInteractions(() => {
@@ -319,6 +341,19 @@ export const SearchScreen: React.FC = () => {
     ? CATALOGUE_STRINGS.filterEmptyState.subtitle
     : CATALOGUE_STRINGS.searchEmptyState.message;
 
+  const showDropdown = suggestionsVisible && query.trim().length >= 1;
+
+  const handleQueryChange = useCallback(
+    (text: string) => {
+      setQuery(text);
+      if (text.trim().length >= 1) {
+        clearSuggestionsHideTimeout();
+        setSuggestionsVisible(true);
+      }
+    },
+    [clearSuggestionsHideTimeout]
+  );
+
   const cardBorderColor = isDark
     ? CARD_COLORS.DARK.border
     : CARD_COLORS.LIGHT.border;
@@ -428,9 +463,11 @@ export const SearchScreen: React.FC = () => {
               <SearchBar
                 ref={searchBarRef}
                 value={query}
-                onChangeText={setQuery}
+                onChangeText={handleQueryChange}
                   onClear={() => {
                     setQuery("");
+                    clearSuggestionsHideTimeout();
+                    setSuggestionsVisible(false);
                     if (hasActiveFilters) {
                       void runCatalogueQuery("", filters);
                     }
@@ -443,18 +480,17 @@ export const SearchScreen: React.FC = () => {
                 leftIcon="search"
                 autoFocus={Platform.OS !== "ios"}
                 onFocus={() => {
-                  if (__DEV__)
-                    console.log("[FuzzySearch] SearchScreen SearchBar onFocus");
-                  setIsFocused(true);
+                  clearSuggestionsHideTimeout();
+                  setSuggestionsVisible(true);
                 }}
                 onBlur={() => {
-                  if (__DEV__)
-                    console.log("[FuzzySearch] SearchScreen SearchBar onBlur");
-                  setIsFocused(false);
+                  scheduleHideSuggestions();
                 }}
                 onSubmitEditing={() => {
                   const q = query.trim();
                   if (q) {
+                    clearSuggestionsHideTimeout();
+                    setSuggestionsVisible(false);
                     void runCatalogueQuery(q, filters);
                   }
                 }}
@@ -466,18 +502,7 @@ export const SearchScreen: React.FC = () => {
             />
           </View>
           {/* Inline dropdown below bar (no modal = input stays focusable); show when focused + 1+ char */}
-          {(() => {
-            const showDropdown = isFocused && query.trim().length >= 1;
-            if (__DEV__ && (query.length > 0 || isFocused)) {
-              console.log("[FuzzySearch] SearchScreen dropdown render", {
-                isFocused,
-                queryLength: query.length,
-                queryTrimLength: query.trim().length,
-                showDropdown,
-              });
-            }
-            return showDropdown;
-          })() && (
+          {showDropdown && (
             <View
               style={[
                 styles.suggestionsWrap,
@@ -487,11 +512,14 @@ export const SearchScreen: React.FC = () => {
               <SearchSuggestions
                 query={query}
                 visible={true}
+                maxHeight={suggestionsMaxHeight}
+                onInteractionStart={clearSuggestionsHideTimeout}
                 onSelect={(item) => {
                   const value = getSearchSuggestionQuery(item);
+                  clearSuggestionsHideTimeout();
+                  setSuggestionsVisible(false);
                   setQuery(value);
                   requestAnimationFrame(() => {
-                    setIsFocused(false);
                     void runCatalogueQuery(value, filters);
                   });
                 }}
@@ -501,7 +529,10 @@ export const SearchScreen: React.FC = () => {
         </View>
 
         {/* Main content below header (lower zIndex so dropdown stays on top) */}
-        <View style={styles.contentBelowHeader}>
+        <View
+          style={styles.contentBelowHeader}
+          pointerEvents={showDropdown ? "none" : "auto"}
+        >
           {hasActiveFilters ? (
             <ActiveFilterChips
               filters={filters}
@@ -653,20 +684,6 @@ const styles = StyleSheet.create({
     shadowColor: APP_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
-  },
-  modalRoot: {
-    flex: 1,
-    backgroundColor: APP_COLORS.overlayDark30,
-  },
-  modalDropdownWrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    elevation: 10,
-    shadowColor: APP_COLORS.shadowBlack,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
     shadowRadius: 8,
   },
   backButton: {

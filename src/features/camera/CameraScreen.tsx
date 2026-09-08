@@ -269,6 +269,13 @@ export const CameraScreen: React.FC = () => {
   const showCameraPermissionInline =
     !!cameraPermissionInline && !hasPermission;
 
+  /** Allow Access / Go to Settings — plain gate UI only, no camera chrome. */
+  const isCameraPermissionGateActive =
+    permissionChecked &&
+    !hasPermission &&
+    !showIdentifyReview &&
+    !capturePreviewUri;
+
   const formatImageCounter = useCallback(
     (current: number, max: number) =>
       strings.camera.multiPhoto.imageCounter
@@ -468,6 +475,25 @@ export const CameraScreen: React.FC = () => {
     !showTipsModal &&
     !showIdentifyReview;
 
+  // Recover inline permission UI if the OS denied access but state was not applied.
+  useEffect(() => {
+    if (
+      !permissionChecked ||
+      hasPermission ||
+      cameraPermissionInline ||
+      isNativeDialogActive
+    ) {
+      return;
+    }
+    void syncPermissionFromOs();
+  }, [
+    cameraPermissionInline,
+    hasPermission,
+    isNativeDialogActive,
+    permissionChecked,
+    syncPermissionFromOs,
+  ]);
+
   useEffect(() => {
     if (!__DEV__) return;
     identifyFlowLog("camera_session_state", {
@@ -544,9 +570,9 @@ export const CameraScreen: React.FC = () => {
           }
           await runEntryPermissionFlow();
         } catch {
-          // permission flow handles inline states
+          await syncPermissionFromOs();
         } finally {
-          if (!cancelled) setTipsCheckDone(true);
+          setTipsCheckDone(true);
         }
       };
 
@@ -1178,27 +1204,18 @@ export const CameraScreen: React.FC = () => {
             setTimeout(() => setWarning(null), 3500);
           }}
         />
-      ) : device ? (
-        capturePreviewUri ? (
-          <AppImage
-            source={{ uri: capturePreviewUri }}
-            style={styles.cameraLayer}
-            resizeMode="cover"
-            preferRNImage
-          />
-        ) : (
-          <View
-            style={[
-              styles.cameraLayer,
-              { backgroundColor: CAMERA_BG_FALLBACK },
-            ]}
-          />
-        )
+      ) : capturePreviewUri ? (
+        <AppImage
+          source={{ uri: capturePreviewUri }}
+          style={styles.cameraLayer}
+          resizeMode="cover"
+          preferRNImage
+        />
       ) : null}
 
       {/* Controls above the native Camera view so shutter taps aren't swallowed. */}
       <View style={styles.controlsLayer} pointerEvents="box-none">
-      {!showIdentifyReview && (
+      {!showIdentifyReview && hasPermission && (
         <CameraCaptureOverlay layout={captureFrameLayout} />
       )}
 
@@ -1221,7 +1238,7 @@ export const CameraScreen: React.FC = () => {
       </TouchableOpacity>
 
       {/* Top-right: sound identify */}
-      {!showIdentifyReview && (
+      {!showIdentifyReview && !isCameraPermissionGateActive && (
       <TouchableOpacity
         onPress={() => {
           const startSound =
@@ -1251,7 +1268,7 @@ export const CameraScreen: React.FC = () => {
       )}
 
       {/* Top-right: flash (torch) — same 44px circle + 26px icon in both states */}
-      {!showIdentifyReview && device?.hasTorch && (
+      {!showIdentifyReview && !isCameraPermissionGateActive && device?.hasTorch && (
         <TouchableOpacity
           onPress={() => setTorchOn((prev) => !prev)}
           style={[
@@ -1276,6 +1293,7 @@ export const CameraScreen: React.FC = () => {
 
       {warning && <CameraWarnings text={warning} />}
 
+      {!isCameraPermissionGateActive ? (
       <View
         style={[
           styles.locationBannerWrap,
@@ -1294,6 +1312,7 @@ export const CameraScreen: React.FC = () => {
           onPressLocation={() => openCustomLocationSheet()}
         />
       </View>
+      ) : null}
 
       {showCameraPermissionInline ? (
         <View
@@ -1360,7 +1379,7 @@ export const CameraScreen: React.FC = () => {
       )}
 
       {/* Two-image slots, daily scan banner, and zoom — below viewfinder (Figma) */}
-      {!showIdentifyReview && (
+      {!showIdentifyReview && !isCameraPermissionGateActive && (
       <View
         style={[
           styles.captureContentColumn,
@@ -1443,7 +1462,7 @@ export const CameraScreen: React.FC = () => {
       )}
 
       {/* Bottom controls: Gallery (left) | Capture (center) | Tips (right) */}
-      {!showIdentifyReview && (
+      {!showIdentifyReview && !isCameraPermissionGateActive && (
       <View
         style={[
           styles.bottomBar,
@@ -1661,7 +1680,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 20,
     right: 20,
-    zIndex: 9,
+    zIndex: 25,
+    elevation: 25,
     justifyContent: "center",
     alignItems: "center",
   },

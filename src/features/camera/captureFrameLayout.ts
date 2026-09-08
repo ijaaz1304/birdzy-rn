@@ -48,7 +48,7 @@ export const CAPTURE_SIDE_ICON_SIZE = 26;
 export const CAPTURE_SHUTTER_OUTER_SIZE = 64;
 export const CAPTURE_SHUTTER_RING_BORDER = 3;
 export const CAPTURE_SHUTTER_INNER_SIZE = 46;
-export const CAPTURE_ZOOM_ACCENT = "#C7630C";
+export const CAPTURE_ZOOM_ACCENT = "#725481";
 export const CAPTURE_ZOOM_UI_MAX = 5;
 export const CAPTURE_ZOOM_UI_MIN = 1;
 

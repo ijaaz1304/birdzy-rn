@@ -30,8 +30,8 @@ export const DISCOUNT_PILL_GRADIENT = {
 
 /** Paywall “Discount ends in” pill */
 export const DISCOUNT_TIMER_PILL = {
-  background: "#4D3221",
-  backgroundDark: "#B88A4A",
+  background: "#01474F",
+  backgroundDark: "#01474F",
   text: "#FFFFFF",
 } as const;
 

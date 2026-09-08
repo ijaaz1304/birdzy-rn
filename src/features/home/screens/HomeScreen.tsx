@@ -84,8 +84,7 @@ import { useStrings } from "../../../hooks/useStrings";
 // Weather permissions removed - not needed for rocks/minerals app
 import { archetypeService } from "../../../services/archetype/archetype.service";
 import { getDisplayName } from "../../../utils/mushroomDisplayUtils";
-import { resolveMushroomImageUrlsForDisplay } from "../../../utils/mushroomCardUtils";
-import { sanitizeBirdImageUrl } from "../../../utils/birdApiMappers";
+import { resolveBirdHeroImageUrls } from "../../../utils/mushroomCardUtils";
 import { useAuthStore } from "../../auth/auth.store";
 import { isIapPipelineBusy } from "../../subscription/hooks/useIapPurchase";
 import { hasPendingMarketingDeepLink } from "../../../navigation/deepLinking/deepLinkManager";
@@ -268,6 +267,7 @@ export const HomeScreen = () => {
     id: string;
     name: string;
     scientificName: string;
+    canonicalName?: string;
     image: string | number | { uri: string };
     imageUrls?: string[];
     description: string;
@@ -303,13 +303,14 @@ export const HomeScreen = () => {
   // Build rock-of-the-day object from a specimen (optional price if API provides it)
   const buildMushroomOfTheDayFromSpecimen = useCallback(
     (specimen: any) => {
-      const resolvedUrls = resolveMushroomImageUrlsForDisplay(
-        specimen?.canonicalName ?? specimen?.scientificName,
+      const nameForPath = specimen?.canonicalName ?? specimen?.scientificName;
+      const imageUrlsResolved = resolveBirdHeroImageUrls(
+        nameForPath,
         specimen?.imageUrls,
-        specimen?.scientificName
+        specimen?.scientificName,
+        specimen?.defaultImageUrl
       );
-      const defaultUrl = sanitizeBirdImageUrl(specimen?.defaultImageUrl);
-      const imageUrl = resolvedUrls[0] ?? defaultUrl;
+      const imageUrl = imageUrlsResolved[0];
 
       return {
         id: specimen?.archetypeId ?? "default",
@@ -319,13 +320,9 @@ export const HomeScreen = () => {
         scientificName:
           specimen?.scientificName ||
           strings.home.birdOfTheDay.birdSpecimen,
+        canonicalName: specimen?.canonicalName,
         image: imageUrl,
-        imageUrls:
-          resolvedUrls.length > 0
-            ? resolvedUrls
-            : defaultUrl
-              ? [defaultUrl]
-              : undefined,
+        imageUrls: imageUrlsResolved.length > 0 ? imageUrlsResolved : undefined,
         description:
           specimen?.detailedDescription ||
           strings.home.birdOfTheDay.discoverDescription,
@@ -1009,6 +1006,8 @@ export const HomeScreen = () => {
         scientificName={mushroomOfTheDay?.scientificName}
         price={mushroomOfTheDay?.price}
         mushroomImage={mushroomOfTheDay?.image}
+        mushroomImageUrls={mushroomOfTheDay?.imageUrls}
+        canonicalName={mushroomOfTheDay?.canonicalName}
         showRefreshButton={true}
         isPremium={isPremium}
         isRefreshing={loadingMushroomOfTheDay}

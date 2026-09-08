@@ -9,10 +9,14 @@ import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { showAlert } from "../../../store/alert.store";
 import ImagePicker from "react-native-image-crop-picker";
 import { navigateToIdentifyCameraScreen } from "../../camera/identifyCameraNavigation";
 import { asIdentifyImage } from "../../camera/identifyImageFlow";
+import { openInteractiveCropper } from "../../camera/interactiveCrop";
+import {
+  launchIosGalleryImage,
+  usesIosPhpPickerGallery,
+} from "../../camera/iosGallerySelection";
 import { AI_CROPPER_OPTIONS } from "../../../constants/imagePipeline.constants";
 import { useTheme } from "../../../hooks/useTheme";
 import { Text } from "../../../atoms";
@@ -20,7 +24,6 @@ import { Images } from "../../../assets";
 import { AskAIStackParamList } from "../../../navigation/types";
 import {
   checkStoragePermission,
-  openDeviceSettings,
 } from "../../../services/permissions";
 import { GalleryAccessPopup } from "../../../components/GalleryAccessPopup";
 import { analyticsService } from "../../../services/analytics/analytics.service";
@@ -35,8 +38,6 @@ type NavProp = NativeStackNavigationProp<
   AskAIStackParamList,
   "AskAIImageSource"
 >;
-
-const CROP_OPTIONS = AI_CROPPER_OPTIONS;
 
 export const AskAIImageSourceScreen: React.FC = () => {
   const theme = useTheme();
@@ -55,21 +56,44 @@ export const AskAIImageSourceScreen: React.FC = () => {
   const openGalleryPicker = async () => {
     try {
       analyticsService.logEvent(EVENTS.ask_ai_image_uploaded);
+
+      if (usesIosPhpPickerGallery()) {
+        const picked = await launchIosGalleryImage();
+        if (picked.status === "cancelled") {
+          navigation.goBack();
+          return;
+        }
+        if (picked.status === "error") {
+          console.error("Ask AI image source: gallery failed", picked.message);
+          navigation.goBack();
+          return;
+        }
+        const cropped = await openInteractiveCropper(picked.uri);
+        if (!cropped) {
+          navigation.goBack();
+          return;
+        }
+        const processed = await asIdentifyImage(cropped.uri);
+        if (!processed) return;
+        navigation.navigate("AskAIMain", { selectedImageUri: processed.uri });
+        return;
+      }
+
       const picked = await ImagePicker.openPicker({
         mediaType: "photo",
         multiple: false,
         includeBase64: false,
         cropping: true,
-        ...CROP_OPTIONS,
+        ...AI_CROPPER_OPTIONS,
       });
-      if ((picked as any)?.path) {
-        const uri = normalizeLocalUri((picked as any).path);
+      if ((picked as { path?: string })?.path) {
+        const uri = normalizeLocalUri((picked as { path: string }).path);
         const processed = await asIdentifyImage(uri);
         if (!processed) return;
         navigation.navigate("AskAIMain", { selectedImageUri: processed.uri });
       }
-    } catch (error: any) {
-      const msg = String(error?.message ?? "");
+    } catch (error: unknown) {
+      const msg = String((error as Error)?.message ?? "");
       if (!msg.toLowerCase().includes("cancel"))
         console.error("Ask AI image source: gallery failed", error);
       navigation.goBack();
@@ -77,6 +101,10 @@ export const AskAIImageSourceScreen: React.FC = () => {
   };
 
   const handleUpload = async () => {
+    if (usesIosPhpPickerGallery()) {
+      await openGalleryPicker();
+      return;
+    }
     const storage = await checkStoragePermission();
     if (!storage.granted) {
       setPhotosBlocked(!!storage.blocked);

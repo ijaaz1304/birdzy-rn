@@ -16,6 +16,10 @@ import {
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../../navigation/types";
 import { ScreenContainer } from "../../../molecules";
+import {
+  AuthScreenBackground,
+  AuthScreenStatusBar,
+} from "../components/AuthScreenBackground";
 import { Input } from "../../../molecules/Input/Input";
 import { PrimaryButton } from "../../../atoms/PrimaryButton/PrimaryButton";
 import { Text } from "../../../atoms/Text/Text";
@@ -26,7 +30,7 @@ import { APP_COLORS } from "../../../config/colors";
 import { SCREEN_COLORS } from "../../../constants/colorConstants";
 import { useAuthStore } from "../auth.store";
 import { AUTH_STRINGS } from "../../../config/strings/auth.strings";
-import { AUTH_TEXT_FIELD_RADIUS } from "../constants/authFormLayout";
+import { AUTH_TEXT_FIELD_RADIUS, AUTH_BACK_BUTTON_LEFT_OFFSET } from "../constants/authFormLayout";
 import { typography } from "../../../design-system/typography";
 import { FONTS } from "../../../common/typography";
 
@@ -116,8 +120,10 @@ export const CreateNewPasswordScreen = () => {
   };
 
   return (
-    <ScreenContainer showBackground={false} backgroundColor={authBg}>
-      <View style={[styles.backRow, { paddingTop: insets.top + 8 }]}>
+    <ScreenContainer showBackground={false} backgroundColor={authBg} edges={[]}>
+      <AuthScreenStatusBar isDark={isDark} />
+      <AuthScreenBackground isDark={isDark} />
+      <View style={[styles.backRow, styles.authFormLayer, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
@@ -131,7 +137,7 @@ export const CreateNewPasswordScreen = () => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.flex}
+        style={[styles.flex, styles.authFormLayer]}
         keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
       >
         <ScrollView
@@ -200,6 +206,9 @@ export const CreateNewPasswordScreen = () => {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  authFormLayer: {
+    zIndex: 1,
+  },
   backRow: {
     paddingHorizontal: 20,
     zIndex: 10,
@@ -209,6 +218,7 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "center",
     alignItems: "flex-start",
+    marginLeft: AUTH_BACK_BUTTON_LEFT_OFFSET,
   },
   scrollContent: {
     flexGrow: 1,

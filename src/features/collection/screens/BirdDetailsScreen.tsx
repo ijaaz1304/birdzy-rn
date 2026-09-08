@@ -343,7 +343,7 @@ export const BirdDetailsScreen: React.FC = () => {
   const effectiveArchetypeId =
     (typeof resolvedArchetypeId === "string" && resolvedArchetypeId.trim()) ||
     (typeof mushroomId === "string" ? mushroomId : "");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("sounds");
   const [nameSoundPlaying, setNameSoundPlaying] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollContentRef = useRef<View>(null);
@@ -1564,6 +1564,10 @@ export const BirdDetailsScreen: React.FC = () => {
       collection_name: collectionName,
     });
   }, [collectionName, mushroomData, mushroomId, source]);
+
+  useEffect(() => {
+    setActiveTab("sounds");
+  }, [mushroomId]);
 
   // Scroll to section when tab is selected (use onLayout offsets to avoid measureLayout ref errors)
   useEffect(() => {
@@ -3280,17 +3284,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     {tabsToShow.map((tab) => (
                       <TouchableOpacity
                         key={tab.id}
-                        onPress={() => {
-                          setActiveTab(tab.id);
-                          if (tab.id === "overview") {
-                            setTimeout(() => {
-                              scrollViewRef.current?.scrollTo({
-                                y: 0,
-                                animated: true,
-                              });
-                            }, 0);
-                          }
-                        }}
+                        onPress={() => setActiveTab(tab.id)}
                         style={[
                           styles.aiTab,
                           styles.aiTabScrollable,
@@ -3325,29 +3319,6 @@ export const BirdDetailsScreen: React.FC = () => {
                         >
                           {tab.label}
                         </Text>
-                        {(() => {
-                          const birdPremiumTabs = [
-                            "morphology",
-                            "behavior",
-                            "habitat",
-                            "feeding",
-                            "breeding",
-                            "range",
-                          ];
-                          const showLock =
-                            !isPremium &&
-                            !isBirdOfTheDay &&
-                            tab.id !== "overview" &&
-                            tab.id !== "sounds" &&
-                            birdPremiumTabs.includes(tab.id);
-                          return showLock ? (
-                            <AppImage
-                              source={Images.birdGoPro}
-                              style={styles.aiTabBadge}
-                              resizeMode="contain"
-                            />
-                          ) : null;
-                        })()}
                       </TouchableOpacity>
                     ))}
                   </ScrollView>

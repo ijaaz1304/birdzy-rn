@@ -22,10 +22,10 @@ export const MODAL_STRINGS = {
         "To identify birds around you, we need access to your camera.",
       enableButton: "Continue",
       allowAccessButton: "Allow Access",
-      openSettings: "Open Settings",
-      deniedTitle: "Manage Camera Access",
+      openSettings: "Go to settings",
+      deniedTitle: "Camera permission needed",
       deniedSubtitle:
-        "Camera access was previously turned off. Open Settings to enable the camera for bird identification.",
+        "Enable camera access in settings to scan and identify birds around you",
     },
     microphonePermission: {
       title: "Enable Microphone Access",

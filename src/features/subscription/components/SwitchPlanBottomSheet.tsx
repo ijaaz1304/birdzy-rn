@@ -4,7 +4,6 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { PlanId } from "../../../config/subscriptionConfig";
 import { FONTS } from "../../../common/typography";
-import { PostAuthSubscriptionDisclosure } from "../../post-auth-onboarding/components/PostAuthSubscriptionDisclosure";
 import { PostAuthGradientButton } from "../../post-auth-onboarding/components/PostAuthGradientButton";
 import { PostAuthHorizontalPlanCard, HORIZONTAL_PLAN_ROW_STYLE } from "../../post-auth-onboarding/components/PostAuthHorizontalPlanCard";
 import {
@@ -152,7 +151,7 @@ export const SwitchPlanBottomSheet: React.FC<Props> = ({
             {getSwitchSheetTitle(currentPlanKind)}
           </Text>
 
-          <View style={HORIZONTAL_PLAN_ROW_STYLE}>
+          <View style={styles.planRow}>
             {switchablePlans.map((plan) => {
               const duration = (plan.duration ?? "").toLowerCase();
               const isLifetime = duration === "lifetime";
@@ -196,17 +195,11 @@ export const SwitchPlanBottomSheet: React.FC<Props> = ({
           <View style={styles.infoBlock}>
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>
               You&apos;re about to change your subscription. Don&apos;t
-              worry—your data and settings will stay safe.
-            </Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              Upgrades take effect immediately.
-            </Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+              worry—your data and settings will stay safe.{"\n\n"}
+              Upgrades take effect immediately.{"\n\n"}
               Downgrades will apply at the end of your current billing cycle.
             </Text>
           </View>
-
-          <PostAuthSubscriptionDisclosure plan={selectedPlan} colors={colors} />
 
           <PostAuthGradientButton
             title={ctaLabel}
@@ -261,15 +254,15 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   headerRow: {
-    minHeight: 40,
+    minHeight: 24,
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "flex-start",
     alignItems: "center",
   },
   closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 24,
+    height: 24,
+    borderRadius: 24,
     backgroundColor: "#F6F6F6",
     alignItems: "center",
     justifyContent: "center",
@@ -279,9 +272,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 32,
     textAlign: "center",
+    width: "100%",
+  },
+  planRow: {
+    ...HORIZONTAL_PLAN_ROW_STYLE,
+    gap: 12,
   },
   infoBlock: {
-    gap: 4,
+    width: "100%",
   },
   infoText: {
     fontFamily: FONTS.regular,

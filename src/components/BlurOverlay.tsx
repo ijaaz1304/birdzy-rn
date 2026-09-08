@@ -27,7 +27,7 @@ export function BlurOverlay({
   const theme = useTheme();
   const isDark = theme.mode === "dark";
   const isPremiumGate = variant === "premiumGate";
-  const blurAmount = isPremiumGate ? 10 : glass ? 4 : 2;
+  const blurAmount = isPremiumGate ? 8 : glass ? 4 : 2;
 
   const blurOverlayFallback = isPremiumGate
     ? isDark

@@ -18,13 +18,14 @@ export function getPostAuthBackgroundLayout(
   windowWidth: number,
   windowHeight: number
 ) {
+  const screenHeight = Dimensions.get("screen").height;
   const { isWideScreen, contentWidth } = getPostAuthContentLayout(
     windowWidth,
     windowHeight
   );
-  const bgWidth = isWideScreen ? contentWidth + 40 : windowWidth;
-  const bgLeft = isWideScreen ? (windowWidth - bgWidth) / 2 : 0;
-  const bgHeight = Math.max(windowHeight, bgWidth * POST_AUTH_BG_ASPECT);
+  const bgWidth = windowWidth;
+  const bgLeft = 0;
+  const bgHeight = Math.max(screenHeight, bgWidth * COMMON_BG_ASPECT);
 
   return { bgWidth, bgLeft, bgHeight, isWideScreen };
 }

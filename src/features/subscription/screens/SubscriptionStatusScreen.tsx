@@ -54,7 +54,7 @@ import {
   planMatchesKind,
 } from "../utils/subscriptionStatusDisplay";
 
-const SINCE_BADGE_BG = "#4D3221";
+const SINCE_BADGE_BG = "#747E3B";
 
 type SubscriptionStatusRouteProp = RouteProp<
   SubscriptionStackParamList,
@@ -259,7 +259,8 @@ export const SubscriptionStatusScreen: React.FC = () => {
             ) : null}
 
             <Text style={[styles.heading, { color: colors.textPrimary }]}>
-              You are in {getPlanStatusTitle(planKind)}
+              You are in{"\n"}
+              {getPlanStatusTitle(planKind)}
             </Text>
             <Text style={[styles.subheading, { color: colors.textSecondary }]}>
               You get fully access to every features.
@@ -279,10 +280,7 @@ export const SubscriptionStatusScreen: React.FC = () => {
                 Days left to renew date:
               </Text>
               <View style={styles.renewalCountdownWrap}>
-                <RenewalCountdownPills
-                  renewalDate={renewalDate}
-                  textPrimary={colors.textPrimary}
-                />
+                <RenewalCountdownPills renewalDate={renewalDate} />
               </View>
             </View>
           ) : null}

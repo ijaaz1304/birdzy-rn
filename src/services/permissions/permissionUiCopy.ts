@@ -29,9 +29,7 @@ export function getCameraPermissionUiCopy(): PermissionPromptCopy {
     subtitle: c.subtitle,
     continueLabel: c.enableButton,
     allowAccessLabel: c.allowAccessButton,
-    openSettingsLabel: isIos
-      ? CAMERA_STRINGS.buttons.openSettings
-      : c.openSettings,
+    openSettingsLabel: c.openSettings,
     deniedTitle: c.deniedTitle,
     deniedSubtitle: c.deniedSubtitle,
   };

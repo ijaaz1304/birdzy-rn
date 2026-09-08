@@ -10,6 +10,8 @@ import {
   RateUsModal,
   FeedbackModal,
   NotificationPermissionPopup,
+  LimitReachedBottomSheet,
+  SubscriptionDiscountSheet,
   // CameraPermissionPopup,
 } from "../../../molecules/Modal";
 import { sendRatingFeedback } from "../../../services/rating/ratingFeedback.service";
@@ -37,8 +39,11 @@ import {
   OVERLAY_COLORS,
 } from "../../../constants/colorConstants";
 import { SETTINGS_STRINGS } from "../../../config/strings/settings.strings";
+import { isDevSettingsVisible } from "../../../lib/env/appEnv";
 import { useStrings } from "../../../hooks/useStrings";
-// import { DevEnvironmentInfo } from "../components/DevEnvironmentInfo";
+import { DevEnvironmentInfo } from "../components/DevEnvironmentInfo";
+import { UPGRADE_MODAL_PREVIEW_ITEMS } from "../upgradeModalPreviews";
+import type { LimitType } from "../../../config/subscription.config";
 import { SettingsSection, SettingsItem } from "../components";
 import { useAppLogsStore, isAppLogsFeatureEnabled } from "../../../features/app-logs/app-logs.store";
 import { openAppStoreForRating } from "../../../utils/modalHelpers";
@@ -85,8 +90,9 @@ export const SettingsScreen: React.FC = () => {
     (s) => s.setCameraUploadLogsEnabled
   );
   const { plans: subscriptionPlansFromHook } = useSubscriptionPlansWithPrices();
-  // const devForcePremium = useSubscriptionStore((s) => s.devForcePremium);
-  // const setDevForcePremium = useSubscriptionStore((s) => s.setDevForcePremium);
+  const devForcePremium = useSubscriptionStore((s) => s.devForcePremium);
+  const setDevForcePremium = useSubscriptionStore((s) => s.setDevForcePremium);
+  const showDevSettings = isDevSettingsVisible();
   const _strings = useStrings();
   const { showToast } = useToast();
   const { registerDevice } = usePushNotifications();
@@ -102,6 +108,10 @@ export const SettingsScreen: React.FC = () => {
     number | undefined
   >();
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [previewUpgradeLimitType, setPreviewUpgradeLimitType] =
+    useState<LimitType | null>(null);
+  const [showSubscriptionDiscountPreview, setShowSubscriptionDiscountPreview] =
+    useState(false);
   const [birdRegionLabel, setBirdRegionLabel] = useState(
     getBirdRegionLabel("auto")
   );
@@ -363,14 +373,14 @@ export const SettingsScreen: React.FC = () => {
 
         {/* PREFERENCES SECTION */}
         <SettingsSection title={SETTINGS_STRINGS.sections.preferences}>
-          {/* Dev: force premium toggle */}
-          {/* {__DEV__ && (
+          {showDevSettings ? (
             <SettingsItem
               title={SETTINGS_STRINGS.items.usePremium}
+              subtitle="Dev: unlock premium gates locally"
               switchValue={devForcePremium}
               onSwitchChange={setDevForcePremium}
             />
-          )} */}
+          ) : null}
           {/* Dev: disable 50% discount testing toggle */}
           {/* <SettingsItem
             title={SETTINGS_STRINGS.items.disable50Discount}
@@ -410,6 +420,14 @@ export const SettingsScreen: React.FC = () => {
         {/* DIAGNOSTICS — dev builds only; hidden in production */}
         {isAppLogsFeatureEnabled() ? (
         <SettingsSection title={SETTINGS_STRINGS.sections.diagnostics}>
+          {showDevSettings ? (
+            <SettingsItem
+              title={SETTINGS_STRINGS.items.usePremium}
+              subtitle="Dev: force premium for testing"
+              switchValue={devForcePremium}
+              onSwitchChange={setDevForcePremium}
+            />
+          ) : null}
           <SettingsItem
             title={SETTINGS_STRINGS.items.recordDiagnosticLogs}
             subtitle={SETTINGS_STRINGS.items.recordDiagnosticLogsSubtitle}
@@ -429,6 +447,26 @@ export const SettingsScreen: React.FC = () => {
             showArrow={true}
           />
         </SettingsSection>
+        ) : null}
+
+        {showDevSettings ? <DevEnvironmentInfo /> : null}
+
+        {showDevSettings ? (
+          <SettingsSection title={SETTINGS_STRINGS.sections.upgradeModalsDev}>
+            {UPGRADE_MODAL_PREVIEW_ITEMS.map(({ limitType, label }) => (
+              <SettingsItem
+                key={limitType}
+                title={label}
+                onPress={() => setPreviewUpgradeLimitType(limitType)}
+                showArrow={true}
+              />
+            ))}
+            <SettingsItem
+              title={SETTINGS_STRINGS.items.subscriptionDiscountSheet}
+              onPress={() => setShowSubscriptionDiscountPreview(true)}
+              showArrow={true}
+            />
+          </SettingsSection>
         ) : null}
 
         {/* MORE SECTION */}
@@ -532,6 +570,25 @@ export const SettingsScreen: React.FC = () => {
       <DeleteAccountConfirmation
         visible={showDeleteAccount}
         onClose={() => setShowDeleteAccount(false)}
+      />
+
+      <LimitReachedBottomSheet
+        visible={previewUpgradeLimitType != null}
+        onClose={() => setPreviewUpgradeLimitType(null)}
+        onUpgrade={() => {
+          setPreviewUpgradeLimitType(null);
+          handleManageSubscription();
+        }}
+        limitType={previewUpgradeLimitType ?? "identification"}
+      />
+
+      <SubscriptionDiscountSheet
+        visible={showSubscriptionDiscountPreview}
+        onClose={() => setShowSubscriptionDiscountPreview(false)}
+        onSubscribe={() => {
+          setShowSubscriptionDiscountPreview(false);
+          handleManageSubscription();
+        }}
       />
     </SafeAreaView>
   );

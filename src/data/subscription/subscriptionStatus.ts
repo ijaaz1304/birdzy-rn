@@ -15,7 +15,9 @@ export const DEFAULT_SUBSCRIPTION_BENEFITS: string[] = [
   "Create and save unlimited collections",
   "Access complete bird info anytime",
   "Post without limits in the feed",
-  "Get unlimited Bird of the Day refreshes",
+  "Get multiple birds of the day",
+  "Send unlimited storage",
+  "Unlock unlimited Bird Sounds",
   "Send unlimited messages with AI chatbot",
 ];
 

@@ -245,13 +245,13 @@ export const birdsAppConfig: AppConfig = {
         imageKey: "auth_scans",
       },
       {
-        title: "Browse a vast collection of birds",
+        title: "Browse a vast collection of birds.",
         subtitle:
           "Explore a global collection of birds with detailed images, filters, and identification guides.",
         imageKey: "auth_cards",
       },
       {
-        title: "Curate your own bird collections",
+        title: "Curate your own bird collections.",
         subtitle:
           "Create personalized collections and organize your birds just the way you prefer.",
         imageKey: "auth_identity",

@@ -85,12 +85,10 @@ export function getBirdImageUrls(raw: Record<string, unknown>): string[] {
   const urls = raw.imageUrls ?? raw.images;
   if (Array.isArray(urls)) {
     return urls
-      .map((u) => sanitizeBirdImageUrl(typeof u === "string" ? u : undefined))
+      .map((u) => (typeof u === "string" ? u.trim() : undefined))
       .filter((u): u is string => Boolean(u));
   }
-  const single = sanitizeBirdImageUrl(
-    typeof raw.defaultImageUrl === "string" ? raw.defaultImageUrl : undefined
-  );
+  const single = asString(raw.defaultImageUrl);
   return single ? [single] : [];
 }
 

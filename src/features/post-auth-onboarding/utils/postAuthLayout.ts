@@ -42,14 +42,16 @@ export type PostAuthLayoutMetrics = {
   notificationContentTopPadding: number;
   /** Screen 1 — larger notification hero, pushed down. */
   notificationImageMarginTop: number;
-  /** Screen 3 — feature carousel + plans. */
+  /** Screen 3 — subscription paywall with discount timer. */
   subscriptionTopPadding: number;
   subscriptionBodyPaddingBottom: number;
   subscriptionPlanRowMarginTop: number;
+  subscriptionDiscountTimerTop: number;
+  subscriptionCarouselMarginTop: number;
   subscriptionBottomPadding: number;
   subscriptionCarouselIconSize: number;
   subscriptionCarouselIconMarginBottom: number;
-  /** Screen 4 — title top offset and gift illustration size. */
+  /** Screen 4 — gift surprise interstitial. */
   surpriseTopPadding: number;
   surpriseTitleGap: number;
   surpriseTitleFontSize: number;
@@ -93,8 +95,8 @@ export function usePostAuthLayoutMetrics(): PostAuthLayoutMetrics {
     const notificationWidth = Math.min(layoutContentWidth, isCompact ? 310 : 343);
     const notificationHeight = Math.round(notificationWidth * (1232 / 1120));
 
-    const titleToHeroGap = isCompact ? 24 : 40;
-    const contentTopPadding = isVeryCompact ? 32 : isCompact ? 44 : 56;
+    const titleToHeroGap = isCompact ? 24 : 32;
+    const contentTopPadding = isVeryCompact ? 48 : isCompact ? 60 : 76;
     const isIos = Platform.OS === "ios";
     const isAndroid = Platform.OS === "android";
     const isLargeScreen = isWideScreen || height >= 800;
@@ -160,14 +162,16 @@ export function usePostAuthLayoutMetrics(): PostAuthLayoutMetrics {
         : 16,
       subscriptionBodyPaddingBottom: spaciousSubscription
         ? isCompact
-          ? 20
-          : 36
-        : 8,
+          ? 12
+          : 24
+        : 4,
       subscriptionPlanRowMarginTop: spaciousSubscription
         ? isCompact
-          ? 8
-          : 4
-        : 16,
+          ? 0
+          : 0
+        : 4,
+      subscriptionDiscountTimerTop: 0,
+      subscriptionCarouselMarginTop: isVeryCompact ? 8 : isCompact ? 10 : 12,
       subscriptionBottomPadding: spaciousSubscription
         ? isCompact
           ? 12
@@ -189,12 +193,12 @@ export function usePostAuthLayoutMetrics(): PostAuthLayoutMetrics {
       surpriseTitleLineHeight: isCompact ? 36 : 40,
       surpriseImageWidth: Math.min(
         layoutContentWidth,
-        isCompact ? 310 : POST_AUTH_LAYOUT.contentWidth
+        isCompact ? 220 : 260
       ),
       surpriseImageHeight: Math.round(
         Math.min(
           layoutContentWidth,
-          isCompact ? 310 : POST_AUTH_LAYOUT.contentWidth
+          isCompact ? 220 : 260
         ) *
           (1450 / 1500)
       ),

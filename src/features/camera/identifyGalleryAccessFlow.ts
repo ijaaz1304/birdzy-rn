@@ -26,8 +26,9 @@ export type IdentifyGalleryAccessResult = {
   status: IdentifyGalleryAccessStatus;
 };
 
-/** True when identify gallery can use system picker without READ_MEDIA (Android 13+). */
+/** True when identify gallery can use a system picker without broad library access. */
 export function isIdentifyGalleryPermissionlessPicker(): boolean {
+  if (Platform.OS === "ios") return true;
   return Platform.OS === "android" && Number(Platform.Version) >= 33;
 }
 

@@ -4,7 +4,13 @@
 
 import { AppImage } from "@/components/AppImage";
 import React from "react";
-import { View, StyleSheet, Dimensions, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import {
@@ -26,25 +32,43 @@ import { spacing } from "../../../design-system/spacing";
 
 import { APP_COLORS } from "../../../config/colors";
 import { ONBOARDING_CTA_DARK } from "../onboardingCta.constants";
+import { PaginationDots } from "./PaginationDots";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("screen");
 
 /** Onboarding background art is 1500×3252 — anchor to bottom so mushrooms align with design */
 const ONBOARDING_BG_ASPECT = 3252 / 1500;
-/** Shift all onboarding title/description blocks up by 6% of screen height */
-const ONBOARDING_TEXT_SHIFT_UP = SCREEN_HEIGHT * 0.06;
+/** Shift onboarding title/description/dots up slightly so they sit above the CTA */
+const ONBOARDING_TEXT_SHIFT_UP = SCREEN_HEIGHT * 0.03;
+/** Auth slide ("Keep track of your bird journey") — title/subtitle inset below safe area */
+const AUTH_PROGRESS_HEADER_TOP_PADDING = 84;
+
+export interface OnboardingPaginationProps {
+  totalPages: number;
+  scrollX: Animated.Value;
+  pageWidth: number;
+}
 
 export interface OnboardingPageProps {
   data: OnboardingPageData;
   width: number;
   pageIndex?: number;
+  pagination?: OnboardingPaginationProps;
   onSignUp?: () => void;
   onLogIn?: () => void;
   onContinueAsGuest?: () => void;
 }
 
 export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
-  ({ data, width, pageIndex = 0, onSignUp, onLogIn, onContinueAsGuest }) => {
+  ({
+    data,
+    width,
+    pageIndex = 0,
+    pagination,
+    onSignUp,
+    onLogIn,
+    onContinueAsGuest,
+  }) => {
     const theme = useTheme();
     const isDark = useIsDark();
     const insets = useSafeAreaInsets();
@@ -52,14 +76,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     const layoutLeft = 0;
     const bgHeight = Math.max(SCREEN_HEIGHT, layoutWidth * ONBOARDING_BG_ASPECT);
     const contentMaxWidth = width - 40;
-    const pageBackgroundStyle = {
-      position: "absolute" as const,
-      left: layoutLeft,
-      bottom: 0,
-      width: layoutWidth,
-      height: bgHeight,
-      zIndex: 0,
-    };
     const showAuthButtons = data.illustration === "authProgress";
     const hasBackgroundImage = !!data.backgroundImage;
     /** Dark page 2 art includes stats/tabs — hide duplicate overlay at top */
@@ -68,11 +84,20 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     /** Auth header uses a single 20px inset (authTextSection); avoid double-padding textSection */
     const authProgressTextMaxWidth = contentMaxWidth;
     const authProgressSubtextMaxWidth = authProgressTextMaxWidth * 0.9;
-    const authHeaderTopPadding = insets.top + 20;
+    const authHeaderTopPadding = insets.top + AUTH_PROGRESS_HEADER_TOP_PADDING;
     const showStatsHeader =
       !hideTopStatsInDark &&
       (!!data.stats || (data.tabs != null && data.tabs.length > 0));
     const showStatsOverlay = hasBackgroundImage && showStatsHeader;
+
+    const pageBackgroundStyle = {
+      position: "absolute" as const,
+      left: layoutLeft,
+      bottom: 0,
+      width: layoutWidth,
+      height: bgHeight,
+      zIndex: 0,
+    };
 
     const renderStatsHeader = () => {
       if (!showStatsHeader) {
@@ -252,6 +277,14 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
         >
           {data.description}
         </Text>
+        {pagination != null && (
+          <PaginationDots
+            totalPages={pagination.totalPages}
+            scrollX={pagination.scrollX}
+            pageWidth={pagination.pageWidth}
+            containerStyle={styles.paginationDotsBelowText}
+          />
+        )}
       </View>
     );
 
@@ -342,8 +375,14 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                   ? {
                       backgroundColor: theme.colors.primaryCTA,
                       borderRadius: ONBOARDING_CTA_DARK.borderRadius,
+                      borderWidth: 1,
+                      borderColor: theme.colors.border0,
                     }
-                  : { backgroundColor: theme.colors.primaryCTA },
+                  : {
+                      backgroundColor: theme.colors.primaryCTA,
+                      borderWidth: 1,
+                      borderColor: SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
+                    },
               ]}
               activeOpacity={0.7}
             >
@@ -372,7 +411,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                       backgroundColor:
                         SUBSCRIPTION_COLORS.COMPARISON_LIGHT.BASE_BG,
                       borderWidth: 1,
-                      borderColor: CARD_COLORS.LIGHT.border,
+                      borderColor: SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
                     },
               ]}
               activeOpacity={0.7}
@@ -920,6 +959,10 @@ const styles = StyleSheet.create({
   },
   textSectionFirstPage: {
     marginBottom: 12,
+  },
+  paginationDotsBelowText: {
+    marginTop: 16,
+    alignSelf: "flex-start",
   },
   /** Consistent horizontal inset — content already has 20px padding */
   textSectionOnboardingInset: {

@@ -185,10 +185,10 @@ export const AI_CHAT_COLORS = {
 // Subscription colors - MASTER SPEC
 export const SUBSCRIPTION_COLORS = {
   // Discount banner/timer
-  DISCOUNT_TIMER_BG: APP_COLORS.brandLight,
-  DISCOUNT_TIMER_TEXT: "#242424",
-  TIMER_BADGE_BG: APP_COLORS.brandLight,
-  TIMER_BADGE_TEXT: "#242424",
+  DISCOUNT_TIMER_BG: APP_COLORS.splashBackground,
+  DISCOUNT_TIMER_TEXT: APP_COLORS.modalTextOnPrimary,
+  TIMER_BADGE_BG: APP_COLORS.splashBackground,
+  TIMER_BADGE_TEXT: APP_COLORS.modalTextOnPrimary,
 
   // Main heading color (both light and dark)
   HEADING_COLOR: APP_COLORS.modalTextOnPrimary,
@@ -200,7 +200,7 @@ export const SUBSCRIPTION_COLORS = {
     TEXT_PRIMARY: "#111111",
     TEXT_SECONDARY: "#111111",
     PREMIUM_BG: "rgba(255,255,255,0.20)",
-    PREMIUM_BORDER: "#C7630C",
+    PREMIUM_BORDER: "#725481",
     PREMIUM_SHADOW: "rgba(199,99,12,0.35)",
   },
 
@@ -211,12 +211,12 @@ export const SUBSCRIPTION_COLORS = {
     TEXT_PRIMARY: APP_COLORS.modalTextOnPrimary,
     TEXT_SECONDARY: APP_COLORS.modalTextOnPrimary,
     PREMIUM_BG: "rgba(255,255,255,0.20)",
-    PREMIUM_BORDER: "#C7630C",
+    PREMIUM_BORDER: "#725481",
     PREMIUM_SHADOW: "rgba(199,99,12,0.35)",
   },
 
   // Subscription card styling - EXACT SPEC
-  CARD_SELECTED_BORDER: "#C7630C",
+  CARD_SELECTED_BORDER: "#725481",
   CARD_SELECTED_SHADOW: "rgba(199,99,12,0.30)",
   CARD_UNSELECTED_BORDER_LIGHT: SCREEN_COLORS.LIGHT.border,
   CARD_UNSELECTED_BORDER_DARK: SCREEN_COLORS.DARK.border,
@@ -451,7 +451,7 @@ export const HOME_COLORS = {
 export const CARD_COLORS = {
   LIGHT: {
     borderRadius: radius.md,
-    border: SCREEN_COLORS.LIGHT.border,
+    border: SEMANTIC_LIGHT.border.zero, // #E7E7E7 — Figma border-0
     background: APP_COLORS.modalTextOnPrimary,
   },
   DARK: {
@@ -695,7 +695,7 @@ export const EDIT_ROCK_SPEC = {
 export const COLLECTION_CARD_SPEC = {
   LIGHT: {
     CARD_BG: APP_COLORS.modalTextOnPrimary,
-    CARD_BORDER: SCREEN_COLORS.LIGHT.border,
+    CARD_BORDER: SEMANTIC_LIGHT.border.zero, // #E7E7E7
     CARD_RADIUS: 12,
     IMAGE_RADIUS: 8,
     TITLE: "#111111",

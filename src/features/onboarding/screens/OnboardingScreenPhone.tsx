@@ -23,7 +23,6 @@ import {
 } from "../onboardingCta.constants";
 import { ScreenContainer } from "../../../molecules/ScreenContainer/ScreenContainer";
 import { OnboardingPage } from "../components/OnboardingPage";
-import { PaginationDots } from "../components/PaginationDots";
 import { useOnboardingStore } from "../onboarding.store";
 import { resetToPostAuthOnboarding } from "../../post-auth-onboarding";
 import { useFeatureConfig } from "../../../config/context";
@@ -369,6 +368,15 @@ export const OnboardingScreenPhone: React.FC = () => {
         data={item}
         width={pageWidth}
         pageIndex={index}
+        pagination={
+          item.illustration !== "authProgress"
+            ? {
+                totalPages: paginatedPageCount,
+                scrollX,
+                pageWidth,
+              }
+            : undefined
+        }
         onSignUp={handleSignUp}
         onLogIn={handleLogIn}
         onContinueAsGuest={handleContinueAsGuest}
@@ -391,7 +399,7 @@ export const OnboardingScreenPhone: React.FC = () => {
       <View
         style={[
           styles.topBar,
-          { backgroundColor: "transparent", paddingTop: insets.top + 12 },
+          { backgroundColor: "transparent", paddingTop: insets.top + 20 },
         ]}
       >
         <View style={styles.topBarContent}>
@@ -475,11 +483,6 @@ export const OnboardingScreenPhone: React.FC = () => {
           },
         ]}
       >
-        <PaginationDots
-          totalPages={paginatedPageCount}
-          scrollX={scrollX}
-          pageWidth={pageWidth}
-        />
         {currentPage < getStartedPageIndex + 1 && (
           <View style={styles.buttonContainer}>
             <Button
@@ -558,7 +561,7 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 12,
     paddingBottom: 32,
-    gap: 24,
+    gap: 0,
     zIndex: 10,
     backgroundColor: "transparent",
   },

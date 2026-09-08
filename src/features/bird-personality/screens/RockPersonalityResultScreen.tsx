@@ -370,7 +370,7 @@ export const BirdPersonalityResultScreen: React.FC = () => {
                     styles.traitNumberCircle,
                     {
                       backgroundColor:
-                        theme.mode === "dark" ? "#FCB182" : "#C7630C",
+                        theme.mode === "dark" ? "#FCB182" : "#725481",
                       width: 28,
                       height: 28,
                       borderRadius: 14,
@@ -425,7 +425,7 @@ export const BirdPersonalityResultScreen: React.FC = () => {
                     styles.traitNumberCircle,
                     {
                       backgroundColor:
-                        theme.mode === "dark" ? "#FCB182" : "#C7630C",
+                        theme.mode === "dark" ? "#FCB182" : "#725481",
                       width: 28,
                       height: 28,
                       borderRadius: 14,

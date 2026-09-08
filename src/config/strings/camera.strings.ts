@@ -94,7 +94,7 @@ export const CAMERA_STRINGS = {
   galleryLocationAccess: {
     title: "Enable Location Access",
     subtitle:
-      "Our identification accuracy improves with location access for regional species.",
+      "Our identification accuracy exceeds 90% with location access.",
     continue: "Continue",
     openSettings: "Open Settings",
   },

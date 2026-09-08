@@ -5,7 +5,12 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, FlatList, TouchableOpacity, StyleSheet, type ListRenderItemInfo } from "react-native";
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { Text } from "../atoms";
 import { useTheme } from "../hooks/useTheme";
 import { Radius } from "../design";
@@ -25,10 +30,20 @@ export interface SearchSuggestionsProps {
   query: string;
   visible: boolean;
   onSelect: (item: SearchDataItem) => void;
+  /** Max dropdown height; defaults to 300. */
+  maxHeight?: number;
+  /** Keeps the dropdown open while the user scrolls (cancels pending blur-hide). */
+  onInteractionStart?: () => void;
 }
 
 export const SearchSuggestions = React.memo<SearchSuggestionsProps>(
-  function SearchSuggestions({ query, visible, onSelect }) {
+  function SearchSuggestions({
+    query,
+    visible,
+    onSelect,
+    maxHeight = DROPDOWN_HEIGHT,
+    onInteractionStart,
+  }) {
     const theme = useTheme();
     const [suggestions, setSuggestions] = useState<SearchDataItem[]>([]);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,12 +70,13 @@ export const SearchSuggestions = React.memo<SearchSuggestionsProps>(
       [onSelect]
     );
 
-    const renderItem = useCallback(
-      ({ item }: ListRenderItemInfo<SearchDataItem>) => {
+    const renderSuggestionRow = useCallback(
+      (item: SearchDataItem) => {
         const label = getSearchSuggestionLabel(item);
         const subtitle = getSearchSuggestionSubtitle(item);
         return (
           <TouchableOpacity
+            key={item.canonicalName}
             style={[styles.item, { borderBottomColor: theme.colors.border0 }]}
             onPress={() => handleSelect(item)}
             activeOpacity={0.7}
@@ -89,11 +105,6 @@ export const SearchSuggestions = React.memo<SearchSuggestionsProps>(
       [handleSelect, theme.colors]
     );
 
-    const keyExtractor = useCallback(
-      (item: SearchDataItem) => item.canonicalName,
-      []
-    );
-
     if (!visible) return null;
 
     return (
@@ -101,33 +112,35 @@ export const SearchSuggestions = React.memo<SearchSuggestionsProps>(
         style={[
           styles.dropdown,
           {
+            maxHeight,
             backgroundColor: theme.colors.surfacePrimary,
             borderColor: theme.colors.border0,
           },
         ]}
+        onTouchStart={onInteractionStart}
       >
-        <FlatList
-          data={suggestions}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          keyboardShouldPersistTaps="handled"
-          removeClippedSubviews
-          initialNumToRender={10}
-          windowSize={3}
-          style={styles.list}
-          ListEmptyComponent={
-            query.trim().length >= 1 ? (
-              <View style={styles.empty}>
-                <Text
-                  variant="caption"
-                  style={{ color: theme.colors.textTertiary }}
-                >
-                  No suggestions
-                </Text>
-              </View>
-            ) : null
-          }
-        />
+        <ScrollView
+          style={[styles.list, { maxHeight }]}
+          contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="always"
+          nestedScrollEnabled
+          showsVerticalScrollIndicator
+          bounces={false}
+          onScrollBeginDrag={onInteractionStart}
+        >
+          {suggestions.length > 0 ? (
+            suggestions.map(renderSuggestionRow)
+          ) : query.trim().length >= 1 ? (
+            <View style={styles.empty}>
+              <Text
+                variant="caption"
+                style={{ color: theme.colors.textTertiary }}
+              >
+                No suggestions
+              </Text>
+            </View>
+          ) : null}
+        </ScrollView>
       </View>
     );
   }
@@ -137,13 +150,15 @@ const DROPDOWN_HEIGHT = 300;
 
 const styles = StyleSheet.create({
   dropdown: {
-    height: DROPDOWN_HEIGHT,
     borderWidth: 1,
     borderRadius: Radius.md,
     overflow: "hidden",
   },
   list: {
-    flex: 1,
+    flexGrow: 0,
+  },
+  listContent: {
+    flexGrow: 0,
   },
   item: {
     paddingVertical: 12,

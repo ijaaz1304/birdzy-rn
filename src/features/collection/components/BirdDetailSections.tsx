@@ -30,6 +30,7 @@ import {
   hasAnyValue,
 } from "../utils/birdDetailContent";
 import { buildBirdSoundListItems } from "../utils/birdSoundListItems";
+import { useBirdSoundDurations } from "../hooks/useBirdSoundDurations";
 import { BirdSoundRow } from "./BirdSoundRow";
 
 const MONTH_LABELS = [
@@ -300,6 +301,11 @@ export function BirdSoundsSection({
   surfaceSecondary: string;
 }) {
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const allUrls = useMemo(
+    () => [...soundUrls, ...(userCapturedSounds ?? [])],
+    [soundUrls, userCapturedSounds]
+  );
+  const durationsSec = useBirdSoundDurations(allUrls);
 
   const items = useMemo(
     () =>
@@ -309,8 +315,16 @@ export function BirdSoundsSection({
         customLocation,
         createdAt,
         updatedAt,
+        durationsSec,
       }),
-    [soundUrls, userCapturedSounds, customLocation, createdAt, updatedAt]
+    [
+      soundUrls,
+      userCapturedSounds,
+      customLocation,
+      createdAt,
+      updatedAt,
+      durationsSec,
+    ]
   );
 
   useEffect(() => {

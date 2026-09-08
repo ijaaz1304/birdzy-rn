@@ -35,11 +35,9 @@ import { RootStackParamList } from "../../../navigation/types";
 import { Button, Text } from "../../../atoms";
 import { ScreenContainer } from "../../../molecules/ScreenContainer/ScreenContainer";
 import { OnboardingPageTablet } from "../components/OnboardingPageTablet";
-import { PaginationDots } from "../components/PaginationDots";
 import {
   TABLET_BOTTOM_SECTION_GAP,
   TABLET_ONBOARDING_AUX_TEXT,
-  TABLET_PAGINATION_DOTS_TRANSLATE_Y,
   useOnboardingTabletLayout,
 } from "../onboardingTabletLayout";
 import { useOnboardingStore } from "../onboarding.store";
@@ -405,6 +403,15 @@ export const OnboardingScreenTablet: React.FC = () => {
           height={screenHeight}
           pageIndex={index}
           bottomChromeHeight={measuredBottomChromeHeight}
+          pagination={
+            item.illustration !== "authProgress"
+              ? {
+                  totalPages: paginationDotCount,
+                  scrollX,
+                  pageWidth: screenWidth,
+                }
+              : undefined
+          }
           onSignUp={handleSignUp}
           onLogIn={handleLogIn}
           onContinueAsGuest={handleContinueAsGuest}
@@ -418,6 +425,8 @@ export const OnboardingScreenTablet: React.FC = () => {
       screenWidth,
       screenHeight,
       measuredBottomChromeHeight,
+      paginationDotCount,
+      scrollX,
     ]
   );
 
@@ -441,7 +450,7 @@ export const OnboardingScreenTablet: React.FC = () => {
         barStyle={isDark ? "light-content" : "dark-content"}
       />
       <View
-        style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) }]}
+        style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) + 8 }]}
         pointerEvents="box-none"
       >
         <View style={styles.topBarContent}>
@@ -515,12 +524,6 @@ export const OnboardingScreenTablet: React.FC = () => {
           },
         ]}
       >
-        <PaginationDots
-          totalPages={paginationDotCount}
-          scrollX={scrollX}
-          pageWidth={screenWidth}
-          containerStyle={styles.paginationDots}
-        />
         {currentPage < getStartedPageIndex + 1 ? (
           <View style={styles.buttonContainer}>
             <Button
@@ -602,9 +605,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     backgroundColor: "transparent",
     alignItems: "center",
-  },
-  paginationDots: {
-    transform: [{ translateY: TABLET_PAGINATION_DOTS_TRANSLATE_Y }],
   },
   buttonContainer: {
     width: "100%",

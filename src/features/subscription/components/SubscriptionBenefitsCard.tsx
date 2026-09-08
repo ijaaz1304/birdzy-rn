@@ -1,8 +1,8 @@
 import React from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
-import { BlurView } from "@react-native-community/blur";
+import { StyleSheet, Text, View } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { FONTS } from "../../../common/typography";
+import { APP_COLORS } from "../../../config/colors";
 import { DEFAULT_SUBSCRIPTION_BENEFITS } from "../../../data/subscription/subscriptionStatus";
 import type { PostAuthOnboardingColors } from "../../post-auth-onboarding/constants";
 
@@ -11,25 +11,13 @@ type Props = {
   benefits?: string[];
 };
 
-const BENEFIT_CHECK_BG = "#32BE45";
-
-const CARD_BORDER = "rgba(255, 255, 255, 0.20)";
-const CARD_BACKGROUND = "rgba(255, 255, 255, 0.15)";
-const CARD_SHADOW = "rgba(203, 75, 0, 0.30)";
+const BENEFIT_CHECK_BG = APP_COLORS.splashBackground;
 
 export const SubscriptionBenefitsCard: React.FC<Props> = ({
   colors,
   benefits = DEFAULT_SUBSCRIPTION_BENEFITS,
 }) => (
   <View style={styles.wrapper}>
-    {Platform.OS === "ios" ? (
-      <BlurView
-        style={StyleSheet.absoluteFillObject}
-        blurType="light"
-        blurAmount={8}
-        reducedTransparencyFallbackColor={CARD_BACKGROUND}
-      />
-    ) : null}
     <View style={styles.content}>
       <Text style={[styles.title, { color: colors.textPrimary }]}>
         Your Benefits:
@@ -53,18 +41,13 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: CARD_BORDER,
+    borderColor: "#FFFFFF",
     overflow: "hidden",
-    backgroundColor: CARD_BACKGROUND,
-    shadowColor: CARD_SHADOW,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 15,
-    elevation: 6,
+    backgroundColor: "#FFFFFF",
   },
   content: {
     padding: 12,
-    gap: 16,
+    gap: 8,
   },
   title: {
     fontFamily: FONTS.medium,
@@ -76,7 +59,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 16,
+    minHeight: 32,
     paddingVertical: 4,
   },
   checkCircle: {

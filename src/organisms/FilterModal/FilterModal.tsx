@@ -8,8 +8,8 @@ import React, {
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, TouchableWithoutFeedback, FlatList, Animated, PanResponder, Dimensions } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "../../hooks/useTheme";
-import { OVERLAY_COLORS, UI_COLORS } from "../../constants/colorConstants";
+import { useTheme, useIsDark } from "../../hooks/useTheme";
+import { OVERLAY_COLORS } from "../../constants/colorConstants";
 import { HIT_SLOP } from "../../constants/uiConstants";
 import { FONTS } from "../../common/typography";
 
@@ -44,9 +44,12 @@ const LEGACY_MINERAL_FILTER_LABELS: Record<string, string> = {
   color: "Color",
 };
 
-/** Figma: left category rail — wider than options column minimum */
-const CATEGORY_PANEL_WIDTH = 168;
-const FILTER_SEARCH_HEIGHT = 40;
+/** Figma 8030:20248 — left category rail */
+const CATEGORY_PANEL_WIDTH = 127;
+const FILTER_SEARCH_HEIGHT = 48;
+const FILTER_CHECKBOX_SIZE = 24;
+/** Figma brand-1 primary on filter sheet (light) */
+const FILTER_ACCENT_LIGHT = APP_COLORS.createButtonFg;
 /** Keep catalogue header visible above the sheet (Figma: sheet sits lower, not full-screen) */
 const FILTER_MODAL_MIN_TOP_OFFSET = 200;
 const FILTER_MODAL_TOP_OFFSET_RATIO = 0.26;
@@ -69,12 +72,15 @@ const FilterModal = ({
 }: FilterModalProps) => {
   const theme = useTheme();
   const colors = theme.colors;
+  const isDark = useIsDark();
+  const filterAccent = isDark ? colors.primaryCTA : FILTER_ACCENT_LIGHT;
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<FilterCategory>("birdType");
   const [isDraggingModal, setIsDraggingModal] = useState(false);
 
   const modalRef = useRef<View>(null);
+  const categoriesListRef = useRef<FlatList<FilterCategoryConfig>>(null);
   const dragHandleRef = useRef<View>(null);
   const translateY = useRef(new Animated.Value(0)).current;
   const backgroundOpacity = useRef(new Animated.Value(1)).current;
@@ -303,13 +309,13 @@ const FilterModal = ({
         onPress={disabled ? undefined : onPress}
         style={[
           styles.checkbox(colors),
-          checked && styles.checkboxChecked(colors),
+          checked && styles.checkboxChecked(colors.primaryCTA),
           disabled && { opacity: 0.5 },
         ]}
         disabled={disabled}
       >
         {checked && (
-          <Ionicons name="checkmark-sharp" size={14} color={colors.onPrimary} />
+          <Ionicons name="checkmark-sharp" size={16} color={colors.onPrimary} />
         )}
       </TouchableOpacity>
     ),
@@ -425,6 +431,22 @@ const FilterModal = ({
     }
   }, [visible, filterCategories, selectedCategory]);
 
+  // Keep the active left-rail category visible when the list is long.
+  useEffect(() => {
+    if (!visible || filterCategories.length === 0) return;
+    const index = filterCategories.findIndex(
+      (category) => category.id === selectedCategory
+    );
+    if (index < 0) return;
+    requestAnimationFrame(() => {
+      categoriesListRef.current?.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 0.5,
+      });
+    });
+  }, [visible, selectedCategory, filterCategories]);
+
   return (
     <Modal
       animationType="none"
@@ -465,13 +487,16 @@ const FilterModal = ({
                 <View style={styles.placeholder(colors)} />
               </View>
 
-              <View style={styles.header(colors)}>
+              <View style={styles.header}>
                 <TouchableOpacity
                   onPress={clearAllFilters1}
-                  style={styles.headerLeft(colors)}
+                  style={styles.headerLeft}
                   hitSlop={HIT_SLOP.CLOSE}
                 >
-                  <Text style={styles.headerClearAllText(colors)}>
+                  <Text
+                    numberOfLines={1}
+                    style={styles.headerClearAllText(filterAccent)}
+                  >
                     Clear all
                   </Text>
                 </TouchableOpacity>
@@ -483,42 +508,57 @@ const FilterModal = ({
                   style={styles.headerRight}
                   hitSlop={HIT_SLOP.CLOSE}
                 >
-                  <Ionicons
-                    name="close"
-                    size={24}
-                    color={colors.textPrimary || colors.text}
-                  />
+                  <View style={styles.closeButton(colors)}>
+                    <Ionicons
+                      name="close"
+                      size={20}
+                      color={colors.textPrimary || colors.text}
+                    />
+                  </View>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.content}>
                 <View style={styles.categoriesContainer(colors)}>
                   <FlatList
+                    ref={categoriesListRef}
                     style={styles.categoriesList}
                     data={filterCategories}
-                    keyExtractor={(_, index) => index.toString()}
-                    showsVerticalScrollIndicator={false}
+                    keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={
+                      filterCategories.length > 8
+                    }
+                    nestedScrollEnabled
                     scrollEnabled={!isDraggingModal}
+                    onScrollToIndexFailed={({ index }) => {
+                      setTimeout(() => {
+                        categoriesListRef.current?.scrollToIndex({
+                          index,
+                          animated: false,
+                          viewPosition: 0.5,
+                        });
+                      }, 100);
+                    }}
                     renderItem={({ item: category }) => {
+                      const selected = selectedCategory === category.id;
                       const selectedCount = filters[category.id]?.length ?? 0;
                       return (
                         <TouchableOpacity
                           key={category.id}
                           style={[
                             styles.categoryItem,
-                            selectedCategory === category.id &&
-                              styles.selectedCategory(colors),
+                            selected && styles.selectedCategory(colors, filterAccent),
                           ]}
                           onPress={() => {
                             setSelectedCategory(category.id as FilterCategory);
-                            setSearchText(""); // Clear search when changing categories
+                            setSearchText("");
                           }}
                         >
                           <Text
                             style={[
-                              styles.categoryText(colors),
-                              selectedCategory !== category.id &&
-                                styles.categoryTextUnselected(colors),
+                              selected
+                                ? styles.categoryTextSelected(colors)
+                                : styles.categoryTextUnselected(colors),
                             ]}
                           >
                             {category.label}
@@ -537,13 +577,13 @@ const FilterModal = ({
                   <View style={styles.searchBox(colors)}>
                     <Ionicons
                       name="search"
-                      size={18}
+                      size={24}
                       color={colors.textTertiary}
                     />
                     <TextInput
                       style={styles.searchInput(colors)}
                       placeholderTextColor={colors.textTertiary}
-                      cursorColor={APP_COLORS.ctaPrimary}
+                      cursorColor={filterAccent}
                       placeholder="Search"
                       value={searchText}
                       onChangeText={setSearchText}
@@ -553,8 +593,11 @@ const FilterModal = ({
                   <FlatList<string | { level: string; value: string }>
                     style={styles.optionsList}
                     data={filteredOptions}
-                    // keyExtractor={item => item}
-                    keyExtractor={(_, index) => index.toString()}
+                    keyExtractor={(item, index) =>
+                      selectedCategory === "scientificClassification"
+                        ? `${(item as { level: string; value: string }).level}-${(item as { level: string; value: string }).value}`
+                        : `${String(item)}-${index}`
+                    }
                     showsVerticalScrollIndicator={false}
                     scrollEnabled={!isDraggingModal}
                     renderItem={({ item: option }) => {
@@ -611,9 +654,9 @@ const FilterModal = ({
                 </View>
               </View>
 
-              <SafeAreaView edges={["bottom"]} style={styles.footer(colors)}>
+              <SafeAreaView edges={["bottom"]} style={styles.footer}>
                 <TouchableOpacity
-                  style={styles.applyButton(colors)}
+                  style={styles.applyButton(colors.primaryCTA)}
                   onPress={() =>
                     onApplyFilters(filters, getTotalSelectedCount() > 0)
                   }
@@ -650,32 +693,38 @@ const styles = {
   },
   modalContent: (colors: any, height: number) => ({
     height,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfacePrimary || colors.background,
     width: "100%" as const,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     overflow: "hidden" as const,
   }),
-  header: (colors: any) => ({
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  }),
-  headerLeft: (_colors: any) => ({
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    alignItems: "flex-start" as const,
-    justifyContent: "center" as const,
-  }),
-  headerClearAllText: () => ({
-    fontSize: 16,
-    fontFamily: FONTS.bold,
-    color: APP_COLORS.ctaPrimary,
+  header: StyleSheet.create({
+    header: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "space-between" as const,
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[5],
+      paddingBottom: spacing[4],
+      gap: spacing[4],
+    },
+  }).header,
+  headerLeft: StyleSheet.create({
+    headerLeft: {
+      flexShrink: 0,
+      paddingVertical: 4,
+      paddingRight: spacing[2],
+      alignItems: "flex-start" as const,
+      justifyContent: "center" as const,
+    },
+  }).headerLeft,
+  headerClearAllText: (accent: string) => ({
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: FONTS.medium,
+    color: accent,
+    flexShrink: 0,
   }),
   headerCenter: {
     flex: 1,
@@ -684,16 +733,23 @@ const styles = {
   },
   headerTitle: (colors: any) => ({
     fontSize: 16,
-    fontFamily: FONTS.bold,
+    lineHeight: 24,
+    fontFamily: FONTS.medium,
     color: colors.textPrimary || colors.text,
   }),
   headerRight: {
-    flex: 1,
+    width: 52,
     alignItems: "flex-end" as const,
     justifyContent: "center" as const,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
   },
+  closeButton: (colors: any) => ({
+    width: 32,
+    height: 32,
+    borderRadius: 24,
+    backgroundColor: colors.surfaceSecondary,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  }),
   placeholder: (colors: any) => ({
     position: "relative" as const,
     top: 0,
@@ -709,32 +765,39 @@ const styles = {
     backgroundColor: colors.surfacePrimary || colors.background,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.borderLight || colors.border,
-    paddingHorizontal: spacing[3],
+    borderColor: colors.border0 || colors.borderLight || colors.border,
+    paddingHorizontal: spacing[4],
     height: FILTER_SEARCH_HEIGHT,
-    marginHorizontal: spacing[3],
-    marginTop: spacing[3],
     marginBottom: spacing[2],
   }),
   searchInput: (colors: any) => ({
     flex: 1,
-    marginLeft: spacing[2],
-    fontSize: 14,
-    lineHeight: 18,
+    marginLeft: spacing[3],
+    fontSize: 16,
+    lineHeight: 24,
     paddingVertical: 0,
     color: colors.textPrimary || colors.text,
+    fontFamily: FONTS.regular,
   }),
   content: StyleSheet.create({
     content: {
       flex: 1,
       flexDirection: "row" as const,
+      paddingHorizontal: spacing[5],
+      gap: spacing[4],
+      minHeight: 0,
     },
   }).content,
   categoriesContainer: (colors: any) => ({
     width: CATEGORY_PANEL_WIDTH,
+    alignSelf: "stretch" as const,
+    minHeight: 0,
+    backgroundColor: colors.surfacePrimary,
     borderRightWidth: 1,
-    borderRightColor: colors.border,
-    paddingTop: spacing[2],
+    borderRightColor: colors.border0 || colors.border,
+    borderTopLeftRadius: Radius.md,
+    borderBottomLeftRadius: Radius.md,
+    overflow: "hidden" as const,
   }),
   categoriesList: StyleSheet.create({
     categoriesList: {
@@ -746,31 +809,32 @@ const styles = {
       flexDirection: "row" as const,
       alignItems: "center" as const,
       justifyContent: "flex-start" as const,
-      paddingVertical: spacing[3],
-      paddingHorizontal: spacing[3],
-      minHeight: 44,
+      paddingVertical: spacing[2],
+      paddingHorizontal: spacing[2],
     },
   }).categoryItem,
-  selectedCategory: (colors: any) => ({
-    backgroundColor:
-      colors.surfaceBrandGreen || UI_COLORS.FILTER_SELECTED_BG,
-    borderRightWidth: 3,
-    borderRightColor: APP_COLORS.ctaPrimary,
+  selectedCategory: (colors: any, accent: string) => ({
+    backgroundColor: colors.surfaceSecondary,
+    borderRightWidth: 2,
+    borderRightColor: accent,
   }),
-  categoryText: (colors: any) => ({
-    fontSize: 13,
-    lineHeight: 18,
+  categoryTextSelected: (colors: any) => ({
+    fontSize: 14,
+    lineHeight: 20,
     color: colors.textPrimary || colors.text,
-    fontFamily: FONTS.bold,
+    fontFamily: FONTS.medium,
   }),
   categoryTextUnselected: (colors: any) => ({
+    fontSize: 14,
+    lineHeight: 20,
     color: colors.textSecondary,
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.regular,
   }),
   optionsContainer: StyleSheet.create({
     optionsContainer: {
       flex: 1,
       minWidth: 0,
+      minHeight: 0,
     },
   }).optionsContainer,
   optionsList: StyleSheet.create({
@@ -787,9 +851,9 @@ const styles = {
     optionItem: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
-      paddingVertical: spacing[3],
-      paddingHorizontal: spacing[3],
-      minHeight: 44,
+      paddingVertical: spacing[1],
+      paddingHorizontal: spacing[2],
+      minHeight: 32,
     },
   }).optionItem,
   checkboxContainer: StyleSheet.create({
@@ -801,40 +865,43 @@ const styles = {
   }).checkboxContainer,
   optionText: (colors: any) => ({
     flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 24,
     color: colors.textPrimary || colors.text,
+    fontFamily: FONTS.regular,
   }),
   checkbox: (colors: any) => ({
-    width: 20,
-    height: 20,
+    width: FILTER_CHECKBOX_SIZE,
+    height: FILTER_CHECKBOX_SIZE,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: colors.border0 || colors.border,
     justifyContent: "center" as const,
     alignItems: "center" as const,
   }),
-  checkboxChecked: () => ({
-    borderColor: APP_COLORS.ctaPrimary,
-    backgroundColor: APP_COLORS.ctaPrimary,
+  checkboxChecked: (accent: string) => ({
+    borderColor: accent,
+    backgroundColor: accent,
   }),
-  footer: (colors: any) => ({
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[3],
-    paddingBottom: spacing[2],
-  }),
-  applyButton: () => ({
-    backgroundColor: APP_COLORS.ctaPrimary,
+  footer: StyleSheet.create({
+    footer: {
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[4],
+      paddingBottom: spacing[2],
+    },
+  }).footer,
+  applyButton: (accent: string) => ({
+    backgroundColor: accent,
     borderRadius: 24,
-    paddingVertical: 14,
+    height: 44,
     alignItems: "center" as const,
+    justifyContent: "center" as const,
   }),
   applyButtonText: (colors: any) => ({
     color: colors.onPrimary,
     fontSize: 16,
-    fontFamily: FONTS.bold,
+    lineHeight: 24,
+    fontFamily: FONTS.medium,
   }),
   dragHandleContainer: StyleSheet.create({
     dragHandleContainer: {

@@ -70,3 +70,8 @@ export function isDevIntent(): boolean {
 export function isProdIntent(): boolean {
   return getAppIntent() === "prod";
 }
+
+/** Dev-only Settings UI (premium toggle, env info). Dev APK or Metro debug. */
+export function isDevSettingsVisible(): boolean {
+  return __DEV__ || isDevIntent();
+}

@@ -69,6 +69,18 @@ export const PostAuthLocationAccessSlide: React.FC<
           {heading}
         </Text>
 
+        <Text
+          style={[
+            styles.body,
+            {
+              color: textPrimary,
+              marginTop: 12,
+            },
+          ]}
+        >
+          {body}
+        </Text>
+
         <View
           style={[
             styles.heroWrap,
@@ -81,18 +93,6 @@ export const PostAuthLocationAccessSlide: React.FC<
             resizeMode="contain"
           />
         </View>
-
-        <Text
-          style={[
-            styles.body,
-            {
-              color: textPrimary,
-              marginTop: layout.heroImageMarginBottom,
-            },
-          ]}
-        >
-          {body}
-        </Text>
       </View>
 
       <View style={styles.footer}>
@@ -160,7 +160,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.16,
     width: POST_AUTH_LAYOUT.contentWidth,
     maxWidth: "100%",
-    marginBottom: 8,
     flexShrink: 0,
   },
   footer: {

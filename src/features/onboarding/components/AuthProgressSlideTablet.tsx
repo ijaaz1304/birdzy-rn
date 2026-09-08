@@ -11,7 +11,6 @@ import { Text } from "../../../atoms";
 import { useTheme } from "../../../hooks/useTheme";
 import { FONTS } from "../../../common/typography";
 import {
-  CARD_COLORS,
   SCREEN_COLORS,
   SUBSCRIPTION_COLORS,
 } from "../../../constants/colorConstants";
@@ -77,7 +76,7 @@ export const AuthProgressSlideTablet: React.FC<Props> = ({
         pointerEvents="box-none"
       >
         {SHOW_SLIDE_COPY_ON_TABLET ? (
-          <View style={[styles.authTextSection, styles.authTextSectionLifted]}>
+          <View style={styles.authTextSection}>
             <View style={styles.onboardingTextPairCentered}>
               <Text
                 variant="title"
@@ -119,7 +118,17 @@ export const AuthProgressSlideTablet: React.FC<Props> = ({
           style={[
             styles.signUpButton,
             styles.authButtonCta,
-            { backgroundColor: theme.colors.primaryCTA },
+            theme.mode === "dark"
+              ? {
+                  backgroundColor: theme.colors.primaryCTA,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                }
+              : {
+                  backgroundColor: theme.colors.primaryCTA,
+                  borderWidth: 1,
+                  borderColor: SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
+                },
           ]}
           activeOpacity={0.7}
         >
@@ -146,7 +155,7 @@ export const AuthProgressSlideTablet: React.FC<Props> = ({
               : {
                   backgroundColor: SUBSCRIPTION_COLORS.COMPARISON_LIGHT.BASE_BG,
                   borderWidth: 1,
-                  borderColor: CARD_COLORS.LIGHT.border,
+                  borderColor: SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
                 },
           ]}
           activeOpacity={0.7}
@@ -201,9 +210,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     gap: 6,
-  },
-  authTextSectionLifted: {
-    transform: [{ translateY: -12 }],
   },
   onboardingTextPairCentered: {
     alignItems: "center",

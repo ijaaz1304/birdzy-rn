@@ -31,6 +31,7 @@ export function warmBundledImageCache(): void {
     Images.subscriptionCarousel3,
     Images.subscriptionCarousel4,
     Images.subscriptionCarousel5,
+    Images.subscriptionCarousel6,
     Images.rateUsSheetBgLight,
     Images.rateUsSheetBgDark,
     Images.popUp50Light,

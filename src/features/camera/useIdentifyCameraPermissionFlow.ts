@@ -83,8 +83,15 @@ export function useIdentifyCameraPermissionFlow(deviceAvailable: boolean) {
       applyDeniedInlineState(attempts, result.blocked, result.canRequestAgain);
 
       return { granted: false as const, attempts };
+    } catch {
+      setHasPermission(false);
+      const attempts = await getCameraNativeAttemptCount();
+      const current = await checkCameraPermission();
+      applyDeniedInlineState(attempts, current.blocked, current.canRequestAgain);
+      return { granted: false as const, attempts };
     } finally {
       setIsNativeDialogActive(false);
+      setPermissionChecked(true);
     }
   }, [applyDeniedInlineState, applyGranted]);
 

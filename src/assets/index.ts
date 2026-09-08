@@ -134,19 +134,21 @@ export const Images = {
   subscriptionIconFeedDark: require("./subscription/carousel/dark/feed.webp"),
   subscriptionIconBirdOfDayDark: require("./subscription/carousel/dark/bird_of_the_day.webp"),
   subscriptionIconAiChatDark: require("./subscription/carousel/dark/ai.webp"),
-  /** Subscription paywall / post-auth feature carousel (subs_0…subs_5 PNGs). */
+  /** Subscription paywall / post-auth feature carousel (subs_0…subs_6 PNGs). */
   subscriptionCarousel0: require("./subscription/carousel_png/subs_0.png"),
   subscriptionCarousel1: require("./subscription/carousel_png/subs_1.png"),
   subscriptionCarousel2: require("./subscription/carousel_png/subs_2.png"),
   subscriptionCarousel3: require("./subscription/carousel_png/subs_3.png"),
   subscriptionCarousel4: require("./subscription/carousel_png/subs_4.png"),
   subscriptionCarousel5: require("./subscription/carousel_png/subs_5.png"),
+  subscriptionCarousel6: require("./subscription/carousel_png/subs_6.png"),
   subscriptionCarousel0Dark: require("./subscription/carousel_png/subs_0.png"),
   subscriptionCarousel1Dark: require("./subscription/carousel_png/subs_1.png"),
   subscriptionCarousel2Dark: require("./subscription/carousel_png/subs_2.png"),
   subscriptionCarousel3Dark: require("./subscription/carousel_png/subs_3.png"),
   subscriptionCarousel4Dark: require("./subscription/carousel_png/subs_4.png"),
   subscriptionCarousel5Dark: require("./subscription/carousel_png/subs_5.png"),
+  subscriptionCarousel6Dark: require("./subscription/carousel_png/subs_6.png"),
 
   subscriptionListIdentification: require("./subscription/list/light/1.webp"),
   subscriptionListCollection: require("./subscription/list/light/2.webp"),
@@ -408,6 +410,8 @@ export const Images = {
   soundListeningSpinner: require("./camera/sound/listening_spinner.png"),
   soundIdentifyHero: require("./camera/sound/identify_by_sound_hero.png"),
   soundIdentifyPause: require("./camera/sound/pause_white.png"),
+  /** Figma 8567:1851 — manage camera access illustration */
+  cameraTakePhotoIllustration: require("./camera/take_photo_illustration.png"),
   soundPause: require("./common/icons/pause_sound.png"),
   soundRecord: require("./common/iconfix/sound/record.webp"),
   soundRecordStop: require("./common/iconfix/sound/record_stop.webp"),

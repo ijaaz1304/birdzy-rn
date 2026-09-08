@@ -2,14 +2,14 @@ import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-/** Pagination dots + gap + CTA (safe-area padding is on the overlay itself). */
-const TABLET_BOTTOM_CHROME_BASE = 76;
+/** Primary CTA (safe-area padding is on the overlay itself). */
+const TABLET_BOTTOM_CHROME_BASE = 56;
 
-/** Minimum gap between slide copy bottom edge and top of dots/CTA overlay. */
-export const TABLET_MARKETING_TEXT_BOTTOM_LIFT = 8;
+/** Minimum gap between slide copy bottom edge and top of CTA overlay. */
+export const TABLET_MARKETING_TEXT_BOTTOM_LIFT = 4;
 
 /** Floor for marketing copy bottom inset. */
-export const TABLET_MARKETING_TEXT_MIN_BOTTOM = 88;
+export const TABLET_MARKETING_TEXT_MIN_BOTTOM = 72;
 
 /** Horizontal inset for marketing copy on tablet. */
 export const TABLET_MARKETING_TEXT_HORIZONTAL_PADDING = 18;
@@ -54,7 +54,7 @@ export const TABLET_AUTH_CTA_STACK_HEIGHT = 124;
 const TABLET_ASSET_AUTH_CTA_BOTTOM = 12;
 
 /** Extra top inset for auth slide title/subtitle on tablet (below safe area). */
-export const TABLET_AUTH_TEXT_TOP_OFFSET = 4;
+export const TABLET_AUTH_TEXT_TOP_OFFSET = 60;
 
 /** Marketing slide copy inset on the phone asset (px). */
 const TABLET_ASSET_TEXT_LEFT = 32;
@@ -62,9 +62,6 @@ const TABLET_ASSET_TEXT_BOTTOM = 168;
 
 /** Gap between pagination dots and primary CTA on tablet overlay. */
 export const TABLET_BOTTOM_SECTION_GAP = 6;
-
-/** Lift pagination dots slightly above the bottom chrome stack. */
-export const TABLET_PAGINATION_DOTS_TRANSLATE_Y = -12;
 
 export function getTabletAuthTextTopPadding(insetTop: number): number {
   return Math.max(insetTop, 12) + TABLET_AUTH_TEXT_TOP_OFFSET;

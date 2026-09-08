@@ -65,7 +65,7 @@ export const APP_COLORS = {
 
   // Brand — Mushroom app (Figma Brand 1 orange + Brand 2 earth brown)
   brandPrimary: '#FDBE62',
-  brandPrimaryDark: '#C7630C',
+  brandPrimaryDark: '#725481',
   brandLight: '#F7E6CD',
   brandDarkBg: '#513103',
 
@@ -77,8 +77,8 @@ export const APP_COLORS = {
   // Mushroom of the day (cards, tags, CTAs)
   mineralOfDayTitle: '#4D3221',
   mineralOfDayTagBg: '#F7E6CD',
-  mineralOfDayTagText: '#C7630C',
-  mineralOfDayDotActive: '#C7630C',
+  mineralOfDayTagText: '#725481',
+  mineralOfDayDotActive: '#725481',
   mineralOfDayLearnMoreBg: '#4D3221',
   mineralOfDayOpenButton: '#159945',
   textPrimaryDark: '#1E1E1F',
@@ -148,7 +148,7 @@ export const APP_COLORS = {
   blurOverlayWhite30: 'rgba(255,255,255,0.3)',
 
   // Ask AI promo card gradient end (brand + alpha)
-  promoCardAskGradientEndLight: '#C7630C01',
+  promoCardAskGradientEndLight: '#72548101',
   promoCardAskGradientEndDark: '#FDBE6201',
 
   // Tooltip (AppLogsTooltip)
@@ -186,14 +186,14 @@ export const APP_COLORS = {
   borderMuted: '#606970',
 
   // Onboarding (brand solid)
-  brandPrimaryDarkRgb: 'rgba(199, 99, 12, 1)',
+  brandPrimaryDarkRgb: 'rgba(114, 84, 129, 1)',
 
   // Mushroom personality gradient
   rockPersonalityStart: '#F7E6CD',
-  rockPersonalityEnd: '#C7630C',
+  rockPersonalityEnd: '#725481',
 
   // Subscription sheet
-  subscriptionDiscountTimer: '#FCB30D',
+  subscriptionDiscountTimer: '#01474F',
   subscriptionDiscountBg: '#FDBE62',
   subscriptionPremium: '#A47758',
   subscriptionMuted: '#949494',

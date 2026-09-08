@@ -7,7 +7,7 @@ export type PostAuthSubscriptionFeature = {
   subtitle: string;
 };
 
-/** Promo carousel — carousel_png/subs_0…subs_5 (384×384 PNG icons). */
+/** Promo carousel — carousel_png/subs_0…subs_6 (384×384 PNG icons). */
 export const POST_AUTH_SUBSCRIPTION_FEATURES: PostAuthSubscriptionFeature[] = [
   {
     iconLight: Images.subscriptionCarousel0,
@@ -49,6 +49,13 @@ export const POST_AUTH_SUBSCRIPTION_FEATURES: PostAuthSubscriptionFeature[] = [
     title: "Chat With AI Without Limits",
     subtitle:
       "Ask unlimited questions about birds and get instant AI guidance.",
+  },
+  {
+    iconLight: Images.subscriptionCarousel6,
+    iconDark: Images.subscriptionCarousel6Dark,
+    title: "Identify and Save Bird Sounds",
+    subtitle:
+      "Unlimited identification and storage of bird sounds.",
   },
 ];
 

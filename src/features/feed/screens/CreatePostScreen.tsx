@@ -17,6 +17,10 @@ import {
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import ImagePicker from "react-native-image-crop-picker";
+import {
+  launchIosGalleryImage,
+  usesIosPhpPickerGallery,
+} from "../../camera/iosGallerySelection";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { FEED_COLORS, UI_COLORS } from "../../../constants/colorConstants";
@@ -288,13 +292,29 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
   );
 
   /**
-   * Same picker as Identify (Camera gallery): react-native-image-crop-picker openPicker
-   * returns a real filesystem path. react-native-image-picker on device often yields ph://
-   * URIs that openCropper cannot use reliably.
+   * iOS: PHPicker via react-native-image-picker → local file → crop.
+   * Android: react-native-image-crop-picker openPicker → crop.
    */
   const openImageLibrary = async () => {
     const log = useAppLogsStore.getState();
     try {
+      if (usesIosPhpPickerGallery()) {
+        const picked = await launchIosGalleryImage();
+        if (picked.status === "cancelled") {
+          log.debug(`${CREATE_POST_LOG} launchImageLibrary cancelled`);
+          return;
+        }
+        if (picked.status === "error") {
+          log.error(`${CREATE_POST_LOG} launchImageLibrary error`, {
+            message: picked.message,
+          });
+          showToast("Failed to select image", "error");
+          return;
+        }
+        await cropAndApplyImage(picked.uri, "gallery");
+        return;
+      }
+
       const picked = await ImagePicker.openPicker({
         mediaType: "photo",
         multiple: false,
@@ -335,16 +355,18 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
 
   const handleSelectImage = async () => {
     if (!ensureCanAddImage()) return;
-    const storage = await checkStoragePermission();
-    if (!storage.granted) {
-      useAppLogsStore
-        .getState()
-        .info(`${CREATE_POST_LOG} storage not granted`, {
-          blocked: !!storage.blocked,
-        });
-      setPhotosBlocked(!!storage.blocked);
-      setShowGalleryPopup(true);
-      return;
+    if (!usesIosPhpPickerGallery()) {
+      const storage = await checkStoragePermission();
+      if (!storage.granted) {
+        useAppLogsStore
+          .getState()
+          .info(`${CREATE_POST_LOG} storage not granted`, {
+            blocked: !!storage.blocked,
+          });
+        setPhotosBlocked(!!storage.blocked);
+        setShowGalleryPopup(true);
+        return;
+      }
     }
     await openImageLibrary();
   };

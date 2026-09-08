@@ -48,7 +48,10 @@ import { FONTS } from "../../../common/typography";
 import { Radius } from "../../../design";
 
 import { APP_COLORS } from "../../../config/colors";
-import { AUTH_TEXT_FIELD_RADIUS } from "../constants/authFormLayout";
+import {
+  AUTH_TEXT_FIELD_RADIUS,
+  AUTH_BACK_BUTTON_LEFT_OFFSET,
+} from "../constants/authFormLayout";
 
 type SignUpRouteProp = RouteProp<AuthStackParamList, "SignUp">;
 type SignUpNavigationProp = NativeStackNavigationProp<
@@ -147,6 +150,7 @@ export const SignUpScreen = () => {
   const emailIconColor = isDark
     ? APP_COLORS.modalTextOnPrimary
     : APP_COLORS.surfaceDark;
+  const authLinkColor = APP_COLORS.ctaPrimary;
   const legalLinkColor = isDark
     ? theme.colors.textPrimary
     : APP_COLORS.surfaceDark;
@@ -338,8 +342,11 @@ export const SignUpScreen = () => {
               <Text
                 variant="body"
                 size="medium"
-                color="primary"
-                style={[styles.footerLink, { textDecorationLine: "underline" }]}
+                weight="medium"
+                style={[
+                  styles.footerLink,
+                  { color: authLinkColor, textDecorationLine: "underline" },
+                ]}
               >
                 Log in
               </Text>
@@ -445,9 +452,10 @@ export const SignupEmailScreen = () => {
   const isFormValid =
     email && password && confirm && passwordsMatch && !isInvalidEmail;
 
-  const formScreenColors =
-    theme.mode === "dark" ? SCREEN_COLORS.DARK : SCREEN_COLORS.LIGHT;
   const isDark = theme.mode === "dark";
+  const authBg = isDark
+    ? APP_COLORS.surfaceAuthDark
+    : APP_COLORS.surfaceAuthLight;
   const backIconColor = isDark
     ? SCREEN_COLORS.DARK.text
     : APP_COLORS.surfaceDark;
@@ -483,12 +491,14 @@ export const SignupEmailScreen = () => {
   return (
     <ScreenContainer
       showBackground={false}
-      backgroundColor={formScreenColors.background}
+      backgroundColor={authBg}
       edges={[]}
     >
+      <AuthScreenStatusBar isDark={isDark} />
+      <AuthScreenBackground isDark={isDark} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.flex}
+        style={[styles.flex, styles.authFormLayer]}
       >
         <View
           style={[
@@ -610,6 +620,9 @@ export const SignupEmailScreen = () => {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  authFormLayer: {
+    zIndex: 1,
+  },
   emailPage: {
     flex: 1,
     paddingHorizontal: 20,
@@ -625,7 +638,7 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "center",
     alignItems: "flex-start",
-    marginLeft: -10,
+    marginLeft: AUTH_BACK_BUTTON_LEFT_OFFSET,
   },
   emailFooter: {
     paddingTop: 20,
