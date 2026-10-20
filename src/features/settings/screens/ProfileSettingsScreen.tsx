@@ -1,129 +1,152 @@
 /**
- * Profile Settings Screen — view-only profile details from settings.
+ * My Profile Screen (Figma 7891:186281)
+ * Current profile form with an explicit Save action.
+ * Email is always read-only (social + email logins).
  */
 
-import React, { useEffect } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import { Avatar, Text, NavBackIcon } from "../../../atoms";
-import { useTheme } from "../../../hooks/useTheme";
+import { Button, Text } from "../../../atoms";
+import { useToast } from "../../../hooks";
+import { FONTS } from "../../../common/typography";
+import { SETTINGS_STRINGS } from "../../../config/strings/settings.strings";
+import { useCountriesStore } from "../../../data/countries.store";
 import { useAuthStore } from "../../auth/auth.store";
 import { useProfileStore } from "../../profile/profile.store";
-import { SETTINGS_STRINGS } from "../../../config/strings/settings.strings";
-import { spacing } from "../../../design-system/spacing";
-import { APP_COLORS } from "../../../config/colors";
+import {
+  SettingsHeader,
+  SettingsTextField,
+  SettingsSelectField,
+} from "../components";
+import { useSettingsColors } from "../settingsColors";
 
-function ProfileField({
-  label,
-  value,
-  colors,
-}: {
-  label: string;
-  value: string;
-  colors: ReturnType<typeof useTheme>["colors"];
-}) {
-  return (
-    <View
-      style={[
-        styles.fieldCard,
-        {
-          backgroundColor: colors.surfacePrimary,
-          borderColor: colors.border,
-        },
-      ]}
-    >
-      <Text variant="body" size="small" color="textSecondary">
-        {label}
-      </Text>
-      <Text
-        variant="body"
-        size="medium"
-        weight="medium"
-        style={styles.fieldValue}
-      >
-        {value}
-      </Text>
-    </View>
-  );
-}
+const S = SETTINGS_STRINGS.myProfile;
 
 export const ProfileSettingsScreen: React.FC = () => {
-  const theme = useTheme();
-  const colors = theme.colors;
-  const navigation = useNavigation();
-  const { user } = useAuthStore();
-  const { profile, fetchProfile } = useProfileStore();
+  const c = useSettingsColors();
+  const { showToast } = useToast();
+  const user = useAuthStore((s) => s.user);
+  const { profile, fetchProfile, updateProfile } = useProfileStore();
+  const {
+    dropdownOptions: countryOptions,
+    loading: countriesLoading,
+    loadCountries,
+  } = useCountriesStore();
 
-  const displayName = user?.name ?? profile?.name ?? "—";
-  const displayEmail = user?.email ?? profile?.email ?? "—";
-  const displayBio =
-    (profile as { bio?: string } | null)?.bio?.trim() ||
-    SETTINGS_STRINGS.profile.bioEmpty;
-  const avatarUri = user?.avatar ?? profile?.avatar;
+  const source = user ?? profile;
+  const email = (user?.email ?? profile?.email ?? "").trim();
+
+  const [name, setName] = useState(source?.name?.trim() ?? "");
+  const [phone, setPhone] = useState(source?.phone ?? "");
+  const [country, setCountry] = useState(source?.country);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+    loadCountries();
+  }, [fetchProfile, loadCountries]);
+
+  useEffect(() => {
+    if (!profile) return;
+    setName(profile.name?.trim() ?? "");
+    setPhone(profile.phone ?? "");
+    setCountry(profile.country);
+  }, [profile]);
+
+  const saveAll = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await updateProfile({
+        ...(name.trim() ? { name: name.trim() } : {}),
+        phone: phone.trim(),
+        ...(country ? { country } : {}),
+      });
+      showToast("Profile saved", "success");
+    } catch {
+      showToast(S.saveFailed, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      edges={["top"]}
+      style={[styles.container, { backgroundColor: c.screen }]}
+      edges={["top", "bottom"]}
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <NavBackIcon color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text
-          variant="title"
-          size="large"
-          weight="bold"
-          style={styles.headerTitle}
-        >
-          {SETTINGS_STRINGS.profile.title}
-        </Text>
-        <View style={styles.headerRight} />
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+      <SettingsHeader title={S.title} />
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.avatarSection}>
-          <Avatar
-            name={displayName !== "—" ? displayName : undefined}
-            source={avatarUri}
-            size={120}
-            style={{
-              borderWidth: 1,
-              borderColor: APP_COLORS.borderGray,
-              backgroundColor: colors.surfaceVariant,
-            }}
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.group}>
+            <Text style={[styles.groupTitle, { color: c.text }]}>
+              {S.personalInformation}
+            </Text>
+            <SettingsTextField
+              label={S.fullName}
+              labelTone="primary"
+              placeholder={S.fullNamePlaceholder}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+              textContentType="name"
+            />
+          </View>
+
+          <View style={styles.group}>
+            <Text style={[styles.groupTitle, { color: c.text }]}>
+              {S.contact}
+            </Text>
+            <SettingsTextField
+              label={S.email}
+              placeholder={S.emailPlaceholder}
+              value={email}
+              editable={false}
+            />
+            <SettingsTextField
+              label={S.phone}
+              placeholder={S.phonePlaceholder}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              textContentType="telephoneNumber"
+            />
+          </View>
+
+          <SettingsSelectField
+            label={S.location}
+            placeholder={S.locationPlaceholder}
+            options={countryOptions ?? []}
+            value={country}
+            onSelect={setCountry}
+            disabled={countriesLoading}
+          />
+        </ScrollView>
+        <View style={styles.footer}>
+          <Button
+            title="Save"
+            size="large"
+            onPress={saveAll}
+            fullWidth
+            loading={saving}
+            disabled={saving}
           />
         </View>
-
-        <ProfileField
-          label={SETTINGS_STRINGS.profile.name}
-          value={displayName}
-          colors={colors}
-        />
-        <ProfileField
-          label={SETTINGS_STRINGS.profile.email}
-          value={displayEmail}
-          colors={colors}
-        />
-        <ProfileField
-          label={SETTINGS_STRINGS.profile.bio}
-          value={displayBio}
-          colors={colors}
-        />
-      </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -132,46 +155,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-  },
-  headerRight: {
-    width: 44,
-  },
-  scrollView: {
-    flex: 1,
-  },
+  footer: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 },
   content: {
-    padding: spacing[4],
-    gap: spacing[4],
-    paddingBottom: spacing[8],
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 32,
+    gap: 24,
   },
-  avatarSection: {
-    alignItems: "center",
-    marginBottom: spacing[2],
+  group: {
+    gap: 12,
   },
-  fieldCard: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    gap: spacing[1],
-  },
-  fieldValue: {
-    lineHeight: 22,
+  groupTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.bold,
+    lineHeight: 24,
   },
 });

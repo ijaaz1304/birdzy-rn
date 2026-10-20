@@ -4,7 +4,15 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useState } from "react";
-import { View, TouchableOpacity, StyleSheet, ViewStyle, Modal, FlatList, TouchableWithoutFeedback } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  ViewStyle,
+  Modal,
+  FlatList,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Text } from "../../atoms";
 import { Icon } from "../../atoms";
@@ -39,6 +47,10 @@ export interface DropdownProps {
   fullWidth?: boolean;
   /** Optional corner radius override (e.g. auth pill fields use 28). */
   borderRadius?: number;
+  /** Override button height (e.g. settings forms use 48). */
+  height?: number;
+  /** Replaces the default arrow-down indicator. */
+  rightIcon?: React.ReactNode;
   style?: ViewStyle;
 }
 
@@ -56,6 +68,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
   size = "medium",
   fullWidth = true,
   borderRadius,
+  height,
+  rightIcon,
   style,
 }) => {
   const theme = useTheme();
@@ -112,6 +126,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     return {
       ...baseStyle,
       ...sizeStyles[size],
+      ...(height != null && { height, minHeight: height, paddingVertical: 0 }),
       ...(disabled && { opacity: 0.5 }),
     };
   };
@@ -163,15 +178,17 @@ export const Dropdown: React.FC<DropdownProps> = ({
             {selectedOption?.label || placeholder}
           </Text>
         </View>
-        <AppImage
-          source={isDark ? Images.arrowDownDark : Images.arrowDownLight}
-          style={[
-            styles.rightIconImage,
-            { width: iconSize, height: iconSize },
-            isOpen && styles.rotatedIcon,
-          ]}
-          resizeMode="contain"
-        />
+        {rightIcon ?? (
+          <AppImage
+            source={isDark ? Images.arrowDownDark : Images.arrowDownLight}
+            style={[
+              styles.rightIconImage,
+              { width: iconSize, height: iconSize },
+              isOpen && styles.rotatedIcon,
+            ]}
+            resizeMode="contain"
+          />
+        )}
       </TouchableOpacity>
       {(error || helperText) && (
         <Text
@@ -215,7 +232,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                     onPress={() => setIsOpen(false)}
                     style={styles.closeButton}
                   >
-                    <Icon name="close" size={24} color={theme.colors.text} />
+                    <Icon name="x" size={24} color={theme.colors.text} />
                   </TouchableOpacity>
                 </View>
                 <FlatList

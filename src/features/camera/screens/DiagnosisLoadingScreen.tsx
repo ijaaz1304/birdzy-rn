@@ -1,3 +1,11 @@
+import {
+  beginFreeScanAttempt,
+  completeFreeScanAttempt,
+  cancelFreeScanAttempt,
+} from "../../../services/session/scanQuota";
+import type { ScanAttempt } from "../../../services/session/scanAllowance";
+import { requestFreeScanLimitPrompt } from "../../../services/freeScanLimitPrompt";
+import { notifyFreeScanLimitAfterSuccess } from "../../../services/freeScanLimitFlow";
 /**
  * Diagnosis Loading Screen
  * Shows image preview while analyzing with scanning animation
@@ -6,7 +14,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
@@ -20,11 +31,7 @@ import {
   useSubscriptionStore,
   selectIsPremium,
 } from "../../../features/subscription/subscription.store";
-import {
-  canIdentifyByMode,
-  incrementPhotoIdentificationUsage,
-  incrementSoundIdentificationUsage,
-} from "../../../services/session/usageLimit.service";
+import { canIdentifyByMode } from "../../../services/session/usageLimit.service";
 import {
   incrementLifetimeIdentificationCount,
   isIdentificationMilestone,
@@ -60,7 +67,10 @@ import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
 import { fetchStepByStepMatches } from "../../discovery/utils/runStepByStepAnalysis";
 
 const navigateHomeFromDiagnosis = (
-  navigation: NativeStackNavigationProp<CameraStackParamList, "DiagnosisLoading">,
+  navigation: NativeStackNavigationProp<
+    CameraStackParamList,
+    "DiagnosisLoading"
+  >,
   isStepByStep = false
 ) => {
   useIdentificationEntryStore.getState().setSuppressFtueAutoNavigation(true);
@@ -83,9 +93,11 @@ function classifySoundIdentifyError(error?: unknown): "noBird" | "noise" {
     error instanceof Error
       ? error.message
       : typeof error === "string"
-        ? error
-        : "";
-  return /noise|ambient|signal|snr|too loud/i.test(message) ? "noise" : "noBird";
+      ? error
+      : "";
+  return /noise|ambient|signal|snr|too loud/i.test(message)
+    ? "noise"
+    : "noBird";
 }
 
 type DiagnosisLoadingScreenRouteProp = RouteProp<
@@ -104,8 +116,17 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<DiagnosisLoadingScreenNavigationProp>();
   const route = useRoute<DiagnosisLoadingScreenRouteProp>();
-  const { image, displayImage, images, audioUri, identifyMode, cropStartSec, cropDurationSec, audioDurationSec, recordedAt } =
-    route.params || ({} as CameraStackParamList["DiagnosisLoading"]);
+  const {
+    image,
+    displayImage,
+    images,
+    audioUri,
+    identifyMode,
+    cropStartSec,
+    cropDurationSec,
+    audioDurationSec,
+    recordedAt,
+  } = route.params || ({} as CameraStackParamList["DiagnosisLoading"]);
   const isSoundMode = identifyMode === "sound" || !!audioUri;
   const isStepByStepMode = identifyMode === "stepByStep";
   const uploadImages =
@@ -116,9 +137,9 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   const primaryImage = isSoundMode ? undefined : previewImage;
 
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorModalMessage, setErrorModalMessage] = useState<string | undefined>(
-    undefined
-  );
+  const [errorModalMessage, setErrorModalMessage] = useState<
+    string | undefined
+  >(undefined);
   const [soundError, setSoundError] = useState<"noBird" | "noise" | null>(null);
   const [showUpgradeSheet, setShowUpgradeSheet] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<"analyzing" | "preparing">(
@@ -208,6 +229,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   useEffect(() => {
     isMountedRef.current = true;
     let cancelled = false;
+    let scanAttempt: ScanAttempt | undefined;
 
     const runDiagnosis = async () => {
       void performanceService.startTrace(BIRD_IDENTIFICATION_TRACE);
@@ -230,7 +252,9 @@ export const DiagnosisLoadingScreen: React.FC = () => {
           if (possibleMatches.length === 0) {
             analyticsService.logEvent(EVENTS.identify_result_fail);
             analyticsService.logEvent(EVENTS.identification_done_failure);
-            analyticsService.logEvent(EVENTS.identify_result, { result: "fail" });
+            analyticsService.logEvent(EVENTS.identify_result, {
+              result: "fail",
+            });
             await stopIdentificationTrace("failure");
             if (!cancelled && isMountedRef.current) {
               showStepByStepFailure();
@@ -243,7 +267,11 @@ export const DiagnosisLoadingScreen: React.FC = () => {
             .filter((uri): uri is string => !!uri);
 
           setLoadingPhase("preparing");
-          void awaitPrefetchRemoteImages(thumbnailUris, thumbnailUris.length, 0);
+          void awaitPrefetchRemoteImages(
+            thumbnailUris,
+            thumbnailUris.length,
+            0
+          );
           if (thumbnailUris.length > 0 && !cancelled && isMountedRef.current) {
             const waitForDecode = new Promise<void>((resolve) => {
               thumbPrefetchDoneRef.current = resolve;
@@ -284,7 +312,9 @@ export const DiagnosisLoadingScreen: React.FC = () => {
         return;
       }
       if (!isPremium) {
-        const allowed = await canIdentifyByMode(isSoundMode ? "sound" : "photo");
+        const allowed = await canIdentifyByMode(
+          isSoundMode ? "sound" : "photo"
+        );
         if (cancelled) return;
         if (!allowed) {
           analyticsService.logEvent(EVENTS.identification_limit_reached, {
@@ -292,11 +322,22 @@ export const DiagnosisLoadingScreen: React.FC = () => {
           });
           analyticsService.logEvent(EVENTS.identification_limit_exceeded);
           await stopIdentificationTrace("limit");
-          if (!cancelled && isMountedRef.current) setShowUpgradeSheet(true);
+          if (!cancelled && isMountedRef.current) {
+            navigateHomeFromDiagnosis(navigation);
+            requestFreeScanLimitPrompt();
+          }
           return;
         }
       }
       try {
+        const start = await beginFreeScanAttempt(route.key);
+        if (start.status !== "ready") {
+          navigateHomeFromDiagnosis(navigation);
+          if (start.status === "blocked") requestFreeScanLimitPrompt();
+          return;
+        }
+        scanAttempt = start.attempt;
+        if (cancelled) return;
         let matches;
         let matchesFoundCount;
         let uploadedSoundUrls: string[] | undefined;
@@ -341,12 +382,24 @@ export const DiagnosisLoadingScreen: React.FC = () => {
             result: "fail",
           });
           await stopIdentificationTrace("failure");
+          const allowance = await completeFreeScanAttempt(
+            scanAttempt,
+            "failure"
+          );
+          if (cancelled) return;
+          if (allowance.remaining === 0) {
+            navigateHomeFromDiagnosis(navigation);
+            requestFreeScanLimitPrompt();
+            return;
+          }
           if (!cancelled && isMountedRef.current) {
             if (isSoundMode && audioUri) {
-              useIdentificationResultsStore.getState().setResults([], undefined, {
-                uploadedSoundUrls,
-                uploadedImageUrls,
-              });
+              useIdentificationResultsStore
+                .getState()
+                .setResults([], undefined, {
+                  uploadedSoundUrls,
+                  uploadedImageUrls,
+                });
               navigation.replace("SoundNoMatch", {
                 audioUri,
                 audioDurationSec: audioDurationSec ?? 0,
@@ -392,21 +445,15 @@ export const DiagnosisLoadingScreen: React.FC = () => {
 
         if (cancelled || !isMountedRef.current) return;
 
+        await completeFreeScanAttempt(scanAttempt, "success");
+        if (cancelled) return;
         navigateToPossibleMatches(possibleMatches, false, uploadedSoundUrls);
+        void notifyFreeScanLimitAfterSuccess();
 
         void (async () => {
           rescheduleInactivityNotifications().catch(() => {
             // Non-blocking; permission or channel errors are logged inside the service
           });
-
-          const isPremiumNow = selectIsPremium(useSubscriptionStore.getState());
-          if (!isPremiumNow) {
-            if (isSoundMode) {
-              await incrementSoundIdentificationUsage();
-            } else {
-              await incrementPhotoIdentificationUsage();
-            }
-          }
 
           const lifetimeCount = await incrementLifetimeIdentificationCount();
           if (isIdentificationMilestone(lifetimeCount)) {
@@ -425,13 +472,20 @@ export const DiagnosisLoadingScreen: React.FC = () => {
       }
     };
 
-    runDiagnosis();
+    void runDiagnosis()
+      .catch((error) => {
+        if (!cancelled) showIdentifyFailure(error);
+      })
+      .finally(() => {
+        if (scanAttempt) cancelFreeScanAttempt(scanAttempt);
+      });
     return () => {
       cancelled = true;
+      if (scanAttempt) cancelFreeScanAttempt(scanAttempt);
       isMountedRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per diagnosis entry
-  }, [isPremium]);
+  }, []);
 
   return (
     <View
@@ -458,7 +512,11 @@ export const DiagnosisLoadingScreen: React.FC = () => {
                       { backgroundColor: `${colors.primaryCTA}14` },
                     ]}
                   >
-                    <MaterialIcons name="graphic-eq" size={72} color={colors.primaryCTA} />
+                    <MaterialIcons
+                      name="graphic-eq"
+                      size={72}
+                      color={colors.primaryCTA}
+                    />
                   </View>
                 ) : (
                   <IdentificationScannerFrame
@@ -494,7 +552,9 @@ export const DiagnosisLoadingScreen: React.FC = () => {
                   variant="primary"
                   size="large"
                   fullWidth
-                  onPress={() => navigateHomeFromDiagnosis(navigation, isStepByStepMode)}
+                  onPress={() =>
+                    navigateHomeFromDiagnosis(navigation, isStepByStepMode)
+                  }
                   textStyle={{ flexShrink: 0 }}
                 />
               </View>
@@ -519,9 +579,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
           });
         }}
         retryLabel={
-          isStepByStepMode
-            ? CAMERA_STRINGS.error.stepByStep.retry
-            : undefined
+          isStepByStepMode ? CAMERA_STRINGS.error.stepByStep.retry : undefined
         }
         title={
           isStepByStepMode ? CAMERA_STRINGS.error.stepByStep.title : undefined

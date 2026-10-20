@@ -1,3 +1,4 @@
+import { AppImage } from "@/components/AppImage";
 /**
  * Identification tip sample image with red cross badge at bottom-right (Figma).
  * Always renders identification/light WebPs — never theme-swaps to dark assets.
@@ -5,7 +6,6 @@
 
 import React from "react";
 import {
-  Image,
   ImageResizeMode,
   ImageSourcePropType,
   StyleSheet,
@@ -51,7 +51,7 @@ export const TipSampleImage: React.FC<TipSampleImageProps> = ({
       style,
     ]}
   >
-    <Image
+    <AppImage
       source={source}
       style={[styles.image, { borderRadius, backgroundColor, resizeMode }]}
       resizeMode={resizeMode}

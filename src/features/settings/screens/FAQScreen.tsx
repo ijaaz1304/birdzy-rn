@@ -1,13 +1,20 @@
+import { SettingsHeader } from "../components/SettingsHeader";
+import FaqChevron from "../../../assets/icons/settings/faq-chevron.svg";
 /**
  * FAQ Screen
  * Accordion-style list with intro and contact email. Matches Support FAQ design.
  */
 
 import React, { useState, useMemo } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Linking } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Linking,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { Text, NavBackIcon } from "../../../atoms";
+import { Text } from "../../../atoms";
 import { useTheme } from "../../../hooks/useTheme";
 import { useNavigation } from "@react-navigation/native";
 import { SettingsStackParamList } from "../../../navigation/types";
@@ -43,24 +50,7 @@ export const FAQScreen: React.FC = () => {
       style={[styles.container, { backgroundColor: colors.background }]}
       edges={["top", "bottom"]}
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <NavBackIcon color={colors.text} />
-        </TouchableOpacity>
-        <Text
-          variant="title"
-          size="large"
-          weight="bold"
-          style={[styles.title, styles.text16Bold]}
-        >
-          FAQ
-        </Text>
-        <View style={styles.placeholder} />
-      </View>
+      <SettingsHeader title="FAQs" onBackPress={() => navigation.goBack()} />
 
       <ScrollView
         style={styles.scroll}
@@ -103,13 +93,9 @@ export const FAQScreen: React.FC = () => {
                 >
                   {item.question}
                 </Text>
-                <MaterialIcons
-                  name={
-                    isExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"
-                  }
-                  size={24}
-                  color={colors.text}
-                  style={styles.chevron}
+                <FaqChevron
+                  color={colors.textPrimary}
+                  style={[styles.chevron, isExpanded && styles.chevronOpen]}
                 />
               </TouchableOpacity>
               {isExpanded && (
@@ -117,7 +103,7 @@ export const FAQScreen: React.FC = () => {
                   variant="body"
                   size="small"
                   color="textSecondary"
-                  style={[styles.answer, styles.text14]}
+                  style={[styles.answer, styles.text16]}
                 >
                   {item.answer}
                 </Text>
@@ -177,30 +163,17 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     lineHeight: 20,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing[4],
-    paddingVertical: 12,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: { flex: 1, textAlign: "center" },
-  placeholder: { width: 44 },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: spacing[4], paddingBottom: 32 },
+  content: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 32 },
   intro: {
     marginBottom: spacing[5],
   },
   itemWrap: {
     borderBottomWidth: 1,
-    paddingVertical: spacing[4],
+    paddingVertical: 0,
   },
   questionRow: {
+    paddingVertical: 24,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -209,12 +182,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: spacing[2],
   },
+  chevronOpen: { transform: [{ rotate: "180deg" }] },
   chevron: {
     marginLeft: spacing[2],
   },
   answer: {
-    marginTop: spacing[3],
-    lineHeight: 20,
+    paddingBottom: 24,
+    lineHeight: 24,
   },
   contactWrap: {
     marginTop: spacing[6],

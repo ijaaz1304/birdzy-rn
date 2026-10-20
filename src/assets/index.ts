@@ -29,7 +29,10 @@ export { default as Banner1DarkSvg } from "./home/images/banner/dark/identify_ba
 export { default as Banner2Svg } from "./home/images/banner/light/identify_banner.webp";
 export { default as Banner2DarkSvg } from "./home/images/banner/dark/discount_banner.png";
 
-export { IDENTIFICATION_TIP_LIGHT_IMAGES, IDENTIFICATION_TIP_LIGHT_IMAGE_LIST } from "./identificationTipImages";
+export {
+  IDENTIFICATION_TIP_LIGHT_IMAGES,
+  IDENTIFICATION_TIP_LIGHT_IMAGE_LIST,
+} from "./identificationTipImages";
 export { default as IdentificationScannerOverlay } from "./identification/scanner.svg";
 export { default as CatalogueVolumeIcon } from "./catalogue/icons/volume_high.svg";
 export { default as BirdSizeScaleGraphic } from "./collection/details/bird/size_scale.svg";
@@ -101,7 +104,7 @@ export const Images = {
   authBgDark: require("./home/common_bg.webp"),
   authScreenBg: require("./home/common_bg.webp"),
 
-  appIcon: require("./branding/app-icon/app_icon.webp"),
+  appIcon: require("./branding/splash/splash_bird.png"),
 
   onboardingBg1: require("./onboarding/light/background_1.webp"),
   onboardingBg2: require("./onboarding/light/background_2.webp"),

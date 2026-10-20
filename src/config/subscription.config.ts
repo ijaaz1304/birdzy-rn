@@ -136,7 +136,7 @@ export const SUBSCRIPTION_CAROUSEL_ITEMS = [
     iconKey: "identification",
     title: "Get unlimited identifications - Go pro+",
     description:
-      "Free users get 2 photo IDs and 2 sound IDs per day. Go Pro+ to identify with no daily cap.",
+      "Free users get 30 photo and sound scans in total. Go Pro+ for unlimited identification.",
     imageLight: "subscriptionPopupIconIdentification",
     imageDark: "subscriptionPopupIconIdentificationDark",
   },
@@ -190,7 +190,7 @@ export const SUBSCRIPTION_CAROUSEL_ITEMS = [
     iconKey: "soundIdentification",
     title: "Get unlimited sound identifications - Go pro+",
     description:
-      "Free users get 2 sound identifications per day. Go Pro+ to identify bird calls with no daily cap.",
+      "Photo and sound identification share 30 free scans in total. Go Pro+ for unlimited identification.",
     imageLight: "subscriptionPopupIconSoundIdentification",
     imageDark: "subscriptionPopupIconSoundIdentificationDark",
   },

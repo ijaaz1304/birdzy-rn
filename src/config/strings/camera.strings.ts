@@ -56,9 +56,10 @@ export const CAMERA_STRINGS = {
     dailyLimitReached: "Daily limit reached",
     dailyLimitSubtitle:
       "You've used your {count} free identifications today. Upgrade to Premium for unlimited scans.",
-    freeScansLeftPrefix: "Free daily scans left: ",
+    freeScansLeftPrefix: "Free scans left: ",
     resetInPrefix: "Reset in ",
-    maxPhotosSelected: "You can add up to 2 photos. Remove one to capture another.",
+    maxPhotosSelected:
+      "You can add up to 2 photos. Remove one to capture another.",
   },
   editResult: {
     title: "Edit Information",
@@ -99,8 +100,7 @@ export const CAMERA_STRINGS = {
   },
   galleryLocationAccess: {
     title: "Enable Location Access",
-    subtitle:
-      "Our identification accuracy exceeds 90% with location access.",
+    subtitle: "Our identification accuracy exceeds 90% with location access.",
     continue: "Continue",
     openSettings: "Open Settings",
   },

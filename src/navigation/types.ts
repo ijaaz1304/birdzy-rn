@@ -1,3 +1,4 @@
+import type { NavigatorScreenParams } from "@react-navigation/native";
 /**
  * Navigation type definitions
  */
@@ -56,7 +57,10 @@ export type BirdSoundsScreenParams = {
 
 export type HomeStackParamList = {
   HomeMain: undefined;
-  BirdOfTheDay: { birdId?: string; /** @deprecated Use birdId */ mushroomId?: string };
+  BirdOfTheDay: {
+    birdId?: string;
+    /** @deprecated Use birdId */ mushroomId?: string;
+  };
   BirdDetails: {
     birdId?: string;
     /** @deprecated Use birdId */
@@ -119,24 +123,26 @@ export type OtherPossibleMatchesScreenParams = {
 
 export type CameraStackParamList = {
   IdentificationLocationGate: undefined;
-  CameraMain: {
-    returnImageToAskAI?: boolean;
-    returnImageToFeed?: boolean;
-    returnImageToQuiz?: boolean;
-    feedDraft?: {
-      title?: string;
-      content?: string;
-      itemName?: string;
-      postId?: string;
-    };
-    pendingCrop?: {
-      uri: string;
-      displayUri?: string;
-      width?: number;
-      height?: number;
-    };
-    resetCapture?: boolean;
-  } | undefined;
+  CameraMain:
+    | {
+        returnImageToAskAI?: boolean;
+        returnImageToFeed?: boolean;
+        returnImageToQuiz?: boolean;
+        feedDraft?: {
+          title?: string;
+          content?: string;
+          itemName?: string;
+          postId?: string;
+        };
+        pendingCrop?: {
+          uri: string;
+          displayUri?: string;
+          width?: number;
+          height?: number;
+        };
+        resetCapture?: boolean;
+      }
+    | undefined;
   GalleryPicker:
     | {
         returnImageToAskAI?: boolean;
@@ -241,7 +247,12 @@ export type CollectionStackParamList = {
   };
   BirdDetails: {
     mushroomId: string;
-    source?: "collection" | "catalogue" | "identification" | "birdOfTheDay" | "quiz";
+    source?:
+      | "collection"
+      | "catalogue"
+      | "identification"
+      | "birdOfTheDay"
+      | "quiz";
     /** When source is 'collection', which collection (e.g. 'Owned' | 'Identified' | 'Wishlist') — used to show Edit only for Owned/Identified */
     collectionName?: string;
     /** When fromCollectionDetails, used to navigate back to CollectionDetails after remove */
@@ -336,6 +347,10 @@ export type AskAIStackParamList = {
 };
 
 export type SettingsStackParamList = {
+  LoginSecurity: undefined;
+  ChangePassword: undefined;
+  CreatePassword: undefined;
+  ContactUs: undefined;
   SettingsMain: undefined;
   ProfileSettings: undefined;
   AccountActions: undefined;

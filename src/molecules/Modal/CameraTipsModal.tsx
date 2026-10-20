@@ -1,3 +1,4 @@
+import { AppImage } from "@/components/AppImage";
 /**
  * Camera Tips Modal
  * Mushroom identification photo quality examples (too dark / far / bright / blurry).
@@ -7,7 +8,15 @@
  */
 
 import React, { useMemo } from "react";
-import { Dimensions, Image, ImageSourcePropType, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, View, useWindowDimensions } from "react-native";
+import {
+  Dimensions,
+  ImageSourcePropType,
+  StyleSheet,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { useStrings } from "../../hooks/useStrings";
 import { Text, Button } from "../../atoms";
@@ -15,7 +24,10 @@ import { Modal } from "./Modal";
 import { IDENTIFICATION_TIP_LIGHT_IMAGES } from "../../assets/identificationTipImages";
 import { TipSampleImage } from "./TipSampleImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
-import { getPopupChromeStyle, getPopupPrimaryCtaStyle } from "../../design-system/modalTokens";
+import {
+  getPopupChromeStyle,
+  getPopupPrimaryCtaStyle,
+} from "../../design-system/modalTokens";
 export interface CameraTipsModalProps {
   visible: boolean;
   onClose: () => void;
@@ -144,11 +156,7 @@ export const CameraTipsModal: React.FC<CameraTipsModalProps> = ({
 
   const content = (
     <View
-      style={[
-        styles.card,
-        getPopupChromeStyle(theme),
-        { padding: spacing[6] },
-      ]}
+      style={[styles.card, getPopupChromeStyle(theme), { padding: spacing[6] }]}
     >
       <TouchableOpacity
         onPress={onClose}
@@ -160,7 +168,7 @@ export const CameraTipsModal: React.FC<CameraTipsModalProps> = ({
         <CloseIcon isDark={theme.mode === "dark"} style={styles.closeIcon} />
       </TouchableOpacity>
 
-      <Image
+      <AppImage
         source={IDENTIFICATION_TIP_LIGHT_IMAGES.alertIcon}
         style={styles.warningIcon}
         resizeMode="contain"

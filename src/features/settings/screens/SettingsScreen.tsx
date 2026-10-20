@@ -1,70 +1,51 @@
+import {
+  useSubscriptionStore,
+  selectIsPremium,
+} from "../../subscription/subscription.store";
 /**
  * Settings Main Screen
- * Refactored with proper structure, navigation, and theming
  */
 
-import { AppImage } from "@/components/AppImage";
 import React, { useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   RateUsModal,
   FeedbackModal,
   NotificationPermissionPopup,
-  LimitReachedBottomSheet,
-  SubscriptionDiscountSheet,
-  // CameraPermissionPopup,
 } from "../../../molecules/Modal";
 import { sendRatingFeedback } from "../../../services/rating/ratingFeedback.service";
 import { useToast } from "../../../hooks";
 import { useRateUsStore } from "../../rate-us/rate-us.store";
 import { DeleteAccountConfirmation } from "../../../components/DeleteAccountConfirmation";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { LogoutConfirmation } from "../../../components/LogoutConfirmation";
+import { StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { Text, NavBackIcon } from "../../../atoms";
 import { SettingsStackParamList } from "../../../navigation/types";
 import { useThemeContext } from "../../../app/ThemeProvider";
-import { getAppearanceModeLabel } from "../utils/appearanceLabels";
 import { trackAppearanceSettingsOpened } from "../../theme/themeExperiment.service";
 import { useThemeExperiment } from "../../theme/useThemeExperiment";
 import { useAuthStore } from "../../auth/auth.store";
-import {
-  useSubscriptionStore,
-  selectIsPremium,
-} from "../../subscription/subscription.store";
-import { useSubscriptionPlansWithPrices } from "../../subscription/hooks/useSubscriptionPlansWithPrices";
-import {
-  OVERLAY_COLORS,
-} from "../../../constants/colorConstants";
 import { SETTINGS_STRINGS } from "../../../config/strings/settings.strings";
-import { isDevSettingsVisible } from "../../../lib/env/appEnv";
-import { useStrings } from "../../../hooks/useStrings";
-import { DevEnvironmentInfo } from "../components/DevEnvironmentInfo";
-import { UPGRADE_MODAL_PREVIEW_ITEMS } from "../upgradeModalPreviews";
-import type { LimitType } from "../../../config/subscription.config";
-import { SettingsSection, SettingsItem } from "../components";
-import { useAppLogsStore, isAppLogsFeatureEnabled } from "../../../features/app-logs/app-logs.store";
+import {
+  SettingsSection,
+  SettingsItem,
+  SettingsHeader,
+  SettingsAccountRow,
+} from "../components";
+import { useSettingsColors } from "../settingsColors";
+import {
+  useAppLogsStore,
+  isAppLogsFeatureEnabled,
+} from "../../../features/app-logs/app-logs.store";
 import { openAppStoreForRating } from "../../../utils/modalHelpers";
 import { usePushNotifications } from "../../../hooks/usePushNotifications";
-import { Radius } from "../../../design";
-
 import { spacing } from "../../../design-system/spacing";
+import { checkNotificationPermission } from "../../../services/permissions";
+import { shouldShowLogoutAction } from "../utils/accountActions";
 
-import { APP_COLORS } from "../../../config/colors";
-
-import {
-  checkNotificationPermission,
-  // requestCameraPermission,
-} from "../../../services/permissions";
-import {
-  getBirdRegionLabel,
-  getBirdRegionPreference,
-  type BirdRegionId,
-} from "../../../services/session/birdRegionPreference.service";
-import { syncNotificationTopics } from "../../../services/notifications/notificationTopics.service";
-import { loadNotificationPreferences } from "../notificationsPreference.storage";
+const M = SETTINGS_STRINGS.main;
 
 type SettingsScreenNavigationProp = NativeStackNavigationProp<
   SettingsStackParamList,
@@ -72,28 +53,25 @@ type SettingsScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 export const SettingsScreen: React.FC = () => {
-  const { theme, themeMode } = useThemeContext();
+  const { themeMode } = useThemeContext();
   const { canChangeAppearance } = useThemeExperiment();
-  const colors = theme.colors;
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { user, isAuthenticated, token, guestId } = useAuthStore();
   const isGuest = !!user?.isGuest;
-  // Show Login for: not signed in, or guest user (by flag or by having guestId from guest login)
   const showLoginButton =
     !isAuthenticated || isGuest || (isAuthenticated && !!guestId);
-  const subscription = useSubscriptionStore((s) => s.subscription);
+  const isSignedIn = !showLoginButton;
+  const showLogout = shouldShowLogoutAction(user, guestId);
+  const settingsColors = useSettingsColors();
   const isPremium = useSubscriptionStore(selectIsPremium);
   const appLogsEnabled = useAppLogsStore((s) => s.isEnabled);
   const setAppLogsEnabled = useAppLogsStore((s) => s.setEnabled);
-  const cameraUploadLogsEnabled = useAppLogsStore((s) => s.cameraUploadLogsEnabled);
+  const cameraUploadLogsEnabled = useAppLogsStore(
+    (s) => s.cameraUploadLogsEnabled
+  );
   const setCameraUploadLogsEnabled = useAppLogsStore(
     (s) => s.setCameraUploadLogsEnabled
   );
-  const { plans: subscriptionPlansFromHook } = useSubscriptionPlansWithPrices();
-  const devForcePremium = useSubscriptionStore((s) => s.devForcePremium);
-  const setDevForcePremium = useSubscriptionStore((s) => s.setDevForcePremium);
-  const showDevSettings = isDevSettingsVisible();
-  const _strings = useStrings();
   const { showToast } = useToast();
   const { registerDevice } = usePushNotifications();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -101,27 +79,16 @@ export const SettingsScreen: React.FC = () => {
     useState(false);
   const [showRateUsModal, setShowRateUsModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [_feedbackSource, setFeedbackSource] = useState<"menu" | "rate_us">(
+  const [feedbackSource, setFeedbackSource] = useState<"rate_us" | "menu">(
     "menu"
   );
   const [lowRatingFromRateUs, setLowRatingFromRateUs] = useState<
     number | undefined
   >();
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
-  const [previewUpgradeLimitType, setPreviewUpgradeLimitType] =
-    useState<LimitType | null>(null);
-  const [showSubscriptionDiscountPreview, setShowSubscriptionDiscountPreview] =
-    useState(false);
-  const [birdRegionLabel, setBirdRegionLabel] = useState(
-    getBirdRegionLabel("auto")
-  );
-  // const [showCameraPermissionPopup, setShowCameraPermissionPopup] =
-  //   useState(false);
-  // const [cameraPreviewLoading, setCameraPreviewLoading] = useState(false);
-  // const [cameraPreviewBlocked, setCameraPreviewBlocked] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { setHasRated, setHasDeclined } = useRateUsStore();
 
-  // Sync notification toggle with device permission (and optional registration)
   useEffect(() => {
     let mounted = true;
     checkNotificationPermission().then((result) => {
@@ -136,9 +103,6 @@ export const SettingsScreen: React.FC = () => {
     useCallback(() => {
       void checkNotificationPermission().then((result) => {
         setNotificationsEnabled(result.granted);
-      });
-      void getBirdRegionPreference().then((regionId: BirdRegionId) => {
-        setBirdRegionLabel(getBirdRegionLabel(regionId));
       });
     }, [])
   );
@@ -155,7 +119,12 @@ export const SettingsScreen: React.FC = () => {
         showToast("Please sign in to enable notifications", "info");
         return;
       }
-      // Keep switch off until the custom sheet grants permission.
+      const alreadyGranted = await checkNotificationPermission();
+      if (alreadyGranted.granted) {
+        setNotificationsEnabled(true);
+        registerDevice({ requestPermission: false }).catch(() => undefined);
+        return;
+      }
       setNotificationsEnabled(false);
       setShowNotificationPermissionPopup(true);
       return;
@@ -173,16 +142,12 @@ export const SettingsScreen: React.FC = () => {
     registerDevice({ requestPermission: false }).catch(() => {
       // Permission was granted; registration may retry on next app focus.
     });
-    void loadNotificationPreferences().then((prefs) => {
-      void syncNotificationTopics(prefs);
-    });
   }, [registerDevice, showToast]);
 
   const handleNotificationPermissionClose = useCallback(() => {
     setShowNotificationPermissionPopup(false);
     void syncNotificationToggleFromPermission();
   }, [syncNotificationToggleFromPermission]);
-  // const isDevSettingsVisible = __DEV__ && getAppIntent() === "dev";
 
   const handleRateUsClose = () => {
     setShowRateUsModal(false);
@@ -200,7 +165,7 @@ export const SettingsScreen: React.FC = () => {
     setHasRated(true);
     setShowRateUsModal(false);
     void sendRatingFeedback({
-      domain: "Birds",
+      domain: "Mushrooms",
       message: "",
       rating,
       source: "rate_us",
@@ -218,35 +183,31 @@ export const SettingsScreen: React.FC = () => {
   }) => {
     try {
       await sendRatingFeedback({
-        domain: "Birds",
+        domain: "Mushrooms",
         name: data.name || undefined,
         email: data.email || undefined,
         message: data.feedback,
         rating: data.rating ?? lowRatingFromRateUs,
-        source: "rate_us",
+        source: feedbackSource === "menu" ? "feedback" : "rate_us",
       });
       showToast("Thank you for your feedback!", "success");
       setShowFeedbackModal(false);
       setLowRatingFromRateUs(undefined);
+      setFeedbackSource("menu");
     } catch (e) {
       showToast("Failed to send. Please try again.", "error");
     }
   };
 
-  const subscriptionPlans = subscriptionPlansFromHook;
-  const _activePlan = subscription?.planId
-    ? subscriptionPlans.find((p) => p.id === subscription.planId)
-    : null;
-
   const handleManageSubscription = () => {
-    // Navigate to subscription management
-    navigation
-      .getParent()
-      ?.navigate("SubscriptionStack", { screen: "SubscriptionMain" });
+    // Premium-only row: take subscribers to Switch Plans (status + switch sheet).
+    navigation.getParent()?.navigate("SubscriptionStack", {
+      screen: "SubscriptionStatus",
+      params: { openSwitchPlan: true },
+    });
   };
 
   const handleLogin = () => {
-    // Pass guest details when user is guest so Login/SignUp can promote guest account
     navigation.getParent()?.navigate("AuthStack", {
       screen: "Login",
       params: isGuest && guestId ? { guestId, fromGuest: true } : undefined,
@@ -255,269 +216,164 @@ export const SettingsScreen: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.container, { backgroundColor: settingsColors.screen }]}
       edges={["top", "bottom"]}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <NavBackIcon color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text
-          variant="title"
-          size="medium"
-          weight="bold"
-          style={styles.headerTitle}
-        >
-          {SETTINGS_STRINGS.screen.title}
-        </Text>
-        <View style={styles.headerRight} />
-      </View>
+      <SettingsHeader title={SETTINGS_STRINGS.screen.title} />
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { gap: isSignedIn ? 24 : 16 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* ACCOUNT SECTION */}
-        <SettingsSection title={SETTINGS_STRINGS.sections.account}>
-          <SettingsItem
-            title={SETTINGS_STRINGS.account.myProfile}
-            onPress={() =>
-              isAuthenticated
-                ? navigation.navigate("ProfileSettings")
-                : handleLogin()
-            }
-            showArrow={true}
-            leftComponent={
-              <View
-                style={[
-                  styles.avatarCircle,
-                  { backgroundColor: colors.surfaceVariant, marginRight: 12 },
-                ]}
-              >
-                {user?.avatar ? (
-                  <AppImage
-                    source={{ uri: user.avatar }}
-                    style={styles.avatarImage}
-                  />
-                ) : (
-                  <MaterialIcons
-                    name="person"
-                    size={24}
-                    color={colors.textTertiary}
-                  />
-                )}
-              </View>
-            }
+        <SettingsSection title={M.sections.account}>
+          <SettingsAccountRow
+            variant="profile"
+            title={M.profileTitle}
+            subtitle={M.profileSubtitle}
+            avatarUri={user?.avatar}
+            onPress={() => navigation.navigate("ProfileSettings")}
           />
-          {showLoginButton && (
-            <SettingsItem
-              title={SETTINGS_STRINGS.account.loginText}
+          {!isSignedIn && (
+            <SettingsAccountRow
+              variant="guest"
+              title={M.guestTitle}
+              subtitle={M.guestSubtitle}
               onPress={handleLogin}
-              showArrow={true}
             />
           )}
-          <SettingsItem
-            title={SETTINGS_STRINGS.account.emailAndPassword}
-            onPress={() =>
-              isAuthenticated
-                ? navigation.navigate("ProfileSettings")
-                : handleLogin()
-            }
-            showArrow={true}
-          />
-          {isAuthenticated && (
+          {isSignedIn && !user?.isSocial && (
             <SettingsItem
-              title="Account Actions"
-              onPress={() => navigation.navigate("AccountActions")}
-              showArrow={true}
+              icon="mail"
+              title={M.loginSecurity}
+              onPress={() => navigation.navigate("LoginSecurity")}
+              showArrow
             />
           )}
-          <SettingsItem
-            title={
-              isPremium
-                ? SETTINGS_STRINGS.items.manageSubscription
-                : SETTINGS_STRINGS.items.subscription
-            }
-            onPress={handleManageSubscription}
-            showArrow={true}
-          />
+          {isSignedIn && isPremium && (
+            <SettingsItem
+              icon="comment"
+              title={M.manageSubscription}
+              onPress={handleManageSubscription}
+              showArrow
+            />
+          )}
         </SettingsSection>
 
-        {/* SUPPORT SECTION */}
-        <SettingsSection title={SETTINGS_STRINGS.sections.support}>
+        <SettingsSection title={M.sections.helpSupport}>
           <SettingsItem
-            title={SETTINGS_STRINGS.items.faq}
+            icon="faq"
+            title={M.faqs}
             onPress={() => navigation.navigate("FAQ")}
-            showArrow={true}
+            showArrow
           />
           <SettingsItem
-            title={SETTINGS_STRINGS.items.rateUs}
+            icon="mail"
+            title={M.contactUs}
+            onPress={() => navigation.navigate("ContactUs")}
+            showArrow
+          />
+          <SettingsItem
+            icon="star"
+            title={M.rateUs}
             onPress={() => setShowRateUsModal(true)}
-            showArrow={true}
+            showArrow
           />
           <SettingsItem
-            title={SETTINGS_STRINGS.items.feedback}
+            icon="comment"
+            title={M.feedback}
             onPress={() => {
+              setLowRatingFromRateUs(undefined);
               setFeedbackSource("menu");
               setShowFeedbackModal(true);
             }}
-            showArrow={true}
+            showArrow
           />
         </SettingsSection>
 
-        {/* PREFERENCES SECTION */}
-        <SettingsSection title={SETTINGS_STRINGS.sections.preferences}>
-          {showDevSettings ? (
-            <SettingsItem
-              title={SETTINGS_STRINGS.items.usePremium}
-              subtitle="Dev: unlock premium gates locally"
-              switchValue={devForcePremium}
-              onSwitchChange={setDevForcePremium}
-            />
-          ) : null}
-          {/* Dev: disable 50% discount testing toggle */}
-          {/* <SettingsItem
-            title={SETTINGS_STRINGS.items.disable50Discount}
-            subtitle={SETTINGS_STRINGS.items.disable50DiscountSubtitle}
-            switchValue={devDisable50Discount}
-            onSwitchChange={setDevDisable50Discount}
-          /> */}
+        <SettingsSection title={M.sections.preferences}>
           <SettingsItem
             title={SETTINGS_STRINGS.preferences.notificationSettings}
             onPress={() => navigation.navigate("Notifications")}
-            showArrow={true}
+            showArrow
           />
           <SettingsItem
             title={SETTINGS_STRINGS.preferences.birdRegion}
-            value={birdRegionLabel}
             onPress={() => navigation.navigate("BirdRegion")}
-            showArrow={true}
+            showArrow
           />
           <SettingsItem
-            title={SETTINGS_STRINGS.preferences.notifications}
+            icon="notification"
+            title={M.notifications}
             switchValue={notificationsEnabled}
             onSwitchChange={handleNotificationToggle}
           />
           {canChangeAppearance && (
             <SettingsItem
-              title={SETTINGS_STRINGS.preferences.appearance}
-              value={getAppearanceModeLabel(themeMode)}
+              icon="sun"
+              title={M.appearance}
+              value={SETTINGS_STRINGS.appearance.shortLabels[themeMode]}
               onPress={() => {
                 trackAppearanceSettingsOpened(themeMode);
                 navigation.navigate("Appearance");
               }}
-              showArrow={true}
+              showArrow
             />
           )}
         </SettingsSection>
 
-        {/* DIAGNOSTICS — dev builds only; hidden in production */}
         {isAppLogsFeatureEnabled() ? (
-        <SettingsSection title={SETTINGS_STRINGS.sections.diagnostics}>
-          {showDevSettings ? (
+          <SettingsSection title={SETTINGS_STRINGS.sections.diagnostics}>
             <SettingsItem
-              title={SETTINGS_STRINGS.items.usePremium}
-              subtitle="Dev: force premium for testing"
-              switchValue={devForcePremium}
-              onSwitchChange={setDevForcePremium}
+              title={SETTINGS_STRINGS.items.recordDiagnosticLogs}
+              subtitle={SETTINGS_STRINGS.items.recordDiagnosticLogsSubtitle}
+              switchValue={appLogsEnabled}
+              onSwitchChange={setAppLogsEnabled}
             />
-          ) : null}
-          <SettingsItem
-            title={SETTINGS_STRINGS.items.recordDiagnosticLogs}
-            subtitle={SETTINGS_STRINGS.items.recordDiagnosticLogsSubtitle}
-            switchValue={appLogsEnabled}
-            onSwitchChange={setAppLogsEnabled}
-          />
-          <SettingsItem
-            title={SETTINGS_STRINGS.items.cameraUploadLogs}
-            subtitle={SETTINGS_STRINGS.items.cameraUploadLogsSubtitle}
-            switchValue={cameraUploadLogsEnabled}
-            onSwitchChange={setCameraUploadLogsEnabled}
-          />
-          <SettingsItem
-            title={SETTINGS_STRINGS.items.appLogs}
-            subtitle={SETTINGS_STRINGS.items.viewAppLogsSubtitle}
-            onPress={() => navigation.navigate("AppLogs")}
-            showArrow={true}
-          />
-        </SettingsSection>
-        ) : null}
-
-        {showDevSettings ? <DevEnvironmentInfo /> : null}
-
-        {showDevSettings ? (
-          <SettingsSection title={SETTINGS_STRINGS.sections.upgradeModalsDev}>
-            {UPGRADE_MODAL_PREVIEW_ITEMS.map(({ limitType, label }) => (
-              <SettingsItem
-                key={limitType}
-                title={label}
-                onPress={() => setPreviewUpgradeLimitType(limitType)}
-                showArrow={true}
-              />
-            ))}
             <SettingsItem
-              title={SETTINGS_STRINGS.items.subscriptionDiscountSheet}
-              onPress={() => setShowSubscriptionDiscountPreview(true)}
-              showArrow={true}
+              title={SETTINGS_STRINGS.items.cameraUploadLogs}
+              subtitle={SETTINGS_STRINGS.items.cameraUploadLogsSubtitle}
+              switchValue={cameraUploadLogsEnabled}
+              onSwitchChange={setCameraUploadLogsEnabled}
+            />
+            <SettingsItem
+              title={SETTINGS_STRINGS.items.appLogs}
+              subtitle={SETTINGS_STRINGS.items.viewAppLogsSubtitle}
+              onPress={() => navigation.navigate("AppLogs")}
+              showArrow
             />
           </SettingsSection>
         ) : null}
 
-        {/* MORE SECTION */}
-        <SettingsSection title={SETTINGS_STRINGS.sections.more}>
+        <SettingsSection title={M.sections.others}>
           <SettingsItem
-            title={SETTINGS_STRINGS.items.termsOfUse}
+            icon="file"
+            title={M.termsOfUse}
             onPress={() => navigation.navigate("Terms")}
-            showArrow={true}
+            showArrow
           />
           <SettingsItem
-            title={SETTINGS_STRINGS.items.privacyPolicy}
+            icon="shield"
+            title={M.privacyPolicy}
             onPress={() => navigation.navigate("Privacy")}
-            showArrow={true}
+            showArrow
           />
+          <SettingsItem
+            icon="delete"
+            title={M.deleteAccount}
+            onPress={() => setShowDeleteAccount(true)}
+            showArrow
+          />
+          {showLogout && (
+            <SettingsItem
+              icon="logout"
+              title={M.logOut}
+              textColor={settingsColors.danger}
+              onPress={() => setShowLogoutConfirm(true)}
+              showArrow
+            />
+          )}
         </SettingsSection>
-
-        {/* Dev: environment info, version details, Crashlytics test */}
-        {/* {isDevSettingsVisible && (
-          <>
-            <SettingsSection title="Dev">
-              <SettingsItem
-                title="Version Details"
-                onPress={() => {}}
-                showArrow={true}
-              />
-            </SettingsSection>
-
-            <SettingsSection title="Testing">
-              <SettingsItem
-                title="Trigger test crash (Crashlytics)"
-                onPress={() => {
-                  try {
-                    firebaseCrashlytics.crash();
-                  } catch (e) {
-                    showToast("Crashlytics not available", "error");
-                  }
-                }}
-                textColor={colors.error}
-                rightComponent={
-                  <MaterialIcons
-                    name="warning"
-                    size={24}
-                    color={colors.error}
-                  />
-                }
-              />
-            </SettingsSection>
-
-            <DevEnvironmentInfo />
-          </>
-        )} */}
       </ScrollView>
 
       <RateUsModal
@@ -539,56 +395,20 @@ export const SettingsScreen: React.FC = () => {
         onClose={() => {
           setShowFeedbackModal(false);
           setLowRatingFromRateUs(undefined);
+          setFeedbackSource("menu");
         }}
         onSubmit={handleFeedbackSubmit}
         rating={lowRatingFromRateUs}
       />
-
-      {/* Dev: camera permission popup preview */}
-      {/* <CameraPermissionPopup
-        visible={showCameraPermissionPopup}
-        onClose={() => setShowCameraPermissionPopup(false)}
-        onAllowCamera={async () => {
-          setCameraPreviewLoading(true);
-          try {
-            const result = await requestCameraPermission();
-            if (result.granted) {
-              setShowCameraPermissionPopup(false);
-              showToast("Camera permission granted", "success");
-              return;
-            }
-            setCameraPreviewBlocked(!!result.blocked);
-          } finally {
-            setCameraPreviewLoading(false);
-          }
-        }}
-        onSkip={() => setShowCameraPermissionPopup(false)}
-        loading={cameraPreviewLoading}
-        openSettings={cameraPreviewBlocked}
-      /> */}
 
       <DeleteAccountConfirmation
         visible={showDeleteAccount}
         onClose={() => setShowDeleteAccount(false)}
       />
 
-      <LimitReachedBottomSheet
-        visible={previewUpgradeLimitType != null}
-        onClose={() => setPreviewUpgradeLimitType(null)}
-        onUpgrade={() => {
-          setPreviewUpgradeLimitType(null);
-          handleManageSubscription();
-        }}
-        limitType={previewUpgradeLimitType ?? "identification"}
-      />
-
-      <SubscriptionDiscountSheet
-        visible={showSubscriptionDiscountPreview}
-        onClose={() => setShowSubscriptionDiscountPreview(false)}
-        onSubscribe={() => {
-          setShowSubscriptionDiscountPreview(false);
-          handleManageSubscription();
-        }}
+      <LogoutConfirmation
+        visible={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
       />
     </SafeAreaView>
   );
@@ -598,92 +418,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing[4],
-    paddingVertical: 12,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-  },
-  headerRight: {
-    width: 44,
-  },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: spacing[4],
+    paddingHorizontal: spacing[4],
+    paddingTop: 24,
     paddingBottom: 32,
-  },
-  loginButton: {
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  premiumCard: {
-    overflow: "hidden",
-    position: "relative",
-  },
-  premiumCardContent: {
-    flexDirection: "row",
-    padding: spacing[4],
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  premiumCardLeft: {
-    flex: 1,
-  },
-  premiumCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  activeBadge: {
-    marginLeft: 8,
-  },
-  beetlePlaceholder: {
-    width: 60,
-    height: 60,
-    marginTop: 8,
-    backgroundColor: OVERLAY_COLORS.BACKDROP_VERY_LIGHT,
-    borderRadius: Radius.sm,
-  },
-  premiumCardRight: {
-    alignItems: "flex-end",
-    gap: 8,
-  },
-  manageButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  logoutButton: {
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: APP_COLORS.borderGray,
-  },
-  avatarCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
   },
 });

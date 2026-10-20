@@ -61,27 +61,48 @@ export type CaptureFrameLayout = {
   frameRadius: number;
 };
 
-export function useCaptureFrameLayout(): CaptureFrameLayout {
+export function computeCaptureFrameLayout(
+  width: number,
+  height: number,
+  insetTop: number,
+  constraints: { minimumTop?: number; bottomInset?: number } = {}
+): CaptureFrameLayout {
+  const frameTop = Math.max(
+    insetTop + CAPTURE_FRAME_TOP_OFFSET,
+    constraints.minimumTop ?? 0
+  );
+  const frameSize = Math.max(
+    0,
+    Math.min(
+      CAPTURE_FRAME_MAX_SIZE,
+      width - CAPTURE_FRAME_HORIZONTAL_INSET * 2,
+      height - frameTop - (constraints.bottomInset ?? 0)
+    )
+  );
+  return {
+    screenWidth: width,
+    screenHeight: height,
+    frameSize,
+    frameLeft: (width - frameSize) / 2,
+    frameTop,
+    frameRadius: Math.min(CAPTURE_FRAME_RADIUS, frameSize / 2),
+  };
+}
+
+export function useCaptureFrameLayout(
+  constraints: { minimumTop?: number; bottomInset?: number } = {}
+): CaptureFrameLayout {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-
-  return useMemo(() => {
-    const frameSize = Math.min(
-      CAPTURE_FRAME_MAX_SIZE,
-      width - CAPTURE_FRAME_HORIZONTAL_INSET * 2
-    );
-    const frameLeft = (width - frameSize) / 2;
-    const frameTop = insets.top + CAPTURE_FRAME_TOP_OFFSET;
-
-    return {
-      screenWidth: width,
-      screenHeight: height,
-      frameSize,
-      frameLeft,
-      frameTop,
-      frameRadius: CAPTURE_FRAME_RADIUS,
-    };
-  }, [width, height, insets.top]);
+  const { minimumTop, bottomInset } = constraints;
+  return useMemo(
+    () =>
+      computeCaptureFrameLayout(width, height, insets.top, {
+        minimumTop,
+        bottomInset,
+      }),
+    [width, height, insets.top, minimumTop, bottomInset]
+  );
 }
 
 /** Map UI zoom (1–5×) to the device zoom factor supported by VisionCamera. */

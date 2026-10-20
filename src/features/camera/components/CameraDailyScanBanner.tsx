@@ -1,9 +1,15 @@
 /**
- * Free-plan daily photo scan counter + reset countdown (Figma 8717:62309).
+ * Free-plan lifetime photo and sound scan counter (Figma 8717:62309).
  */
 
 import React from "react";
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import MaskedView from "@react-native-masked-view/masked-view";
 import LinearGradient from "react-native-linear-gradient";
 import { AppImage } from "@/components/AppImage";
@@ -54,7 +60,6 @@ function GradientHighlight({
 export const CameraDailyScanBanner: React.FC<Props> = ({
   remaining,
   dailyLimit,
-  resetLabel,
   style,
 }) => {
   const strings = useStrings();
@@ -73,13 +78,6 @@ export const CameraDailyScanBanner: React.FC<Props> = ({
         </Text>
         <GradientHighlight style={styles.highlightText}>
           {scansLabel}
-        </GradientHighlight>
-        <Text style={styles.separator}>{" • "}</Text>
-        <Text style={styles.bodyText}>
-          {strings.camera.limits.resetInPrefix}
-        </Text>
-        <GradientHighlight style={styles.highlightText}>
-          {resetLabel}
         </GradientHighlight>
       </View>
     </View>

@@ -1,21 +1,22 @@
 /**
  * Settings Item Component
- * Reusable row item for settings with optional arrow, switch, or custom right component
+ * 60px row: optional 20px icon, Body/14px/Regular label, trailing value /
+ * chevron / toggle. Divider is controlled by the parent SettingsSection.
  */
 
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { Text } from "../../../atoms";
-import { useTheme } from "../../../hooks/useTheme";
-
 import { FONTS } from "../../../common/typography";
-
-import { Radius } from "../../../design";
+import { useSettingsColors } from "../settingsColors";
+import { SettingsIcon, SettingsIconName } from "./SettingsIcon";
 
 export interface SettingsItemProps {
   title: string;
   subtitle?: string;
+  icon?: SettingsIconName;
+  /** Trailing grey value (e.g. Appearance → "System"). */
+  value?: string;
   onPress?: () => void;
   showArrow?: boolean;
   showBorder?: boolean;
@@ -24,10 +25,8 @@ export interface SettingsItemProps {
   /** For toggle switch */
   switchValue?: boolean;
   onSwitchChange?: (value: boolean) => void;
-  /** Text color override (e.g., for error items like Delete Account) */
+  /** Label + icon color override (e.g. Log Out in red) */
   textColor?: string;
-  /** Right-side value label (e.g. "Use System theme") */
-  value?: string;
   /** When true, row is non-interactive (e.g. sub-toggle when master is off). */
   disabled?: boolean;
 }
@@ -35,6 +34,8 @@ export interface SettingsItemProps {
 export const SettingsItem: React.FC<SettingsItemProps> = ({
   title,
   subtitle,
+  icon,
+  value,
   onPress,
   showArrow = false,
   showBorder = false,
@@ -43,164 +44,131 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
   switchValue,
   onSwitchChange,
   textColor,
-  value,
   disabled = false,
 }) => {
-  const colors = useTheme().colors;
-
-  // Arrow color based on theme
-  const arrowColor = colors.textSecondary; // #5D5D5D light, #D1D1D1 dark
+  const c = useSettingsColors();
+  const labelColor = textColor ?? c.text;
 
   const content = (
     <View
       style={[
-        styles.itemContainer,
+        styles.row,
         showBorder && {
           borderBottomWidth: 1,
-          borderBottomColor: colors.border,
+          borderBottomColor: c.cardBorder,
         },
         disabled && styles.disabled,
       ]}
     >
-      <View style={styles.leftContent}>
-        {leftComponent}
-        <View style={styles.textContent}>
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={[styles.title, { color: textColor ?? colors.textSecondary }]}
-          >
-            {title}
-          </Text>
-          {subtitle && (
-            <Text
-              variant="body"
-              size="small"
-              color="textSecondary"
-              style={styles.subtitle}
-            >
-              {subtitle}
-            </Text>
-          )}
-        </View>
-      </View>
-
-      {/* Right side */}
-      <View style={styles.rightContent}>
-        {value ? (
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={[styles.value, { color: colors.textBrand }]}
-          >
-            {value}
+      {leftComponent}
+      {icon && <SettingsIcon name={icon} color={labelColor} />}
+      <View style={styles.textContent}>
+        <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={[styles.title, { color: labelColor }]}
+        >
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text numberOfLines={2} style={[styles.subtitle, { color: c.muted }]}>
+            {subtitle}
           </Text>
         ) : null}
-        {rightComponent}
-        {switchValue !== undefined && onSwitchChange && (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            disabled={disabled}
-            onPress={() => {
-              if (disabled) return;
-              onSwitchChange(!switchValue);
-            }}
-            style={[
-              styles.switchTrack,
-              {
-                backgroundColor: switchValue ? colors.primary : colors.border,
-                justifyContent: switchValue ? "flex-end" : "flex-start",
-              },
-            ]}
-          >
-            <View
-              style={[styles.switchThumb, { backgroundColor: colors.surface }]}
-            />
-          </TouchableOpacity>
-        )}
-        {showArrow && (
-          <View style={styles.arrowWrap}>
-            <MaterialIcons name="chevron-right" size={20} color={arrowColor} />
-          </View>
-        )}
       </View>
+
+      {rightComponent}
+      {switchValue !== undefined && onSwitchChange && (
+        <TouchableOpacity
+          activeOpacity={0.8}
+          disabled={disabled}
+          onPress={() => onSwitchChange(!switchValue)}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: switchValue, disabled }}
+          accessibilityLabel={title}
+          style={[
+            styles.switchTrack,
+            {
+              backgroundColor: switchValue ? c.brand : c.toggleOff,
+              alignItems: switchValue ? "flex-end" : "flex-start",
+            },
+          ]}
+        >
+          <View style={[styles.switchKnob, { backgroundColor: c.knob }]} />
+        </TouchableOpacity>
+      )}
+      {(value || showArrow) && (
+        <View style={styles.trailing}>
+          {value ? (
+            <Text style={[styles.value, { color: c.muted }]}>{value}</Text>
+          ) : null}
+          {showArrow && <SettingsIcon name="chevronRight" color={c.text} />}
+        </View>
+      )}
     </View>
   );
 
   if (onPress) {
     return (
       <TouchableOpacity
-        onPress={disabled ? undefined : onPress}
+        onPress={onPress}
         activeOpacity={0.7}
         disabled={disabled}
+        accessibilityRole="button"
       >
         {content}
       </TouchableOpacity>
     );
   }
 
-  return <View>{content}</View>;
+  return content;
 };
 
 const styles = StyleSheet.create({
-  itemContainer: {
+  row: {
+    minHeight: 60,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-  },
-  leftContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
+    gap: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
   textContent: {
     flex: 1,
     minWidth: 0,
   },
-  /** Sub header: Body/14px/Medium – Satoshi 500, line-height 20px */
   title: {
     fontSize: 14,
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.regular,
     lineHeight: 20,
-    marginBottom: 0,
-    overflow: "hidden",
   },
   subtitle: {
     marginTop: 2,
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+    lineHeight: 16,
+  },
+  trailing: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   value: {
-    fontSize: 16,
-    fontFamily: FONTS.bold,
-    lineHeight: 24,
-    maxWidth: 180,
+    fontSize: 13,
+    fontFamily: FONTS.regular,
+    lineHeight: 19.5,
   },
-  rightContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  /** Arrow: 20×20, overflow hidden */
-  arrowWrap: {
-    width: 20,
-    height: 20,
-    overflow: "hidden",
-    alignItems: "center",
+  switchTrack: {
+    width: 56,
+    height: 32,
+    borderRadius: 32,
+    padding: 2,
     justifyContent: "center",
   },
-  /** Circular switch: pill track + circular thumb */
-  switchTrack: {
-    width: 51,
-    height: 31,
-    borderRadius: Radius.lg,
-    padding: 3,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  switchThumb: {
-    width: 25,
-    height: 25,
-    borderRadius: Radius.full,
+  switchKnob: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   disabled: {
     opacity: 0.45,

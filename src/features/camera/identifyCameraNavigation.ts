@@ -149,7 +149,9 @@ export function resolveActiveExternalReturnTarget(
 
 /** Keep route params and store aligned while the shared camera is open. */
 export function syncExternalCameraSessionOnFocus(
-  navigation: { setParams: (params: Partial<IdentifyCameraMainParams>) => void },
+  navigation: {
+    setParams: (params: Partial<IdentifyCameraMainParams>) => void;
+  },
   params: IdentifyCameraMainParams | undefined
 ): void {
   const routeExternal = resolveCameraReturnTargetFromRoute(params);
@@ -162,7 +164,9 @@ export function syncExternalCameraSessionOnFocus(
 
   if (storeTarget && !routeExternal) {
     if (explicitlyClearedForIdentify || params == null) {
-      useIdentificationEntryStore.getState().setExternalCameraReturnTarget(null);
+      useIdentificationEntryStore
+        .getState()
+        .setExternalCameraReturnTarget(null);
       return;
     }
     navigation.setParams(
@@ -195,25 +199,9 @@ export function resolveCropHostReturnTarget(params: {
   returnImageToQuiz?: boolean;
   feedDraft?: FeedCameraDraft | null;
 }): CropReturnTarget {
-  if (params.returnTarget === "analysis" && params.feedDraft != null) {
-    return "feed";
-  }
-
-  const routeExternal = resolveCameraReturnTargetFromRoute(params);
-  if (routeExternal) return routeExternal;
-
-  if (params.returnTarget === "analysis") return "analysis";
-  if (params.returnTarget === "camera") return "camera";
-
-  if (
-    params.returnTarget === "askAi" ||
-    params.returnTarget === "feed" ||
-    params.returnTarget === "quiz"
-  ) {
-    return params.returnTarget;
-  }
-
-  return "analysis";
+  // The explicit crop destination owns the session. Stale route flags must not
+  // send an identification photo to Ask AI or a previous feed draft.
+  return params.returnTarget;
 }
 
 /** Root navigator — stable across Camera stack depth changes. */
@@ -230,7 +218,9 @@ export function getAppRootNavigation(navigation: {
   while (current?.getParent?.()) {
     current = current.getParent() as typeof current;
   }
-  return current?.navigate ? (current as { navigate: (...args: unknown[]) => void }) : null;
+  return current?.navigate
+    ? (current as { navigate: (...args: unknown[]) => void })
+    : null;
 }
 
 export function buildCameraMainParams(

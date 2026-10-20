@@ -1,3 +1,4 @@
+import { requestFreeScanLimitPrompt } from "../../../services/freeScanLimitPrompt";
 /**
  * Crop host — holds a freeze-frame of the capture while VisionCamera is released
  * and the native cropper presents.
@@ -6,15 +7,17 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { AppImage } from "@/components/AppImage";
-import { useFocusEffect, useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+  RouteProp,
+} from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CameraStackParamList } from "../../../navigation/types";
 import { openInteractiveCropper } from "../interactiveCrop";
 import { isImageCropPickerCancelError } from "../cropImageAndReturnObject";
-import {
-  ensureLoadableUri,
-  normalizeImageUriForCrop,
-} from "../camera.utils";
+import { ensureLoadableUri, normalizeImageUriForCrop } from "../camera.utils";
 import { identifyFlowError, identifyFlowLog } from "../identifyFlowLog";
 import { navigateProcessedImageResult } from "../identifyImageFlow";
 import { resolveCropHostReturnTarget } from "../identifyCameraNavigation";
@@ -27,10 +30,7 @@ import { canIdentifyPhoto } from "../../../services/session/usageLimit.service";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
 
-type Nav = NativeStackNavigationProp<
-  CameraStackParamList,
-  "IdentifyImageCrop"
->;
+type Nav = NativeStackNavigationProp<CameraStackParamList, "IdentifyImageCrop">;
 type Route = RouteProp<CameraStackParamList, "IdentifyImageCrop">;
 
 export const IdentifyImageCropScreen: React.FC = () => {
@@ -71,7 +71,7 @@ export const IdentifyImageCropScreen: React.FC = () => {
       if (startedUriRef.current === normalizedUri) return;
       startedUriRef.current = normalizedUri;
 
-          identifyFlowLog("crop_host_opened", {
+      identifyFlowLog("crop_host_opened", {
         returnTarget,
         pathPrefix: normalizedUri.slice(0, 32),
         screen: "IdentifyImageCrop",
@@ -117,6 +117,7 @@ export const IdentifyImageCropScreen: React.FC = () => {
               const allowed = await canIdentifyPhoto();
               if (!allowed) {
                 identifyFlowError("IFLOW-011", "Identification limit reached");
+                requestFreeScanLimitPrompt();
                 navigation.goBack();
                 return;
               }
@@ -169,7 +170,10 @@ export const IdentifyImageCropScreen: React.FC = () => {
   );
 
   return (
-    <View style={[styles.host, { backgroundColor: "#111111" }]} pointerEvents="none">
+    <View
+      style={[styles.host, { backgroundColor: "#111111" }]}
+      pointerEvents="none"
+    >
       {normalizedUri ? (
         <AppImage
           source={{ uri: normalizedUri }}

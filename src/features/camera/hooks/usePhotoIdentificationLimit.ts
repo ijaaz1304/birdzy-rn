@@ -1,54 +1,36 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-  formatDailyLimitResetCountdown,
-  getPhotoIdentificationLimitDisplay,
-  type PhotoIdentificationLimitDisplay,
-} from "../utils/photoIdentificationLimit";
-
-type LimitState = PhotoIdentificationLimitDisplay & {
-  resetLabel: string;
-};
-
-const EMPTY: LimitState = {
-  dailyLimit: 2,
-  usedToday: 0,
-  remaining: 2,
-  resetMs: 0,
-  resetLabel: "0h:00m",
-};
+import { useCallback, useEffect, useRef, useState } from "react";
+import { subscribeToScanQuotaChanges } from "../../../services/session/scanQuota";
+import { getPhotoIdentificationLimitDisplay } from "../utils/photoIdentificationLimit";
 
 export function usePhotoIdentificationLimit(enabled: boolean) {
-  const [limit, setLimit] = useState<LimitState>(EMPTY);
-
+  const [limit, setLimit] = useState({
+    dailyLimit: 30,
+    usedToday: 0,
+    remaining: 30,
+    resetMs: 0,
+    resetLabel: "",
+  });
+  const generation = useRef(0);
   const refresh = useCallback(async () => {
     if (!enabled) return;
-    const next = await getPhotoIdentificationLimitDisplay();
-    setLimit({
-      ...next,
-      resetLabel: formatDailyLimitResetCountdown(next.resetMs),
-    });
+    const version = ++generation.current;
+    try {
+      const next = await getPhotoIdentificationLimitDisplay();
+      if (version === generation.current) setLimit({ ...next, resetLabel: "" });
+    } catch {
+      /* Submission reports storage errors; keep the last known display. */
+    }
   }, [enabled]);
-
   useEffect(() => {
     if (!enabled) return;
     void refresh();
-    const interval = setInterval(() => {
-      setLimit((prev) => {
-        const resetMs = Math.max(0, prev.resetMs - 60_000);
-        return {
-          ...prev,
-          resetMs,
-          resetLabel: formatDailyLimitResetCountdown(resetMs),
-        };
-      });
-    }, 60_000);
-    return () => clearInterval(interval);
+    const unsubscribe = subscribeToScanQuotaChanges(() => {
+      void refresh();
+    });
+    return () => {
+      generation.current += 1;
+      unsubscribe();
+    };
   }, [enabled, refresh]);
-
-  useEffect(() => {
-    if (!enabled) return;
-    void refresh();
-  }, [enabled, refresh]);
-
   return { limit, refresh };
 }

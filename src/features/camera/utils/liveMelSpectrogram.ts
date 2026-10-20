@@ -84,7 +84,7 @@ export class LiveMelSpectrogramEngine {
 
   /** Shallow view for live UI — column arrays are immutable once pushed. */
   getColumnsView(): number[][] {
-    return this.columns;
+    return this.columns.slice();
   }
 
   /** Deep copy for export after recording (survives engine reset). */

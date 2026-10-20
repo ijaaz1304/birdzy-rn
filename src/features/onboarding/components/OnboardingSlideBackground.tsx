@@ -1,10 +1,6 @@
+import { AppImage } from "@/components/AppImage";
 import React, { useMemo } from "react";
-import {
-  Image,
-  StyleSheet,
-  View,
-  type ImageSourcePropType,
-} from "react-native";
+import { StyleSheet, View, type ImageSourcePropType } from "react-native";
 
 /** Onboarding background art is 1500×3252 — anchor to bottom like phone. */
 const ONBOARDING_BG_ASPECT = 3252 / 1500;
@@ -28,11 +24,9 @@ export const OnboardingSlideBackground: React.FC<
   return (
     <View style={styles.layer} pointerEvents="none">
       {backgroundColor ? (
-        <View
-          style={[StyleSheet.absoluteFillObject, { backgroundColor }]}
-        />
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor }]} />
       ) : null}
-      <Image
+      <AppImage
         source={source}
         style={{
           position: "absolute",

@@ -19,6 +19,11 @@ function walk(dir, out = []) {
 const jsxImage = [];
 const rnImageImport = [];
 const fastImageDisplay = [];
+// Infrastructure intentionally uses FastImage directly for decode completion / prefetch.
+const fastImageInfrastructure = new Set([
+  "components/AppImage/HiddenRemoteImagePrefetcher.tsx",
+  "imagePipeline/prefetchBundledSources.ts",
+]);
 
 for (const file of walk(ROOT)) {
   const rel = path.relative(ROOT, file);
@@ -42,6 +47,7 @@ for (const file of walk(ROOT)) {
   if (
     /from\s+["']react-native-fast-image["']/.test(content) &&
     !rel.includes("prefetchImages") &&
+    !fastImageInfrastructure.has(rel) &&
     !rel.includes("AppImage/AppImage")
   ) {
     fastImageDisplay.push(rel);
@@ -63,8 +69,10 @@ const webp = (assets.match(/\.webp"/g) || []).length;
 const png = (assets.match(/\.png"/g) || []).length;
 console.log(`\nAssets index: ${webp} WebP, ${png} PNG (${webp + png} total)`);
 console.log(
-  "\nDiagnosis: iOS RN Image fails on bundled WebP (~140 assets). Bundled PNG (~90) use RN Image on iOS. Remote URLs use FastImage (cache + WebP)."
+  "\nBundled assets route through RN Image with the installed WebP decoder. Remote URLs use FastImage for caching."
 );
 console.log("\nRun full audit: npm run verify:image-pipeline");
 
-process.exit(jsxImage.length + rnImageImport.length + fastImageDisplay.length > 0 ? 1 : 0);
+process.exit(
+  jsxImage.length + rnImageImport.length + fastImageDisplay.length > 0 ? 1 : 0
+);

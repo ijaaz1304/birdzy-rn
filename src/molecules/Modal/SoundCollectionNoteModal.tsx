@@ -1,16 +1,11 @@
 import React from "react";
-import {
-  Modal,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { Text } from "../../../atoms";
-import { CloseIcon } from "../../../components/shared/CloseIcon";
-import { FONTS } from "../../../common/typography";
-import { COLLECTION_STRINGS } from "../../../config/strings/collection.strings";
-import { Radius } from "../../../design";
-import { useTheme } from "../../../hooks/useTheme";
+import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text } from "../../atoms";
+import { CloseIcon } from "../../components/shared/CloseIcon";
+import { FONTS } from "../../common/typography";
+import { COLLECTION_STRINGS } from "../../config/strings/collection.strings";
+import { Radius } from "../../design";
+import { useTheme } from "../../hooks/useTheme";
 
 type Props = {
   visible: boolean;
@@ -31,18 +26,10 @@ export function SoundCollectionNoteModal({ visible, onClose }: Props) {
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors.surfacePrimary },
-          ]}
-        >
+        <View style={[styles.card, { backgroundColor: colors.surfacePrimary }]}>
           <TouchableOpacity
             onPress={onClose}
-            style={[
-              styles.close,
-              { backgroundColor: colors.surfaceSecondary },
-            ]}
+            style={[styles.close, { backgroundColor: colors.surfaceSecondary }]}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Close"

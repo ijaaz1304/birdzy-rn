@@ -1,3 +1,7 @@
+import { LoginSecurityScreen } from "../features/settings/screens/LoginSecurityScreen";
+import { ChangePasswordScreen } from "../features/settings/screens/ChangePasswordScreen";
+import { CreatePasswordScreen } from "../features/settings/screens/CreatePasswordScreen";
+import { ContactUsScreen } from "../features/settings/screens/ContactUsScreen";
 /**
  * Settings Stack Navigator
  */
@@ -39,6 +43,10 @@ export const SettingsStack: React.FC = () => {
       <Stack.Screen name="AppLogs" component={AppLogsScreen} />
       <Stack.Screen name="Privacy" component={PrivacyScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
+      <Stack.Screen name="LoginSecurity" component={LoginSecurityScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen name="CreatePassword" component={CreatePasswordScreen} />
+      <Stack.Screen name="ContactUs" component={ContactUsScreen} />
     </Stack.Navigator>
   );
 };

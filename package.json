@@ -54,7 +54,10 @@
     "remoteconfig:pull:prod": "npx -y firebase-tools@latest use prod && npx -y firebase-tools@latest remoteconfig:get -o remoteconfig.template.json",
     "remoteconfig:push:dev": "npx -y firebase-tools@latest use dev && npx -y firebase-tools@latest deploy --only remoteconfig",
     "remoteconfig:push:prod": "npx -y firebase-tools@latest use prod && npx -y firebase-tools@latest deploy --only remoteconfig",
-    "remoteconfig:push:all": "npm run remoteconfig:push:dev && npm run remoteconfig:push:prod"
+    "remoteconfig:push:all": "npm run remoteconfig:push:dev && npm run remoteconfig:push:prod",
+    "test:quiet": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.8",

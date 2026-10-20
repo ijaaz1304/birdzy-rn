@@ -1,4 +1,4 @@
-import type { LimitType } from "../../../config/subscription.config";
+import type { LimitType } from "../../config/subscription.config";
 
 export type UpgradeModalPreviewItem = {
   limitType: LimitType;

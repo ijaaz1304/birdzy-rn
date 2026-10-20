@@ -32,6 +32,6 @@ export async function getPhotoIdentificationLimitDisplay(): Promise<PhotoIdentif
     dailyLimit,
     usedToday,
     remaining,
-    resetMs: getMsUntilDailyLimitReset(),
+    resetMs: 0,
   };
 }

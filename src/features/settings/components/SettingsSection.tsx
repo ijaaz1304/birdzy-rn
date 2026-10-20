@@ -1,15 +1,14 @@
 /**
  * Settings Section Component
- * Reusable section header for settings groups.
- * Items (e.g. Rate Us, Write feedback, Enable notification) are wrapped in a card-style background.
+ * Heading (Body/16px/SemiBold) above a bordered card; rows are divided by
+ * 1px grey/50 lines, no divider after the last row.
  */
 
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Text } from "../../../atoms";
-import { useTheme } from "../../../hooks/useTheme";
-
 import { FONTS } from "../../../common/typography";
+import { useSettingsColors } from "../settingsColors";
 
 export interface SettingsSectionProps {
   title: string;
@@ -20,25 +19,25 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
   title,
   children,
 }) => {
-  const theme = useTheme();
-  const colors = theme.colors;
-  const radius = theme.radius;
+  const c = useSettingsColors();
+  const rows = React.Children.toArray(children).filter(React.isValidElement);
 
   return (
     <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-        {title}
-      </Text>
+      <Text style={[styles.sectionTitle, { color: c.text }]}>{title}</Text>
       <View
         style={[
-          styles.card,
-          {
-            // backgroundColor: colors.surface ?? colors.surfacePrimary,
-            borderRadius: radius.lg,
-          },
+          styles.cardShadow,
+          { backgroundColor: c.card, borderColor: c.cardBorder },
         ]}
       >
-        {children}
+        <View style={styles.cardClip}>
+          {rows.map((row, index) =>
+            React.cloneElement(row as React.ReactElement<any>, {
+              showBorder: index < rows.length - 1,
+            })
+          )}
+        </View>
       </View>
     </View>
   );
@@ -46,16 +45,27 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 0,
+    paddingTop: 4,
+    gap: 8,
   },
-  /** Headings: Body/16px/SemiBold – Satoshi 700, line-height 24px */
   sectionTitle: {
+    paddingHorizontal: 4,
     fontSize: 16,
     fontFamily: FONTS.bold,
     lineHeight: 24,
-    marginBottom: 8,
   },
-  card: {
+  cardShadow: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 1,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  cardClip: {
+    borderRadius: 15,
     overflow: "hidden",
   },
 });

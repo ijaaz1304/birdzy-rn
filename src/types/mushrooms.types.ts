@@ -122,6 +122,7 @@ export interface MushroomDetail extends MushroomListItem {
   /** Bird API — similar species (mapped from similarBirds) */
   flightPattern?: string[];
   flightAltitude?: string[];
+  sexDifferences?: string;
   keyIdentificationMarks?: string[];
   dominantColors?: string[];
   diet?: string[];

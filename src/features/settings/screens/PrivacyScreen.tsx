@@ -1,18 +1,16 @@
+import { SettingsHeader } from "../components/SettingsHeader";
 /**
  * Privacy Policy Screen
- * Opens Birdzy Privacy Policy in an in-app WebView.
+ * Opens Shroomzy Privacy Policy in an in-app WebView.
  */
 
 import React from "react";
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { WebView } from "react-native-webview";
 import { useTheme } from "../../../hooks/useTheme";
-import { Text, NavBackIcon } from "../../../atoms";
 import { getPrivacyPolicyUrl } from "../../../constants/legalUrls";
-
-import { spacing } from "../../../design-system/spacing";
 
 export const PrivacyScreen: React.FC = () => {
   const theme = useTheme();
@@ -24,15 +22,10 @@ export const PrivacyScreen: React.FC = () => {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["top", "bottom"]}
     >
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <NavBackIcon color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text variant="title" size="medium" weight="semibold">
-          Privacy Policy
-        </Text>
-        <View style={styles.placeholder} />
-      </View>
+      <SettingsHeader
+        title="Privacy Policy"
+        onBackPress={() => navigation.goBack()}
+      />
 
       <View style={styles.webViewContainer}>
         {loading && (
@@ -57,15 +50,6 @@ export const PrivacyScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: spacing[4],
-  },
-  placeholder: {
-    width: 24,
   },
   webViewContainer: {
     flex: 1,

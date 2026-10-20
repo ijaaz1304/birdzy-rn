@@ -12,12 +12,24 @@ import React, {
 } from "react";
 import { InteractionManager, Platform, Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, AppState, AppStateStatus } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  AppState,
+  AppStateStatus,
+} from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useNavigation, useFocusEffect, useIsFocused } from "@react-navigation/native";
+import {
+  useNavigation,
+  useFocusEffect,
+  useIsFocused,
+} from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   RootStackParamList,
@@ -88,27 +100,22 @@ import { useAuthStore } from "../../auth/auth.store";
 import { isIapPipelineBusy } from "../../subscription/hooks/useIapPurchase";
 import { hasPendingMarketingDeepLink } from "../../../navigation/deepLinking/deepLinkManager";
 import { waitForAuthentication } from "../../../utils/authUtils";
+import { HOME_LAYOUT } from "../../../constants/colorConstants";
+import { AUTH_WAIT, TIMING } from "../../../constants/appConstants";
 import {
-  HOME_LAYOUT,
-} from "../../../constants/colorConstants";
-import {
-  AUTH_WAIT,
-  TIMING,
-  DISCOUNT,
-  PLACEHOLDERS,
-} from "../../../constants/appConstants";
-import { SCREEN_STORAGE_KEYS, UI_STATE_KEYS } from "../../../constants/storageConstants";
+  SCREEN_STORAGE_KEYS,
+  UI_STATE_KEYS,
+} from "../../../constants/storageConstants";
 import { usePublishedAppsStore } from "../publishedApps.store";
 import { filterPublishedAppsForCrossPromo } from "../publishedAppsFilter";
 import { getRandomizedCatalogueListing } from "../../../utils/catalogueUtils";
-import {
-  useRunAfterTooltipComplete,
-} from "../../../contexts/TooltipVisibilityContext";
+import { useRunAfterTooltipComplete } from "../../../contexts/TooltipVisibilityContext";
 import { isTooltipPending } from "../../../components/AppLogsTooltip/AppLogsTooltip";
+import { warmCatalogueList } from "../../catalogue/warmCatalogueList";
 import {
-  warmCatalogueList,
-} from "../../catalogue/warmCatalogueList";
-import { prefetchRemoteImage, prefetchRemoteImages } from "../../../utils/prefetchImages";
+  prefetchRemoteImage,
+  prefetchRemoteImages,
+} from "../../../utils/prefetchImages";
 import { FONTS } from "../../../common/typography";
 
 import { Radius } from "../../../design";
@@ -277,8 +284,7 @@ export const HomeScreen = () => {
   const mushroomOfTheDayIndexRef = useRef(0);
 
   // Rock of the Day Modal state
-  const [showBirdOfTheDayModal, setShowBirdOfTheDayModal] =
-    useState(false);
+  const [showBirdOfTheDayModal, setShowBirdOfTheDayModal] = useState(false);
   const [showMotdLimitSheet, setShowMotdLimitSheet] = useState(false);
   const [loadingMushroomOfTheDay, setLoadingMushroomOfTheDay] = useState(false);
   const [showMushroomOfDayBanner, setShowMushroomOfDayBanner] = useState(true);
@@ -314,11 +320,9 @@ export const HomeScreen = () => {
       return {
         id: specimen?.archetypeId ?? "default",
         name:
-          getDisplayName(specimen) ||
-          strings.home.birdOfTheDay.featuredBird,
+          getDisplayName(specimen) || strings.home.birdOfTheDay.featuredBird,
         scientificName:
-          specimen?.scientificName ||
-          strings.home.birdOfTheDay.birdSpecimen,
+          specimen?.scientificName || strings.home.birdOfTheDay.birdSpecimen,
         canonicalName: specimen?.canonicalName,
         image: imageUrl,
         imageUrls: imageUrlsResolved.length > 0 ? imageUrlsResolved : undefined,
@@ -337,12 +341,7 @@ export const HomeScreen = () => {
       if (!specimen) return;
       const built = buildMushroomOfTheDayFromSpecimen(specimen);
       setMushroomOfTheDay(built);
-      const imageUrl =
-        typeof built.image === "string"
-          ? built.image
-          : built.image && typeof built.image === "object" && "uri" in built.image
-            ? built.image.uri
-            : specimen?.imageUrls?.[0];
+      const imageUrl = built.image || specimen?.imageUrls?.[0];
       prefetchRemoteImages([imageUrl], 1);
       void prefetchRemoteImage(imageUrl);
     },
@@ -608,9 +607,7 @@ export const HomeScreen = () => {
   }, [fetchMushroomOfTheDay, loadMushrooms]);
 
   const { user } = useAuthStore();
-  const userName = getHomeDisplayName(
-    user?.name || user?.firstName || "Guest"
-  );
+  const userName = getHomeDisplayName(user?.name || user?.firstName || "Guest");
 
   const stickyDiscountBannerVisible = !isPremium && showDiscountBanner;
 
@@ -666,289 +663,291 @@ export const HomeScreen = () => {
       edges={["top"]}
     >
       <View style={styles.homeBody}>
-      <ScrollView
-        style={styles.homeScroll}
-        showsVerticalScrollIndicator={false}
-        nestedScrollEnabled={true}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingBottom: stickyDiscountScrollPadding,
-          width: "100%",
-          alignItems: "stretch",
-        }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
-        }
-      >
-        {/* Header */}
-        <View
-          style={[
-            screenStyles.header,
-            {
-              paddingHorizontal: HORIZONTAL_MARGIN,
-              paddingTop: Space[4],
-              paddingBottom: Space[2],
-            },
-          ]}
+        <ScrollView
+          style={styles.homeScroll}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            paddingBottom: stickyDiscountScrollPadding,
+            width: "100%",
+            alignItems: "stretch",
+          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
         >
-          <View style={[screenStyles.headerLeft, { gap: Space[2] }]}>
-            <TouchableOpacity
-              onPress={() => {
-                rootNavigation.navigate("SettingsStack", {
-                  screen: "SettingsMain",
-                });
-              }}
-              activeOpacity={0.7}
-              style={isPremium ? styles.avatarWithCoverTouchable : undefined}
-            >
-              {isPremium ? (
-                <View style={styles.avatarCoverContainer}>
+          {/* Header */}
+          <View
+            style={[
+              screenStyles.header,
+              {
+                paddingHorizontal: HORIZONTAL_MARGIN,
+                paddingTop: Space[4],
+                paddingBottom: Space[2],
+              },
+            ]}
+          >
+            <View style={[screenStyles.headerLeft, { gap: Space[2] }]}>
+              <TouchableOpacity
+                onPress={() => {
+                  rootNavigation.navigate("SettingsStack", {
+                    screen: "SettingsMain",
+                  });
+                }}
+                activeOpacity={0.7}
+                style={isPremium ? styles.avatarWithCoverTouchable : undefined}
+              >
+                {isPremium ? (
+                  <View style={styles.avatarCoverContainer}>
+                    <Avatar
+                      source={
+                        user?.avatar ? { uri: user.avatar } : Images.avatarHome
+                      }
+                      name={userName}
+                      size={32}
+                      style={styles.avatarInsideCover}
+                    />
+                    <AppImage
+                      source={Images.avatarCover}
+                      style={styles.avatarCoverBg}
+                      resizeMode="contain"
+                      pointerEvents="none"
+                    />
+                  </View>
+                ) : (
                   <Avatar
                     source={
                       user?.avatar ? { uri: user.avatar } : Images.avatarHome
                     }
                     name={userName}
                     size={32}
-                    style={styles.avatarInsideCover}
                   />
+                )}
+              </TouchableOpacity>
+              <AppText variant="title18">
+                {homeConfig.header.greeting(userName)}
+              </AppText>
+            </View>
+            <View style={[screenStyles.headerRight, styles.headerRightActions]}>
+              {isPremium ? (
+                <View style={styles.youAreProWrap} pointerEvents="none">
                   <AppImage
-                    source={Images.avatarCover}
-                    style={styles.avatarCoverBg}
+                    source={Images.youArePro}
+                    style={styles.youAreProImage}
                     resizeMode="contain"
-                    pointerEvents="none"
                   />
                 </View>
               ) : (
-                <Avatar
-                  source={
-                    user?.avatar ? { uri: user.avatar } : Images.avatarHome
-                  }
-                  name={userName}
-                  size={32}
-                />
+                <TouchableOpacity
+                  onPress={() => {
+                    analyticsService.logEvent(EVENTS.go_pro_button);
+                    rootNavigation.navigate("SubscriptionStack", {
+                      screen: "SubscriptionMain",
+                      params: {
+                        discount50: discountOffer.isActive,
+                      },
+                    });
+                  }}
+                  activeOpacity={0.8}
+                  style={styles.goProIconButton}
+                >
+                  <AppImage
+                    source={Images.goPro}
+                    style={styles.goProImage}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
-            <AppText variant="title18">
-              {homeConfig.header.greeting(userName)}
-            </AppText>
-          </View>
-          <View style={[screenStyles.headerRight, styles.headerRightActions]}>
-            {isPremium ? (
-              <View style={styles.youAreProWrap} pointerEvents="none">
-                <AppImage
-                  source={Images.youArePro}
-                  style={styles.youAreProImage}
-                  resizeMode="contain"
-                />
-              </View>
-            ) : (
               <TouchableOpacity
                 onPress={() => {
-                  analyticsService.logEvent(EVENTS.go_pro_button);
-                  rootNavigation.navigate("SubscriptionStack", {
-                    screen: "SubscriptionMain",
+                  rootNavigation.navigate("MainTabs", {
+                    screen: "Catalogue",
                     params: {
-                      discount50: discountOffer.isActive,
+                      screen: "SearchFilter",
                     },
                   });
                 }}
-                activeOpacity={0.8}
-                style={styles.goProIconButton}
-              >
-                <AppImage
-                  source={Images.goPro}
-                  style={styles.goProImage}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              onPress={() => {
-                rootNavigation.navigate("MainTabs", {
-                  screen: "Catalogue",
-                  params: {
-                    screen: "SearchFilter",
-                  },
-                });
-              }}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              style={[styles.searchIconContainer]}
-            >
-              <AppImage
-                source={
-                  isDark ? Images.searchHomeDark : Images.iconGlobalSearch
-                }
-                style={styles.searchIcon}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={[styles.sectionBlock, styles.identifyBannerSection]}>
-          <HomeIdentifyCardsSection
-            onSoundPress={() => {
-              startSoundIdentificationEntry();
-            }}
-            onPhotoPress={() => {
-              analyticsService.logEvent(EVENTS.identify_banner);
-              startIdentificationEntry();
-            }}
-          />
-        </View>
-
-        <View style={styles.sectionBlock}>
-          <HomeWizardBanner
-            onPress={() => {
-              homeStackNavigation.navigate("StepByStep", { startFresh: true });
-            }}
-          />
-        </View>
-
-        {!isPremium && showInlineDiscountBanner && (
-          <View style={[styles.sectionBlock, styles.discountBannerSection]}>
-            <View style={styles.fullSubsWrap}>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => {
-                  analyticsService.logEvent(EVENTS.subs_discount_banner);
-                  rootNavigation.navigate("SubscriptionStack", {
-                    screen: "SubscriptionMain",
-                    params: {
-                      openPlanModal: true,
-                      discount50: discountOffer.isActive,
-                    },
-                  });
-                }}
-              >
-                <AppImage
-                  source={Images.fullSubsBanner}
-                  style={styles.fullSubsBanner}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.fullSubsClose}
-                onPress={() => setShowInlineDiscountBanner(false)}
+                activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={[styles.searchIconContainer]}
               >
-                <CloseIcon isDark={isDark} style={styles.fullSubsCloseIcon} />
+                <AppImage
+                  source={
+                    isDark ? Images.searchHomeDark : Images.iconGlobalSearch
+                  }
+                  style={styles.searchIcon}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             </View>
           </View>
-        )}
 
-        <View style={styles.sectionBlock}>
-          <HomeExploreNearYouSection
-            onExploreMap={() => {
-              rootNavigation.navigate("MainTabs", {
-                screen: "Catalogue",
-                params: {
-                  screen: "CatalogueMain",
-                  params: { category: EXPLORE_NEAR_YOU_CATEGORIES.map },
-                },
-              });
-            }}
-            onGrowingNow={() => {
-              rootNavigation.navigate("MainTabs", {
-                screen: "Catalogue",
-                params: {
-                  screen: "CatalogueMain",
-                  params: { category: EXPLORE_NEAR_YOU_CATEGORIES.growing },
-                },
-              });
-            }}
-            onYearRound={() => {
-              rootNavigation.navigate("MainTabs", {
-                screen: "Catalogue",
-                params: {
-                  screen: "CatalogueMain",
-                  params: { category: EXPLORE_NEAR_YOU_CATEGORIES.yearRound },
-                },
-              });
-            }}
-          />
-        </View>
-
-        <View style={styles.sectionBlock}>
-          <HomeBirdCornerSection
-            onBirdOfTheDay={() => {
-              if (mushroomOfTheDay) {
-                void handleOpenMushroomOfDay();
-              }
-            }}
-            onAskAi={() => {
-              analyticsService.logEvent(EVENTS.ask_ai_banner_clicked, {
-                source: "home_corner",
-              });
-              rootNavigation.navigate("AskAIStack", { screen: "AskAIMain" });
-            }}
-            onBirdSoundLibrary={() => {
-              homeStackNavigation.navigate("AudioGallery");
-            }}
-          />
-        </View>
-
-        <View style={styles.sectionBlock}>
-          <View style={[layoutStyles.rowBetween, { marginBottom: Space[4] }]}>
-            <AppText
-              variant="body16"
-              color={colors.textPrimary}
-              style={{ fontFamily: FONTS.bold }}
-            >
-              {homeConfig.sections.otherApps.title}
-            </AppText>
-            <TouchableOpacity
-              onPress={() => {
-                analyticsService.logEvent(EVENTS.our_other_app_view_all);
-                homeStackNavigation.navigate("OtherApps");
+          <View style={[styles.sectionBlock, styles.identifyBannerSection]}>
+            <HomeIdentifyCardsSection
+              onSoundPress={() => {
+                startSoundIdentificationEntry();
               }}
-              activeOpacity={0.7}
-            >
-              <AppText
-                variant="caption12"
-                color={colors.textPrimary}
-                style={{ fontFamily: FONTS.medium }}
-              >
-                {homeConfig.sections.otherApps.viewAllText}
-              </AppText>
-            </TouchableOpacity>
+              onPhotoPress={() => {
+                analyticsService.logEvent(EVENTS.identify_banner);
+                startIdentificationEntry();
+              }}
+            />
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.otherAppsScrollContent}
-          >
-            {otherAppsForHome.map((app) => (
-              <AppOtherAppCard
-                key={app.key}
-                variant="horizontal"
-                title={app.title}
-                subtitle={app.subtitle}
-                image={app.image}
-                onPress={() => {
-                  analyticsService.logEvent(EVENTS.get_app, {
-                    app_name: String(app.title ?? app.key),
-                  });
-                  if (app.storeUrl) {
-                    Linking.openURL(app.storeUrl);
-                  } else {
-                    homeStackNavigation.navigate("OtherApps");
-                  }
-                }}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      </ScrollView>
 
-      {!isPremium && showDiscountBanner ? (
+          <View style={styles.sectionBlock}>
+            <HomeWizardBanner
+              onPress={() => {
+                homeStackNavigation.navigate("StepByStep", {
+                  startFresh: true,
+                });
+              }}
+            />
+          </View>
+
+          {!isPremium && showInlineDiscountBanner && (
+            <View style={[styles.sectionBlock, styles.discountBannerSection]}>
+              <View style={styles.fullSubsWrap}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => {
+                    analyticsService.logEvent(EVENTS.subs_discount_banner);
+                    rootNavigation.navigate("SubscriptionStack", {
+                      screen: "SubscriptionMain",
+                      params: {
+                        openPlanModal: true,
+                        discount50: discountOffer.isActive,
+                      },
+                    });
+                  }}
+                >
+                  <AppImage
+                    source={Images.fullSubsBanner}
+                    style={styles.fullSubsBanner}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.fullSubsClose}
+                  onPress={() => setShowInlineDiscountBanner(false)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <CloseIcon isDark={isDark} style={styles.fullSubsCloseIcon} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.sectionBlock}>
+            <HomeExploreNearYouSection
+              onExploreMap={() => {
+                rootNavigation.navigate("MainTabs", {
+                  screen: "Catalogue",
+                  params: {
+                    screen: "CatalogueMain",
+                    params: { category: EXPLORE_NEAR_YOU_CATEGORIES.map },
+                  },
+                });
+              }}
+              onGrowingNow={() => {
+                rootNavigation.navigate("MainTabs", {
+                  screen: "Catalogue",
+                  params: {
+                    screen: "CatalogueMain",
+                    params: { category: EXPLORE_NEAR_YOU_CATEGORIES.growing },
+                  },
+                });
+              }}
+              onYearRound={() => {
+                rootNavigation.navigate("MainTabs", {
+                  screen: "Catalogue",
+                  params: {
+                    screen: "CatalogueMain",
+                    params: { category: EXPLORE_NEAR_YOU_CATEGORIES.yearRound },
+                  },
+                });
+              }}
+            />
+          </View>
+
+          <View style={styles.sectionBlock}>
+            <HomeBirdCornerSection
+              onBirdOfTheDay={() => {
+                if (mushroomOfTheDay) {
+                  void handleOpenMushroomOfDay();
+                }
+              }}
+              onAskAi={() => {
+                analyticsService.logEvent(EVENTS.ask_ai_banner_clicked, {
+                  source: "home_corner",
+                });
+                rootNavigation.navigate("AskAIStack", { screen: "AskAIMain" });
+              }}
+              onBirdSoundLibrary={() => {
+                homeStackNavigation.navigate("AudioGallery");
+              }}
+            />
+          </View>
+
+          <View style={styles.sectionBlock}>
+            <View style={[layoutStyles.rowBetween, { marginBottom: Space[4] }]}>
+              <AppText
+                variant="body16"
+                color={colors.textPrimary}
+                style={{ fontFamily: FONTS.bold }}
+              >
+                {homeConfig.sections.otherApps.title}
+              </AppText>
+              <TouchableOpacity
+                onPress={() => {
+                  analyticsService.logEvent(EVENTS.our_other_app_view_all);
+                  homeStackNavigation.navigate("OtherApps");
+                }}
+                activeOpacity={0.7}
+              >
+                <AppText
+                  variant="caption12"
+                  color={colors.textPrimary}
+                  style={{ fontFamily: FONTS.medium }}
+                >
+                  {homeConfig.sections.otherApps.viewAllText}
+                </AppText>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.otherAppsScrollContent}
+            >
+              {otherAppsForHome.map((app) => (
+                <AppOtherAppCard
+                  key={app.key}
+                  variant="horizontal"
+                  title={app.title}
+                  subtitle={app.subtitle}
+                  image={app.image}
+                  onPress={() => {
+                    analyticsService.logEvent(EVENTS.get_app, {
+                      app_name: String(app.title ?? app.key),
+                    });
+                    if (app.storeUrl) {
+                      Linking.openURL(app.storeUrl);
+                    } else {
+                      homeStackNavigation.navigate("OtherApps");
+                    }
+                  }}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        </ScrollView>
+
+        {!isPremium && showDiscountBanner ? (
           <View style={styles.stickyDiscountBanner}>
             <DiscountCountdownBanner
               hours={countdown.hours}

@@ -1,18 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  RouteProp,
-  useNavigation,
-  useRoute,
-} from "@react-navigation/native";
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NavBackIcon, Text } from "../../../atoms";
 import { FONTS } from "../../../common/typography";
 import { COLLECTION_STRINGS } from "../../../config/strings/collection.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { spacing } from "../../../design-system/spacing";
-import { useSemanticColors } from "../../../hooks/useSemanticColors";
+import { useTheme } from "../../../hooks/useTheme";
 import { CollectionStackParamList } from "../../../navigation/types";
 import { soundRecordingService } from "../../../services/audio/soundRecording.service";
 import { BirdSoundRow } from "../components/BirdSoundRow";
@@ -27,7 +26,7 @@ export const BirdSoundsScreen: React.FC = () => {
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
   const { textPrimary, textSecondary, surfacePrimary, surfaceSecondary } =
-    useSemanticColors();
+    useTheme().colors;
   const strings = COLLECTION_STRINGS.birdDetails.sounds;
 
   const [playingId, setPlayingId] = useState<string | null>(null);

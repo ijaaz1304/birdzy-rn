@@ -1,3 +1,4 @@
+import { IMAGE_PIPELINE_MAX_UPLOAD_MB } from "../../constants/imagePipeline.constants";
 /**
  * Camera utility functions
  */
@@ -93,9 +94,7 @@ export type CameraPermissionStatus =
   | "restricted"
   | "authorized";
 
-const mapCameraPermissionStatus = (
-  status: string
-): CameraPermissionStatus => {
+const mapCameraPermissionStatus = (status: string): CameraPermissionStatus => {
   if (status === "granted") return "authorized";
   if (
     status === "not-determined" ||
@@ -190,11 +189,11 @@ export const validateImageQuality = (
     };
   }
 
-  // Maximum file size (10MB)
-  if (fileSize && fileSize > 10 * 1024 * 1024) {
+  // Maximum file size (5MB)
+  if (fileSize && fileSize > IMAGE_PIPELINE_MAX_UPLOAD_MB * 1024 * 1024) {
     return {
       valid: false,
-      warning: "Image file is too large. Please use a smaller image.",
+      warning: "Image file is too large. Maximum size is 5MB.",
     };
   }
 

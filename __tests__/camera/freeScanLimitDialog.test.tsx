@@ -1,0 +1,108 @@
+jest.setTimeout(20000);
+import React from "react";
+import { act, create, type ReactTestRenderer } from "react-test-renderer";
+import {
+  InteractionManager,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+} from "react-native";
+import { FreeScanLimitDialog } from "../../src/components/shared/FreeScanLimitDialog";
+import {
+  requestFreeScanLimitPrompt,
+  dismissFreeScanLimitPrompt,
+} from "../../src/services/freeScanLimitPrompt";
+jest.mock("../../src/assets/freeScanClose.svg", () => () => null);
+let renderer: ReactTestRenderer;
+const upgrade = jest.fn();
+let settle: () => void;
+const os = Platform.OS;
+const visible = () => renderer.root.findByType(Modal).props.visible;
+const press = async (label: string) =>
+  act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: label }).props.onPress();
+  });
+async function mount(premium = false) {
+  await act(async () => {
+    renderer = create(
+      <FreeScanLimitDialog active isPremium={premium} onUpgrade={upgrade} />
+    );
+  });
+}
+beforeEach(() => {
+  jest.useFakeTimers();
+  jest.clearAllMocks();
+  dismissFreeScanLimitPrompt();
+  jest
+    .spyOn(InteractionManager, "runAfterInteractions")
+    .mockImplementation((callback) => {
+      settle = callback as () => void;
+      return { cancel: jest.fn() } as never;
+    });
+});
+afterEach(async () => {
+  await act(async () => renderer?.unmount());
+  jest.restoreAllMocks();
+  jest.useRealTimers();
+  Object.defineProperty(Platform, "OS", { configurable: true, value: os });
+});
+it("does not show on first camera entry without an exhausted-limit request", async () => {
+  await mount();
+  expect(visible()).toBe(false);
+});
+it("retains a completed-scan request across navigation and waits for transitions", async () => {
+  requestFreeScanLimitPrompt();
+  await mount();
+  expect(visible()).toBe(false);
+  await act(async () => settle());
+  expect(visible()).toBe(true);
+});
+it("shows the Figma copy and can reopen after Not Now", async () => {
+  requestFreeScanLimitPrompt();
+  await mount();
+  await act(async () => settle());
+  expect(
+    renderer.root
+      .findAllByType(Text)
+      .some(
+        (node) =>
+          node.props.children ===
+          "You’ve used all 30 free scans. For unlimited scans, Go Premium"
+      )
+  ).toBe(true);
+  await press("Not Now");
+  expect(visible()).toBe(false);
+  await act(async () => requestFreeScanLimitPrompt());
+  await act(async () => settle());
+  expect(visible()).toBe(true);
+});
+it("suppresses the popup for premium users", async () => {
+  requestFreeScanLimitPrompt();
+  await mount(true);
+  expect(visible()).toBe(false);
+});
+it("opens the iOS paywall after dismissal only once", async () => {
+  Object.defineProperty(Platform, "OS", { configurable: true, value: "ios" });
+  requestFreeScanLimitPrompt();
+  await mount();
+  await act(async () => settle());
+  await press("Go Premium");
+  expect(upgrade).not.toHaveBeenCalled();
+  await act(async () => renderer.root.findByType(Modal).props.onDismiss());
+  await act(async () => renderer.root.findByType(Modal).props.onDismiss());
+  expect(upgrade).toHaveBeenCalledTimes(1);
+});
+it("waits for the Android modal to close before opening premium", async () => {
+  Object.defineProperty(Platform, "OS", {
+    configurable: true,
+    value: "android",
+  });
+  requestFreeScanLimitPrompt();
+  await mount();
+  await act(async () => settle());
+  await press("Go Premium");
+  expect(upgrade).not.toHaveBeenCalled();
+  await act(async () => jest.advanceTimersByTime(350));
+  expect(upgrade).toHaveBeenCalledTimes(1);
+});

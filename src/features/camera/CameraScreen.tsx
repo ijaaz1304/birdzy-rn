@@ -1,3 +1,4 @@
+import { requestFreeScanLimitPrompt } from "../../services/freeScanLimitPrompt";
 /**
  * Camera Screen Component
  * Main camera interface for Identify flow using react-native-vision-camera.
@@ -19,7 +20,15 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { AppState, BackHandler, Platform, StatusBar, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  AppState,
+  BackHandler,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   useFocusEffect,
   useIsFocused,
@@ -54,23 +63,22 @@ import {
   CAPTURE_SHUTTER_INNER_SIZE,
 } from "./captureFrameLayout";
 import { CameraWarnings } from "./CameraWarnings";
-import { CameraTipsModal, LimitReachedBottomSheet } from "../../molecules/Modal";
+import {
+  CameraTipsModal,
+  LimitReachedBottomSheet,
+} from "../../molecules/Modal";
 import { IdentificationLocationBanner } from "./components/IdentificationLocationBanner";
 import { CameraImageSlots } from "./components/CameraImageSlots";
 import { CameraIdentifyReview } from "./components/CameraIdentifyReview";
 import { CameraPermissionInlineState } from "./components/CameraPermissionInlineState";
 import { CameraDailyScanBanner } from "./components/CameraDailyScanBanner";
 import { usePhotoIdentificationLimit } from "./hooks/usePhotoIdentificationLimit";
-import {
-  MAX_CAMERA_IDENTIFY_IMAGES,
-} from "./utils/identificationLimitDisplay";
+import { MAX_CAMERA_IDENTIFY_IMAGES } from "./utils/identificationLimitDisplay";
 import { shouldShowLocationBannerAsGranted } from "./locationToggle.helpers";
 import { useLocationToggleFlow } from "./useLocationToggleFlow";
 import { useLocationPermissionUiStore } from "./locationPermissionUi.store";
 import { createCameraStyles } from "./camera.styles";
-import {
-  checkCameraPermission,
-} from "../../services/permissions";
+import { checkCameraPermission } from "../../services/permissions";
 import { useIdentifyCameraPermissionFlow } from "./useIdentifyCameraPermissionFlow";
 import {
   buildGalleryPickerParams,
@@ -137,7 +145,14 @@ export const CameraScreen: React.FC = () => {
   const [cameraFacing, setCameraFacing] = useState<"back" | "front">("back");
   const device = useCameraDevice(cameraFacing);
   const insets = useSafeAreaInsets();
-  const captureFrameLayout = useCaptureFrameLayout();
+  const [locationBannerHeight, setLocationBannerHeight] = useState(0);
+  const [captureControlsHeight, setCaptureControlsHeight] = useState(220);
+  const [bottomControlsHeight, setBottomControlsHeight] = useState(120);
+  const captureFrameLayout = useCaptureFrameLayout({
+    minimumTop: insets.top + 68 + locationBannerHeight + 16,
+    bottomInset:
+      captureControlsHeight + bottomControlsHeight + CAPTURE_CONTENT_GAP + 12,
+  });
   const hasShownTipsRef = useRef(false);
   const selectedImagesRef = useRef<CroppedImageObject[]>([]);
 
@@ -182,7 +197,7 @@ export const CameraScreen: React.FC = () => {
   const { submitProcessed, isProcessing } = useIdentifyImagePipeline({
     navigation,
     isPremium,
-    onLimitReached: () => setShowUpgradeSheet(true),
+    onLimitReached: requestFreeScanLimitPrompt,
     onError: (message) => {
       setWarning(message);
       setTimeout(() => setWarning(null), 3000);
@@ -211,8 +226,12 @@ export const CameraScreen: React.FC = () => {
   const setShowCustomPopup = useLocationPermissionUiStore(
     (s) => s.setShowCustomPopup
   );
-  const showCustomPopup = useLocationPermissionUiStore((s) => s.showCustomPopup);
-  const showManagePopup = useLocationPermissionUiStore((s) => s.showManagePopup);
+  const showCustomPopup = useLocationPermissionUiStore(
+    (s) => s.showCustomPopup
+  );
+  const showManagePopup = useLocationPermissionUiStore(
+    (s) => s.showManagePopup
+  );
   const setShowManagePopup = useLocationPermissionUiStore(
     (s) => s.setShowManagePopup
   );
@@ -266,8 +285,7 @@ export const CameraScreen: React.FC = () => {
     !isAddingAnotherPhoto &&
     !isExternalCameraReturn;
 
-  const showCameraPermissionInline =
-    !!cameraPermissionInline && !hasPermission;
+  const showCameraPermissionInline = !!cameraPermissionInline && !hasPermission;
 
   /** Allow Access / Go to Settings — plain gate UI only, no camera chrome. */
   const isCameraPermissionGateActive =
@@ -388,12 +406,7 @@ export const CameraScreen: React.FC = () => {
     }
     if (!isFocused) return;
     restoreCameraSession();
-  }, [
-    isCropRouteActive,
-    isFocused,
-    pauseCameraForCrop,
-    restoreCameraSession,
-  ]);
+  }, [isCropRouteActive, isFocused, pauseCameraForCrop, restoreCameraSession]);
 
   // After permission is granted, show tips once (if not disabled) — not during multi-photo add.
   useEffect(() => {
@@ -514,10 +527,7 @@ export const CameraScreen: React.FC = () => {
   ]);
 
   const canUseCameraHardware =
-    !!device &&
-    isCameraSessionActive &&
-    isCameraReady &&
-    !isCapturing;
+    !!device && isCameraSessionActive && isCameraReady && !isCapturing;
 
   // Reset ready when session pauses; fallback-enable if onStarted never fires after resume.
   useEffect(() => {
@@ -1037,7 +1047,11 @@ export const CameraScreen: React.FC = () => {
               maxImages={MAX_CAMERA_IDENTIFY_IMAGES}
               onRemove={removePhoto}
             />
-            <Text variant="body" size="small" style={styles.captureImageCounter}>
+            <Text
+              variant="body"
+              size="small"
+              style={styles.captureImageCounter}
+            >
               {formatImageCounter(
                 selectedImages.length,
                 MAX_CAMERA_IDENTIFY_IMAGES
@@ -1176,364 +1190,387 @@ export const CameraScreen: React.FC = () => {
 
       {!showUpgradeSheet && (
         <>
-      {showCameraHardware ? (
-        <Camera
-          ref={cameraRef}
-          style={styles.cameraLayer}
-          device={device}
-          torch={torchOn ? "on" : "off"}
-          zoom={cameraZoom}
-          isActive={isCameraSessionActive}
-          photo={true}
-          enableZoomGesture={true}
-          onInitialized={() => {
-            if (!isFocused || isCropRouteActive) return;
-            isCameraReadyRef.current = true;
-            setIsCameraReady(true);
-            identifyFlowLog("camera_ready", { source: "onInitialized" });
-          }}
-          onStarted={() => {
-            if (!isFocused || isCropRouteActive) return;
-            isCameraReadyRef.current = true;
-            setIsCameraReady(true);
-            identifyFlowLog("camera_ready", { source: "onStarted" });
-          }}
-          onError={(err) => {
-            console.error("Camera error:", err);
-            setWarning("Camera failed to start. Try again or upload a photo.");
-            setTimeout(() => setWarning(null), 3500);
-          }}
-        />
-      ) : capturePreviewUri ? (
-        <AppImage
-          source={{ uri: capturePreviewUri }}
-          style={styles.cameraLayer}
-          resizeMode="cover"
-          preferRNImage
-        />
-      ) : null}
-
-      {/* Controls above the native Camera view so shutter taps aren't swallowed. */}
-      <View style={styles.controlsLayer} pointerEvents="box-none">
-      {!showIdentifyReview && hasPermission && (
-        <CameraCaptureOverlay layout={captureFrameLayout} />
-      )}
-
-      {/* Top-left: back — circular bg matches flash control */}
-      <TouchableOpacity
-        onPress={handleBackPress}
-        style={[
-          styles.topNavButton,
-          styles.topNavButtonLeft,
-          styles.topNavButtonBack,
-          showIdentifyReview && styles.topNavButtonRaised,
-          {
-            top: insets.top + 12,
-          },
-        ]}
-        activeOpacity={0.8}
-        hitSlop={HIT_SLOP.CLOSE}
-      >
-        <NavBackIcon color="#FFFFFF" size={CAPTURE_TOP_ICON_SIZE} />
-      </TouchableOpacity>
-
-      {/* Top-right: sound identify */}
-      {!showIdentifyReview && !isCameraPermissionGateActive && (
-      <TouchableOpacity
-        onPress={() => {
-          const startSound =
-            useIdentificationEntryStore.getState().startSoundEntryHandler;
-          if (startSound) {
-            startSound();
-            return;
-          }
-          navigation.navigate("SoundIdentify");
-        }}
-        style={[
-          styles.topNavButton,
-          styles.topNavButtonRight,
-          styles.topNavButtonBack,
-          {
-            top: insets.top + 12,
-            right: device?.hasTorch ? 68 : 16,
-          },
-        ]}
-        activeOpacity={0.8}
-        hitSlop={HIT_SLOP.CLOSE}
-        accessibilityRole="button"
-        accessibilityLabel="Identify by sound"
-      >
-        <MaterialIcons name="mic" size={26} color="#FFFFFF" />
-      </TouchableOpacity>
-      )}
-
-      {/* Top-right: flash (torch) — same 44px circle + 26px icon in both states */}
-      {!showIdentifyReview && !isCameraPermissionGateActive && device?.hasTorch && (
-        <TouchableOpacity
-          onPress={() => setTorchOn((prev) => !prev)}
-          style={[
-            styles.topNavButton,
-            styles.topNavButtonRight,
-            styles.topNavButtonBack,
-            {
-              top: insets.top + 12,
-            },
-          ]}
-          activeOpacity={0.8}
-          hitSlop={HIT_SLOP.CLOSE}
-        >
-          <AppImage
-            source={torchOn ? Images.iconfixFlash : Images.iconfixFlashOff}
-            style={styles.backNavIcon}
-            resizeMode="contain"
-            preferRNImage
-          />
-        </TouchableOpacity>
-      )}
-
-      {warning && <CameraWarnings text={warning} />}
-
-      {!isCameraPermissionGateActive ? (
-      <View
-        style={[
-          styles.locationBannerWrap,
-          showIdentifyReview && styles.locationBannerWrapRaised,
-          { top: insets.top + 68 },
-        ]}
-      >
-        <IdentificationLocationBanner
-          variant="camera"
-          permissionGranted={shouldShowLocationBannerAsGranted(
-            locationPermissionGranted,
-            location
-          )}
-          locationLabel={locationLabel}
-          onToggleLocation={handleLocationToggle}
-          onPressLocation={() => openCustomLocationSheet()}
-        />
-      </View>
-      ) : null}
-
-      {showCameraPermissionInline ? (
-        <View
-          style={[
-            styles.cameraPermissionInlineHost,
-            {
-              top: insets.top + 120,
-              bottom: Math.max(insets.bottom, 8) + 76,
-            },
-          ]}
-          pointerEvents="box-none"
-        >
-          <CameraPermissionInlineState
-            variant={cameraPermissionInline!}
-            loading={cameraPermissionLoading}
-            onAction={() => void handleCameraPermissionAction()}
-          />
-        </View>
-      ) : null}
-
-      {showIdentifyReview ? (
-        <CameraIdentifyReview
-          images={selectedImages}
-          topInset={reviewTopInset}
-          addAnotherLabel={strings.camera.buttons.addAnotherPhoto}
-          identifyLabel={strings.camera.buttons.identifyBird}
-          imageCounterLabel={formatImageCounter}
-          submitToastLabel={formatSubmitToast}
-          isProcessing={isProcessing}
-          onRemove={removePhoto}
-          onAddAnother={handleAddAnotherPhoto}
-          onIdentify={submit}
-        />
-      ) : null}
-
-      {/* Hint tooltip */}
-      {!showIdentifyReview && showHint && !showCameraPermissionInline && !isAddingAnotherPhoto && selectedImages.length === 0 && (
-        <View
-          style={[
-            styles.hintPill,
-            { backgroundColor: theme.colors.surface + "E6" },
-          ]}
-        >
-          <AppImage
-            source={Images.informationCircle}
-            style={[
-              styles.controlIconWhite,
-              {
-                width: 16,
-                height: 16,
-              },
-            ]}
-            resizeMode="contain"
-          />
-          <Text
-            variant="body"
-            size="small"
-            color="textSecondary"
-            style={{ flex: 1 }}
-          >
-            Keep the bird centered, well-lit, and in focus.
-          </Text>
-        </View>
-      )}
-
-      {/* Two-image slots, daily scan banner, and zoom — below viewfinder (Figma) */}
-      {!showIdentifyReview && !isCameraPermissionGateActive && (
-      <View
-        style={[
-          styles.captureContentColumn,
-          {
-            top: captureContentLayout.top,
-          },
-        ]}
-        pointerEvents="box-none"
-      >
-        <CameraImageSlots
-          images={selectedImages}
-          maxImages={MAX_CAMERA_IDENTIFY_IMAGES}
-          onRemove={removePhoto}
-        />
-
-        {selectedImages.length > 0 ? (
-          <Text variant="body" size="small" style={styles.captureImageCounter}>
-            {formatImageCounter(
-              selectedImages.length,
-              MAX_CAMERA_IDENTIFY_IMAGES
-            )}
-          </Text>
-        ) : null}
-
-        {!isPremium && (
-          <CameraDailyScanBanner
-            remaining={photoLimit.remaining}
-            dailyLimit={photoLimit.dailyLimit}
-            resetLabel={photoLimit.resetLabel}
-            style={styles.dailyScanBanner}
-          />
-        )}
-
-        <View style={styles.zoomSliderInline} pointerEvents="box-none">
-          <CameraZoomControls
-            zoom={zoomUi}
-            onZoomChange={setZoomUi}
-            disabled={!isCameraReady}
-          />
-        </View>
-
-        {selectedImages.length >= MAX_CAMERA_IDENTIFY_IMAGES ? (
-          <TouchableOpacity
-            onPress={submit}
-            activeOpacity={0.85}
-            disabled={isProcessing}
-            style={[
-              styles.submitBtn,
-              {
-                backgroundColor: APP_COLORS.createButtonFg,
-                borderRadius: theme.radius.lg,
-                opacity: isProcessing ? 0.7 : 1,
-                marginTop: SUBMIT_BELOW_ZOOM_GAP,
-              },
-            ]}
-          >
-            {isProcessing ? (
-              <Text
-                variant="body"
-                size="medium"
-                weight="semibold"
-                style={{ color: APP_COLORS.modalTextOnPrimary }}
-              >
-                Preparing…
-              </Text>
-            ) : (
-              <Text
-                variant="body"
-                size="medium"
-                weight="semibold"
-                style={{ color: APP_COLORS.modalTextOnPrimary }}
-              >
-                {strings.camera.buttons.identifyBird}
-              </Text>
-            )}
-          </TouchableOpacity>
-        ) : null}
-
-      </View>
-      )}
-
-      {/* Bottom controls: Gallery (left) | Capture (center) | Tips (right) */}
-      {!showIdentifyReview && !isCameraPermissionGateActive && (
-      <View
-        style={[
-          styles.bottomBar,
-          {
-            paddingBottom: Math.max(8, insets.bottom),
-          },
-        ]}
-      >
-        <View style={styles.controls}>
-          <TouchableOpacity
-            onPress={openGallery}
-            style={[
-              styles.sideIconOnly,
-              isNativeDialogActive && styles.sideIconDisabled,
-            ]}
-            activeOpacity={0.8}
-            disabled={isNativeDialogActive}
-            hitSlop={HIT_SLOP.CLOSE}
-          >
+          {showCameraHardware ? (
+            <Camera
+              ref={cameraRef}
+              style={styles.cameraLayer}
+              device={device}
+              torch={torchOn ? "on" : "off"}
+              zoom={cameraZoom}
+              isActive={isCameraSessionActive}
+              photo={true}
+              enableZoomGesture={true}
+              onInitialized={() => {
+                if (!isFocused || isCropRouteActive) return;
+                isCameraReadyRef.current = true;
+                setIsCameraReady(true);
+                identifyFlowLog("camera_ready", { source: "onInitialized" });
+              }}
+              onStarted={() => {
+                if (!isFocused || isCropRouteActive) return;
+                isCameraReadyRef.current = true;
+                setIsCameraReady(true);
+                identifyFlowLog("camera_ready", { source: "onStarted" });
+              }}
+              onError={(err) => {
+                console.error("Camera error:", err);
+                setWarning(
+                  "Camera failed to start. Try again or upload a photo."
+                );
+                setTimeout(() => setWarning(null), 3500);
+              }}
+            />
+          ) : capturePreviewUri ? (
             <AppImage
-              source={Images.iconfixUpload}
-              style={styles.uploadSideIcon}
-              resizeMode="contain"
+              source={{ uri: capturePreviewUri }}
+              style={styles.cameraLayer}
+              resizeMode="cover"
               preferRNImage
             />
-          </TouchableOpacity>
+          ) : null}
 
-          <TouchableOpacity
-            style={[
-              styles.captureOuter,
-              {
-                opacity:
-                  isCapturing || !canUseCameraHardware ? 0.45 : 1,
-              },
-            ]}
-            onPress={capture}
-            activeOpacity={0.8}
-            disabled={isCapturing || !canUseCameraHardware}
-            accessibilityRole="button"
-            accessibilityLabel="Capture photo"
-            accessibilityState={{
-              disabled: isCapturing || !canUseCameraHardware,
-            }}
-          >
-            <View style={styles.captureInnerRing}>
-              <View style={styles.captureInnerFill} />
-            </View>
-          </TouchableOpacity>
+          {/* Controls above the native Camera view so shutter taps aren't swallowed. */}
+          <View style={styles.controlsLayer} pointerEvents="box-none">
+            {!showIdentifyReview && hasPermission && (
+              <CameraCaptureOverlay layout={captureFrameLayout} />
+            )}
 
-          {isAddingAnotherPhoto || selectedImages.length > 0 ? (
-            <View style={styles.sideBtn} />
-          ) : (
-          <TouchableOpacity
-            onPress={() => setShowTipsModal(true)}
-            style={styles.sideBtn}
-            activeOpacity={0.8}
-            hitSlop={HIT_SLOP.CLOSE}
-            accessibilityRole="button"
-            accessibilityLabel="Photo tips"
-          >
-            <AppImage
-              source={Images.informationCircle}
-              style={styles.controlIconWhite}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          )}
-        </View>
-      </View>
-      )}
-      </View>
+            {/* Top-left: back — circular bg matches flash control */}
+            <TouchableOpacity
+              onPress={handleBackPress}
+              style={[
+                styles.topNavButton,
+                styles.topNavButtonLeft,
+                styles.topNavButtonBack,
+                showIdentifyReview && styles.topNavButtonRaised,
+                {
+                  top: insets.top + 12,
+                },
+              ]}
+              activeOpacity={0.8}
+              hitSlop={HIT_SLOP.CLOSE}
+            >
+              <NavBackIcon color="#FFFFFF" size={CAPTURE_TOP_ICON_SIZE} />
+            </TouchableOpacity>
+
+            {/* Top-right: sound identify */}
+            {!showIdentifyReview && !isCameraPermissionGateActive && (
+              <TouchableOpacity
+                onPress={() => {
+                  const startSound =
+                    useIdentificationEntryStore.getState()
+                      .startSoundEntryHandler;
+                  if (startSound) {
+                    startSound();
+                    return;
+                  }
+                  navigation.navigate("SoundIdentify");
+                }}
+                style={[
+                  styles.topNavButton,
+                  styles.topNavButtonRight,
+                  styles.topNavButtonBack,
+                  {
+                    top: insets.top + 12,
+                    right: device?.hasTorch ? 68 : 16,
+                  },
+                ]}
+                activeOpacity={0.8}
+                hitSlop={HIT_SLOP.CLOSE}
+                accessibilityRole="button"
+                accessibilityLabel="Identify by sound"
+              >
+                <MaterialIcons name="mic" size={26} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+
+            {/* Top-right: flash (torch) — same 44px circle + 26px icon in both states */}
+            {!showIdentifyReview &&
+              !isCameraPermissionGateActive &&
+              device?.hasTorch && (
+                <TouchableOpacity
+                  onPress={() => setTorchOn((prev) => !prev)}
+                  style={[
+                    styles.topNavButton,
+                    styles.topNavButtonRight,
+                    styles.topNavButtonBack,
+                    {
+                      top: insets.top + 12,
+                    },
+                  ]}
+                  activeOpacity={0.8}
+                  hitSlop={HIT_SLOP.CLOSE}
+                >
+                  <AppImage
+                    source={
+                      torchOn ? Images.iconfixFlash : Images.iconfixFlashOff
+                    }
+                    style={styles.backNavIcon}
+                    resizeMode="contain"
+                    preferRNImage
+                  />
+                </TouchableOpacity>
+              )}
+
+            {warning && <CameraWarnings text={warning} />}
+
+            {!isCameraPermissionGateActive ? (
+              <View
+                onLayout={(event) =>
+                  setLocationBannerHeight(event.nativeEvent.layout.height)
+                }
+                style={[
+                  styles.locationBannerWrap,
+                  showIdentifyReview && styles.locationBannerWrapRaised,
+                  { top: insets.top + 68 },
+                ]}
+              >
+                <IdentificationLocationBanner
+                  variant="camera"
+                  permissionGranted={shouldShowLocationBannerAsGranted(
+                    locationPermissionGranted,
+                    location
+                  )}
+                  locationLabel={locationLabel}
+                  onToggleLocation={handleLocationToggle}
+                  onPressLocation={() => openCustomLocationSheet()}
+                />
+              </View>
+            ) : null}
+
+            {showCameraPermissionInline ? (
+              <View
+                style={[
+                  styles.cameraPermissionInlineHost,
+                  {
+                    top: insets.top + 120,
+                    bottom: Math.max(insets.bottom, 8) + 76,
+                  },
+                ]}
+                pointerEvents="box-none"
+              >
+                <CameraPermissionInlineState
+                  variant={cameraPermissionInline!}
+                  loading={cameraPermissionLoading}
+                  onAction={() => void handleCameraPermissionAction()}
+                />
+              </View>
+            ) : null}
+
+            {showIdentifyReview ? (
+              <CameraIdentifyReview
+                images={selectedImages}
+                topInset={reviewTopInset}
+                addAnotherLabel={strings.camera.buttons.addAnotherPhoto}
+                identifyLabel={strings.camera.buttons.identifyBird}
+                imageCounterLabel={formatImageCounter}
+                submitToastLabel={formatSubmitToast}
+                isProcessing={isProcessing}
+                onRemove={removePhoto}
+                onAddAnother={handleAddAnotherPhoto}
+                onIdentify={submit}
+              />
+            ) : null}
+
+            {/* Hint tooltip */}
+            {!showIdentifyReview &&
+              showHint &&
+              !showCameraPermissionInline &&
+              !isAddingAnotherPhoto &&
+              selectedImages.length === 0 && (
+                <View
+                  style={[
+                    styles.hintPill,
+                    { backgroundColor: theme.colors.surface + "E6" },
+                  ]}
+                >
+                  <AppImage
+                    source={Images.informationCircle}
+                    style={[
+                      styles.controlIconWhite,
+                      {
+                        width: 16,
+                        height: 16,
+                      },
+                    ]}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    variant="body"
+                    size="small"
+                    color="textSecondary"
+                    style={{ flex: 1 }}
+                  >
+                    Keep the bird centered, well-lit, and in focus.
+                  </Text>
+                </View>
+              )}
+
+            {/* Two-image slots, lifetime scan banner, and zoom — below viewfinder (Figma) */}
+            {!showIdentifyReview && !isCameraPermissionGateActive && (
+              <View
+                onLayout={(event) =>
+                  setCaptureControlsHeight(event.nativeEvent.layout.height)
+                }
+                style={[
+                  styles.captureContentColumn,
+                  {
+                    top: captureContentLayout.top,
+                  },
+                ]}
+                pointerEvents="box-none"
+              >
+                <CameraImageSlots
+                  images={selectedImages}
+                  maxImages={MAX_CAMERA_IDENTIFY_IMAGES}
+                  onRemove={removePhoto}
+                />
+
+                {selectedImages.length > 0 ? (
+                  <Text
+                    variant="body"
+                    size="small"
+                    style={styles.captureImageCounter}
+                  >
+                    {formatImageCounter(
+                      selectedImages.length,
+                      MAX_CAMERA_IDENTIFY_IMAGES
+                    )}
+                  </Text>
+                ) : null}
+
+                {!isPremium && (
+                  <CameraDailyScanBanner
+                    remaining={photoLimit.remaining}
+                    dailyLimit={photoLimit.dailyLimit}
+                    resetLabel={photoLimit.resetLabel}
+                    style={styles.dailyScanBanner}
+                  />
+                )}
+
+                <View style={styles.zoomSliderInline} pointerEvents="box-none">
+                  <CameraZoomControls
+                    zoom={zoomUi}
+                    onZoomChange={setZoomUi}
+                    disabled={!isCameraReady}
+                  />
+                </View>
+
+                {selectedImages.length >= MAX_CAMERA_IDENTIFY_IMAGES ? (
+                  <TouchableOpacity
+                    onPress={submit}
+                    activeOpacity={0.85}
+                    disabled={isProcessing}
+                    style={[
+                      styles.submitBtn,
+                      {
+                        backgroundColor: APP_COLORS.createButtonFg,
+                        borderRadius: theme.radius.lg,
+                        opacity: isProcessing ? 0.7 : 1,
+                        marginTop: SUBMIT_BELOW_ZOOM_GAP,
+                      },
+                    ]}
+                  >
+                    {isProcessing ? (
+                      <Text
+                        variant="body"
+                        size="medium"
+                        weight="semibold"
+                        style={{ color: APP_COLORS.modalTextOnPrimary }}
+                      >
+                        Preparing…
+                      </Text>
+                    ) : (
+                      <Text
+                        variant="body"
+                        size="medium"
+                        weight="semibold"
+                        style={{ color: APP_COLORS.modalTextOnPrimary }}
+                      >
+                        {strings.camera.buttons.identifyBird}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            )}
+
+            {/* Bottom controls: Gallery (left) | Capture (center) | Tips (right) */}
+            {!showIdentifyReview && !isCameraPermissionGateActive && (
+              <View
+                onLayout={(event) =>
+                  setBottomControlsHeight(event.nativeEvent.layout.height)
+                }
+                style={[
+                  styles.bottomBar,
+                  {
+                    paddingBottom: Math.max(8, insets.bottom),
+                  },
+                ]}
+              >
+                <View style={styles.controls}>
+                  <TouchableOpacity
+                    onPress={openGallery}
+                    style={[
+                      styles.sideIconOnly,
+                      isNativeDialogActive && styles.sideIconDisabled,
+                    ]}
+                    activeOpacity={0.8}
+                    disabled={isNativeDialogActive}
+                    hitSlop={HIT_SLOP.CLOSE}
+                  >
+                    <AppImage
+                      source={Images.iconfixUpload}
+                      style={styles.uploadSideIcon}
+                      resizeMode="contain"
+                      preferRNImage
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.captureOuter,
+                      {
+                        opacity:
+                          isCapturing || !canUseCameraHardware ? 0.45 : 1,
+                      },
+                    ]}
+                    onPress={capture}
+                    activeOpacity={0.8}
+                    disabled={isCapturing || !canUseCameraHardware}
+                    accessibilityRole="button"
+                    accessibilityLabel="Capture photo"
+                    accessibilityState={{
+                      disabled: isCapturing || !canUseCameraHardware,
+                    }}
+                  >
+                    <View style={styles.captureInnerRing}>
+                      <View style={styles.captureInnerFill} />
+                    </View>
+                  </TouchableOpacity>
+
+                  {isAddingAnotherPhoto || selectedImages.length > 0 ? (
+                    <View style={styles.sideBtn} />
+                  ) : (
+                    <TouchableOpacity
+                      onPress={() => setShowTipsModal(true)}
+                      style={styles.sideBtn}
+                      activeOpacity={0.8}
+                      hitSlop={HIT_SLOP.CLOSE}
+                      accessibilityRole="button"
+                      accessibilityLabel="Photo tips"
+                    >
+                      <AppImage
+                        source={Images.informationCircle}
+                        style={styles.controlIconWhite}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            )}
+          </View>
         </>
       )}
 
@@ -1556,7 +1593,6 @@ export const CameraScreen: React.FC = () => {
         }}
         limitType="identification"
       />
-
     </View>
   );
 };

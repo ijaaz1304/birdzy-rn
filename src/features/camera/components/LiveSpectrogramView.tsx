@@ -1,7 +1,7 @@
 /**
  * Live mel spectrogram — SVG renderer (capped column/band budget for device perf).
  */
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { LayoutChangeEvent, StyleSheet, View } from "react-native";
 import Svg, { Line, Rect } from "react-native-svg";
 import {
@@ -62,12 +62,13 @@ function layoutCenterPlayheadColumns(
   const maxHistory = playheadIndex + 1;
   const history = columns.slice(-maxHistory);
   const startPad = playheadIndex - history.length + 1;
-  const grid: Array<number[] | null> = Array.from({ length: maxCols }, () => null);
+  const grid: Array<number[] | null> = Array.from(
+    { length: maxCols },
+    () => null
+  );
   for (let i = 0; i < history.length; i += 1) {
     const column = history[i];
-    grid[startPad + i] = column
-      ? downsampleBands(column, displayBands)
-      : null;
+    grid[startPad + i] = column ? downsampleBands(column, displayBands) : null;
   }
   return grid;
 }
@@ -148,73 +149,25 @@ function LiveSpectrogramViewComponent({
       : 1;
   const bandHeight = height / displayBands;
   const playheadX = playheadCenter ? width / 2 : width;
-  const rectCacheRef = useRef<{
-    columnCount: number;
-    firstColumn: number[] | undefined;
-    lastColumn: number[] | undefined;
-    maxCols: number;
-    nodes: React.ReactNode[];
-  }>({ columnCount: 0, firstColumn: undefined, lastColumn: undefined, maxCols: 0, nodes: [] });
-
   const rects = useMemo(() => {
     const perf = isSoundPerfEnabled();
     const renderStart = perf ? soundPerfNow() : 0;
 
     const colCount = playheadCenter ? maxCols : visibleColumns.length;
-    const lastColumn = columns[columns.length - 1];
-    const firstColumn = columns[0];
-    const cache = rectCacheRef.current;
-    const canAppend =
-      playheadCenter &&
-      cache.maxCols === maxCols &&
-      cache.columnCount > 0 &&
-      columns.length === cache.columnCount + 1 &&
-      cache.firstColumn === firstColumn &&
-      cache.lastColumn != null &&
-      lastColumn != null;
-
-    let nodes: React.ReactNode[];
-    if (canAppend && lastColumn) {
-      const downsampled = downsampleBands(lastColumn, displayBands);
-      const playheadIndex = Math.floor(maxCols / 2);
-      const maxHistory = playheadIndex + 1;
-      const colIndex =
-        columns.length >= maxHistory
-          ? maxCols - 1
-          : playheadIndex - (maxHistory - columns.length) + (columns.length - 1);
-      nodes = [...cache.nodes, ...buildColumnRects(downsampled, colIndex, columnWidth, bandHeight)];
-    } else {
-      nodes = [];
-      for (let colIndex = 0; colIndex < colCount; colIndex += 1) {
-        const column = playheadCenter
-          ? (visibleColumns[colIndex] as number[] | null)
-          : (visibleColumns[colIndex] as number[] | undefined);
-        if (!column) continue;
-        nodes.push(...buildColumnRects(column, colIndex, columnWidth, bandHeight));
-      }
+    const nodes: React.ReactNode[] = [];
+    for (let colIndex = 0; colIndex < colCount; colIndex += 1) {
+      const column = visibleColumns[colIndex];
+      if (column)
+        nodes.push(
+          ...buildColumnRects(column, colIndex, columnWidth, bandHeight)
+        );
     }
-
-    rectCacheRef.current = {
-      columnCount: columns.length,
-      firstColumn,
-      lastColumn,
-      maxCols,
-      nodes,
-    };
 
     if (perf) {
       soundPerfRecordTiming("SvgRender", soundPerfNow() - renderStart);
     }
     return nodes;
-  }, [
-    bandHeight,
-    columnWidth,
-    columns,
-    displayBands,
-    maxCols,
-    playheadCenter,
-    visibleColumns,
-  ]);
+  }, [bandHeight, columnWidth, maxCols, playheadCenter, visibleColumns]);
 
   return (
     <View style={[styles.wrap, { height }]} onLayout={onLayout}>
@@ -244,7 +197,7 @@ function spectrogramColumnsEqual(prev: number[][], next: number[][]): boolean {
   if (prev === next) return true;
   if (prev.length !== next.length) return false;
   if (prev.length === 0) return true;
-  return prev[prev.length - 1] === next[next.length - 1];
+  return prev.every((column, index) => column === next[index]);
 }
 
 export const LiveSpectrogramView = React.memo(

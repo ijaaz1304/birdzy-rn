@@ -175,7 +175,9 @@ export const SoundNoMatchScreen: React.FC = () => {
         showToast(copy.savedToUnknown, "success");
       } catch (error) {
         showToast(
-          error instanceof Error ? error.message : "Could not save this recording.",
+          error instanceof Error
+            ? error.message
+            : "Could not save this recording.",
           "error"
         );
       } finally {
@@ -253,7 +255,12 @@ export const SoundNoMatchScreen: React.FC = () => {
                   ) : (
                     <DetailsMoreShareLight width={20} height={20} />
                   )}
-                  <Text style={[styles.menuItemLabel, { color: colors.textPrimary }]}>
+                  <Text
+                    style={[
+                      styles.menuItemLabel,
+                      { color: colors.textPrimary },
+                    ]}
+                  >
                     Share
                   </Text>
                 </TouchableOpacity>
@@ -269,7 +276,12 @@ export const SoundNoMatchScreen: React.FC = () => {
                   ) : (
                     <DetailsMoreReportLight width={20} height={20} />
                   )}
-                  <Text style={[styles.menuItemLabel, { color: colors.textPrimary }]}>
+                  <Text
+                    style={[
+                      styles.menuItemLabel,
+                      { color: colors.textPrimary },
+                    ]}
+                  >
                     Report
                   </Text>
                 </TouchableOpacity>
@@ -315,7 +327,7 @@ export const SoundNoMatchScreen: React.FC = () => {
                   {copy.locationSpottedPrefix}
                   <Text
                     style={styles.locationLink}
-                    onPress={openCustomLocationSheet}
+                    onPress={() => openCustomLocationSheet()}
                   >
                     {locationLabel.trim()}
                   </Text>
@@ -332,9 +344,7 @@ export const SoundNoMatchScreen: React.FC = () => {
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
                 {noMatchCopy.title}
               </Text>
-              <Text
-                style={[styles.emptyBody, { color: colors.textSecondary }]}
-              >
+              <Text style={[styles.emptyBody, { color: colors.textSecondary }]}>
                 {showLocationAsGranted
                   ? noMatchCopy.bodyWithLocation
                   : noMatchCopy.bodyNoLocation}
@@ -382,7 +392,12 @@ export const SoundNoMatchScreen: React.FC = () => {
                 },
               ]}
             >
-              <Text style={[styles.secondaryBtnLabel, { color: colors.textPrimary }]}>
+              <Text
+                style={[
+                  styles.secondaryBtnLabel,
+                  { color: colors.textPrimary },
+                ]}
+              >
                 {noMatchCopy.saveRecording}
               </Text>
             </TouchableOpacity>

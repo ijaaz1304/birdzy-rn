@@ -1,3 +1,5 @@
+import { FreeScanLimitHost } from "../components/shared/FreeScanLimitHost";
+import { navigateToSubscriptionMain } from "../utils/navigation";
 /**
  * Root Navigator
  */
@@ -9,7 +11,12 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { AppState, AppStateStatus, DeviceEventEmitter, Linking } from "react-native";
+import {
+  AppState,
+  AppStateStatus,
+  DeviceEventEmitter,
+  Linking,
+} from "react-native";
 import { CommonActions, NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import notifee, { EventType } from "@notifee/react-native";
@@ -504,7 +511,11 @@ export const RootNavigator: React.FC<RootNavigatorProps> = ({
       const hasAuth = typeof token === "string" && token.length > 0 && isAuth;
 
       const finishBootstrap = (
-        nextRoute: "Onboarding" | "MainTabs" | "PostAuthOnboarding" | "AuthStack"
+        nextRoute:
+          | "Onboarding"
+          | "MainTabs"
+          | "PostAuthOnboarding"
+          | "AuthStack"
       ) => {
         log("route ->", nextRoute, "(from store after hydration)");
         applyRouteRef.current(nextRoute, true);
@@ -546,8 +557,8 @@ export const RootNavigator: React.FC<RootNavigatorProps> = ({
         | "AuthStack" = !hasAuth
         ? "Onboarding"
         : shouldResumePostAuthOnboarding()
-          ? "PostAuthOnboarding"
-          : "MainTabs";
+        ? "PostAuthOnboarding"
+        : "MainTabs";
       finishBootstrap(nextRoute);
     };
 
@@ -592,10 +603,7 @@ export const RootNavigator: React.FC<RootNavigatorProps> = ({
       "change",
       (nextAppState: AppStateStatus) => {
         if (nextAppState === "active") {
-          const {
-            isAuthenticated,
-            refreshAuthToken,
-          } = useAuthStore.getState();
+          const { isAuthenticated, refreshAuthToken } = useAuthStore.getState();
           if (!isAuthenticated) return;
           // Refresh token first so auth/me and other requests use a fresh token
           refreshAuthToken()
@@ -1073,10 +1081,13 @@ export const RootNavigator: React.FC<RootNavigatorProps> = ({
           onHighRating={async (rating: number) => {
             useAppLogsStore
               .getState()
-              .info("[RateUs] High rating (4–5), opening native in-app review", {
-                rating,
-                source: "home",
-              });
+              .info(
+                "[RateUs] High rating (4–5), opening native in-app review",
+                {
+                  rating,
+                  source: "home",
+                }
+              );
             analyticsService.logEvent(EVENTS.rate_4_5, {
               rating: String(rating),
             });
@@ -1141,6 +1152,7 @@ export const RootNavigator: React.FC<RootNavigatorProps> = ({
           }}
         />
       </BottomSheetProvider>
+      <FreeScanLimitHost onUpgrade={navigateToSubscriptionMain} />
     </NavigationContainer>
   );
 };
