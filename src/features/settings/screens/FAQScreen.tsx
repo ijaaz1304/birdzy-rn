@@ -77,6 +77,8 @@ export const FAQScreen: React.FC = () => {
             >
               <TouchableOpacity
                 style={styles.questionRow}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: isExpanded }}
                 onPress={() => toggle(item.id)}
                 activeOpacity={0.7}
               >
@@ -89,21 +91,25 @@ export const FAQScreen: React.FC = () => {
                     styles.text16Bold,
                     { color: colors.text },
                   ]}
-                  numberOfLines={isExpanded ? undefined : 2}
                 >
                   {item.question}
                 </Text>
-                <FaqChevron
-                  color={colors.textPrimary}
+                <View
                   style={[styles.chevron, isExpanded && styles.chevronOpen]}
-                />
+                >
+                  <FaqChevron color={colors.textPrimary} />
+                </View>
               </TouchableOpacity>
               {isExpanded && (
                 <Text
                   variant="body"
                   size="small"
                   color="textSecondary"
-                  style={[styles.answer, styles.text16]}
+                  style={[
+                    styles.answer,
+                    styles.text16,
+                    { color: colors.textPrimary },
+                  ]}
                 >
                   {item.answer}
                 </Text>
@@ -184,6 +190,10 @@ const styles = StyleSheet.create({
   },
   chevronOpen: { transform: [{ rotate: "180deg" }] },
   chevron: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
     marginLeft: spacing[2],
   },
   answer: {

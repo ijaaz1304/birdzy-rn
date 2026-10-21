@@ -1,7 +1,3 @@
-import {
-  useSubscriptionStore,
-  selectIsPremium,
-} from "../../subscription/subscription.store";
 /**
  * Settings Main Screen
  */
@@ -63,7 +59,6 @@ export const SettingsScreen: React.FC = () => {
   const isSignedIn = !showLoginButton;
   const showLogout = shouldShowLogoutAction(user, guestId);
   const settingsColors = useSettingsColors();
-  const isPremium = useSubscriptionStore(selectIsPremium);
   const appLogsEnabled = useAppLogsStore((s) => s.isEnabled);
   const setAppLogsEnabled = useAppLogsStore((s) => s.setEnabled);
   const cameraUploadLogsEnabled = useAppLogsStore(
@@ -196,15 +191,8 @@ export const SettingsScreen: React.FC = () => {
       setFeedbackSource("menu");
     } catch (e) {
       showToast("Failed to send. Please try again.", "error");
+      throw e;
     }
-  };
-
-  const handleManageSubscription = () => {
-    // Premium-only row: take subscribers to Switch Plans (status + switch sheet).
-    navigation.getParent()?.navigate("SubscriptionStack", {
-      screen: "SubscriptionStatus",
-      params: { openSwitchPlan: true },
-    });
   };
 
   const handleLogin = () => {
@@ -227,13 +215,15 @@ export const SettingsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         <SettingsSection title={M.sections.account}>
-          <SettingsAccountRow
-            variant="profile"
-            title={M.profileTitle}
-            subtitle={M.profileSubtitle}
-            avatarUri={user?.avatar}
-            onPress={() => navigation.navigate("ProfileSettings")}
-          />
+          {isSignedIn && (
+            <SettingsAccountRow
+              variant="profile"
+              title={M.profileTitle}
+              subtitle={M.profileSubtitle}
+              avatarUri={user?.avatar}
+              onPress={() => navigation.navigate("ProfileSettings")}
+            />
+          )}
           {!isSignedIn && (
             <SettingsAccountRow
               variant="guest"
@@ -250,14 +240,7 @@ export const SettingsScreen: React.FC = () => {
               showArrow
             />
           )}
-          {isSignedIn && isPremium && (
-            <SettingsItem
-              icon="comment"
-              title={M.manageSubscription}
-              onPress={handleManageSubscription}
-              showArrow
-            />
-          )}
+          {/* Manage Subscription is hidden for all users. */}
         </SettingsSection>
 
         <SettingsSection title={M.sections.helpSupport}>

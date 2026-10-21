@@ -1,12 +1,13 @@
 /**
  * Account row at the top of Settings.
- * guest: rounded-square avatar + "Log in / Sign up" (Caption/12px subtitle)
- * profile: circular avatar + "My Profile" (Body/14px subtitle)
+ * guest: rounded-square avatar + "Log in / Sign up"
+ * profile: circular avatar + "My Profile"
+ * subtitle: Body/14px/Regular, primary text (#111)
  */
 
 import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { AppImage } from "@/components/AppImage";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Text } from "../../../atoms";
 import { FONTS } from "../../../common/typography";
 import { useSettingsColors } from "../settingsColors";
@@ -55,7 +56,7 @@ export const SettingsAccountRow: React.FC<SettingsAccountRowProps> = ({
         {avatarUri ? (
           <AppImage source={{ uri: avatarUri }} style={styles.avatarImage} />
         ) : (
-          <SettingsIcon name="user" color={isGuest ? c.text : c.label} />
+          <SettingsIcon name="user" color={c.text} />
         )}
       </View>
       <View style={[styles.textContent, isGuest && styles.guestTextContent]}>
@@ -65,10 +66,7 @@ export const SettingsAccountRow: React.FC<SettingsAccountRowProps> = ({
         <Text
           numberOfLines={1}
           ellipsizeMode="tail"
-          style={[
-            isGuest ? styles.captionSubtitle : styles.bodySubtitle,
-            { color: c.muted },
-          ]}
+          style={[styles.bodySubtitle, { color: c.text }]}
         >
           {subtitle}
         </Text>
@@ -113,11 +111,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.bold,
     lineHeight: 20,
-  },
-  captionSubtitle: {
-    fontSize: 12,
-    fontFamily: FONTS.regular,
-    lineHeight: 16,
   },
   bodySubtitle: {
     fontSize: 14,

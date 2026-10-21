@@ -71,7 +71,7 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
           {title}
         </Text>
         {subtitle ? (
-          <Text numberOfLines={2} style={[styles.subtitle, { color: c.muted }]}>
+          <Text numberOfLines={2} style={[styles.subtitle, { color: c.text }]}>
             {subtitle}
           </Text>
         ) : null}
@@ -100,7 +100,7 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
       {(value || showArrow) && (
         <View style={styles.trailing}>
           {value ? (
-            <Text style={[styles.value, { color: c.muted }]}>{value}</Text>
+            <Text style={[styles.value, { color: c.text }]}>{value}</Text>
           ) : null}
           {showArrow && <SettingsIcon name="chevronRight" color={c.text} />}
         </View>
@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 2,
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: FONTS.regular,
-    lineHeight: 16,
+    lineHeight: 20,
   },
   trailing: {
     flexDirection: "row",
@@ -154,9 +154,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   value: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: FONTS.regular,
-    lineHeight: 19.5,
+    lineHeight: 20,
   },
   switchTrack: {
     width: 56,

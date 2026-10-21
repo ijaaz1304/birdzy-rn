@@ -20,7 +20,6 @@ import { sendRatingFeedback } from "../../../services/rating/ratingFeedback.serv
 import { useAuthStore } from "../../auth/auth.store";
 import {
   SettingsHeader,
-  SettingsIcon,
   SettingsSelectField,
   SettingsTextArea,
 } from "../components";
@@ -84,7 +83,7 @@ export const ContactUsScreen: React.FC = () => {
             options={TOPICS}
             value={topic}
             onSelect={setTopic}
-            rightIcon={<SettingsIcon name="chevronRightLg" color={c.text} />}
+            inlineMenu
           />
           <SettingsTextArea
             label={S.message}

@@ -62,6 +62,10 @@ export const ProfileSettingsScreen: React.FC = () => {
 
   const saveAll = async () => {
     if (saving) return;
+    if (phone && !/^\d{10}$/.test(phone)) {
+      showToast("Please enter a 10-digit phone number.", "error");
+      return;
+    }
     setSaving(true);
     try {
       await updateProfile({
@@ -121,7 +125,10 @@ export const ProfileSettingsScreen: React.FC = () => {
               label={S.phone}
               placeholder={S.phonePlaceholder}
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={(value) =>
+                setPhone(value.replace(/\D/g, "").slice(0, 10))
+              }
+              maxLength={10}
               keyboardType="phone-pad"
               textContentType="telephoneNumber"
             />

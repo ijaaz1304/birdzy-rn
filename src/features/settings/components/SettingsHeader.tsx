@@ -19,14 +19,15 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
   title,
   onBackPress,
 }) => {
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
+  const foreground = mode === "dark" ? colors.textPrimary : "#111111";
   const navigation = useNavigation();
 
   return (
     <View style={styles.bar}>
       <Text
         numberOfLines={1}
-        style={[styles.title, { color: colors.textPrimary }]}
+        style={[styles.title, { color: foreground }]}
         accessibilityRole="header"
       >
         {title}
@@ -38,7 +39,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
         accessibilityRole="button"
         accessibilityLabel="Back"
       >
-        <SettingsIcon name="back" color={colors.textPrimary} />
+        <SettingsIcon name="back" color={foreground} />
       </TouchableOpacity>
     </View>
   );
@@ -52,6 +53,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   back: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
     padding: 8,
   },
   title: {

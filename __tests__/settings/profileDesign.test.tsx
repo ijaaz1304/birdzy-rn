@@ -86,3 +86,25 @@ it("saves name, optional phone and country without changing email or removed fie
     country: "US",
   });
 });
+
+it("restricts pasted phone input to ten digits and rejects incomplete phone numbers", async () => {
+  await act(async () => {
+    renderer = create(<ProfileSettingsScreen />);
+  });
+  const phoneField = () => renderer.root.findAllByType(SettingsTextField)[2];
+  expect(phoneField().props.maxLength).toBe(10);
+  await act(async () => phoneField().props.onChangeText("12a345678901234"));
+  expect(phoneField().props.value).toBe("1234567890");
+  await act(async () => phoneField().props.onChangeText("123"));
+  await act(async () => renderer.root.findByType(Button).props.onPress());
+  expect(mockSave).not.toHaveBeenCalled();
+  expect(mockToast).toHaveBeenCalledWith(
+    "Please enter a 10-digit phone number.",
+    "error"
+  );
+  await act(async () => phoneField().props.onChangeText("1234567890"));
+  await act(async () => renderer.root.findByType(Button).props.onPress());
+  expect(mockSave).toHaveBeenCalledWith(
+    expect.objectContaining({ phone: "1234567890" })
+  );
+});

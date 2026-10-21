@@ -5,7 +5,10 @@
  */
 
 import { AppImage } from "@/components/AppImage";
-import { CloseIcon, type CloseIconVariant } from "@/components/shared/CloseIcon";
+import {
+  CloseIcon,
+  type CloseIconVariant,
+} from "@/components/shared/CloseIcon";
 import React, {
   useCallback,
   useEffect,
@@ -13,7 +16,22 @@ import React, {
   useState,
   ReactNode,
 } from "react";
-import { View, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Image, ImageSourcePropType, Platform, Modal as RNModal, ScrollView, TextInput, Keyboard, KeyboardAvoidingView, ActivityIndicator, ViewStyle } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Image,
+  ImageSourcePropType,
+  Platform,
+  Modal as RNModal,
+  ScrollView,
+  TextInput,
+  Keyboard,
+  KeyboardAvoidingView,
+  ActivityIndicator,
+  ViewStyle,
+} from "react-native";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
@@ -534,10 +552,7 @@ function getSheetCloseIconSize(sheetType: AppSheetType): number {
 }
 
 function getSheetCloseIconVariant(sheetType: AppSheetType): CloseIconVariant {
-  if (
-    sheetType === "limitReached" ||
-    sheetType === "subscriptionDiscount"
-  ) {
+  if (sheetType === "limitReached" || sheetType === "subscriptionDiscount") {
     return "plain";
   }
   return "sheet";
@@ -661,9 +676,7 @@ export const AppSheet: React.FC<AppSheetProps> = ({
     Boolean((payload as SheetPayload<"custom">).showDefaultHeader) &&
     Boolean((payload as SheetPayload<"custom">).disableScroll);
   const usesTitleCloseHeaderRow =
-    isCollectionFormSheet ||
-    isCollectionPickerSheet ||
-    isFormLikeCustomSheet;
+    isCollectionFormSheet || isCollectionPickerSheet || isFormLikeCustomSheet;
   const hideStandaloneCloseRow =
     effectiveConfig.showDefaultHeader && usesTitleCloseHeaderRow;
 
@@ -673,7 +686,10 @@ export const AppSheet: React.FC<AppSheetProps> = ({
       : undefined;
   const customKeyboardBottomInset =
     type === "custom" && payload && "keyboardBottomInset" in payload
-      ? Math.max(0, (payload as SheetPayload<"custom">).keyboardBottomInset ?? 0)
+      ? Math.max(
+          0,
+          (payload as SheetPayload<"custom">).keyboardBottomInset ?? 0
+        )
       : 0;
   const useBg = effectiveConfig.use50PercentBackground;
   const variant =
@@ -749,8 +765,7 @@ export const AppSheet: React.FC<AppSheetProps> = ({
       }>)
     : null;
 
-  const usesBitmapSheetArt =
-    showSheetBackground && !!bgSource && !isSvg;
+  const usesBitmapSheetArt = showSheetBackground && !!bgSource && !isSvg;
 
   const configBasedHeight = useMemo(() => {
     const h = effectiveConfig.height;
@@ -829,7 +844,11 @@ export const AppSheet: React.FC<AppSheetProps> = ({
 
   /** Forms with TextInputs: pan steals the first tap and can dismiss while typing. */
   const enablePanDismiss = useMemo(() => {
-    if (type === "createCollection" || type === "renameCollection" || type === "feedback") {
+    if (
+      type === "createCollection" ||
+      type === "renameCollection" ||
+      type === "feedback"
+    ) {
       return false;
     }
     if (type === "custom" && payload != null && "children" in payload) {
@@ -898,9 +917,7 @@ export const AppSheet: React.FC<AppSheetProps> = ({
   if (!visible) return null;
 
   const communityRulesConfig =
-    type === "communityRules" &&
-    payload &&
-    "config" in payload
+    type === "communityRules" && payload && "config" in payload
       ? (payload as SheetPayload<"communityRules">).config
       : null;
 
@@ -1080,39 +1097,42 @@ export const AppSheet: React.FC<AppSheetProps> = ({
           {content}
         </ScrollView>
       ) : (
-      <View
-        style={[
-          styles.contentScroll,
-          styles.contentScrollContent,
-          styles.contentNoScroll,
-          {
-            paddingBottom:
-              usesPopupSheetSafeAreaInContent(type) || type === "communityRules"
-                ? 0
-                : isCollectionFormSheet || shouldDisableScroll
-                ? Math.max(insets.bottom, 8)
-                : CONTENT_PADDING_V + insets.bottom,
-            flex: 1,
-          },
-          type === "custom" && styles.contentScrollContentCustom,
-          (isCollectionFormSheet || isCollectionPickerSheet || isFormLikeCustomSheet) &&
-            styles.contentScrollContentCreateCollection,
-          isCollectionPickerSheet && styles.collectionPickerContentHost,
-          isFormLikeCustomSheet && styles.formLikeCustomContentHost,
-          type === "limitReached" && styles.limitReachedContentHost,
-          (type === "notificationPermission" ||
-            type === "locationPermission" ||
-            type === "identificationMilestone" ||
-            type === "subscriptionDiscount" ||
-            type === "rateUs" ||
-            type === "feedback") &&
-            styles.permissionContentHost,
-          type === "communityRules" && styles.communityRulesContentHost,
-        ]}
-        removeClippedSubviews={false}
-      >
-        {content}
-      </View>
+        <View
+          style={[
+            styles.contentScroll,
+            styles.contentScrollContent,
+            styles.contentNoScroll,
+            {
+              paddingBottom:
+                usesPopupSheetSafeAreaInContent(type) ||
+                type === "communityRules"
+                  ? 0
+                  : isCollectionFormSheet || shouldDisableScroll
+                  ? Math.max(insets.bottom, 8)
+                  : CONTENT_PADDING_V + insets.bottom,
+              flex: 1,
+            },
+            type === "custom" && styles.contentScrollContentCustom,
+            (isCollectionFormSheet ||
+              isCollectionPickerSheet ||
+              isFormLikeCustomSheet) &&
+              styles.contentScrollContentCreateCollection,
+            isCollectionPickerSheet && styles.collectionPickerContentHost,
+            isFormLikeCustomSheet && styles.formLikeCustomContentHost,
+            type === "limitReached" && styles.limitReachedContentHost,
+            (type === "notificationPermission" ||
+              type === "locationPermission" ||
+              type === "identificationMilestone" ||
+              type === "subscriptionDiscount" ||
+              type === "rateUs" ||
+              type === "feedback") &&
+              styles.permissionContentHost,
+            type === "communityRules" && styles.communityRulesContentHost,
+          ]}
+          removeClippedSubviews={false}
+        >
+          {content}
+        </View>
       )}
     </View>
   );
@@ -2468,8 +2488,7 @@ function LimitReachedContent({
     plans.find((p) => p.id === defaultSelectedPlanId) ?? plans[0] ?? null;
   const upgradeCtaLabel = useMemo(
     () =>
-      getSubscriptionCtaLabel({ selectedPlan }) ||
-      UPGRADE_MODAL.CTA_SUBSCRIBE,
+      getSubscriptionCtaLabel({ selectedPlan }) || UPGRADE_MODAL.CTA_SUBSCRIBE,
     [selectedPlan]
   );
   const bottomPadding = CONTENT_PADDING_V + (insets?.bottom ?? 0);
@@ -2483,9 +2502,9 @@ function LimitReachedContent({
         style={[
           sheetStyles.limitTextCtaSection,
           isCollectionLimit && sheetStyles.collectionLimitTextCtaSection,
-          isIdentificationLimit && sheetStyles.identificationLimitTextCtaSection,
-          isBirdOfDayLimit &&
-            sheetStyles.birdOfDayLimitTextCtaSection,
+          isIdentificationLimit &&
+            sheetStyles.identificationLimitTextCtaSection,
+          isBirdOfDayLimit && sheetStyles.birdOfDayLimitTextCtaSection,
           {
             marginTop: "auto",
             paddingHorizontal: theme.spacing[6],
@@ -2758,10 +2777,7 @@ function RateUsContent({
       >
         {s.title}
       </Text>
-      <Text
-        color="textSecondary"
-        style={sheetStyles.rateSubtitle}
-      >
+      <Text color="textSecondary" style={sheetStyles.rateSubtitle}>
         {s.subtitle}
       </Text>
       <View style={sheetStyles.starsRow}>
@@ -2770,9 +2786,7 @@ function RateUsContent({
           return (
             <TouchableOpacity
               key={i}
-              onPress={() =>
-                setRating((prev) => (prev === i ? i - 1 : i))
-              }
+              onPress={() => setRating((prev) => (prev === i ? i - 1 : i))}
               activeOpacity={0.7}
               style={sheetStyles.rateStarHit}
               accessibilityRole="button"
@@ -3439,7 +3453,10 @@ function IdentificationMilestoneContent({
       >
         <Text
           weight="semibold"
-          style={[sheetStyles.milestoneTitle, { color: theme.colors.textPrimary }]}
+          style={[
+            sheetStyles.milestoneTitle,
+            { color: theme.colors.textPrimary },
+          ]}
         >
           {strings.title}
         </Text>
@@ -3479,23 +3496,39 @@ function FeedbackContent({
     email: string;
     feedback: string;
     rating?: number;
-  }) => void;
+  }) => void | Promise<void>;
   onClose: () => void;
   theme: ReturnType<typeof useTheme>;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const s = MODAL_STRINGS.feedbackModal;
-  const isValid = feedback.length >= 10;
-  const isEmailValid = email === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const canSubmit = isValid && isEmailValid;
-  const handleSubmit = () => {
-    onSubmit({ name, email, feedback, rating });
-    setName("");
-    setEmail("");
-    setFeedback("");
-    onClose();
+  const canSubmit =
+    name.trim().length > 0 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) &&
+    feedback.trim().length >= 10 &&
+    !submitting;
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    try {
+      await onSubmit({
+        name: name.trim(),
+        email: email.trim(),
+        feedback: feedback.trim(),
+        rating,
+      });
+      setName("");
+      setEmail("");
+      setFeedback("");
+      onClose();
+    } catch {
+      // Keep the form for retry; the caller displays the error.
+    } finally {
+      setSubmitting(false);
+    }
   };
   const feedbackInputBg = theme.colors.textFieldBackground;
   const feedbackInputBorder = theme.colors.textFieldBorder;
@@ -3513,6 +3546,7 @@ function FeedbackContent({
           {s.subtitle}
         </Text>
         <TextInput
+          editable={!submitting}
           placeholder={s.namePlaceholder}
           placeholderTextColor={theme.colors.textTertiary}
           value={name}
@@ -3528,6 +3562,7 @@ function FeedbackContent({
           ]}
         />
         <TextInput
+          editable={!submitting}
           placeholder={s.emailPlaceholder}
           placeholderTextColor={theme.colors.textTertiary}
           value={email}
@@ -3545,6 +3580,7 @@ function FeedbackContent({
           ]}
         />
         <TextInput
+          editable={!submitting}
           placeholder={s.feedbackPlaceholder}
           placeholderTextColor={theme.colors.textTertiary}
           value={feedback}
@@ -3563,10 +3599,7 @@ function FeedbackContent({
             },
           ]}
         />
-        <Text
-          color="textSecondary"
-          style={sheetStyles.feedbackCharCount}
-        >
+        <Text color="textSecondary" style={sheetStyles.feedbackCharCount}>
           {feedback.length}/{FEEDBACK_MESSAGE_MAX_LENGTH}
         </Text>
         <Button
@@ -3576,6 +3609,7 @@ function FeedbackContent({
           fullWidth
           onPress={handleSubmit}
           disabled={!canSubmit}
+          loading={submitting}
           style={sheetStyles.feedbackBtn}
         />
       </View>

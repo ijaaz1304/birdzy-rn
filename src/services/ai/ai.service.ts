@@ -1,3 +1,4 @@
+import { isIdentificationNoMatch } from "../session/identificationNoMatch";
 /**
  * AI Service
  * Integrates with Core API for AI identification and chat
@@ -14,9 +15,7 @@ import {
   getImageProcessingErrorMessage,
   ProcessedImage,
 } from "../../utils/imageProcessing/imagePreprocessor";
-import {
-  normalizeBirdIdentifyResponseLegacy,
-} from "../../utils/birdApiMappers";
+import { normalizeBirdIdentifyResponseLegacy } from "../../utils/birdApiMappers";
 import type {
   IdentifyMushroomResult,
   MushroomIdentification,
@@ -152,6 +151,8 @@ class AIService {
       }
 
       if (response.error) {
+        if (isIdentificationNoMatch(response))
+          return { imageUrls: [], matches: [], matchesFoundCount: 0 };
         throw new ApiException(response.reason || "Identification failed");
       }
 
@@ -175,6 +176,8 @@ class AIService {
         matchesFoundCount: birdResult.matchesFoundCount,
       };
     } catch (error) {
+      if (isIdentificationNoMatch(error))
+        return { imageUrls: [], matches: [], matchesFoundCount: 0 };
       throw normalizeError(error);
     }
   }
@@ -199,10 +202,10 @@ class AIService {
         ext === "wav"
           ? "audio/wav"
           : ext === "ogg"
-            ? "audio/ogg"
-            : ext === "mp3"
-              ? "audio/mpeg"
-              : "audio/m4a";
+          ? "audio/ogg"
+          : ext === "mp3"
+          ? "audio/mpeg"
+          : "audio/m4a";
       const response = await coreApi.identifySound({
         uri: audioUri,
         type,
@@ -213,7 +216,16 @@ class AIService {
       });
 
       if (response.error) {
-        throw new ApiException(response.reason || "Sound identification failed");
+        if (isIdentificationNoMatch(response))
+          return {
+            imageUrls: [],
+            matches: [],
+            matchesFoundCount: 0,
+            soundUrls: [],
+          };
+        throw new ApiException(
+          response.reason || "Sound identification failed"
+        );
       }
 
       const legacy = normalizeBirdIdentifyResponseLegacy(response);
@@ -224,6 +236,13 @@ class AIService {
         matchesFoundCount: legacy.matchesFoundCount,
       };
     } catch (error) {
+      if (isIdentificationNoMatch(error))
+        return {
+          imageUrls: [],
+          matches: [],
+          matchesFoundCount: 0,
+          soundUrls: [],
+        };
       throw normalizeError(error);
     }
   }
@@ -243,10 +262,14 @@ class AIService {
             typeof item === "string"
               ? item
               : typeof item?.uri === "string"
-                ? item.uri
-                : "";
+              ? item.uri
+              : "";
           if (uri.trim()) {
-            files.push({ uri: uri.trim(), type: "image/jpeg", name: "photo.jpg" });
+            files.push({
+              uri: uri.trim(),
+              type: "image/jpeg",
+              name: "photo.jpg",
+            });
           }
         }
       }

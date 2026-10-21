@@ -18,8 +18,7 @@ export const MODAL_STRINGS = {
     },
     cameraPermission: {
       title: "Improve Identification With Camera",
-      subtitle:
-        "To identify birds around you, we need access to your camera.",
+      subtitle: "To identify birds around you, we need access to your camera.",
       enableButton: "Continue",
       allowAccessButton: "Allow Access",
       openSettings: "Go to settings",
@@ -64,7 +63,8 @@ export const MODAL_STRINGS = {
     },
     pushNotifications: {
       title: "Enable Notifications",
-      subtitle: "Get notified about migration alerts, Bird of the Day, and community updates",
+      subtitle:
+        "Get notified about migration alerts, Bird of the Day, and community updates",
       enableButton: "Continue",
       openSettings: "Open Settings",
     },
@@ -110,14 +110,16 @@ export const MODAL_STRINGS = {
     },
     unlimitedIdentifications: {
       title: "Get Unlimited Identifications",
-      subtitle: "Upgrade to premium to identify unlimited birds by photo and sound",
+      subtitle:
+        "Upgrade to premium to identify unlimited birds by photo and sound",
       upgradeButton: "Upgrade Now",
       laterButton: "Maybe Later",
     },
     /** @deprecated Use unlimitedIdentifications */
     unlimitedMushrooms: {
       title: "Get Unlimited Identifications",
-      subtitle: "Upgrade to premium to identify unlimited birds by photo and sound",
+      subtitle:
+        "Upgrade to premium to identify unlimited birds by photo and sound",
       upgradeButton: "Upgrade Now",
       laterButton: "Maybe Later",
     },
@@ -143,7 +145,8 @@ export const MODAL_STRINGS = {
     },
     couldNotIdentify: {
       title: "Could Not Identify Bird",
-      subtitle: "We couldn't identify this bird. Please try again with a clearer photo or recording.",
+      subtitle:
+        "We couldn't identify this bird. Please try again with a clearer photo or recording.",
       retakeButton: "Re-take Photo",
       tryAgainButton: "Try Again",
     },
@@ -230,7 +233,8 @@ export const MODAL_STRINGS = {
       },
       Collection: {
         title: "My Birds",
-        subtitle: "Save sightings, wishlist species, and build custom trip lists.",
+        subtitle:
+          "Save sightings, wishlist species, and build custom trip lists.",
       },
       Feed: {
         title: "Community",
@@ -238,7 +242,8 @@ export const MODAL_STRINGS = {
       },
       AskAI: {
         title: "AI Chat",
-        subtitle: "Ask our bird expert about field marks, behavior, and look-alikes.",
+        subtitle:
+          "Ask our bird expert about field marks, behavior, and look-alikes.",
       },
     },
   },
@@ -283,7 +288,7 @@ export const MODAL_STRINGS = {
     subtitle: "Leaving a quick review helps us improve the app.",
     namePlaceholder: "Enter your name",
     emailPlaceholder: "Enter your email",
-    emailPlaceholderOptional: "Enter your email (optional)",
+    emailPlaceholderOptional: "Enter your email",
     feedbackPlaceholder: "Feedback (10–500 characters)",
     feedbackPlaceholderLong: "Your feedback (10–500 characters)",
     feedbackMinError: "Feedback must be at least 10 characters",
@@ -308,4 +313,3 @@ export const MODAL_STRINGS = {
 } as const;
 
 export const FEEDBACK_MESSAGE_MAX_LENGTH = 500;
-

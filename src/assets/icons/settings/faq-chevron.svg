@@ -1,5 +1,5 @@
-<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="Right Icon">
-<path id="Vector" d="M12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20Z" stroke-width="1.5" stroke="#898D8F"/>
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="13.5" height="7.29289" viewBox="0 0 13.5 7.29289" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="elements">
+<path id="Vector" d="M0.75 0.75L6.04289 6.04289C6.37623 6.37623 6.54289 6.54289 6.75 6.54289C6.95711 6.54289 7.12377 6.37623 7.45711 6.04289L12.75 0.75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#111111"/>
 </g>
 </svg>

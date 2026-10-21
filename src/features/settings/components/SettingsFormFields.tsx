@@ -4,11 +4,18 @@
  * Body/16px/Regular value.
  */
 
-import React from "react";
-import { View, StyleSheet, TextInput, TextInputProps } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  TextInputProps,
+  TouchableOpacity,
+} from "react-native";
 import { Text } from "../../../atoms";
 import { Dropdown, DropdownOption } from "../../../molecules/Dropdown/Dropdown";
 import { FONTS } from "../../../common/typography";
+import SubjectChevron from "../../../assets/icons/settings/subject-chevron.svg";
 import { useSettingsColors } from "../settingsColors";
 
 const FIELD_HEIGHT = 48;
@@ -86,6 +93,7 @@ export interface SettingsSelectFieldProps {
   onSelect: (value: string) => void;
   disabled?: boolean;
   rightIcon?: React.ReactNode;
+  inlineMenu?: boolean;
   containerStyle?: object;
 }
 
@@ -93,9 +101,92 @@ export const SettingsSelectField: React.FC<SettingsSelectFieldProps> = ({
   label,
   labelTone = "secondary",
   containerStyle,
+  inlineMenu = false,
   ...dropdownProps
 }) => {
   const c = useSettingsColors();
+  const [open, setOpen] = useState(false);
+  const selected = dropdownProps.options.find(
+    (option) => option.value === dropdownProps.value
+  );
+  if (inlineMenu) {
+    return (
+      <View style={[styles.field, containerStyle]}>
+        <FieldLabel label={label} tone={labelTone} />
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={label}
+          accessibilityState={{
+            expanded: open,
+            disabled: dropdownProps.disabled,
+          }}
+          disabled={dropdownProps.disabled}
+          onPress={() => setOpen((value) => !value)}
+          style={[
+            styles.selectButton,
+            { borderColor: c.fieldBorder, backgroundColor: c.fieldBg },
+          ]}
+        >
+          <Text style={[styles.selectValue, { color: c.text }]}>
+            {selected?.label ?? dropdownProps.placeholder}
+          </Text>
+          <View
+            style={[
+              styles.selectIcon,
+              { transform: [{ rotate: open ? "-90deg" : "90deg" }] },
+            ]}
+          >
+            <SubjectChevron color={c.text} />
+          </View>
+        </TouchableOpacity>
+        {open && (
+          <View
+            style={[
+              styles.menu,
+              { borderColor: c.fieldBorder, backgroundColor: c.fieldBg },
+            ]}
+          >
+            {dropdownProps.options.map((option, index) => {
+              const highlighted = selected
+                ? selected.value === option.value
+                : index === 0;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  accessibilityRole="button"
+                  accessibilityState={{
+                    selected: selected?.value === option.value,
+                    disabled: option.disabled,
+                  }}
+                  disabled={option.disabled}
+                  onPress={() => {
+                    dropdownProps.onSelect(option.value);
+                    setOpen(false);
+                  }}
+                  style={[
+                    styles.menuOption,
+                    highlighted && { backgroundColor: c.cardBorder },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.menuText,
+                      {
+                        color: highlighted ? c.text : c.label,
+                        fontFamily: highlighted ? FONTS.medium : FONTS.regular,
+                      },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+      </View>
+    );
+  }
   return (
     <View style={[styles.field, containerStyle]}>
       <FieldLabel label={label} tone={labelTone} />
@@ -110,6 +201,41 @@ export const SettingsSelectField: React.FC<SettingsSelectFieldProps> = ({
 };
 
 const styles = StyleSheet.create({
+  selectButton: {
+    height: FIELD_HEIGHT,
+    borderWidth: 1,
+    borderRadius: PILL_RADIUS,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  selectValue: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    lineHeight: 24,
+    letterSpacing: -0.16,
+  },
+  selectIcon: {
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  menu: {
+    borderWidth: 1,
+    borderRadius: 8,
+    gap: 4,
+    overflow: "hidden",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  menuOption: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  menuText: { fontSize: 14, lineHeight: 20 },
   field: {
     gap: 8,
   },
