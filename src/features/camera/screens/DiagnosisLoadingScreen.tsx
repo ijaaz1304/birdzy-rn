@@ -5,7 +5,6 @@ import {
 } from "../../../services/session/scanQuota";
 import type { ScanAttempt } from "../../../services/session/scanAllowance";
 import { requestFreeScanLimitPrompt } from "../../../services/freeScanLimitPrompt";
-import { notifyFreeScanLimitAfterSuccess } from "../../../services/freeScanLimitFlow";
 /**
  * Diagnosis Loading Screen
  * Shows image preview while analyzing with scanning animation
@@ -448,7 +447,6 @@ export const DiagnosisLoadingScreen: React.FC = () => {
         await completeFreeScanAttempt(scanAttempt, "success");
         if (cancelled) return;
         navigateToPossibleMatches(possibleMatches, false, uploadedSoundUrls);
-        void notifyFreeScanLimitAfterSuccess();
 
         void (async () => {
           rescheduleInactivityNotifications().catch(() => {

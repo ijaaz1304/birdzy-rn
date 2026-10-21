@@ -1,5 +1,4 @@
 import {
-  notifyFreeScanLimitAfterSuccess,
   requestFreeScanLimitIfBlocked,
   runWithFreeScanAccess,
 } from "../../src/services/freeScanLimitFlow";
@@ -31,20 +30,27 @@ describe("30 free scan limit flow", () => {
   it("does not show an introduction before the allowance is exhausted", async () => {
     for (const count of [0, 1, 28, 29]) {
       mockUsed = count;
-      await notifyFreeScanLimitAfterSuccess();
+
       expect(await requestFreeScanLimitIfBlocked()).toBe(false);
       expect(getFreeScanLimitPrompt()).toBe(false);
     }
   });
-  it("shows the popup immediately after the 30th completed scan", async () => {
+  it("preserves the 30th scan results and prompts only on the next camera entry", async () => {
+    const enterCamera = jest.fn();
+    mockUsed = 29;
+    expect(await runWithFreeScanAccess(enterCamera)).toBe(true);
+    // The final allowed scan consumes the allowance while its matches remain open.
     mockUsed = 30;
-    await notifyFreeScanLimitAfterSuccess();
+    expect(getFreeScanLimitPrompt()).toBe(false);
+    enterCamera.mockClear();
+    expect(await runWithFreeScanAccess(enterCamera)).toBe(false);
+    expect(enterCamera).not.toHaveBeenCalled();
     expect(getFreeScanLimitPrompt()).toBe(true);
   });
   it("blocks later camera entries and reopens the popup after Not Now", async () => {
     const enterCamera = jest.fn();
     mockUsed = 30;
-    await notifyFreeScanLimitAfterSuccess();
+
     dismissFreeScanLimitPrompt();
     expect(await runWithFreeScanAccess(enterCamera)).toBe(false);
     expect(enterCamera).not.toHaveBeenCalled();
@@ -63,15 +69,15 @@ describe("30 free scan limit flow", () => {
   it("never gates premium users even when their old free allowance is exhausted", async () => {
     mockPremium = true;
     mockUsed = 30;
-    await notifyFreeScanLimitAfterSuccess();
+
     expect(await requestFreeScanLimitIfBlocked()).toBe(false);
     expect(getFreeScanLimitPrompt()).toBe(false);
   });
-  it("coalesces completion and camera requests while the popup is already open", async () => {
+  it("coalesces repeated camera entry requests while the popup is already open", async () => {
     mockUsed = 30;
     const listener = jest.fn();
     const unsubscribe = subscribeFreeScanLimitPrompt(listener);
-    await notifyFreeScanLimitAfterSuccess();
+    await requestFreeScanLimitIfBlocked();
     await requestFreeScanLimitIfBlocked();
     expect(listener).toHaveBeenCalledTimes(1);
     unsubscribe();

@@ -1,3 +1,4 @@
+import { requestFreeScanLimitIfBlocked } from "../../services/freeScanLimitFlow";
 import { requestFreeScanLimitPrompt } from "../../services/freeScanLimitPrompt";
 /**
  * Camera Screen Component
@@ -192,6 +193,12 @@ export const CameraScreen: React.FC = () => {
   /** When true, show live camera again so the user can capture a second photo. */
   const [isAddingAnotherPhoto, setIsAddingAnotherPhoto] = useState(false);
   const isPremium = useSubscriptionStore(selectIsPremium);
+  useEffect(() => {
+    if (isFocused && isAppActive && !isExternalCameraReturn) {
+      void requestFreeScanLimitIfBlocked();
+    }
+  }, [isFocused, isAppActive, isExternalCameraReturn, isPremium]);
+
   const { limit: photoLimit, refresh: refreshPhotoLimit } =
     usePhotoIdentificationLimit(!isPremium);
   const { submitProcessed, isProcessing } = useIdentifyImagePipeline({

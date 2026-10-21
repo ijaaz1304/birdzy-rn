@@ -5,7 +5,6 @@ import {
 } from "../../../services/session/scanQuota";
 import type { ScanAttempt } from "../../../services/session/scanAllowance";
 import { requestFreeScanLimitPrompt } from "../../../services/freeScanLimitPrompt";
-import { notifyFreeScanLimitAfterSuccess } from "../../../services/freeScanLimitFlow";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { aiService } from "../../../services";
@@ -309,7 +308,7 @@ export function useSoundIdentificationFlow(
           await completeFreeScanAttempt(start.attempt, "success");
           if (isStale()) return;
           setIsAnalyzing(false);
-          void notifyFreeScanLimitAfterSuccess();
+
           navigateToPossibleMatches(input, possibleMatches, {
             uploadedSoundUrls,
             uploadedImageUrls,
