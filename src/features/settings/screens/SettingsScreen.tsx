@@ -165,7 +165,7 @@ export const SettingsScreen: React.FC = () => {
     setHasRated(true);
     setShowRateUsModal(false);
     void sendRatingFeedback({
-      domain: "Mushrooms",
+      domain: "Birds",
       message: "",
       rating,
       source: "rate_us",
@@ -183,7 +183,7 @@ export const SettingsScreen: React.FC = () => {
   }) => {
     try {
       await sendRatingFeedback({
-        domain: "Mushrooms",
+        domain: "Birds",
         name: data.name || undefined,
         email: data.email || undefined,
         message: data.feedback,

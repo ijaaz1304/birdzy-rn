@@ -1,7 +1,7 @@
 import { SettingsHeader } from "../components/SettingsHeader";
 /**
  * Terms of Service Screen
- * Opens Shroomzy Terms of Service in an in-app WebView.
+ * Opens Birdzy Terms of Service in an in-app WebView.
  */
 
 import React from "react";

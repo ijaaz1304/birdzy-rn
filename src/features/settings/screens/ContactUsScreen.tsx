@@ -46,7 +46,7 @@ export const ContactUsScreen: React.FC = () => {
     setSending(true);
     try {
       await sendRatingFeedback({
-        domain: "Mushrooms",
+        domain: "Birds",
         name: user?.isGuest ? undefined : user?.name,
         email: user?.isGuest ? undefined : user?.email,
         message: `${topicLabel} - ${message.trim()}`,

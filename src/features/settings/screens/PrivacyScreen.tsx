@@ -1,7 +1,7 @@
 import { SettingsHeader } from "../components/SettingsHeader";
 /**
  * Privacy Policy Screen
- * Opens Shroomzy Privacy Policy in an in-app WebView.
+ * Opens Birdzy Privacy Policy in an in-app WebView.
  */
 
 import React from "react";
