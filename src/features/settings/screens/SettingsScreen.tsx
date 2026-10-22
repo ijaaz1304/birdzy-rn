@@ -232,7 +232,7 @@ export const SettingsScreen: React.FC = () => {
               onPress={handleLogin}
             />
           )}
-          {isSignedIn && !user?.isSocial && (
+          {isSignedIn && (
             <SettingsItem
               icon="mail"
               title={M.loginSecurity}
