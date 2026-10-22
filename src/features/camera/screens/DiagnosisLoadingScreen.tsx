@@ -1,3 +1,4 @@
+import { useUnsuccessfulScanPopup } from "../../../hooks/useUnsuccessfulScanPopup";
 import {
   beginFreeScanAttempt,
   completeFreeScanAttempt,
@@ -146,6 +147,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   );
   const isPremium = useSubscriptionStore(selectIsPremium);
   const isMountedRef = useRef(true);
+  useUnsuccessfulScanPopup(showErrorModal || soundError !== null, route.key);
   const thumbPrefetchDoneRef = useRef<(() => void) | null>(null);
   const [thumbPrefetchUris, setThumbPrefetchUris] = useState<string[]>([]);
 

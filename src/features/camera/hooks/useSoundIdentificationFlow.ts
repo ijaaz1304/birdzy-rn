@@ -1,3 +1,5 @@
+import { useUnsuccessfulScanPopup } from "../../../hooks/useUnsuccessfulScanPopup";
+import { newScanAttemptId } from "../../../services/session/scanAllowance";
 import {
   beginFreeScanAttempt,
   completeFreeScanAttempt,
@@ -76,6 +78,8 @@ export function useSoundIdentificationFlow(
   const thumbPrefetchDoneRef = useRef<(() => void) | null>(null);
   const runIdRef = useRef(0);
   const activeAttempt = useRef<ScanAttempt | null>(null);
+  const failedAttemptId = useRef(newScanAttemptId());
+  useUnsuccessfulScanPopup(soundError !== null, failedAttemptId.current);
   const startingRef = useRef(false);
   useEffect(
     () => () => {
@@ -142,6 +146,7 @@ export function useSoundIdentificationFlow(
       if (startingRef.current) return;
       startingRef.current = true;
       const runId = ++runIdRef.current;
+      failedAttemptId.current = newScanAttemptId();
       const isStale = () => runIdRef.current !== runId;
       try {
         setSoundError(null);
@@ -198,6 +203,7 @@ export function useSoundIdentificationFlow(
             return;
           }
           activeAttempt.current = start.attempt;
+          failedAttemptId.current = start.attempt.id;
           if (isStale()) return;
           let possibleMatches: ReturnType<
             typeof mapIdentificationToPossibleMatch

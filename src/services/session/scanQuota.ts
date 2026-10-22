@@ -71,3 +71,14 @@ export function subscribeToScanQuotaChanges(listener: () => void): () => void {
     unsubscribeAuth();
   };
 }
+
+/** Idempotent completion for any attempt that displays the cannot-identify popup. */
+export const recordUnsuccessfulScan = (
+  id: string,
+  identity = scanQuota.currentScope()
+) =>
+  scanQuota.recordFailure(
+    id,
+    () => selectIsPremium(useSubscriptionStore.getState()),
+    identity
+  );

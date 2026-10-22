@@ -250,6 +250,29 @@ export function createScanAllowance(options: {
             active.delete(attempt.scope);
         }
       }),
+    /** Every displayed identification failure counts, even after its request was cancelled/cleaned up. */
+    recordFailure: (
+      id: string,
+      premiumNow: boolean | (() => boolean),
+      expectedIdentity = scopeNow()
+    ): Promise<ScanAllowance> =>
+      serial(async () => {
+        const { scope, identity, ledger } = await currentLedger();
+        if (
+          identity !== expectedIdentity ||
+          premiumValue(premiumNow) ||
+          ledger.completed.includes(id) ||
+          ledger.used >= FREE_SCAN_LIMIT
+        ) {
+          return display(scope, ledger);
+        }
+        ledger.failures += 1;
+        if (ledger.failures > FREE_FAILURE_GRACE) ledger.used += 1;
+        ledger.completed.push(id);
+        await write(scope, ledger);
+        notify();
+        return display(scope, ledger);
+      }),
     cancel(attempt: ScanAttempt) {
       if (active.get(attempt.scope) === attempt) active.delete(attempt.scope);
     },

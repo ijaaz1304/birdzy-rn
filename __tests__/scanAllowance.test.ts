@@ -228,3 +228,33 @@ it("ignores an old cancelled lease after the same request ID is restarted", asyn
   await quota.complete(second.attempt, "success");
   expect((await quota.get()).remaining).toBe(29);
 });
+
+it("counts every cannot-identify popup from failure six, including generic API failures", async () => {
+  for (let failure = 1; failure <= 10; failure++) {
+    const allowance = await quota.recordFailure(`popup-${failure}`, false);
+    expect(allowance.failures).toBe(failure);
+    expect(allowance.remaining).toBe(30 - Math.max(0, failure - 5));
+  }
+});
+it("does not count the API no-match and its popup twice", async () => {
+  const start = await quota.begin("no-match-and-popup", false);
+  if (start.status !== "ready") throw new Error(start.status);
+  await quota.complete(start.attempt, "failure");
+  await quota.recordFailure(start.attempt.id, false);
+  expect((await quota.get()).failures).toBe(1);
+});
+it("records a failed popup after request cleanup and ignores duplicate presentations", async () => {
+  const start = await quota.begin("api-error", false);
+  if (start.status !== "ready") throw new Error(start.status);
+  quota.cancel(start.attempt);
+  await Promise.all([
+    quota.recordFailure(start.attempt.id, false),
+    quota.recordFailure(start.attempt.id, false),
+  ]);
+  expect((await quota.get()).failures).toBe(1);
+});
+it("does not charge a popup to premium users or a different account", async () => {
+  await quota.recordFailure("premium-error", true);
+  await quota.recordFailure("old-account-error", false, "account:previous");
+  expect((await quota.get()).failures).toBe(0);
+});
