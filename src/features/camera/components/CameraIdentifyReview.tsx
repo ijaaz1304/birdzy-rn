@@ -10,6 +10,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppImage } from "@/components/AppImage";
 import { Text } from "../../../atoms";
 import { APP_COLORS } from "../../../config/colors";
@@ -19,7 +20,13 @@ import { MAX_CAMERA_IDENTIFY_IMAGES } from "../utils/identificationLimitDisplay"
 
 const PREVIEW_HORIZONTAL_INSET = 20;
 const PREVIEW_SIZE = 335;
+const PREVIEW_MIN_SIZE = 160;
 const TOAST_DISMISS_MS = 3000;
+const TOAST_CLEARANCE = 56;
+const SLOT_BLOCK_HEIGHT = 74;
+const ACTIONS_BLOCK_HEIGHT = 108;
+const ACTIONS_BOTTOM_GAP = 16;
+const REVIEW_VERTICAL_CHROME = 16 + SLOT_BLOCK_HEIGHT + ACTIONS_BLOCK_HEIGHT;
 
 type Props = {
   images: CroppedImageObject[];
@@ -43,13 +50,22 @@ export const CameraIdentifyReview: React.FC<Props> = ({
   imageCounterLabel,
   submitToastLabel,
   isProcessing = false,
-  topInset = 122,
+  topInset = 175,
   onRemove,
   onAddAnother,
   onIdentify,
 }) => {
-  const { width: windowWidth } = useWindowDimensions();
-  const previewSize = Math.min(PREVIEW_SIZE, windowWidth - PREVIEW_HORIZONTAL_INSET * 2);
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 8) + ACTIONS_BOTTOM_GAP;
+  const previewSize = Math.min(
+    PREVIEW_SIZE,
+    windowWidth - PREVIEW_HORIZONTAL_INSET * 2,
+    Math.max(
+      PREVIEW_MIN_SIZE,
+      windowHeight - topInset - REVIEW_VERTICAL_CHROME - bottomPadding
+    )
+  );
   const [activeIndex, setActiveIndex] = useState(Math.max(0, images.length - 1));
   const [showToast, setShowToast] = useState(true);
 
@@ -74,7 +90,10 @@ export const CameraIdentifyReview: React.FC<Props> = ({
   return (
     <View style={styles.root} pointerEvents="box-none">
       {showToast ? (
-        <View style={[styles.toast, { top: topInset }]} pointerEvents="none">
+        <View
+          style={[styles.toast, { top: Math.max(12, topInset - TOAST_CLEARANCE) }]}
+          pointerEvents="none"
+        >
           <Text
             variant="body"
             size="small"
@@ -86,7 +105,12 @@ export const CameraIdentifyReview: React.FC<Props> = ({
         </View>
       ) : null}
 
-      <View style={styles.content}>
+      <View
+        style={[
+          styles.content,
+          { paddingTop: topInset, paddingBottom: bottomPadding },
+        ]}
+      >
         <View style={styles.previewSection}>
           <View style={[styles.previewFrame, { width: previewSize, height: previewSize }]}>
             <AppImage
@@ -186,14 +210,11 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: PREVIEW_HORIZONTAL_INSET,
-    paddingTop: 72,
-    paddingBottom: 32,
     justifyContent: "space-between",
   },
   previewSection: {
     alignItems: "center",
     gap: 16,
-    paddingTop: 12,
   },
   previewFrame: {
     borderRadius: 0,
@@ -237,7 +258,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     height: 48,
     borderRadius: 24,
-    backgroundColor: APP_COLORS.createButtonFg,
+    backgroundColor: APP_COLORS.ctaPrimary,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,

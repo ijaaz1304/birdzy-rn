@@ -11,12 +11,29 @@ import {
 } from "../permissions";
 
 const MAX_RECORDING_SECONDS = 60;
+const STOP_PLAYER_TIMEOUT_MS = 250;
+const LOCAL_PROBE_TIMEOUT_MS = 2500;
+
+function isLocalAudioUri(uri: string): boolean {
+  return uri.startsWith("file://") || uri.startsWith("/");
+}
+
+function durationFromMeta(raw: number): number | undefined {
+  if (!(raw > 0) || !Number.isFinite(raw)) return undefined;
+  const sec = raw > 1000 ? raw / 1000 : raw;
+  return sec > 0 ? sec : undefined;
+}
 
 class SoundRecordingService {
   private recordingUri: string | null = null;
   private recordingStartedAt: number | null = null;
   private pausedAt: number | null = null;
   private pausedAccumMs = 0;
+  private playbackSession = 0;
+  private playerHeld = false;
+  private playbackEndHandler: (() => void) | undefined;
+  private durationCache = new Map<string, number>();
+  private durationListeners = new Set<(uri: string, sec: number) => void>();
 
   async ensureMicrophonePermission(): Promise<boolean> {
     const current = await checkMicrophonePermission();
@@ -110,56 +127,111 @@ class SoundRecordingService {
     return MAX_RECORDING_SECONDS;
   }
 
-  async play(uri: string): Promise<void> {
-    await AudioRecorderPlayer.startPlayer(uri);
+  getCachedDurationSec(uri: string): number | undefined {
+    return this.durationCache.get(uri);
+  }
+
+  subscribeDuration(
+    listener: (uri: string, sec: number) => void
+  ): () => void {
+    this.durationListeners.add(listener);
+    return () => {
+      this.durationListeners.delete(listener);
+    };
+  }
+
+  async play(
+    uri: string,
+    options?: { onEnd?: () => void }
+  ): Promise<void> {
+    const session = ++this.playbackSession;
+    this.playbackEndHandler = options?.onEnd;
+    try {
+      await AudioRecorderPlayer.setVolume(1);
+    } catch {
+      // native volume restore is best-effort
+    }
+    if (this.playerHeld) {
+      await this.releasePlayer();
+    }
+    if (session !== this.playbackSession) return;
+    this.playerHeld = true;
+    try {
+      await AudioRecorderPlayer.startPlayer(uri);
+    } catch (error) {
+      if (session === this.playbackSession) this.playerHeld = false;
+      throw error;
+    }
+    if (session !== this.playbackSession) return;
+    this.attachPlaybackListeners(uri, session);
   }
 
   async stopPlayback(): Promise<void> {
-    await AudioRecorderPlayer.stopPlayer();
-    AudioRecorderPlayer.removePlayBackListener();
-    AudioRecorderPlayer.removePlaybackEndListener();
+    this.playbackSession += 1;
+    this.playbackEndHandler = undefined;
+    if (!this.playerHeld) {
+      this.clearPlaybackListeners();
+      return;
+    }
+    this.playerHeld = false;
+    await this.releasePlayer();
   }
 
-  /** Read clip length without audible playback (volume 0, then stop). */
+  /**
+   * Local files only. Remote URLs used to occupy the shared player at volume 0
+   * (up to 12s), which delayed tap-to-play.
+   */
   async probeDurationSec(uri: string): Promise<number | undefined> {
-    if (!uri?.trim()) return undefined;
+    const trimmed = uri?.trim();
+    if (!trimmed) return undefined;
+    const cached = this.durationCache.get(trimmed);
+    if (cached != null) return cached;
+    if (!isLocalAudioUri(trimmed) || this.playerHeld) return undefined;
+
+    const session = this.playbackSession;
     try {
-      await this.stopPlayback();
+      this.playerHeld = true;
       await AudioRecorderPlayer.setVolume(0);
-      await AudioRecorderPlayer.startPlayer(uri);
+      if (session !== this.playbackSession) return undefined;
+      await AudioRecorderPlayer.startPlayer(trimmed);
+      if (session !== this.playbackSession) return undefined;
+
       const durationSec = await new Promise<number | undefined>((resolve) => {
         let settled = false;
-        const finish = async (value?: number) => {
+        const finish = (value?: number) => {
           if (settled) return;
           settled = true;
           clearTimeout(timeout);
-          AudioRecorderPlayer.removePlayBackListener();
-          try {
-            await AudioRecorderPlayer.stopPlayer();
-            await AudioRecorderPlayer.setVolume(1);
-          } catch {
-            // ignore cleanup errors
-          }
           resolve(value);
         };
-        const timeout = setTimeout(() => {
-          void finish(undefined);
-        }, 12_000);
+        const timeout = setTimeout(() => finish(undefined), LOCAL_PROBE_TIMEOUT_MS);
         AudioRecorderPlayer.addPlayBackListener((meta) => {
-          const raw = meta.duration;
-          if (raw > 0) {
-            const sec = raw > 1000 ? raw / 1000 : raw;
-            void finish(sec);
-          }
+          const sec = durationFromMeta(meta.duration);
+          if (sec != null) finish(sec);
         });
       });
-      return durationSec;
-    } catch {
+
+      if (session !== this.playbackSession) return durationSec;
+      this.clearPlaybackListeners();
       try {
         await AudioRecorderPlayer.stopPlayer();
         await AudioRecorderPlayer.setVolume(1);
       } catch {
         // ignore cleanup errors
+      }
+      this.playerHeld = false;
+      if (durationSec != null) this.rememberDuration(trimmed, durationSec);
+      return durationSec;
+    } catch {
+      if (session === this.playbackSession) {
+        this.playerHeld = false;
+        this.clearPlaybackListeners();
+        try {
+          await AudioRecorderPlayer.stopPlayer();
+          await AudioRecorderPlayer.setVolume(1);
+        } catch {
+          // ignore cleanup errors
+        }
       }
       return undefined;
     }
@@ -167,6 +239,47 @@ class SoundRecordingService {
 
   mmss(seconds: number): string {
     return AudioRecorderPlayer.mmss(Math.max(0, Math.floor(seconds)));
+  }
+
+  private rememberDuration(uri: string, sec: number) {
+    this.durationCache.set(uri, sec);
+    this.durationListeners.forEach((listener) => listener(uri, sec));
+  }
+
+  private attachPlaybackListeners(uri: string, session: number) {
+    this.clearPlaybackListeners();
+    AudioRecorderPlayer.addPlayBackListener((meta) => {
+      if (session !== this.playbackSession) return;
+      const sec = durationFromMeta(meta.duration);
+      if (sec != null) this.rememberDuration(uri, sec);
+    });
+    AudioRecorderPlayer.addPlaybackEndListener(() => {
+      if (session !== this.playbackSession) return;
+      this.playerHeld = false;
+      this.clearPlaybackListeners();
+      const onEnd = this.playbackEndHandler;
+      this.playbackEndHandler = undefined;
+      onEnd?.();
+    });
+  }
+
+  private clearPlaybackListeners() {
+    AudioRecorderPlayer.removePlayBackListener();
+    AudioRecorderPlayer.removePlaybackEndListener();
+  }
+
+  private async releasePlayer(): Promise<void> {
+    this.clearPlaybackListeners();
+    try {
+      await Promise.race([
+        AudioRecorderPlayer.stopPlayer(),
+        new Promise<void>((resolve) =>
+          setTimeout(resolve, STOP_PLAYER_TIMEOUT_MS)
+        ),
+      ]);
+    } catch {
+      // native stop can reject when nothing is playing
+    }
   }
 }
 

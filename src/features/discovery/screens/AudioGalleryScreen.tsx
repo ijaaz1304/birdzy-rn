@@ -101,13 +101,22 @@ export const AudioGalleryScreen: React.FC = () => {
 
   const togglePlay = async (file: BirdGalleryAudioFile) => {
     if (playingId === file.fileId) {
-      await soundRecordingService.stopPlayback();
       setPlayingId(null);
+      void soundRecordingService.stopPlayback();
       return;
     }
-    await soundRecordingService.stopPlayback();
-    await soundRecordingService.play(file.url);
     setPlayingId(file.fileId);
+    try {
+      await soundRecordingService.play(file.url, {
+        onEnd: () => {
+          setPlayingId((current) =>
+            current === file.fileId ? null : current
+          );
+        },
+      });
+    } catch {
+      setPlayingId((current) => (current === file.fileId ? null : current));
+    }
   };
 
   const openSpecimen = (file: BirdGalleryAudioFile) => {

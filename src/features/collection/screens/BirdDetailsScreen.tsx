@@ -3245,14 +3245,15 @@ export const BirdDetailsScreen: React.FC = () => {
                               if (!url) return;
                               void (async () => {
                                 if (nameSoundPlaying) {
-                                  await soundRecordingService.stopPlayback();
                                   setNameSoundPlaying(false);
+                                  void soundRecordingService.stopPlayback();
                                   return;
                                 }
+                                setNameSoundPlaying(true);
                                 try {
-                                  await soundRecordingService.stopPlayback();
-                                  await soundRecordingService.play(url);
-                                  setNameSoundPlaying(true);
+                                  await soundRecordingService.play(url, {
+                                    onEnd: () => setNameSoundPlaying(false),
+                                  });
                                 } catch {
                                   setNameSoundPlaying(false);
                                 }

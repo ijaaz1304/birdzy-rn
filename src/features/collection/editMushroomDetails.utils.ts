@@ -8,6 +8,7 @@ import { MushroomPhoto } from "../../types/mushroom-media.types";
 import { getArchetypeImageUrls } from "../../utils/mushroomApiMappers";
 import { getPrimaryCommonName } from "../../utils/mushroomDisplayUtils";
 import { extractBirdProfile } from "../../utils/birdApiMappers";
+import { APP_COLORS } from "../../config/colors";
 import { COLLECTION_STRINGS } from "../../config/strings/collection.strings";
 import { normalizeCollectionIds } from "./collection.utils";
 
@@ -42,7 +43,7 @@ export const EDIT_BIRD_TABS: {
   { id: "migration", label: BIRD_SECTIONS.migration, premium: true },
 ];
 
-export const EDIT_BIRD_SAVE_COLOR = "#402122";
+export const EDIT_BIRD_SAVE_COLOR = APP_COLORS.ctaPrimary;
 
 export type EditableMushroomData = {
   commonName?: string;

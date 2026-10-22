@@ -100,6 +100,20 @@ it("preserves quiet calls with logarithmic contrast without amplifying silence",
   expect(peakForAmplitude(100)).toBeLessThan(peakForAmplitude(1000));
 });
 
+it("holds brief peaks instead of dropping them on the next silent hop", () => {
+  const engine = new LiveMelSpectrogramEngine(20);
+  const tone = Int16Array.from({ length: LIVE_SPECTROGRAM_FFT_SIZE }, (_, i) =>
+    Math.round(12000 * Math.sin((2 * Math.PI * 3000 * i) / 22050))
+  );
+  engine.pushPcm(tone);
+  const peak = Math.max(...engine.columns.at(-1)!);
+  engine.pushPcm(new Int16Array(LIVE_SPECTROGRAM_FFT_SIZE));
+  const after = Math.max(...engine.columns.at(-1)!);
+  expect(peak).toBeGreaterThan(0.2);
+  expect(after).toBeGreaterThan(peak * 0.2);
+  expect(after).toBeLessThan(peak);
+});
+
 it("retains the start of longer recordings while returning only a small live tail", () => {
   const engine = new LiveMelSpectrogramEngine(2600);
   engine.pushPcm(new Int16Array(22050 * 6));

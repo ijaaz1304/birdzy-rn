@@ -22,9 +22,9 @@ class MainActivity : ReactActivity() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       window.isNavigationBarContrastEnforced = false
     }
-    // Launch artwork is teal; JS updates icon contrast once the screen is ready.
+    // Launch artwork is splash.webp (light); JS updates icon contrast once the screen is ready.
     WindowInsetsControllerCompat(window, window.decorView)
-        .isAppearanceLightNavigationBars = false
+        .isAppearanceLightNavigationBars = true
   }
 
   /**

@@ -32,17 +32,31 @@
                                           widthSizable="YES"
                                           heightSizable="YES"/>
 
-                        <subviews/>
+                        <subviews>
+                            <imageView
+                                clipsSubviews="YES"
+                                userInteractionEnabled="NO"
+                                contentMode="scaleAspectFit"
+                                image="LaunchSplash"
+                                translatesAutoresizingMaskIntoConstraints="NO"
+                                id="splash-img">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                            </imageView>
+                        </subviews>
 
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
 
-                        <constraints/>
+                        <constraints>
+                            <constraint firstItem="splash-img" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="splash-top"/>
+                            <constraint firstItem="splash-img" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" id="splash-bottom"/>
+                            <constraint firstItem="splash-img" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="splash-leading"/>
+                            <constraint firstItem="splash-img" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" id="splash-trailing"/>
+                        </constraints>
 
-                        <!-- Birdzy brand teal — matches JS splash (APP_COLORS.splashBackground) -->
                         <color key="backgroundColor"
-                               red="0.00392156862745098"
-                               green="0.27843137254901962"
-                               blue="0.30980392156862745"
+                               red="1"
+                               green="1"
+                               blue="1"
                                alpha="1"
                                colorSpace="custom"
                                customColorSpace="sRGB"/>
@@ -58,4 +72,7 @@
             <point key="canvasLocation" x="52" y="375"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="LaunchSplash" width="1500" height="3248"/>
+    </resources>
 </document>

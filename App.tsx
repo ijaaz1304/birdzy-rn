@@ -25,7 +25,10 @@ import { ThemeProvider } from './src/app';
 import { ToastProvider } from './src/contexts/ToastContext';
 import { AppConfigProvider, getDefaultAppConfig } from './src/config';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { SplashScreenContent } from './src/app/SplashScreen';
+import {
+  SplashScreenContent,
+  SPLASH_SCREEN_BACKGROUND,
+} from './src/app/SplashScreen';
 import { AlertModal } from './src/components/AlertModal';
 import { initializeFirebase } from './src/lib/firebase';
 import { initializeNotificationService } from './src/services/notifications';
@@ -40,7 +43,6 @@ import { socialLoginService, logGoogleSignInStartupDiagnostics, logSocialAuthSta
 import { GOOGLE_WEB_CLIENT_ID } from './src/constants/env';
 import { useAppLogsStore } from './src/features/app-logs/app-logs.store';
 import { initDiscountOfferFirstOpen } from './src/features/subscription/utils/discountOffer';
-import { APP_COLORS } from './src/config/colors';
 import { initAttribution } from './src/services/attribution';
 import { initializeFacebookSdkIfConfigured } from './src/services/facebook/facebookSdk';
 import { warmBundledImageCache } from './src/imagePipeline';
@@ -283,10 +285,10 @@ function App(): React.JSX.Element {
 
   return (
     <GestureHandlerRootView
-      style={{ flex: 1, backgroundColor: APP_COLORS.splashBackground }}
+      style={{ flex: 1, backgroundColor: SPLASH_SCREEN_BACKGROUND }}
     >
       <SafeAreaProvider
-        style={{ flex: 1, backgroundColor: APP_COLORS.splashBackground }}
+        style={{ flex: 1, backgroundColor: SPLASH_SCREEN_BACKGROUND }}
       >
         <BottomSheetModalProvider>
           <AppConfigProvider config={appConfig}>

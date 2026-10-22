@@ -1,6 +1,7 @@
 /** Small, lossless grayscale PNGs: one native image instead of a cell view tree. */
 const QUIET = 245;
 const LOUD = 55;
+export const SPECTROGRAM_BG = `#${QUIET.toString(16).repeat(3)}`;
 const crcTable = Uint32Array.from({ length: 256 }, (_, value) => {
   let crc = value;
   for (let i = 0; i < 8; i += 1) {

@@ -125,6 +125,7 @@ const HAS_SEEN_CAMERA_TIPS_KEY = SCREEN_STORAGE_KEYS.HAS_SEEN_CAMERA_TIPS;
 const ZOOM_CONTROLS_HEIGHT = 32;
 const CAPTURE_CONTENT_GAP = 16;
 const SUBMIT_BELOW_ZOOM_GAP = 12;
+const LOCATION_BANNER_TOP_GAP = 68;
 
 type CameraScreenNavigationProp = NativeStackNavigationProp<
   CameraStackParamList,
@@ -159,7 +160,7 @@ export const CameraScreen: React.FC = () => {
   const [captureControlsHeight, setCaptureControlsHeight] = useState(220);
   const [bottomControlsHeight, setBottomControlsHeight] = useState(120);
   const captureFrameLayout = useCaptureFrameLayout({
-    minimumTop: insets.top + 68 + locationBannerHeight + 16,
+    minimumTop: insets.top + LOCATION_BANNER_TOP_GAP + locationBannerHeight + 16,
     bottomInset:
       captureControlsHeight + bottomControlsHeight + CAPTURE_CONTENT_GAP + 12,
   });
@@ -970,7 +971,8 @@ export const CameraScreen: React.FC = () => {
 
   // No camera hardware (simulator) → gallery upload path.
   const noDeviceMode = permissionChecked && !device;
-  const reviewTopInset = insets.top + 120;
+  const locationBannerTop = insets.top + LOCATION_BANNER_TOP_GAP;
+  const reviewTopInset = captureFrameLayout.frameTop;
 
   if (noDeviceMode) {
     if (showIdentifyReview) {
@@ -995,7 +997,16 @@ export const CameraScreen: React.FC = () => {
             <NavBackIcon color="#FFFFFF" size={CAPTURE_TOP_ICON_SIZE} />
           </TouchableOpacity>
 
-          <View style={[styles.locationBannerWrap, { top: insets.top + 68 }]}>
+          <View
+            onLayout={(event) =>
+              setLocationBannerHeight(event.nativeEvent.layout.height)
+            }
+            style={[
+              styles.locationBannerWrap,
+              styles.locationBannerWrapRaised,
+              { top: locationBannerTop },
+            ]}
+          >
             <IdentificationLocationBanner
               variant="camera"
               permissionGranted={shouldShowLocationBannerAsGranted(
@@ -1048,7 +1059,15 @@ export const CameraScreen: React.FC = () => {
             <NavBackIcon color="#FFFFFF" size={CAPTURE_TOP_ICON_SIZE} />
           </TouchableOpacity>
 
-          <View style={[styles.locationBannerWrap, { top: insets.top + 68 }]}>
+          <View
+            onLayout={(event) =>
+              setLocationBannerHeight(event.nativeEvent.layout.height)
+            }
+            style={[
+              styles.locationBannerWrap,
+              { top: locationBannerTop },
+            ]}
+          >
             <IdentificationLocationBanner
               variant="camera"
               permissionGranted={shouldShowLocationBannerAsGranted(
@@ -1061,7 +1080,12 @@ export const CameraScreen: React.FC = () => {
             />
           </View>
 
-          <View style={styles.galleryOnlyReadyContent}>
+          <View
+            style={[
+              styles.galleryOnlyReadyContent,
+              { paddingTop: reviewTopInset },
+            ]}
+          >
             <CameraImageSlots
               images={selectedImages}
               maxImages={MAX_CAMERA_IDENTIFY_IMAGES}
@@ -1084,7 +1108,7 @@ export const CameraScreen: React.FC = () => {
               style={[
                 styles.submitBtn,
                 {
-                  backgroundColor: APP_COLORS.createButtonFg,
+                  backgroundColor: theme.colors.primaryCTA,
                   borderRadius: theme.radius.lg,
                   opacity: isProcessing ? 0.7 : 1,
                 },
@@ -1342,7 +1366,7 @@ export const CameraScreen: React.FC = () => {
                 style={[
                   styles.locationBannerWrap,
                   showIdentifyReview && styles.locationBannerWrapRaised,
-                  { top: insets.top + 68 },
+                  { top: locationBannerTop },
                 ]}
               >
                 <IdentificationLocationBanner
@@ -1484,7 +1508,7 @@ export const CameraScreen: React.FC = () => {
                     style={[
                       styles.submitBtn,
                       {
-                        backgroundColor: APP_COLORS.createButtonFg,
+                        backgroundColor: theme.colors.primaryCTA,
                         borderRadius: theme.radius.lg,
                         opacity: isProcessing ? 0.7 : 1,
                         marginTop: SUBMIT_BELOW_ZOOM_GAP,
@@ -1689,7 +1713,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
     paddingHorizontal: 20,
-    paddingTop: 120,
+    paddingTop: 175,
   },
   zoomSliderInline: {
     width: "100%",

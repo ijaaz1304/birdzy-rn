@@ -18,20 +18,23 @@ export function useCatalogueCardSound() {
   const toggleSound = useCallback(
     async (id: string, urls?: string[]) => {
       if (playingId === id) {
-        await soundRecordingService.stopPlayback();
         setPlayingId(null);
+        void soundRecordingService.stopPlayback();
         return;
       }
       const url = urls?.find(
         (u) => typeof u === "string" && u.trim().length > 0
       );
       if (!url) return;
+      setPlayingId(id);
       try {
-        await soundRecordingService.stopPlayback();
-        await soundRecordingService.play(url);
-        setPlayingId(id);
+        await soundRecordingService.play(url, {
+          onEnd: () => {
+            setPlayingId((current) => (current === id ? null : current));
+          },
+        });
       } catch {
-        setPlayingId(null);
+        setPlayingId((current) => (current === id ? null : current));
       }
     },
     [playingId]

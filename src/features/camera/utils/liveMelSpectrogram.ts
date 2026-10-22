@@ -84,10 +84,14 @@ function buildMelFilters(
   return filters;
 }
 
+/** Fast attack, slower decay — keeps brief calls visible without sparkle. */
+const DISPLAY_RELEASE = 0.72;
+
 export class LiveMelSpectrogramEngine {
   private pcmRing = new Int16Array(LIVE_SPECTROGRAM_FFT_SIZE);
   private frame = new Float64Array(LIVE_SPECTROGRAM_FFT_SIZE);
   private columnScratch = new Array<number>(LIVE_SPECTROGRAM_MEL_BANDS).fill(0);
+  private smoothed = new Float64Array(LIVE_SPECTROGRAM_MEL_BANDS);
   private ringWrite = 0;
   private hopCounter = 0;
   /** Each column: mel band energies normalized 0–1 (high freq = index 0; low freq at the bottom). */
@@ -110,6 +114,7 @@ export class LiveMelSpectrogramEngine {
 
   reset(): void {
     this.pcmRing.fill(0);
+    this.smoothed.fill(0);
     this.ringWrite = 0;
     this.hopCounter = 0;
     this.columns.length = 0;
@@ -160,13 +165,21 @@ export class LiveMelSpectrogramEngine {
         energy += (spectrum[bin] ?? 0) * weight;
       }
       const db = 10 * Math.log10(Math.max(energy / FULL_SCALE_POWER, 1e-12));
-      normalized[LIVE_SPECTROGRAM_MEL_BANDS - band - 1] = Math.min(
+      const mapped = Math.min(
         1,
         Math.max(
           0,
           (db - DISPLAY_FLOOR_DB) / (DISPLAY_CEILING_DB - DISPLAY_FLOOR_DB)
         )
       );
+      const displayIndex = LIVE_SPECTROGRAM_MEL_BANDS - band - 1;
+      const previous = this.smoothed[displayIndex];
+      const released =
+        mapped >= previous
+          ? mapped
+          : previous * DISPLAY_RELEASE + mapped * (1 - DISPLAY_RELEASE);
+      this.smoothed[displayIndex] = released;
+      normalized[displayIndex] = released;
     }
 
     if (perf) {

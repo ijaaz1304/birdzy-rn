@@ -72,13 +72,20 @@ export const BirdSoundsScreen: React.FC = () => {
   const togglePlay = useCallback(
     async (id: string, url: string) => {
       if (playingId === id) {
-        await soundRecordingService.stopPlayback();
         setPlayingId(null);
+        void soundRecordingService.stopPlayback();
         return;
       }
-      await soundRecordingService.stopPlayback();
-      await soundRecordingService.play(url);
       setPlayingId(id);
+      try {
+        await soundRecordingService.play(url, {
+          onEnd: () => {
+            setPlayingId((current) => (current === id ? null : current));
+          },
+        });
+      } catch {
+        setPlayingId((current) => (current === id ? null : current));
+      }
     },
     [playingId]
   );

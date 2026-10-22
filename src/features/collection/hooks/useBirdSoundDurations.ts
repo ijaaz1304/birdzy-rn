@@ -3,16 +3,14 @@ import { soundRecordingService } from "../../../services/audio/soundRecording.se
 
 export function useBirdSoundDurations(urls: string[]): Record<string, number> {
   const [durationsSec, setDurationsSec] = useState<Record<string, number>>({});
-  const urlsKey = useMemo(
+  const uniqueUrls = useMemo(
     () =>
-      [...new Set(urls.filter((url) => typeof url === "string" && url.trim()))]
-        .sort()
-        .join("\n"),
+      [...new Set(urls.filter((url) => typeof url === "string" && url.trim()))],
     [urls]
   );
+  const urlsKey = uniqueUrls.join("\n");
 
   useEffect(() => {
-    let cancelled = false;
     const unique = urlsKey ? urlsKey.split("\n") : [];
 
     if (unique.length === 0) {
@@ -20,22 +18,36 @@ export function useBirdSoundDurations(urls: string[]): Record<string, number> {
       return;
     }
 
+    const initial: Record<string, number> = {};
+    for (const url of unique) {
+      const cached = soundRecordingService.getCachedDurationSec(url);
+      if (cached != null) initial[url] = cached;
+    }
+    setDurationsSec(initial);
+
+    const unsubscribe = soundRecordingService.subscribeDuration((uri, sec) => {
+      if (!unique.includes(uri)) return;
+      setDurationsSec((prev) =>
+        prev[uri] === sec ? prev : { ...prev, [uri]: sec }
+      );
+    });
+
+    let cancelled = false;
     void (async () => {
-      const next: Record<string, number> = {};
       for (const url of unique) {
         if (cancelled) return;
+        if (initial[url] != null) continue;
         const sec = await soundRecordingService.probeDurationSec(url);
+        if (cancelled) return;
         if (sec != null && sec > 0) {
-          next[url] = sec;
+          setDurationsSec((prev) => ({ ...prev, [url]: sec }));
         }
-      }
-      if (!cancelled) {
-        setDurationsSec(next);
       }
     })();
 
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [urlsKey]);
 
