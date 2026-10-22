@@ -53,9 +53,9 @@ export const CAMERA_STRINGS = {
     diagnosis: "Best Match",
   },
   limits: {
-    dailyLimitReached: "Daily limit reached",
+    dailyLimitReached: "Free scan limit reached",
     dailyLimitSubtitle:
-      "You've used your {count} free identifications today. Upgrade to Premium for unlimited scans.",
+      "You've used your {count} free identifications in total. Upgrade to Premium for unlimited scans.",
     freeScansLeftPrefix: "Free scans left: ",
     resetInPrefix: "Reset in ",
     maxPhotosSelected:

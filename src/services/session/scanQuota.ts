@@ -52,9 +52,7 @@ export const completeFreeScanAttempt = async (
   attempt: ScanAttempt,
   outcome: ScanOutcome
 ) => {
-  const result = await scanQuota.complete(
-    attempt,
-    outcome,
+  const result = await scanQuota.complete(attempt, outcome, () =>
     selectIsPremium(useSubscriptionStore.getState())
   );
   if (selectIsPremium(useSubscriptionStore.getState()))

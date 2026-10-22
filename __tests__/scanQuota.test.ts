@@ -95,3 +95,16 @@ it("charges one attempt for a two-photo identification and shares the allowance 
   expect((await scanQuota.get()).remaining).toBe(29);
   expect((await success("sound-request")).remaining).toBe(28);
 });
+
+it("rechecks Premium when scan completion reads persisted usage", async () => {
+  const start = await beginFreeScanAttempt("upgrade-while-completing");
+  if (start.status !== "ready") throw Error(start.status);
+  const read = (AsyncStorage.getItem as jest.Mock).getMockImplementation()!;
+  (AsyncStorage.getItem as jest.Mock).mockImplementationOnce(async (key) => {
+    const value = await read(key);
+    mockPremium = true;
+    return value;
+  });
+  await completeFreeScanAttempt(start.attempt, "success");
+  expect((await scanQuota.get()).used).toBe(0);
+});

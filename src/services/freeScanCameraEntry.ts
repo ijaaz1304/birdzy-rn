@@ -1,0 +1,40 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { scanQuota } from "./session/scanQuota";
+import { requestFreeScanLimitIfBlocked } from "./freeScanLimitFlow";
+import { requestFreeScanLimitPrompt } from "./freeScanLimitPrompt";
+import {
+  selectIsPremium,
+  useSubscriptionStore,
+} from "../features/subscription/subscription.store";
+let checking: Promise<void> | null = null;
+/** The introduction is per identity; submission gates remain exhaustion-only. */
+export function requestFreeScanCameraEntry(
+  isActive = () => true
+): Promise<void> {
+  if (checking)
+    return checking.then(() => {
+      if (isActive()) return requestFreeScanCameraEntry(isActive);
+    });
+  checking = (async () => {
+    if (!isActive() || selectIsPremium(useSubscriptionStore.getState())) return;
+    if (await requestFreeScanLimitIfBlocked()) return;
+    const scope = scanQuota.currentScope();
+    const key = `freeScanIntroduction_v1:${scope}`;
+    if ((await AsyncStorage.getItem(key)) === "true") return;
+    if (
+      !isActive() ||
+      selectIsPremium(useSubscriptionStore.getState()) ||
+      scanQuota.currentScope() !== scope
+    )
+      return;
+    requestFreeScanLimitPrompt(true);
+    await AsyncStorage.setItem(key, "true");
+  })()
+    .catch(() => {
+      // Retry on the next camera visit if storage is unavailable.
+    })
+    .finally(() => {
+      checking = null;
+    });
+  return checking;
+}

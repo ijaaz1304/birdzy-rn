@@ -1,3 +1,4 @@
+import ScanInfoFigma from "../../../assets/scanInfoFigma.svg";
 /**
  * Free-plan lifetime photo and sound scan counter (Figma 8717:62309).
  */
@@ -12,8 +13,6 @@ import {
 } from "react-native";
 import MaskedView from "@react-native-masked-view/masked-view";
 import LinearGradient from "react-native-linear-gradient";
-import { AppImage } from "@/components/AppImage";
-import { Images } from "../../../assets";
 import { useStrings } from "../../../hooks/useStrings";
 import { FONTS } from "../../../common/typography";
 import { HOME_COLORS } from "../../../constants/colorConstants";
@@ -67,11 +66,9 @@ export const CameraDailyScanBanner: React.FC<Props> = ({
 
   return (
     <View style={[styles.banner, style]}>
-      <AppImage
-        source={Images.informationCircle}
-        style={styles.icon}
-        resizeMode="contain"
-      />
+      <View style={styles.icon}>
+        <ScanInfoFigma />
+      </View>
       <View style={styles.textRow}>
         <Text style={styles.bodyText}>
           {strings.camera.limits.freeScansLeftPrefix}
@@ -95,9 +92,10 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   icon: {
-    width: 24,
-    height: 24,
-    tintColor: "#E7E7E7",
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   textRow: {
     flex: 1,

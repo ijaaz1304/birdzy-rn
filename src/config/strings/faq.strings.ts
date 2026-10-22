@@ -21,7 +21,7 @@ export const FAQ_STRINGS_TEMPLATE = {
       id: "2",
       question: "Why can't I identify more birds?",
       answer:
-        "Free users get 30 scans in total, shared across photo and sound identification. Upgrade to Premium for unlimited photo and sound ID.",
+        "Free users get 30 scans in total, shared across photo and sound identification. This allowance does not reset. The first five no-match attempts are free; each no-match attempt from the sixth uses one scan. Upgrade to Premium for unlimited photo and sound ID.",
     },
     {
       id: "3",

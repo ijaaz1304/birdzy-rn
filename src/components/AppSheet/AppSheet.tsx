@@ -3482,7 +3482,7 @@ function IdentificationMilestoneContent({
 }
 
 /** Matches Ask AI composer input corner radius (Figma). */
-const FEEDBACK_INPUT_BORDER_RADIUS = Radius["2xl"];
+const FEEDBACK_INPUT_BORDER_RADIUS = 360;
 
 function FeedbackContent({
   rating,
@@ -3595,7 +3595,7 @@ function FeedbackContent({
               borderColor: feedbackInputBorder,
               backgroundColor: feedbackInputBg,
               color: theme.colors.text,
-              borderRadius: FEEDBACK_INPUT_BORDER_RADIUS,
+              borderRadius: 12,
             },
           ]}
         />
@@ -4158,11 +4158,16 @@ const sheetStyles = StyleSheet.create({
   feedbackSubtitle: { marginBottom: 16, textAlign: "center", width: "100%" },
   feedbackInput: {
     borderWidth: 1,
-    padding: 12,
+    height: 48,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     marginBottom: 12,
     fontSize: 16,
+    fontFamily: FONTS.regular,
+    lineHeight: 24,
+    letterSpacing: -0.16,
   },
-  feedbackMultiline: { minHeight: 100, textAlignVertical: "top" },
+  feedbackMultiline: { height: 100, textAlignVertical: "top" },
   feedbackCharCount: {
     alignSelf: "flex-end",
     marginTop: -4,

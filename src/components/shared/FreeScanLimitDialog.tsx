@@ -11,17 +11,22 @@ import {
 import FreeScanClose from "../../assets/freeScanClose.svg";
 import {
   dismissFreeScanLimitPrompt,
+  getFreeScanLimitIntroduction,
   getFreeScanLimitPrompt,
   subscribeFreeScanLimitPrompt,
 } from "../../services/freeScanLimitPrompt";
 
 type Props = { active: boolean; isPremium: boolean; onUpgrade: () => void };
 
-/** Figma 8207:15429. Requested only at exhaustion, never as a first-camera introduction. */
+/** Figma 8207:15429. Shown once on first camera entry and again when the allowance is exhausted. */
 export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
   const requested = useSyncExternalStore(
     subscribeFreeScanLimitPrompt,
     getFreeScanLimitPrompt
+  );
+  const introduction = useSyncExternalStore(
+    subscribeFreeScanLimitPrompt,
+    getFreeScanLimitIntroduction
   );
   const upgradePending = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,7 +84,9 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
           <View style={styles.header}>
             <Text style={styles.title}>Free scan limit</Text>
             <Text style={styles.description}>
-              You’ve used all 30 free scans. For unlimited scans, Go Premium
+              {introduction
+                ? "Free users get 30 scans in total. For unlimited scans, Go Premium"
+                : "You’ve used all 30 free scans. For unlimited scans, Go Premium"}
             </Text>
           </View>
           <Pressable

@@ -1,4 +1,9 @@
-import { requestFreeScanLimitIfBlocked } from "../../services/freeScanLimitFlow";
+import {
+  getFreeScanLimitPrompt,
+  subscribeFreeScanLimitPrompt,
+} from "../../services/freeScanLimitPrompt";
+import ScanInfoFigma from "../../assets/scanInfoFigma.svg";
+import { requestFreeScanCameraEntry } from "../../services/freeScanCameraEntry";
 import { requestFreeScanLimitPrompt } from "../../services/freeScanLimitPrompt";
 /**
  * Camera Screen Component
@@ -126,6 +131,10 @@ type CameraScreenNavigationProp = NativeStackNavigationProp<
   "CameraMain"
 >;
 export const CameraScreen: React.FC = () => {
+  const freeScanPopupVisible = React.useSyncExternalStore(
+    subscribeFreeScanLimitPrompt,
+    getFreeScanLimitPrompt
+  );
   const theme = useTheme();
   const isDark = theme.mode === "dark";
   const identifyBackground = isDark ? Images.identifyBgDark : Images.identifyBg;
@@ -194,9 +203,13 @@ export const CameraScreen: React.FC = () => {
   const [isAddingAnotherPhoto, setIsAddingAnotherPhoto] = useState(false);
   const isPremium = useSubscriptionStore(selectIsPremium);
   useEffect(() => {
+    let mounted = true;
     if (isFocused && isAppActive && !isExternalCameraReturn) {
-      void requestFreeScanLimitIfBlocked();
+      void requestFreeScanCameraEntry(() => mounted);
     }
+    return () => {
+      mounted = false;
+    };
   }, [isFocused, isAppActive, isExternalCameraReturn, isPremium]);
 
   const { limit: photoLimit, refresh: refreshPhotoLimit } =
@@ -1561,17 +1574,16 @@ export const CameraScreen: React.FC = () => {
                   ) : (
                     <TouchableOpacity
                       onPress={() => setShowTipsModal(true)}
-                      style={styles.sideBtn}
+                      style={[
+                        styles.sideBtn,
+                        { backgroundColor: "transparent" },
+                      ]}
                       activeOpacity={0.8}
                       hitSlop={HIT_SLOP.CLOSE}
                       accessibilityRole="button"
                       accessibilityLabel="Photo tips"
                     >
-                      <AppImage
-                        source={Images.informationCircle}
-                        style={styles.controlIconWhite}
-                        resizeMode="contain"
-                      />
+                      <ScanInfoFigma />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -1582,7 +1594,7 @@ export const CameraScreen: React.FC = () => {
       )}
 
       <CameraTipsModal
-        visible={showTipsModal}
+        visible={showTipsModal && !freeScanPopupVisible}
         onClose={handleTipsClose}
         onDontShowAgain={handleDontShowTipsAgain}
         overlay

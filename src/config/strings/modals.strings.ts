@@ -285,15 +285,15 @@ export const MODAL_STRINGS = {
   // Write Feedback modal (popup)
   feedbackModal: {
     title: "Write feedback",
-    subtitle: "Leaving a quick review helps us improve the app.",
+    subtitle: "Leaving a quick review for us to improve the app",
     namePlaceholder: "Enter your name",
     emailPlaceholder: "Enter your email",
     emailPlaceholderOptional: "Enter your email",
-    feedbackPlaceholder: "Feedback (10–500 characters)",
-    feedbackPlaceholderLong: "Your feedback (10–500 characters)",
+    feedbackPlaceholder: "Feedback",
+    feedbackPlaceholderLong: "Feedback",
     feedbackMinError: "Feedback must be at least 10 characters",
     emailInvalidError: "Please enter a valid email address",
-    submit: "Submit",
+    submit: "Continue",
   },
 
   // Identification Feedback
