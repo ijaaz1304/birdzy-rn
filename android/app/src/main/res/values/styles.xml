@@ -5,6 +5,10 @@
         <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
         <item name="android:windowBackground">@color/splash_background</item>
+        <!-- Screens paint behind the system gesture / three-button area. -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
         <!-- App implements its own dark theme; Android force-dark inverts text/images. -->
         <item name="android:forceDarkAllowed">false</item>
     </style>

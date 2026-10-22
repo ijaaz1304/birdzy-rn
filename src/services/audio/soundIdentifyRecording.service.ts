@@ -11,6 +11,7 @@ import {
 } from "../permissions";
 import {
   LIVE_SPECTROGRAM_SAMPLE_RATE,
+  LIVE_SPECTROGRAM_FFT_SIZE,
   LiveMelSpectrogramEngine,
   decodePcmFromBase64,
   pcmDbFromSum,
@@ -19,6 +20,7 @@ import { writePcmChunksToWavFile } from "../../features/camera/utils/writePcmWav
 import { soundRecordingService } from "./soundRecording.service";
 import {
   MAX_SOUND_RECORDING_SECONDS,
+  SPECTROGRAM_DISPLAY_MAX_COLUMNS,
   NOISE_HINT_DB_THRESHOLD,
   SPECTROGRAM_MAX_COLUMNS,
   SPECTROGRAM_UI_FPS,
@@ -57,7 +59,9 @@ function hasLivePcmModule(): boolean {
 }
 
 function getNativePcmModule(): NativePcmModule | null {
-  return (NativeModules.RNLiveAudioStream as NativePcmModule | undefined) ?? null;
+  return (
+    (NativeModules.RNLiveAudioStream as NativePcmModule | undefined) ?? null
+  );
 }
 
 function hasNativePcmWavFinalize(): boolean {
@@ -77,7 +81,9 @@ class SoundIdentifyRecordingService {
   private pausedAccumMs = 0;
   /** Full recording chunks — iOS / fallback JS path only. */
   private pcmChunks: Int16Array[] = [];
-  private spectrogramEngine = new LiveMelSpectrogramEngine(SPECTROGRAM_MAX_COLUMNS);
+  private spectrogramEngine = new LiveMelSpectrogramEngine(
+    SPECTROGRAM_MAX_COLUMNS
+  );
   private onSpectrogram: SpectrogramListener | null = null;
   private onMetering: MeteringListener | null = null;
   private isActive = false;
@@ -123,7 +129,9 @@ class SoundIdentifyRecordingService {
   }
 
   private get spectrogramUiFps(): number {
-    return Platform.OS === "android" ? SPECTROGRAM_UI_FPS_ANDROID : SPECTROGRAM_UI_FPS;
+    return Platform.OS === "android"
+      ? SPECTROGRAM_UI_FPS_ANDROID
+      : SPECTROGRAM_UI_FPS;
   }
 
   private get maxVizQueue(): number {
@@ -146,10 +154,10 @@ class SoundIdentifyRecordingService {
   private scheduleVizDrain(): void {
     if (this.vizDrainScheduled) return;
     this.vizDrainScheduled = true;
-    setImmediate(() => {
+    setTimeout(() => {
       this.vizDrainScheduled = false;
       this.drainVizQueue();
-    });
+    }, 0);
   }
 
   private drainVizQueue(): void {
@@ -164,14 +172,23 @@ class SoundIdentifyRecordingService {
     const deadline = Date.now() + this.vizBudgetMs;
 
     while (this.vizQueue.length > 0 && Date.now() < deadline) {
-      const pcm = this.vizQueue.shift();
-      if (pcm) {
-        this.spectrogramEngine.pushPcm(pcm);
+      const pcm = this.vizQueue[0];
+      // At most one FFT hop per iteration, so the deadline is checked between
+      // transforms even when the native recorder delivers a large PCM buffer.
+      const hopSize = LIVE_SPECTROGRAM_FFT_SIZE / 4;
+      this.spectrogramEngine.pushPcm(pcm.subarray(0, hopSize));
+      if (pcm.length <= hopSize) {
+        this.vizQueue.shift();
+      } else {
+        this.vizQueue[0] = pcm.subarray(hopSize);
       }
     }
 
     if (perf) {
-      soundPerfRecordTiming("SpectrogramProcessing", soundPerfNow() - flushStart);
+      soundPerfRecordTiming(
+        "SpectrogramProcessing",
+        soundPerfNow() - flushStart
+      );
     }
 
     this.emitSpectrogramUpdate();
@@ -197,7 +214,9 @@ class SoundIdentifyRecordingService {
   }
 
   getSpectrogramColumnsView(): number[][] {
-    return this.spectrogramEngine.getColumnsView();
+    return this.spectrogramEngine.getColumnsView(
+      SPECTROGRAM_DISPLAY_MAX_COLUMNS
+    );
   }
 
   getSpectrogramVersion(): number {
@@ -323,7 +342,9 @@ class SoundIdentifyRecordingService {
   ): Promise<void> {
     const allowed = await this.ensureMicrophonePermission();
     if (!allowed) {
-      throw new Error("Microphone permission is required to record bird sounds.");
+      throw new Error(
+        "Microphone permission is required to record bird sounds."
+      );
     }
 
     if (onMetering != null) {
@@ -529,7 +550,11 @@ class SoundIdentifyRecordingService {
   }
 
   async stopRecording(): Promise<string> {
-    if (!this.isSessionActive() && this.pcmChunks.length === 0 && !this.usingNativePcmCapture) {
+    if (
+      !this.isSessionActive() &&
+      this.pcmChunks.length === 0 &&
+      !this.usingNativePcmCapture
+    ) {
       logSoundRecord("stopRecording skipped — idle");
       this.resetSessionState();
       throw new Error("No active recording session.");
@@ -547,4 +572,5 @@ class SoundIdentifyRecordingService {
   }
 }
 
-export const soundIdentifyRecordingService = new SoundIdentifyRecordingService();
+export const soundIdentifyRecordingService =
+  new SoundIdentifyRecordingService();

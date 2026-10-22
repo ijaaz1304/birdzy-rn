@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useCallback, useEffect } from "react";
-import { Appearance, StatusBar, useColorScheme } from "react-native";
+import { Appearance, StatusBar, View, useColorScheme } from "react-native";
 import { useThemeStore } from "../features/theme/theme.store";
 import { Theme, themes } from "../design-system/themes";
 import {
@@ -89,7 +89,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> =
     return (
       <ThemeContext.Provider value={contextValue}>
         <StatusBar {...statusBarProps} />
-        {children}
+        <View
+          style={{ flex: 1, backgroundColor: currentTheme.colors.surfacePrimary }}
+        >
+          {children}
+        </View>
       </ThemeContext.Provider>
     );
   });

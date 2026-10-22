@@ -1,6 +1,7 @@
 import {
   LiveMelSpectrogramEngine,
   LIVE_SPECTROGRAM_FFT_SIZE,
+  LIVE_SPECTROGRAM_MEL_BANDS,
   decodePcmFromBase64,
   pcmDbFromSum,
 } from "../../src/features/camera/utils/liveMelSpectrogram";
@@ -14,7 +15,7 @@ describe("liveMelSpectrogram", () => {
     }
     engine.pushPcm(tone);
     expect(engine.columns.length).toBeGreaterThan(0);
-    expect(engine.columns[0]?.length).toBe(48);
+    expect(engine.columns[0]?.length).toBe(LIVE_SPECTROGRAM_MEL_BANDS);
   });
 
   it("maps pcm sum to dBFS", () => {
@@ -69,4 +70,42 @@ describe("liveMelSpectrogram", () => {
     expect(last).toBeDefined();
     expect(Math.max(...(last ?? [1]))).toBeLessThan(0.2);
   });
+});
+
+it("keeps frequency output identical when PCM processing yields between hops", () => {
+  const pcm = Int16Array.from({ length: 8192 }, (_, i) =>
+    Math.round(12000 * Math.sin(i * 0.15))
+  );
+  const whole = new LiveMelSpectrogramEngine(40);
+  const sliced = new LiveMelSpectrogramEngine(40);
+  whole.pushPcm(pcm);
+  for (let i = 0; i < pcm.length; i += 512) {
+    sliced.pushPcm(pcm.subarray(i, i + 512));
+  }
+  expect(sliced.getColumnsSnapshot()).toEqual(whole.getColumnsSnapshot());
+});
+
+it("preserves quiet calls with logarithmic contrast without amplifying silence", () => {
+  const peakForAmplitude = (amplitude: number) => {
+    const engine = new LiveMelSpectrogramEngine(20);
+    engine.pushPcm(
+      Int16Array.from({ length: 4096 }, (_, i) =>
+        Math.round(amplitude * Math.sin((2 * Math.PI * 3000 * i) / 22050))
+      )
+    );
+    return Math.max(...engine.columns.at(-1)!);
+  };
+  expect(peakForAmplitude(0)).toBe(0);
+  expect(peakForAmplitude(100)).toBeGreaterThan(0.15);
+  expect(peakForAmplitude(100)).toBeLessThan(peakForAmplitude(1000));
+});
+
+it("retains the start of longer recordings while returning only a small live tail", () => {
+  const engine = new LiveMelSpectrogramEngine(2600);
+  engine.pushPcm(new Int16Array(22050 * 6));
+  const first = engine.columns[0];
+  engine.pushPcm(new Int16Array(22050 * 6));
+  expect(engine.getColumnsSnapshot().length).toBeGreaterThan(500);
+  expect(engine.columns[0]).toBe(first);
+  expect(engine.getColumnsView(240)).toHaveLength(240);
 });

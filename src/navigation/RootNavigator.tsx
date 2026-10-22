@@ -16,8 +16,16 @@ import {
   AppStateStatus,
   DeviceEventEmitter,
   Linking,
+  NativeModules,
+  Platform,
 } from "react-native";
-import { CommonActions, NavigationContainer } from "@react-navigation/native";
+import { useTheme } from "../hooks/useTheme";
+import {
+  DefaultTheme,
+  DarkTheme,
+  CommonActions,
+  NavigationContainer,
+} from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import notifee, { EventType } from "@notifee/react-native";
 import { RootStackParamList } from "./types";
@@ -123,6 +131,26 @@ export interface RootNavigatorProps {
 export const RootNavigator: React.FC<RootNavigatorProps> = ({
   onNavigationReady,
 }) => {
+  const theme = useTheme();
+  const [activeScreen, setActiveScreen] = useState("Splash");
+  const navigationTheme = useMemo(() => {
+    const base = theme.mode === "dark" ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: { ...base.colors, background: theme.colors.surfacePrimary },
+    };
+  }, [theme]);
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    // Camera/crop previews and launch artwork remain dark in either app theme.
+    const darkSurface = ["Splash", "CameraMain", "IdentifyImageCrop"].includes(
+      activeScreen
+    );
+    NativeModules.SystemNavigationBar?.setDarkIcons(
+      theme.mode !== "dark" && !darkSurface
+    );
+  }, [activeScreen, theme.mode]);
+
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const hasHydrated = useAuthStore((s) => s._hasHydrated);
   const postAuthHasHydrated = usePostAuthOnboardingStore((s) => s._hasHydrated);
@@ -916,16 +944,23 @@ export const RootNavigator: React.FC<RootNavigatorProps> = ({
 
   return (
     <NavigationContainer
+      theme={navigationTheme}
       ref={(ref) => {
         navigationRef.current = ref;
         NavigationService.setNavigationRef(ref);
       }}
-      onReady={handleNavReady}
+      onReady={() => {
+        handleNavReady();
+        setActiveScreen(
+          navigationRef.current?.getCurrentRoute()?.name ?? "Splash"
+        );
+      }}
       onStateChange={(state) => {
         scheduleMarketingDeepLinkEscape();
         if (__DEV__) (console as any).time("RootNavigator.onStateChange");
         const leafName = getLeafFocusedRouteName(state ?? undefined);
         if (!leafName) return;
+        setActiveScreen(leafName);
         logPageNavigation(leafName);
         const payload = getScreenEventForState(state ?? undefined);
         const now = Date.now();

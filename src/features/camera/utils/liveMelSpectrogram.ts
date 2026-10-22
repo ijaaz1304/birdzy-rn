@@ -7,13 +7,23 @@ import {
 
 export const LIVE_SPECTROGRAM_SAMPLE_RATE = 22050;
 export const LIVE_SPECTROGRAM_FFT_SIZE = 2048;
-export const LIVE_SPECTROGRAM_MEL_BANDS = 48;
+export const LIVE_SPECTROGRAM_MEL_BANDS = 128;
 const MIN_HZ = 200;
 const MAX_HZ = 8000;
 
+const hannWindow = Float64Array.from(
+  { length: LIVE_SPECTROGRAM_FFT_SIZE },
+  (_, i) =>
+    0.5 * (1 - Math.cos((2 * Math.PI * i) / (LIVE_SPECTROGRAM_FFT_SIZE - 1)))
+);
+// Full-scale sine power after the Hann window (coherent gain ≈ 0.5).
+const FULL_SCALE_POWER = ((32768 * LIVE_SPECTROGRAM_FFT_SIZE) / 4) ** 2;
+const DISPLAY_FLOOR_DB = -80;
+const DISPLAY_CEILING_DB = -15;
+
 const fft = createLiveFft(LIVE_SPECTROGRAM_FFT_SIZE);
 
-/** Precomputed mel filter weights [band][bin]. */
+/** Store only nonzero filter bins; most FFT bins are outside each mel band. */
 const melFilters = buildMelFilters(
   LIVE_SPECTROGRAM_FFT_SIZE,
   LIVE_SPECTROGRAM_SAMPLE_RATE,
@@ -36,7 +46,7 @@ function buildMelFilters(
   nMels: number,
   fMin: number,
   fMax: number
-): number[][] {
+): Array<Array<{ bin: number; weight: number }>> {
   const binCount = fftSize / 2;
   const melMin = hzToMel(fMin);
   const melMax = hzToMel(fMax);
@@ -45,23 +55,30 @@ function buildMelFilters(
     return Math.floor((melToHz(mel) * fftSize) / sampleRate);
   });
 
-  const filters: number[][] = [];
+  const filters: Array<Array<{ bin: number; weight: number }>> = [];
   for (let m = 0; m < nMels; m += 1) {
     const start = melPoints[m];
     const center = melPoints[m + 1];
     const end = melPoints[m + 2];
-    const row = new Array<number>(binCount).fill(0);
+    const row: Array<{ bin: number; weight: number }> = [];
 
     for (let k = start; k < center; k += 1) {
       if (k >= 0 && k < binCount && center !== start) {
-        row[k] = (k - start) / (center - start);
+        if (k > start)
+          row.push({ bin: k, weight: (k - start) / (center - start) });
       }
     }
     for (let k = center; k < end; k += 1) {
       if (k >= 0 && k < binCount && end !== center) {
-        row[k] = (end - k) / (end - center);
+        row.push({ bin: k, weight: (end - k) / (end - center) });
       }
     }
+    // Normalize filter area so wide high-frequency bands do not look louder.
+    const weightSum = row.reduce((sum, item) => sum + item.weight, 0);
+    if (weightSum > 0)
+      row.forEach((item) => {
+        item.weight /= weightSum;
+      });
     filters.push(row);
   }
   return filters;
@@ -69,12 +86,11 @@ function buildMelFilters(
 
 export class LiveMelSpectrogramEngine {
   private pcmRing = new Int16Array(LIVE_SPECTROGRAM_FFT_SIZE);
-  private frame = new Int16Array(LIVE_SPECTROGRAM_FFT_SIZE);
-  private melScratch = new Array<number>(LIVE_SPECTROGRAM_MEL_BANDS).fill(0);
+  private frame = new Float64Array(LIVE_SPECTROGRAM_FFT_SIZE);
   private columnScratch = new Array<number>(LIVE_SPECTROGRAM_MEL_BANDS).fill(0);
   private ringWrite = 0;
   private hopCounter = 0;
-  /** Each column: mel band energies normalized 0–1 (low freq = index 0). */
+  /** Each column: mel band energies normalized 0–1 (high freq = index 0; low freq at the bottom). */
   readonly columns: number[][] = [];
   readonly maxColumns: number;
 
@@ -83,8 +99,8 @@ export class LiveMelSpectrogramEngine {
   }
 
   /** Shallow view for live UI — column arrays are immutable once pushed. */
-  getColumnsView(): number[][] {
-    return this.columns.slice();
+  getColumnsView(maxColumns = this.maxColumns): number[][] {
+    return this.columns.slice(-maxColumns);
   }
 
   /** Deep copy for export after recording (survives engine reset). */
@@ -123,7 +139,8 @@ export class LiveMelSpectrogramEngine {
 
     for (let i = 0; i < LIVE_SPECTROGRAM_FFT_SIZE; i += 1) {
       this.frame[i] =
-        this.pcmRing[(this.ringWrite + i) % LIVE_SPECTROGRAM_FFT_SIZE];
+        this.pcmRing[(this.ringWrite + i) % LIVE_SPECTROGRAM_FFT_SIZE] *
+        hannWindow[i];
     }
 
     const fftStart = perf ? soundPerfNow() : 0;
@@ -133,39 +150,23 @@ export class LiveMelSpectrogramEngine {
     }
 
     const melStart = perf ? soundPerfNow() : 0;
-    const mel = this.melScratch;
+    const normalized = this.columnScratch;
 
     for (let band = 0; band < LIVE_SPECTROGRAM_MEL_BANDS; band += 1) {
       let energy = 0;
       const weights = melFilters[band];
-      for (let bin = 0; bin < weights.length; bin += 1) {
-        energy += (spectrum[bin] ?? 0) * weights[bin];
+      for (let i = 0; i < weights.length; i += 1) {
+        const { bin, weight } = weights[i];
+        energy += (spectrum[bin] ?? 0) * weight;
       }
-      mel[band] = energy;
-    }
-
-    let peak = 1e-9;
-    let floor = Infinity;
-    for (let i = 0; i < mel.length; i += 1) {
-      const v = mel[i] ?? 0;
-      if (v > peak) peak = v;
-      if (v < floor) floor = v;
-    }
-    const span = peak - floor;
-    const normalized = this.columnScratch;
-    for (let i = 0; i < mel.length; i += 1) {
-      if (span < 1e-6) {
-        normalized[i] = 0;
-      } else {
-        const x = Math.max(0, ((mel[i] ?? 0) - floor) / span);
-        normalized[i] = Math.min(1, x ** 0.72);
-      }
-    }
-
-    for (let i = 0, j = normalized.length - 1; i < j; i += 1, j -= 1) {
-      const tmp = normalized[i] ?? 0;
-      normalized[i] = normalized[j] ?? 0;
-      normalized[j] = tmp;
+      const db = 10 * Math.log10(Math.max(energy / FULL_SCALE_POWER, 1e-12));
+      normalized[LIVE_SPECTROGRAM_MEL_BANDS - band - 1] = Math.min(
+        1,
+        Math.max(
+          0,
+          (db - DISPLAY_FLOOR_DB) / (DISPLAY_CEILING_DB - DISPLAY_FLOOR_DB)
+        )
+      );
     }
 
     if (perf) {

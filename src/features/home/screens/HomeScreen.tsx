@@ -1100,6 +1100,8 @@ const styles = StyleSheet.create({
   },
   fullSubsBanner: {
     width: "100%",
+    // Clear the bundled image's intrinsic height so aspectRatio controls sizing.
+    height: undefined,
     alignSelf: "stretch",
     aspectRatio:
       HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH /

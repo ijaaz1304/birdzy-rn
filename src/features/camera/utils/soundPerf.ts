@@ -149,7 +149,7 @@ export function soundPerfReport(): void {
   logTiming("FFT");
   logTiming("Mel");
   logTiming("Subscription");
-  logTiming("SvgRender");
+  logTiming("BitmapRender");
   logTiming("Snapshot");
   logTiming("WavFinalization");
 

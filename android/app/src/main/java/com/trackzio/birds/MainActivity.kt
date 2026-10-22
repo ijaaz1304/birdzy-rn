@@ -1,6 +1,8 @@
 package com.trackzio.birds
 
 import android.os.Bundle
+import android.os.Build
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.appcompat.app.AppCompatDelegate
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -17,6 +19,12 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
     super.onCreate(null)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      window.isNavigationBarContrastEnforced = false
+    }
+    // Launch artwork is teal; JS updates icon contrast once the screen is ready.
+    WindowInsetsControllerCompat(window, window.decorView)
+        .isAppearanceLightNavigationBars = false
   }
 
   /**

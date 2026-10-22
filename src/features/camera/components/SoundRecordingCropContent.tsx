@@ -1,15 +1,15 @@
 /**
  * Recorded-sound crop + identify UI (shared by SoundIdentify crop phase and SoundCrop route).
  */
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  PanResponder,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSharedValue } from "react-native-reanimated";
+import { runOnJS, useSharedValue } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Text, NavBackIcon, Toggle } from "../../../atoms";
 import { HiddenRemoteImagePrefetcher } from "../../../components/AppImage/HiddenRemoteImagePrefetcher";
@@ -31,12 +31,7 @@ import { useSoundIdentificationFlow } from "../hooks/useSoundIdentificationFlow"
 import { useLocationToggleFlow } from "../useLocationToggleFlow";
 import { shouldShowLocationBannerAsGranted } from "../locationToggle.helpers";
 import { useSoundRecordingSpectrogramStore } from "../soundRecordingSpectrogram.store";
-import {
-  soundPerfBeginCropGesture,
-  soundPerfCropGestureFrame,
-  soundPerfEndCropGesture,
-  soundPerfRender,
-} from "../utils/soundPerf";
+import { soundPerfRender } from "../utils/soundPerf";
 import {
   SOUND_CROP_DURATIONS,
   clampSoundCropStart,
@@ -77,7 +72,9 @@ export function SoundRecordingCropContent({
   const { audioUri, durationSec, recordedAt } = session;
   const theme = useTheme();
   const colors = theme.colors;
-  const spectrogramColumns = useSoundRecordingSpectrogramStore((s) => s.columns);
+  const spectrogramColumns = useSoundRecordingSpectrogramStore(
+    (s) => s.columns
+  );
 
   const {
     location,
@@ -121,53 +118,6 @@ export function SoundRecordingCropContent({
     [startSec, windowSec, durationSec]
   );
 
-  const startSecRef = useRef(clampedStart);
-  const windowSecRef = useRef(windowSec);
-  startSecRef.current = clampedStart;
-  windowSecRef.current = windowSec;
-  const trackWidthRef = useRef(1);
-  const dragOriginRef = useRef(0);
-  const isAnalyzingRef = useRef(isAnalyzing);
-  isAnalyzingRef.current = isAnalyzing;
-
-  const pan = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !isAnalyzingRef.current,
-      onMoveShouldSetPanResponder: () => !isAnalyzingRef.current,
-      onPanResponderGrant: () => {
-        dragOriginRef.current = startSecRef.current;
-        soundPerfBeginCropGesture();
-      },
-      onPanResponderMove: (_, gesture) => {
-        soundPerfCropGestureFrame();
-        const width = Math.max(trackWidthRef.current, 1);
-        const deltaSec = (gesture.dx / width) * durationSec;
-        const nextStart = clampSoundCropStart(
-          dragOriginRef.current + deltaSec,
-          windowSecRef.current,
-          durationSec
-        );
-        cropStartRatio.value = durationSec > 0 ? nextStart / durationSec : 0;
-        cropEndRatio.value =
-          durationSec > 0 ? (nextStart + windowSecRef.current) / durationSec : 1;
-      },
-      onPanResponderRelease: () => {
-        const startSecFromRatio = cropStartRatio.value * durationSec;
-        setStartSec(
-          clampSoundCropStart(
-            startSecFromRatio,
-            windowSecRef.current,
-            durationSec
-          )
-        );
-        soundPerfEndCropGesture();
-      },
-      onPanResponderTerminate: () => {
-        soundPerfEndCropGesture();
-      },
-    })
-  ).current;
-
   const selectChip = (next: SoundCropDuration) => {
     if (isAnalyzing || !isSoundCropChipAvailable(next, durationSec)) return;
     setChip(next);
@@ -183,7 +133,13 @@ export function SoundRecordingCropContent({
       audioUri,
       audioDurationSec: usingFull ? durationSec : windowSec,
       recordedAt,
-      cropStartSec: usingFull ? undefined : clampedStart,
+      cropStartSec: usingFull
+        ? undefined
+        : clampSoundCropStart(
+            cropStartRatio.value * durationSec,
+            windowSec,
+            durationSec
+          ),
       cropDurationSec: usingFull ? undefined : windowSec,
     });
   };
@@ -204,6 +160,29 @@ export function SoundRecordingCropContent({
     cropStartRatio.value = startRatio;
     cropEndRatio.value = endRatio;
   }, [cropEndRatio, cropStartRatio, endRatio, startRatio]);
+
+  const trackWidth = useSharedValue(1);
+  const dragOrigin = useSharedValue(0);
+  const pan = Gesture.Pan()
+    .enabled(!isAnalyzing && durationSec > windowSec)
+    .onStart(() => {
+      dragOrigin.value = cropStartRatio.value * durationSec;
+    })
+    .onUpdate((event) => {
+      const deltaSec =
+        (event.translationX / Math.max(1, trackWidth.value)) * durationSec;
+      const nextStart = Math.min(
+        Math.max(0, dragOrigin.value + deltaSec),
+        Math.max(0, durationSec - windowSec)
+      );
+      cropStartRatio.value = durationSec > 0 ? nextStart / durationSec : 0;
+      cropEndRatio.value =
+        durationSec > 0 ? (nextStart + windowSec) / durationSec : 1;
+    })
+    .onFinalize(() => {
+      // Only commit to React when the drag ends; movement stays on the UI thread.
+      runOnJS(setStartSec)(cropStartRatio.value * durationSec);
+    });
 
   const actionLabel = isAnalyzing
     ? loadingPhase === "preparing"
@@ -263,7 +242,9 @@ export function SoundRecordingCropContent({
                   styles.chip,
                   {
                     borderColor: selected ? colors.primaryCTA : colors.border0,
-                    backgroundColor: selected ? colors.primaryCTA : "transparent",
+                    backgroundColor: selected
+                      ? colors.primaryCTA
+                      : "transparent",
                     opacity: available && !isAnalyzing ? 1 : 0.4,
                   },
                 ]}
@@ -283,31 +264,30 @@ export function SoundRecordingCropContent({
           })}
         </View>
 
-        <View
-          style={styles.spectrogramTrack}
-          onLayout={(e) => {
-            trackWidthRef.current = e.nativeEvent.layout.width;
-          }}
-          {...pan.panHandlers}
-        >
-          {hasSpectrogram ? (
+        <GestureDetector gesture={pan}>
+          <View
+            collapsable={false}
+            style={styles.spectrogramTrack}
+            onLayout={(e) => {
+              trackWidth.value = e.nativeEvent.layout.width;
+            }}
+          >
             <View style={styles.spectrogramStack}>
-              <LiveSpectrogramView
-                columns={spectrogramColumns}
-                playheadCenter={false}
-              />
+              {hasSpectrogram ? (
+                <LiveSpectrogramView
+                  columns={spectrogramColumns}
+                  playheadCenter={false}
+                />
+              ) : (
+                <SoundSpectrogramView />
+              )}
               <LiveSpectrogramCropOverlay
                 startRatio={cropStartRatio}
                 endRatio={cropEndRatio}
               />
             </View>
-          ) : (
-            <SoundSpectrogramView
-              windowStartRatio={startRatio}
-              windowEndRatio={endRatio}
-            />
-          )}
-        </View>
+          </View>
+        </GestureDetector>
 
         <View style={styles.stamps}>
           <Text style={[styles.stamp, { color: colors.primaryCTA }]}>
@@ -319,7 +299,7 @@ export function SoundRecordingCropContent({
         </View>
 
         <Text style={[styles.meta, { color: colors.textSecondary }]}>
-          {stamp}  •  {place}
+          {stamp} • {place}
         </Text>
 
         {!locationOn ? (

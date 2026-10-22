@@ -4,11 +4,10 @@
 
 export function createLiveFft(bufferSize: number): {
   bufferSize: number;
-  transform: (inBuffer: Int16Array | number[]) => Float64Array;
+  transform: (inBuffer: Int16Array | Float64Array | number[]) => Float64Array;
 } {
   let FFT_N_LOG: number;
   let FFT_N: number;
-  let MINY: number;
   let real: number[];
   let imag: number[];
   let sintable: number[];
@@ -17,12 +16,11 @@ export function createLiveFft(bufferSize: number): {
 
   FFT_N_LOG = Math.round(Math.log(bufferSize) / Math.log(2));
   FFT_N = 1 << FFT_N_LOG;
-  MINY = (FFT_N << 2) * Math.sqrt(2);
 
   real = [];
   imag = [];
   sintable = [0];
-  costable = [0];
+  costable = [1]; // cos(0) must preserve the zero-angle butterfly input.
   bitReverse = [];
 
   for (let i = 0; i < FFT_N; i += 1) {
@@ -45,7 +43,9 @@ export function createLiveFft(bufferSize: number): {
 
   let transformOutBuffer: Float64Array | null = new Float64Array(FFT_N >> 1);
 
-  const transform = (inBuffer: Int16Array | number[]): Float64Array => {
+  const transform = (
+    inBuffer: Int16Array | Float64Array | number[]
+  ): Float64Array => {
     let j0 = 1;
     let idx = FFT_N_LOG - 1;
 
@@ -75,22 +75,10 @@ export function createLiveFft(bufferSize: number): {
     const j = FFT_N >> 1;
     const outBuffer = transformOutBuffer ?? new Float64Array(j);
     transformOutBuffer = outBuffer;
-    const sinThreshold = MINY;
-    const cosThreshold = -MINY;
-
-    for (let i = j; i !== 0; i -= 1) {
-      const tmpr = real[i];
-      const tmpi = imag[i];
-      if (
-        tmpr > cosThreshold &&
-        tmpr < sinThreshold &&
-        tmpi > cosThreshold &&
-        tmpi < sinThreshold
-      ) {
-        outBuffer[i - 1] = 0;
-      } else {
-        outBuffer[i - 1] = Math.round(tmpr * tmpr + tmpi * tmpi);
-      }
+    // Preserve FFT-bin indexing and quiet power; the display applies its own
+    // dB floor instead of hard-clipping quiet frequency detail here.
+    for (let i = 0; i < j; i += 1) {
+      outBuffer[i] = real[i] * real[i] + imag[i] * imag[i];
     }
 
     return outBuffer;

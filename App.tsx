@@ -292,12 +292,7 @@ function App(): React.JSX.Element {
           <AppConfigProvider config={appConfig}>
             <ThemeProvider>
               <ToastProvider>
-                <View
-                  style={{
-                    flex: 1,
-                    backgroundColor: APP_COLORS.splashBackground,
-                  }}
-                >
+                <View style={{ flex: 1 }}>
                   {appBootstrapReady ? (
                     <>
                       <RootNavigator

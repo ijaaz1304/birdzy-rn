@@ -18,13 +18,14 @@ export const MAX_PENDING_SPECTROGRAM_CHUNKS_ANDROID = 4;
 export const SPECTROGRAM_VIZ_BUDGET_MS = 8;
 export const SPECTROGRAM_VIZ_BUDGET_MS_ANDROID = 6;
 
-/** Mel columns retained in the rolling spectrogram buffer. */
-export const SPECTROGRAM_MAX_COLUMNS = 200;
+/** Retain the entire 60-second recording at 22050 Hz / 512 samples per hop. */
+export const SPECTROGRAM_MAX_COLUMNS = 2600;
 
-/** SVG render budget — one rect per column × band (keep product modest on device). */
-export const SPECTROGRAM_DISPLAY_MAX_COLUMNS = 120;
-export const SPECTROGRAM_DISPLAY_MIN_COLUMN_PX = 2;
-export const SPECTROGRAM_DISPLAY_MEL_BANDS = 36;
+/** Bitmap dimensions are bounded independently of recording length. */
+export const SPECTROGRAM_DISPLAY_MAX_COLUMNS = 240;
+export const SPECTROGRAM_RECORDED_MAX_COLUMNS = 640;
+export const SPECTROGRAM_DISPLAY_MIN_COLUMN_PX = 1;
+export const SPECTROGRAM_DISPLAY_MEL_BANDS = 128;
 
 /** Timer ticks once per second for stable 1, 2, 3… display. */
 export const RECORDING_TIMER_INTERVAL_MS = 1000;
@@ -32,7 +33,9 @@ export const RECORDING_TIMER_INTERVAL_MS = 1000;
 /** dBFS above which the recording UI shows the background-noise hint. */
 export const NOISE_HINT_DB_THRESHOLD = -12;
 
-export function formatMinRecordingLengthMessage(seconds = MIN_SOUND_RECORDING_SECONDS): string {
+export function formatMinRecordingLengthMessage(
+  seconds = MIN_SOUND_RECORDING_SECONDS
+): string {
   return `Please record at least ${seconds} seconds`;
 }
 
