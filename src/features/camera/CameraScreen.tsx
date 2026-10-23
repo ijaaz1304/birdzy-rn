@@ -1,3 +1,4 @@
+import { useFreeScanPromptSurface } from '../../hooks/useFreeScanPromptSurface';
 import {
   getFreeScanLimitPrompt,
   subscribeFreeScanLimitPrompt,
@@ -144,6 +145,7 @@ export const CameraScreen: React.FC = () => {
   const navigation = useNavigation<CameraScreenNavigationProp>();
   const route = useRoute<RouteProp<CameraStackParamList, "CameraMain">>();
   const isFocused = useIsFocused();
+  useFreeScanPromptSurface(isFocused);
   const isCropRouteActive = useNavigationState(
     (state) => state.routes[state.index]?.name === "IdentifyImageCrop"
   );

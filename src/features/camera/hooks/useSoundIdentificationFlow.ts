@@ -239,16 +239,12 @@ export function useSoundIdentificationFlow(
                   result: "fail",
                 });
                 await stopIdentificationTrace("failure");
-                const allowance = await completeFreeScanAttempt(
+                await completeFreeScanAttempt(
                   start.attempt,
                   "failure"
                 );
                 if (isStale()) return;
                 setIsAnalyzing(false);
-                if (allowance.remaining === 0) {
-                  requestFreeScanLimitPrompt();
-                  return;
-                }
                 navigateToSoundNoMatch(input, {
                   uploadedSoundUrls: soundResult.soundUrls,
                   uploadedImageUrls: soundResult.imageUrls,

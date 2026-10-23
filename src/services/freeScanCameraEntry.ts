@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { scanQuota } from "./session/scanQuota";
-import { requestFreeScanLimitIfBlocked } from "./freeScanLimitFlow";
+import { canIdentify } from "./session/usageLimit.service";
 import { requestFreeScanLimitPrompt } from "./freeScanLimitPrompt";
 import {
   selectIsPremium,
@@ -17,7 +17,8 @@ export function requestFreeScanCameraEntry(
     });
   checking = (async () => {
     if (!isActive() || selectIsPremium(useSubscriptionStore.getState())) return;
-    if (await requestFreeScanLimitIfBlocked()) return;
+    // Exhaustion is shown on the next Submit, never merely on camera entry.
+    if (!(await canIdentify())) return;
     const scope = scanQuota.currentScope();
     const key = `freeScanIntroduction_v1:${scope}`;
     if ((await AsyncStorage.getItem(key)) === "true") return;

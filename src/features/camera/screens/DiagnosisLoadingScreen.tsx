@@ -5,7 +5,6 @@ import {
   cancelFreeScanAttempt,
 } from "../../../services/session/scanQuota";
 import type { ScanAttempt } from "../../../services/session/scanAllowance";
-import { requestFreeScanLimitPrompt } from "../../../services/freeScanLimitPrompt";
 /**
  * Diagnosis Loading Screen
  * Shows image preview while analyzing with scanning animation
@@ -325,7 +324,6 @@ export const DiagnosisLoadingScreen: React.FC = () => {
           await stopIdentificationTrace("limit");
           if (!cancelled && isMountedRef.current) {
             navigateHomeFromDiagnosis(navigation);
-            requestFreeScanLimitPrompt();
           }
           return;
         }
@@ -334,7 +332,6 @@ export const DiagnosisLoadingScreen: React.FC = () => {
         const start = await beginFreeScanAttempt(route.key);
         if (start.status !== "ready") {
           navigateHomeFromDiagnosis(navigation);
-          if (start.status === "blocked") requestFreeScanLimitPrompt();
           return;
         }
         scanAttempt = start.attempt;
@@ -383,16 +380,11 @@ export const DiagnosisLoadingScreen: React.FC = () => {
             result: "fail",
           });
           await stopIdentificationTrace("failure");
-          const allowance = await completeFreeScanAttempt(
+          await completeFreeScanAttempt(
             scanAttempt,
             "failure"
           );
           if (cancelled) return;
-          if (allowance.remaining === 0) {
-            navigateHomeFromDiagnosis(navigation);
-            requestFreeScanLimitPrompt();
-            return;
-          }
           if (!cancelled && isMountedRef.current) {
             if (isSoundMode && audioUri) {
               useIdentificationResultsStore

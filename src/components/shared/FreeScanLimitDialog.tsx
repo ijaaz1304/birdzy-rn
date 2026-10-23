@@ -11,6 +11,7 @@ import {
 import FreeScanClose from "../../assets/freeScanClose.svg";
 import {
   dismissFreeScanLimitPrompt,
+  getFreeScanPromptSurfaceActive,
   getFreeScanLimitIntroduction,
   getFreeScanLimitPrompt,
   subscribeFreeScanLimitPrompt,
@@ -20,6 +21,11 @@ type Props = { active: boolean; isPremium: boolean; onUpgrade: () => void };
 
 /** Figma 8207:15429. Shown once on first camera entry and again when the allowance is exhausted. */
 export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
+  const surfaceActive = useSyncExternalStore(
+    subscribeFreeScanLimitPrompt,
+    getFreeScanPromptSurfaceActive
+  );
+  const canPresent = active && surfaceActive;
   const requested = useSyncExternalStore(
     subscribeFreeScanLimitPrompt,
     getFreeScanLimitPrompt
@@ -33,7 +39,7 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
   const [presented, setPresented] = React.useState(false);
   useEffect(() => {
     if (isPremium) dismissFreeScanLimitPrompt();
-    if (!requested || !active || isPremium) {
+    if (!requested || !canPresent || isPremium) {
       setPresented(false);
       return;
     }
@@ -41,7 +47,7 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
       setPresented(true)
     );
     return () => task.cancel();
-  }, [requested, active, isPremium]);
+  }, [requested, canPresent, isPremium]);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
@@ -65,7 +71,7 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
   };
   return (
     <Modal
-      visible={presented && requested && active && !isPremium}
+      visible={presented && requested && canPresent && !isPremium}
       transparent
       animationType="fade"
       onRequestClose={close}

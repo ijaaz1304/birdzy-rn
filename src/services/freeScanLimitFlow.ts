@@ -4,7 +4,7 @@ import {
 } from "../features/subscription/subscription.store";
 import { canIdentify } from "./session/usageLimit.service";
 import { requestFreeScanLimitPrompt } from "./freeScanLimitPrompt";
-/** Used before camera entry as well as immediately before submission. */
+/** Gate an identification submission; camera entry remains available at zero. */
 export async function requestFreeScanLimitIfBlocked(): Promise<boolean> {
   try {
     if (await canIdentify()) return false;

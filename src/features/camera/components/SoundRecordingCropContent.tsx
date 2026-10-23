@@ -1,3 +1,5 @@
+import { useIsFocused } from '@react-navigation/native';
+import { useFreeScanPromptSurface } from '../../../hooks/useFreeScanPromptSurface';
 /**
  * Recorded-sound crop + identify UI (shared by SoundIdentify crop phase and SoundCrop route).
  */
@@ -70,6 +72,7 @@ export function SoundRecordingCropContent({
 }: Props) {
   soundPerfRender("SoundRecordingCropContent");
   const { audioUri, durationSec, recordedAt } = session;
+  useFreeScanPromptSurface(useIsFocused());
   const theme = useTheme();
   const colors = theme.colors;
   const spectrogramColumns = useSoundRecordingSpectrogramStore(

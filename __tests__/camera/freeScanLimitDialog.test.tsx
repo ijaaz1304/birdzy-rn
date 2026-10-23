@@ -1,3 +1,6 @@
+import { activateFreeScanPromptSurface } from "../../src/services/freeScanLimitPrompt";
+let releasePromptSurface: () => void;
+afterEach(() => releasePromptSurface?.());
 jest.setTimeout(20000);
 import React from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
@@ -31,6 +34,7 @@ async function mount(premium = false) {
   });
 }
 beforeEach(() => {
+  releasePromptSurface = activateFreeScanPromptSurface();
   jest.useFakeTimers();
   jest.clearAllMocks();
   dismissFreeScanLimitPrompt();
@@ -51,7 +55,7 @@ it("does not show on first camera entry without an exhausted-limit request", asy
   await mount();
   expect(visible()).toBe(false);
 });
-it("retains a completed-scan request across navigation and waits for transitions", async () => {
+it("waits for transitions before showing a blocked Submit request", async () => {
   requestFreeScanLimitPrompt();
   await mount();
   expect(visible()).toBe(false);
@@ -105,4 +109,29 @@ it("waits for the Android modal to close before opening premium", async () => {
   expect(upgrade).not.toHaveBeenCalled();
   await act(async () => jest.advanceTimersByTime(350));
   expect(upgrade).toHaveBeenCalledTimes(1);
+});
+
+it("never opens a pending Submit popup on Home and requires a fresh Submit after returning", async () => {
+  requestFreeScanLimitPrompt();
+  await mount();
+  await act(async () => {
+    releasePromptSurface();
+  });
+  await act(async () => settle());
+  expect(visible()).toBe(false);
+  await act(async () => requestFreeScanLimitPrompt());
+  expect(visible()).toBe(false);
+  await act(async () => {
+    releasePromptSurface = activateFreeScanPromptSurface();
+  });
+  expect(visible()).toBe(false);
+  await act(async () => requestFreeScanLimitPrompt());
+  await act(async () => settle());
+  expect(visible()).toBe(true);
+});
+it("ignores a late allowance check that finishes after leaving the camera", async () => {
+  releasePromptSurface();
+  requestFreeScanLimitPrompt();
+  await mount();
+  expect(visible()).toBe(false);
 });

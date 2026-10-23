@@ -1,4 +1,3 @@
-import { requestFreeScanLimitPrompt } from "../../../services/freeScanLimitPrompt";
 /**
  * Crop host — holds a freeze-frame of the capture while VisionCamera is released
  * and the native cropper presents.
@@ -22,11 +21,6 @@ import { identifyFlowError, identifyFlowLog } from "../identifyFlowLog";
 import { navigateProcessedImageResult } from "../identifyImageFlow";
 import { resolveCropHostReturnTarget } from "../identifyCameraNavigation";
 import { showAlert } from "../../../store/alert.store";
-import {
-  useSubscriptionStore,
-  selectIsPremium,
-} from "../../subscription/subscription.store";
-import { canIdentifyPhoto } from "../../../services/session/usageLimit.service";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
 
@@ -36,7 +30,6 @@ type Route = RouteProp<CameraStackParamList, "IdentifyImageCrop">;
 export const IdentifyImageCropScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const isPremium = useSubscriptionStore(selectIsPremium);
   const {
     imageUri,
     returnTarget,
@@ -113,17 +106,8 @@ export const IdentifyImageCropScreen: React.FC = () => {
           });
 
           if (target === "analysis") {
-            if (!isPremium) {
-              const allowed = await canIdentifyPhoto();
-              if (!allowed) {
-                identifyFlowError("IFLOW-011", "Identification limit reached");
-                requestFreeScanLimitPrompt();
-                navigation.goBack();
-                return;
-              }
-            }
             navigateProcessedImageResult(navigation, cropped, {
-              returnTarget: "analysis",
+              returnTarget: "camera",
             });
             return;
           }
@@ -157,7 +141,6 @@ export const IdentifyImageCropScreen: React.FC = () => {
       };
     }, [
       imageUri,
-      isPremium,
       navigation,
       normalizedUri,
       returnImageToAskAI,
