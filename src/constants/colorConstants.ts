@@ -372,10 +372,11 @@ export const HOME_COLORS = {
     /** 50% OFF and body text – Figma 8598:66213 (dark text on purple gradient) */
     HEADLINE_LIGHT: "#111111",
     HEADLINE_DARK: "#FFFFFF",
-    ENDS_LABEL_LIGHT: "#505050",
+    ENDS_LABEL_LIGHT: "#5D5D5D",
     /** Timer box background */
     TIMER_BOX_BG_LIGHT: "#01474F",
-    CTA_BG_LIGHT: APP_COLORS.ctaPrimary,
+    /** Subscribe now */
+    CTA_BG_LIGHT: "#785284",
     CTA_TEXT_LIGHT: APP_COLORS.modalTextOnPrimary,
     GRADIENT_LIGHT: ["#E5D4ED", "#9E70B6"] as const,
     FILL_GRADIENT_LIGHT: ["#E8D4F0", "#F3E6F4"] as const,

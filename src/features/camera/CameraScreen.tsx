@@ -79,6 +79,7 @@ import { CameraImageSlots } from "./components/CameraImageSlots";
 import { CameraIdentifyReview } from "./components/CameraIdentifyReview";
 import { CameraPermissionInlineState } from "./components/CameraPermissionInlineState";
 import { CameraDailyScanBanner } from "./components/CameraDailyScanBanner";
+import { CameraScanCountBadge } from "./components/CameraScanCountBadge";
 import { usePhotoIdentificationLimit } from "./hooks/usePhotoIdentificationLimit";
 import { MAX_CAMERA_IDENTIFY_IMAGES } from "./utils/identificationLimitDisplay";
 import { shouldShowLocationBannerAsGranted } from "./locationToggle.helpers";
@@ -1299,6 +1300,30 @@ export const CameraScreen: React.FC = () => {
               <NavBackIcon color="#FFFFFF" size={CAPTURE_TOP_ICON_SIZE} />
             </TouchableOpacity>
 
+            {/* Top-center: photo tips — free users, matching the other camera apps */}
+            {!isPremium &&
+              !showIdentifyReview &&
+              !isCameraPermissionGateActive && (
+                <View
+                  pointerEvents="box-none"
+                  style={[
+                    styles.topCenterInfoHost,
+                    { top: insets.top + 12 },
+                  ]}
+                >
+                  <TouchableOpacity
+                    onPress={() => setShowTipsModal(true)}
+                    style={styles.topCenterInfoButton}
+                    activeOpacity={0.8}
+                    hitSlop={HIT_SLOP.CLOSE}
+                    accessibilityRole="button"
+                    accessibilityLabel="Photo tips"
+                  >
+                    <ScanInfoFigma />
+                  </TouchableOpacity>
+                </View>
+              )}
+
             {/* Top-right: sound identify */}
             {!showIdentifyReview && !isCameraPermissionGateActive && (
               <TouchableOpacity
@@ -1318,7 +1343,7 @@ export const CameraScreen: React.FC = () => {
                   styles.topNavButtonBack,
                   {
                     top: insets.top + 12,
-                    right: device?.hasTorch ? 68 : 16,
+                    right: device?.hasTorch ? 80 : 28,
                   },
                 ]}
                 activeOpacity={0.8}
@@ -1597,6 +1622,17 @@ export const CameraScreen: React.FC = () => {
 
                   {isAddingAnotherPhoto || selectedImages.length > 0 ? (
                     <View style={styles.sideBtn} />
+                  ) : !isPremium ? (
+                    <CameraScanCountBadge
+                      remaining={photoLimit.remaining}
+                      onPress={() => {
+                        analyticsService.logEvent(
+                          EVENTS.identification_limit_upgrade_click,
+                          { source: "camera_scans_left" }
+                        );
+                        navigateToSubscriptionMain();
+                      }}
+                    />
                   ) : (
                     <TouchableOpacity
                       onPress={() => setShowTipsModal(true)}
@@ -1674,6 +1710,21 @@ const styles = StyleSheet.create({
   },
   topNavButtonRight: {
     right: 20,
+  },
+  topCenterInfoHost: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: CAPTURE_TOP_ICON_BUTTON_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 12,
+  },
+  topCenterInfoButton: {
+    width: CAPTURE_TOP_ICON_BUTTON_SIZE,
+    height: CAPTURE_TOP_ICON_BUTTON_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
   },
   topNavButtonBack: {
     borderRadius: CAPTURE_TOP_ICON_BUTTON_SIZE / 2,

@@ -3271,11 +3271,9 @@ export const BirdDetailsScreen: React.FC = () => {
                               width={24}
                               height={24}
                               color={
-                                nameSoundPlaying
-                                  ? theme.colors.primaryCTA
-                                  : isDark
-                                    ? TEXT_PRIMARY
-                                    : APP_COLORS.surfaceDark
+                                isDark
+                                  ? TEXT_PRIMARY
+                                  : APP_COLORS.surfaceDark
                               }
                             />
                           </TouchableOpacity>

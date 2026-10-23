@@ -1,7 +1,6 @@
 import React from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
-import { AppImage } from "@/components/AppImage";
-import { Images, SoundLibraryPlayIcon } from "../../../assets";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { SoundLibraryPlayIcon } from "../../../assets";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { useTheme } from "../../../hooks/useTheme";
 
@@ -32,7 +31,8 @@ export function SoundPlayButton({
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: isPlaying ? "transparent" : theme.colors.primaryCTA,
+          backgroundColor: theme.colors.primaryCTA,
+          overflow: "hidden",
         },
       ]}
       accessibilityRole="button"
@@ -41,11 +41,10 @@ export function SoundPlayButton({
       }
     >
       {isPlaying ? (
-        <AppImage
-          source={Images.soundPause}
-          style={{ width: size, height: size }}
-          resizeMode="contain"
-        />
+        <View style={styles.pauseGlyph}>
+          <View style={[styles.pauseBar, { height: Math.round(size * 0.35) }]} />
+          <View style={[styles.pauseBar, { height: Math.round(size * 0.35) }]} />
+        </View>
       ) : (
         <SoundLibraryPlayIcon
           width={iconSize}
@@ -62,5 +61,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
+  },
+  pauseGlyph: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  pauseBar: {
+    width: 4,
+    borderRadius: 1,
+    backgroundColor: "#FFFFFF",
   },
 });

@@ -51,19 +51,20 @@ export function HiddenRemoteImagePrefetcher({
     }
   };
 
-  if (uris.length === 0) return null;
+  const uniqueUris = uris.filter((uri, index) => uri && uris.indexOf(uri) === index);
+  if (uniqueUris.length === 0) return null;
 
   return (
     <View
       pointerEvents="none"
       style={[
         styles.host,
-        { width: decodeWidth, height: decodeHeight * uris.length },
+        { width: decodeWidth, height: decodeHeight * uniqueUris.length },
       ]}
     >
-      {uris.map((uri, index) => (
+      {uniqueUris.map((uri, index) => (
         <FastImage
-          key={uri}
+          key={`${index}:${uri}`}
           source={{
             uri,
             priority: FastImage.priority.high,

@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NavBackIcon, Text } from "../../../atoms";
 import { FONTS } from "../../../common/typography";
@@ -63,11 +63,14 @@ export const BirdSoundsScreen: React.FC = () => {
     ]
   );
 
-  useEffect(() => {
-    return () => {
-      void soundRecordingService.stopPlayback();
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setPlayingId(null);
+        void soundRecordingService.stopPlayback();
+      };
+    }, [])
+  );
 
   const togglePlay = useCallback(
     async (id: string, url: string) => {

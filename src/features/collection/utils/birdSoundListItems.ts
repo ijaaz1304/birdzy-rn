@@ -5,6 +5,7 @@ export type BirdSoundListItem = {
   url: string;
   title: string;
   durationLabel?: string;
+  durationSec?: number;
   isUserRecording?: boolean;
   metaLine?: string;
 };
@@ -75,6 +76,7 @@ export function buildBirdSoundListItems(input: {
       isUserRecording: true,
       metaLine: metaParts.length ? metaParts.join(" • ") : undefined,
       durationLabel: formatBirdSoundDuration(input.durationsSec?.[url]),
+      durationSec: input.durationsSec?.[url],
     });
   });
 
@@ -99,6 +101,7 @@ export function buildBirdSoundListItems(input: {
       url,
       title,
       durationLabel: formatBirdSoundDuration(input.durationsSec?.[url]),
+      durationSec: input.durationsSec?.[url],
     });
   });
 

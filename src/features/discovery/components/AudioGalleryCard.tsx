@@ -3,7 +3,6 @@ import React, { useRef } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import {
-  Images,
   SoundLibraryDeleteIcon,
   SoundLibraryEditIcon,
   SoundLibraryPlayIcon,
@@ -94,16 +93,15 @@ const PlayButton: React.FC<{ isPlaying: boolean; onPress: () => void }> = ({
     onPress={onPress}
     activeOpacity={0.85}
     hitSlop={HIT_SLOP.SMALL}
-    style={[styles.playBtn, isPlaying && styles.pauseBtn]}
+    style={[styles.playBtn]}
     accessibilityRole="button"
     accessibilityLabel={isPlaying ? "Pause recording" : "Play recording"}
   >
     {isPlaying ? (
-      <AppImage
-        source={Images.soundPause}
-        style={styles.pauseIcon}
-        resizeMode="contain"
-      />
+      <View style={styles.pauseGlyph}>
+        <View style={styles.pauseBar} />
+        <View style={styles.pauseBar} />
+      </View>
     ) : (
       <SoundLibraryPlayIcon width={24} height={24} color="#FFFFFF" />
     )}
@@ -207,27 +205,29 @@ const CardBody: React.FC<Props> = ({
         { backgroundColor: colors.surfacePrimary },
       ]}
     >
-      {variant === "identified" ? (
+      {variant === "identified" || onOpen ? (
         <TouchableOpacity
           style={styles.identifiedMain}
           onPress={onOpen}
           disabled={!onOpen}
           activeOpacity={onOpen ? 0.85 : 1}
         >
-          {imageUrl ? (
-            <AppImage
-              source={{ uri: imageUrl }}
-              style={styles.thumb}
-              resizeMode="cover"
-            />
-          ) : (
-            <View
-              style={[
-                styles.thumb,
-                { backgroundColor: APP_COLORS.createButtonBg },
-              ]}
-            />
-          )}
+          {variant === "identified" ? (
+            imageUrl ? (
+              <AppImage
+                source={{ uri: imageUrl }}
+                style={styles.thumb}
+                resizeMode="cover"
+              />
+            ) : (
+              <View
+                style={[
+                  styles.thumb,
+                  { backgroundColor: APP_COLORS.createButtonBg },
+                ]}
+              />
+            )
+          ) : null}
           {textBlock}
         </TouchableOpacity>
       ) : (
@@ -380,13 +380,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
+    overflow: "hidden",
   },
-  pauseBtn: {
-    backgroundColor: "transparent",
+  pauseGlyph: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
   },
-  pauseIcon: {
-    width: 40,
-    height: 40,
+  pauseBar: {
+    width: 4,
+    height: 14,
+    borderRadius: 1,
+    backgroundColor: "#FFFFFF",
   },
   swipeActions: {
     width: 40,

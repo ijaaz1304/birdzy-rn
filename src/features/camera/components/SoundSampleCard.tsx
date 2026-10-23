@@ -9,6 +9,7 @@ import { useIsDark, useTheme } from "../../../hooks/useTheme";
 import { formatSoundClipLabel } from "../utils/soundCrop";
 import { SoundPlayButton } from "./SoundPlayButton";
 import { SoundSpectrogramView } from "./SoundSpectrogramView";
+import { usePlayingCountdown } from "../../collection/hooks/usePlayingCountdown";
 
 type Props = {
   durationSec: number;
@@ -34,6 +35,8 @@ export function SoundSampleCard({
   const cardBg = isDark ? theme.colors.surfacePrimary : APP_COLORS.surfaceWhite;
   const cardBorder = isDark ? theme.colors.border0 : APP_COLORS.borderLight;
   const birdsLabel = copy.birdsCount.replace("{count}", String(birdCount));
+  const remainingSec = usePlayingCountdown(isPlaying, durationSec);
+  const shownSec = isPlaying ? remainingSec ?? durationSec : durationSec;
 
   return (
     <View
@@ -54,7 +57,7 @@ export function SoundSampleCard({
               {copy.sampleTitle}
             </Text>
             <Text style={[styles.duration, { color: theme.colors.textPrimary }]}>
-              {formatSoundClipLabel(durationSec).replace(/s$/, "")}
+              {formatSoundClipLabel(shownSec).replace(/s$/, "")}
             </Text>
           </View>
           <Text

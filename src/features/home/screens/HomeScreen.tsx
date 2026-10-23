@@ -41,6 +41,7 @@ import { CloseIcon } from "../../../components/shared/CloseIcon";
 import { Avatar } from "../../../atoms";
 import { Images } from "../../../assets";
 import DiscountCountdownBanner from "../../../components/customui/DiscountCountdownBanner";
+import DiscountBanner from "../../../components/customui/DiscountBanner";
 import {
   HomeIdentifyCardsSection,
   HomeWizardBanner,
@@ -812,34 +813,54 @@ export const HomeScreen = () => {
 
           {!isPremium && showInlineDiscountBanner && (
             <View style={[styles.sectionBlock, styles.discountBannerSection]}>
-              <View style={styles.fullSubsWrap}>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => {
+              {discountOffer.isActive ? (
+                <DiscountBanner
+                  hours={countdown.hours}
+                  minutes={countdown.minutes}
+                  seconds={countdown.seconds}
+                  isDiscountActive
+                  onClose={() => setShowInlineDiscountBanner(false)}
+                  onSubscribe={() => {
                     analyticsService.logEvent(EVENTS.subs_discount_banner);
                     rootNavigation.navigate("SubscriptionStack", {
                       screen: "SubscriptionMain",
                       params: {
                         openPlanModal: true,
-                        discount50: discountOffer.isActive,
+                        discount50: true,
                       },
                     });
                   }}
-                >
-                  <AppImage
-                    source={Images.fullSubsBanner}
-                    style={styles.fullSubsBanner}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.fullSubsClose}
-                  onPress={() => setShowInlineDiscountBanner(false)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <CloseIcon isDark={isDark} style={styles.fullSubsCloseIcon} />
-                </TouchableOpacity>
-              </View>
+                />
+              ) : (
+                <View style={styles.fullSubsWrap}>
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => {
+                      analyticsService.logEvent(EVENTS.subs_discount_banner);
+                      rootNavigation.navigate("SubscriptionStack", {
+                        screen: "SubscriptionMain",
+                        params: {
+                          openPlanModal: true,
+                          discount50: false,
+                        },
+                      });
+                    }}
+                  >
+                    <AppImage
+                      source={Images.fullSubsBanner}
+                      style={styles.fullSubsBanner}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.fullSubsClose}
+                    onPress={() => setShowInlineDiscountBanner(false)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <CloseIcon isDark={isDark} style={styles.fullSubsCloseIcon} />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           )}
 

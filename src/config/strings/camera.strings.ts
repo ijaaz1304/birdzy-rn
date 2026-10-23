@@ -57,6 +57,8 @@ export const CAMERA_STRINGS = {
     dailyLimitSubtitle:
       "You've used your {count} free identifications in total. Upgrade to Premium for unlimited scans.",
     freeScansLeftPrefix: "Free scans left: ",
+    leftLabel: "Left",
+    scansRemainingA11y: "{count} scans left",
     resetInPrefix: "Reset in ",
     maxPhotosSelected:
       "You can add up to 2 photos. Remove one to capture another.",

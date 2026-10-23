@@ -21,6 +21,12 @@ export const SPECTROGRAM_VIZ_BUDGET_MS_ANDROID = 6;
 /** Retain the entire 60-second recording at 22050 Hz / 512 samples per hop. */
 export const SPECTROGRAM_MAX_COLUMNS = 2600;
 
+/**
+ * Live recording shows this many time slices across the full width
+ * (~2s). New sound enters on the right and older sound moves left.
+ */
+export const LIVE_SPECTROGRAM_WINDOW_COLUMNS = 80;
+
 /** Bitmap dimensions are bounded independently of recording length. */
 export const SPECTROGRAM_DISPLAY_MAX_COLUMNS = 240;
 export const SPECTROGRAM_RECORDED_MAX_COLUMNS = 640;

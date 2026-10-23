@@ -7,6 +7,7 @@ import { isIdentificationNoMatch } from "../session/identificationNoMatch";
 import { coreApi } from "../api/features/core.api";
 import type { BirdIdentifyResponse } from "../api/features/bird.api.types";
 import { ApiException, normalizeError } from "../api/errors";
+import RNFS from "react-native-fs";
 import {
   processImage,
   DEFAULT_CONFIG,
@@ -56,6 +57,21 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+}
+
+async function ensureLocalAudioUri(uri: string): Promise<string> {
+  const trimmed = uri.trim();
+  if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  const pathName = trimmed.split("?")[0]?.split("/").pop() || "recording.m4a";
+  const safeName = pathName.replace(/[^a-zA-Z0-9._-]/g, "_") || "recording.m4a";
+  const dest = `${RNFS.CachesDirectoryPath}/gallery-identify-${Date.now()}-${safeName}`;
+  const result = await RNFS.downloadFile({ fromUrl: trimmed, toFile: dest }).promise;
+  if (result.statusCode != null && result.statusCode >= 400) {
+    throw new Error("Could not download this recording");
+  }
+  return dest.startsWith("file://") ? dest : `file://${dest}`;
 }
 
 class AIService {
@@ -196,7 +212,8 @@ class AIService {
     matchesFoundCount: number;
   }> {
     try {
-      const name = audioUri.split("/").pop() ?? "recording.m4a";
+      const localUri = await ensureLocalAudioUri(audioUri);
+      const name = localUri.split("/").pop() ?? "recording.m4a";
       const ext = name.split(".").pop()?.toLowerCase();
       const type =
         ext === "wav"
@@ -207,7 +224,7 @@ class AIService {
           ? "audio/mpeg"
           : "audio/m4a";
       const response = await coreApi.identifySound({
-        uri: audioUri,
+        uri: localUri,
         type,
         name,
         startTime: crop?.startSec,

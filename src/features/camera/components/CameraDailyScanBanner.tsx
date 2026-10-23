@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
   banner: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     padding: 8,
     borderRadius: 8,
@@ -98,10 +99,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   textRow: {
-    flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
+    justifyContent: "center",
   },
   bodyText: {
     fontFamily: FONTS.regular,

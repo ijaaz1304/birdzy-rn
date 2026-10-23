@@ -36,11 +36,6 @@ import { performanceService } from "../../../services/performance/performance.se
 import { rescheduleInactivityNotifications } from "../../../services/notifications/scheduledNotifications.service";
 import { useIdentificationResultsStore } from "../identificationResults.store";
 import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
-import {
-  getDevIdentificationSampleMatches,
-  getDevSoundIdentificationExtras,
-  shouldUseIdentificationDevSamples,
-} from "../identificationDevSamples";
 
 const BIRD_IDENTIFICATION_TRACE = "bird_identification";
 
@@ -211,71 +206,50 @@ export function useSoundIdentificationFlow(
           let uploadedSoundUrls: string[] | undefined;
           let uploadedImageUrls: string[] | undefined;
 
-          try {
-            const crop =
-              input.cropStartSec != null && input.cropDurationSec != null
-                ? {
-                    startSec: input.cropStartSec,
-                    durationSec: input.cropDurationSec,
-                  }
-                : undefined;
-            const userLocation = getIdentificationUserLocationForApi();
-            const soundResult = await aiService.identifyBirdSound(
-              input.audioUri,
-              crop,
-              userLocation
-            );
+          const crop =
+            input.cropStartSec != null && input.cropDurationSec != null
+              ? {
+                  startSec: input.cropStartSec,
+                  durationSec: input.cropDurationSec,
+                }
+              : undefined;
+          const userLocation = getIdentificationUserLocationForApi();
+          const soundResult = await aiService.identifyBirdSound(
+            input.audioUri,
+            crop,
+            userLocation
+          );
 
+          if (isStale()) return;
+
+          if (
+            soundResult.matchesFoundCount === 0 ||
+            !soundResult.matches?.length
+          ) {
+            analyticsService.logEvent(EVENTS.identify_result_fail);
+            analyticsService.logEvent(EVENTS.identification_done_failure);
+            analyticsService.logEvent(EVENTS.identify_result, {
+              result: "fail",
+            });
+            await stopIdentificationTrace("failure");
+            await completeFreeScanAttempt(
+              start.attempt,
+              "failure"
+            );
             if (isStale()) return;
-
-            if (
-              soundResult.matchesFoundCount === 0 ||
-              !soundResult.matches?.length
-            ) {
-              if (!shouldUseIdentificationDevSamples()) {
-                analyticsService.logEvent(EVENTS.identify_result_fail);
-                analyticsService.logEvent(EVENTS.identification_done_failure);
-                analyticsService.logEvent(EVENTS.identify_result, {
-                  result: "fail",
-                });
-                await stopIdentificationTrace("failure");
-                await completeFreeScanAttempt(
-                  start.attempt,
-                  "failure"
-                );
-                if (isStale()) return;
-                setIsAnalyzing(false);
-                navigateToSoundNoMatch(input, {
-                  uploadedSoundUrls: soundResult.soundUrls,
-                  uploadedImageUrls: soundResult.imageUrls,
-                });
-                return;
-              }
-              console.warn(
-                "[SoundIdentify] API returned no matches — using dev sample results"
-              );
-              possibleMatches = getDevIdentificationSampleMatches();
-              const devExtras = getDevSoundIdentificationExtras();
-              uploadedSoundUrls = devExtras.soundUrls;
-              uploadedImageUrls = devExtras.imageUrls;
-            } else {
-              possibleMatches = soundResult.matches.map(
-                mapIdentificationToPossibleMatch
-              );
-              uploadedSoundUrls = soundResult.soundUrls;
-              uploadedImageUrls = soundResult.imageUrls;
-            }
-          } catch (apiError) {
-            if (!shouldUseIdentificationDevSamples()) throw apiError;
-            console.warn(
-              "[SoundIdentify] API failed — using dev sample results",
-              (apiError as Error)?.message ?? apiError
-            );
-            possibleMatches = getDevIdentificationSampleMatches();
-            const devExtras = getDevSoundIdentificationExtras();
-            uploadedSoundUrls = devExtras.soundUrls;
-            uploadedImageUrls = devExtras.imageUrls;
+            setIsAnalyzing(false);
+            navigateToSoundNoMatch(input, {
+              uploadedSoundUrls: soundResult.soundUrls,
+              uploadedImageUrls: soundResult.imageUrls,
+            });
+            return;
           }
+
+          possibleMatches = soundResult.matches.map(
+            mapIdentificationToPossibleMatch
+          );
+          uploadedSoundUrls = soundResult.soundUrls;
+          uploadedImageUrls = soundResult.imageUrls;
 
           analyticsService.logEvent(EVENTS.identify_result_success);
           analyticsService.logEvent(EVENTS.identification_done_success);

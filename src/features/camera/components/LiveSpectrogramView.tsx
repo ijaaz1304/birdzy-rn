@@ -1,11 +1,22 @@
 /** High-resolution spectrogram rendered as one lossless native bitmap. */
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { LayoutChangeEvent, PixelRatio, StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  LayoutChangeEvent,
+  PixelRatio,
+  Platform,
+  StyleSheet,
+  View,
+} from "react-native";
 import { AppImage } from "../../../components/AppImage";
 import {
+  LIVE_SPECTROGRAM_WINDOW_COLUMNS,
   SPECTROGRAM_DISPLAY_MAX_COLUMNS,
   SPECTROGRAM_RECORDED_MAX_COLUMNS,
   SPECTROGRAM_DISPLAY_MEL_BANDS,
+  SPECTROGRAM_UI_FPS,
+  SPECTROGRAM_UI_FPS_ANDROID,
 } from "../constants/soundRecording.constants";
 import { logSoundRenderCount } from "../utils/soundRecordLog";
 import { SPECTROGRAM_BG, spectrogramBitmap } from "../utils/spectrogramBitmap";
@@ -15,10 +26,15 @@ import {
   soundPerfRecordTiming,
 } from "../utils/soundPerf";
 
+const LIVE_SCROLL_MS =
+  1000 /
+  (Platform.OS === "android" ? SPECTROGRAM_UI_FPS_ANDROID : SPECTROGRAM_UI_FPS);
+
 type Props = {
   height?: number;
   /** Normalized band energies, high frequencies first. */
   columns: number[][];
+  /** Live scroll: newest audio on the right edge, history growing left. */
   playheadCenter?: boolean;
 };
 
@@ -35,9 +51,21 @@ function LiveSpectrogramViewComponent({
   const visibleRef = useRef<0 | 1>(0);
   const shownUriRef = useRef<string | undefined>();
   const pendingUriRef = useRef<string | undefined>();
+  const layoutWidthRef = useRef(0);
+  const bitmapWidthRef = useRef(0);
+  const playheadRef = useRef(playheadCenter);
+  const columnCountRef = useRef(columns.length);
+  const shownColumnCountRef = useRef(0);
+  const shift0 = useRef(new Animated.Value(0)).current;
+  const shift1 = useRef(new Animated.Value(0)).current;
+  const shifts = useRef([shift0, shift1]).current;
+
+  playheadRef.current = playheadCenter;
+  columnCountRef.current = columns.length;
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     const next = event.nativeEvent.layout.width;
+    layoutWidthRef.current = next;
     setWidth((prev) => (Math.abs(prev - next) < 0.5 ? prev : next));
   }, []);
 
@@ -53,6 +81,7 @@ function LiveSpectrogramViewComponent({
           )
         )
       : 0;
+  bitmapWidthRef.current = bitmapWidth;
 
   const nextUri = useMemo(() => {
     if (!bitmapWidth || !columns.length) return undefined;
@@ -73,6 +102,7 @@ function LiveSpectrogramViewComponent({
     if (shownUriRef.current == null) {
       shownUriRef.current = nextUri;
       visibleRef.current = 0;
+      shownColumnCountRef.current = columnCountRef.current;
       setSlot0(nextUri);
       setVisible(0);
       return;
@@ -85,13 +115,47 @@ function LiveSpectrogramViewComponent({
     else setSlot0(nextUri);
   }, [nextUri]);
 
-  const promote = useCallback((slot: 0 | 1, uri: string) => {
-    if (pendingUriRef.current !== uri || visibleRef.current === slot) return;
-    shownUriRef.current = uri;
-    pendingUriRef.current = undefined;
-    visibleRef.current = slot;
-    setVisible(slot);
-  }, []);
+  const promote = useCallback(
+    (slot: 0 | 1, uri: string) => {
+      if (pendingUriRef.current !== uri || visibleRef.current === slot) return;
+      shownUriRef.current = uri;
+      pendingUriRef.current = undefined;
+      visibleRef.current = slot;
+
+      const delta = columnCountRef.current - shownColumnCountRef.current;
+      const slots = Math.max(
+        1,
+        Math.min(bitmapWidthRef.current, LIVE_SPECTROGRAM_WINDOW_COLUMNS)
+      );
+      const layoutWidth = layoutWidthRef.current;
+      if (
+        playheadRef.current &&
+        shownColumnCountRef.current > 0 &&
+        delta > 0 &&
+        layoutWidth > 0
+      ) {
+        const dx = (Math.min(delta, slots) / slots) * layoutWidth;
+        const shift = shifts[slot];
+        shift.setValue(dx);
+        Animated.timing(shift, {
+          toValue: 0,
+          duration: LIVE_SCROLL_MS,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }).start();
+      }
+      shownColumnCountRef.current = columnCountRef.current;
+      setVisible(slot);
+    },
+    [shifts]
+  );
+
+  useEffect(() => {
+    if (!playheadCenter) {
+      shift0.setValue(0);
+      shift1.setValue(0);
+    }
+  }, [playheadCenter, shift0, shift1]);
 
   const source0 = useMemo(() => (slot0 ? { uri: slot0 } : undefined), [slot0]);
   const source1 = useMemo(() => (slot1 ? { uri: slot1 } : undefined), [slot1]);
@@ -103,27 +167,44 @@ function LiveSpectrogramViewComponent({
       pointerEvents="none"
       collapsable={false}
     >
-      {source0 ? (
-        <AppImage
-          source={source0}
-          style={[styles.layer, visible === 0 ? styles.front : styles.back]}
-          resizeMode="stretch"
-          preferRNImage
-          fadeDuration={0}
-          onLoad={() => promote(0, slot0!)}
-        />
-      ) : null}
-      {source1 ? (
-        <AppImage
-          source={source1}
-          style={[styles.layer, visible === 1 ? styles.front : styles.back]}
-          resizeMode="stretch"
-          preferRNImage
-          fadeDuration={0}
-          onLoad={() => promote(1, slot1!)}
-        />
-      ) : null}
-      {playheadCenter ? <View style={styles.playhead} /> : null}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.layer,
+          visible === 0 ? styles.front : styles.back,
+          { transform: [{ translateX: shift0 }] },
+        ]}
+      >
+        {source0 ? (
+          <AppImage
+            source={source0}
+            style={[styles.image, visible === 0 ? styles.front : styles.back]}
+            resizeMode="stretch"
+            preferRNImage
+            fadeDuration={0}
+            onLoad={() => promote(0, slot0!)}
+          />
+        ) : null}
+      </Animated.View>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.layer,
+          visible === 1 ? styles.front : styles.back,
+          { transform: [{ translateX: shift1 }] },
+        ]}
+      >
+        {source1 ? (
+          <AppImage
+            source={source1}
+            style={[styles.image, visible === 1 ? styles.front : styles.back]}
+            resizeMode="stretch"
+            preferRNImage
+            fadeDuration={0}
+            onLoad={() => promote(1, slot1!)}
+          />
+        ) : null}
+      </Animated.View>
     </View>
   );
 }
@@ -147,6 +228,9 @@ const styles = StyleSheet.create({
   },
   layer: {
     ...StyleSheet.absoluteFillObject,
+  },
+  image: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: SPECTROGRAM_BG,
   },
   front: {
@@ -154,15 +238,5 @@ const styles = StyleSheet.create({
   },
   back: {
     zIndex: 0,
-  },
-  playhead: {
-    position: "absolute",
-    left: "50%",
-    top: 0,
-    bottom: 0,
-    width: 2,
-    marginLeft: -1,
-    zIndex: 2,
-    backgroundColor: "#EF4444",
   },
 });

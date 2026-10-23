@@ -66,8 +66,19 @@ it("keeps short calls between sampled columns when shrinking a full track", () =
   ).toEqual([55, 150]);
 });
 
-it("keeps live history left of the center playhead and the future blank", () => {
-  expect(decode(spectrogramBitmap([[0.5], [1]], 5, 1, true)).pixels).toEqual([
-    245, 150, 55, 245, 245,
-  ]);
+it("draws live speech as wide stripes that enter on the right edge", () => {
+  const width = 160;
+  const { pixels } = decode(spectrogramBitmap([[0.5], [1]], width, 1, true));
+  const slot = width / 80;
+  expect(pixels.slice(0, width - slot * 2).every((pixel) => pixel === 245)).toBe(
+    true
+  );
+  const older = pixels[width - slot * 2];
+  const newest = pixels[width - 1];
+  expect(pixels.slice(width - slot * 2, width - slot).every((pixel) => pixel === older)).toBe(
+    true
+  );
+  expect(pixels.slice(width - slot).every((pixel) => pixel === newest)).toBe(true);
+  expect(newest).toBeLessThan(older);
+  expect(older).toBeLessThan(245);
 });

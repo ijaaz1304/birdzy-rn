@@ -18,11 +18,22 @@ function isLocalAudioUri(uri: string): boolean {
   return uri.startsWith("file://") || uri.startsWith("/");
 }
 
+function mediaSeconds(raw: number, asMilliseconds: boolean): number {
+  if (!Number.isFinite(raw) || raw < 0) return 0;
+  return asMilliseconds ? raw / 1000 : raw;
+}
+
 function durationFromMeta(raw: number): number | undefined {
   if (!(raw > 0) || !Number.isFinite(raw)) return undefined;
   const sec = raw > 1000 ? raw / 1000 : raw;
   return sec > 0 ? sec : undefined;
 }
+
+export type SoundPlaybackProgress = {
+  uri: string;
+  positionSec: number;
+  durationSec: number;
+};
 
 class SoundRecordingService {
   private recordingUri: string | null = null;
@@ -34,6 +45,9 @@ class SoundRecordingService {
   private playbackEndHandler: (() => void) | undefined;
   private durationCache = new Map<string, number>();
   private durationListeners = new Set<(uri: string, sec: number) => void>();
+  private playbackListeners = new Set<
+    (progress: SoundPlaybackProgress | null) => void
+  >();
 
   async ensureMicrophonePermission(): Promise<boolean> {
     const current = await checkMicrophonePermission();
@@ -131,6 +145,15 @@ class SoundRecordingService {
     return this.durationCache.get(uri);
   }
 
+  subscribePlayback(
+    listener: (progress: SoundPlaybackProgress | null) => void
+  ): () => void {
+    this.playbackListeners.add(listener);
+    return () => {
+      this.playbackListeners.delete(listener);
+    };
+  }
+
   subscribeDuration(
     listener: (uri: string, sec: number) => void
   ): () => void {
@@ -169,6 +192,7 @@ class SoundRecordingService {
   async stopPlayback(): Promise<void> {
     this.playbackSession += 1;
     this.playbackEndHandler = undefined;
+    this.emitPlayback(null);
     if (!this.playerHeld) {
       this.clearPlaybackListeners();
       return;
@@ -241,6 +265,10 @@ class SoundRecordingService {
     return AudioRecorderPlayer.mmss(Math.max(0, Math.floor(seconds)));
   }
 
+  private emitPlayback(progress: SoundPlaybackProgress | null) {
+    this.playbackListeners.forEach((listener) => listener(progress));
+  }
+
   private rememberDuration(uri: string, sec: number) {
     this.durationCache.set(uri, sec);
     this.durationListeners.forEach((listener) => listener(uri, sec));
@@ -250,13 +278,32 @@ class SoundRecordingService {
     this.clearPlaybackListeners();
     AudioRecorderPlayer.addPlayBackListener((meta) => {
       if (session !== this.playbackSession) return;
-      const sec = durationFromMeta(meta.duration);
-      if (sec != null) this.rememberDuration(uri, sec);
+      const durationRaw = Number(meta.duration) || 0;
+      const positionRaw = Number(meta.currentPosition) || 0;
+      if (durationRaw <= 0) return;
+      const asMilliseconds = durationRaw > 1000 || positionRaw > 1000;
+      const durationSec =
+        durationRaw > 0
+          ? mediaSeconds(durationRaw, asMilliseconds)
+          : undefined;
+      const positionSec = mediaSeconds(positionRaw, asMilliseconds);
+      if (durationSec != null && durationSec > 0 && !this.durationCache.has(uri)) {
+        this.rememberDuration(uri, durationSec);
+      }
+      this.emitPlayback({
+        uri,
+        positionSec,
+        durationSec:
+          durationSec && durationSec > 0
+            ? durationSec
+            : this.durationCache.get(uri) ?? 0,
+      });
     });
     AudioRecorderPlayer.addPlaybackEndListener(() => {
       if (session !== this.playbackSession) return;
       this.playerHeld = false;
       this.clearPlaybackListeners();
+      this.emitPlayback(null);
       const onEnd = this.playbackEndHandler;
       this.playbackEndHandler = undefined;
       onEnd?.();

@@ -1,7 +1,6 @@
-import { AppImage } from "@/components/AppImage";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { Images, SoundLibraryPlayIcon } from "../../../assets";
+import { SoundLibraryPlayIcon } from "../../../assets";
 import { Text } from "../../../atoms";
 import { FONTS } from "../../../common/typography";
 import { APP_COLORS } from "../../../config/colors";
@@ -10,6 +9,8 @@ import { Radius } from "../../../design";
 import { spacing } from "../../../design-system/spacing";
 import { useTheme } from "../../../hooks/useTheme";
 import type { BirdSoundListItem } from "../utils/birdSoundListItems";
+import { formatBirdSoundDuration } from "../utils/birdSoundListItems";
+import { usePlayingCountdown } from "../hooks/usePlayingCountdown";
 
 type Props = {
   item: BirdSoundListItem;
@@ -30,6 +31,12 @@ export function BirdSoundRow({
 }: Props) {
   const theme = useTheme();
   const strings = COLLECTION_STRINGS.birdDetails.sounds;
+  const remainingSec = usePlayingCountdown(isPlaying, item.durationSec, item.url);
+  const durationText = isPlaying
+    ? remainingSec != null
+      ? formatBirdSoundDuration(Math.max(remainingSec, 0.001))
+      : item.durationLabel
+    : item.durationLabel;
 
   return (
     <TouchableOpacity
@@ -43,15 +50,13 @@ export function BirdSoundRow({
         style={[
           styles.playButton,
           { backgroundColor: theme.colors.primaryCTA },
-          isPlaying && styles.pauseButton,
         ]}
       >
         {isPlaying ? (
-          <AppImage
-            source={Images.soundPause}
-            style={styles.pauseIcon}
-            resizeMode="contain"
-          />
+          <View style={styles.pauseGlyph}>
+            <View style={styles.pauseBar} />
+            <View style={styles.pauseBar} />
+          </View>
         ) : (
           <SoundLibraryPlayIcon width={24} height={24} color="#FFFFFF" />
         )}
@@ -72,9 +77,9 @@ export function BirdSoundRow({
               </View>
             ) : null}
           </View>
-          {item.durationLabel ? (
+          {durationText ? (
             <Text style={[styles.duration, { color: textSecondary }]}>
-              {item.durationLabel}
+              {durationText}
             </Text>
           ) : isPlaying ? (
             <Text style={[styles.duration, { color: textSecondary }]}>
@@ -111,13 +116,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
+    overflow: "hidden",
   },
-  pauseButton: {
-    backgroundColor: "transparent",
+  pauseGlyph: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
   },
-  pauseIcon: {
-    width: 40,
-    height: 40,
+  pauseBar: {
+    width: 4,
+    height: 14,
+    borderRadius: 1,
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,

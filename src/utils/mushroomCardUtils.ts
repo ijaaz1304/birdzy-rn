@@ -116,6 +116,14 @@ export function resolveMushroomImageUrlsForDisplay(
  * Hero/carousel image URLs — same fallback chain as BirdDetailsScreen:
  * resolved API URLs → sanitized defaultImageUrl → config catalogue URLs.
  */
+function isDirectImageUri(uri: string): boolean {
+  return (
+    uri.startsWith("http://") ||
+    uri.startsWith("https://") ||
+    uri.startsWith("file://")
+  );
+}
+
 export function resolveBirdHeroImageUrls(
   canonicalName: string | undefined,
   imageUrls: unknown[] | undefined | null,
@@ -123,21 +131,20 @@ export function resolveBirdHeroImageUrls(
   defaultImageUrl?: string | null
 ): string[] {
   const nameForPath = canonicalName?.trim() || fallbackMineralName?.trim();
+  const direct: string[] = [];
+  const sanitizedDefault = sanitizeBirdImageUrl(defaultImageUrl);
+  if (sanitizedDefault) direct.push(sanitizedDefault);
+  for (const uri of normalizeImageUrls(imageUrls)) {
+    if (isDirectImageUri(uri) && !direct.includes(uri)) direct.push(uri);
+  }
+  if (direct.length > 0) return direct;
+
   const resolved = resolveMushroomImageUrlsForDisplay(
     nameForPath,
     imageUrls,
     fallbackMineralName
-  );
-  const httpResolved = resolved.filter(
-    (uri) =>
-      uri.startsWith("http://") ||
-      uri.startsWith("https://") ||
-      uri.startsWith("file://")
-  );
-  if (httpResolved.length > 0) return httpResolved;
-
-  const sanitizedDefault = sanitizeBirdImageUrl(defaultImageUrl);
-  if (sanitizedDefault) return [sanitizedDefault];
+  ).filter(isDirectImageUri);
+  if (resolved.length > 0) return resolved;
 
   const configUrls = getMushroomImageUrls(nameForPath);
   if (configUrls?.length) return configUrls;

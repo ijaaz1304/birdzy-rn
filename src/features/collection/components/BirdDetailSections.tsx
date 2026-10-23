@@ -3,14 +3,14 @@
  */
 
 import { AppImage } from "@/components/AppImage";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import {
   BirdSizeScaleGraphic,
   Images,
 } from "../../../assets";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { InfoRow, Text } from "../../../atoms";
 import { StaticMap } from "../../../molecules/StaticMap/StaticMap";
 import { navigateToSoundIdentify } from "../../../utils/navigation";
@@ -327,11 +327,14 @@ export function BirdSoundsSection({
     ]
   );
 
-  useEffect(() => {
-    return () => {
-      void soundRecordingService.stopPlayback();
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setPlayingId(null);
+        void soundRecordingService.stopPlayback();
+      };
+    }, [])
+  );
 
   const togglePlay = useCallback(
     async (id: string, url: string) => {

@@ -56,7 +56,7 @@ export const RecordingSpectrogramPanel = React.memo(function RecordingSpectrogra
     return (
       <View style={styles.fallbackWrap} accessibilityLabel="Recording audio indicator">
         {/* Static decorative strip — not live frequency analysis. */}
-        <SoundSpectrogramView playheadCenter />
+        <SoundSpectrogramView />
         <Text style={[styles.fallbackLabel, { color: colors.textSecondary }]}>
           Recording audio…
         </Text>

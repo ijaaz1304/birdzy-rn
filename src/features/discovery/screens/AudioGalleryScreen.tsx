@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import type { NavigationProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   CreatePlusIcon,
@@ -29,7 +30,7 @@ import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { FREE_AUDIO_GALLERY_LIMIT } from "../../../constants/appConstants";
 import { ConfirmationModal, SearchBar } from "../../../molecules";
-import { HomeStackParamList } from "../../../navigation/types";
+import { HomeStackParamList, MainTabParamList } from "../../../navigation/types";
 import { useTheme } from "../../../hooks/useTheme";
 import { archetypeService } from "../../../services/archetype/archetype.service";
 import type { BirdGalleryAudioFile } from "../../../services/api/features/bird.api.types";
@@ -119,21 +120,36 @@ export const AudioGalleryScreen: React.FC = () => {
     }
   };
 
-  const openSpecimen = (file: BirdGalleryAudioFile) => {
-    const specimenId = file.specimen?.specimenId;
-    if (!specimenId) return;
-    navigation.navigate("BirdDetails", {
-      mushroomId: specimenId,
-      source: "collection",
-      idType: "specimen",
-      specimenId,
-    });
+  const openPossibleMatches = (file: BirdGalleryAudioFile) => {
+    if (!file.url?.trim()) return;
+    if (playingId === file.fileId) {
+      void soundRecordingService.stopPlayback();
+      setPlayingId(null);
+    }
+    const recordedAt =
+      Date.parse(file.createdAt || file.capturedAt || "") || Date.now();
+    navigation
+      .getParent<NavigationProp<MainTabParamList>>()
+      ?.navigate("Camera", {
+        screen: "DiagnosisLoading",
+        params: {
+          audioUri: file.url,
+          audioDurationSec: 0,
+          recordedAt,
+          identifyMode: "sound",
+        },
+      });
   };
 
   const editUnknown = (file: BirdGalleryAudioFile) => {
     const specimenId = file.specimen?.specimenId;
     if (specimenId) {
-      openSpecimen(file);
+      navigation.navigate("BirdDetails", {
+        mushroomId: specimenId,
+        source: "collection",
+        idType: "specimen",
+        specimenId,
+      });
       return;
     }
     navigateToSoundIdentify(navigation);
@@ -388,11 +404,7 @@ export const AudioGalleryScreen: React.FC = () => {
                 matchLabel={strings.match}
                 matchesLabel={strings.matches}
                 onPlay={() => void togglePlay(item)}
-                onOpen={
-                  activeTab === "identified"
-                    ? () => openSpecimen(item)
-                    : undefined
-                }
+                onOpen={() => openPossibleMatches(item)}
                 onEdit={
                   activeTab === "unknown" ? () => editUnknown(item) : undefined
                 }

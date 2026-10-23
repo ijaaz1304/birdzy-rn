@@ -3,7 +3,7 @@
  */
 
 import { AppImage } from "@/components/AppImage";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ImageSourcePropType, StyleProp, ViewStyle } from "react-native";
 import Animated, {
   cancelAnimation,
@@ -15,7 +15,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Images } from "../../assets";
-import { CachedRemoteImage } from "@/components/AppImage";
 
 const STAR_FRAME_WIDTH = 310;
 const STAR_FRAME_ASPECT = 1348 / 1094;
@@ -61,6 +60,8 @@ function resolveRemoteUri(source: ImageSourcePropType): string | null {
 
 export type GlowingWaveSpecimenCardProps = {
   imageSource: ImageSourcePropType;
+  /** Extra remote photos to try if the first one fails to load. */
+  imageUris?: string[];
   width?: number;
   style?: StyleProp<ViewStyle>;
   animate?: boolean;
@@ -74,6 +75,7 @@ export const GlowingWaveSpecimenCard: React.FC<
   GlowingWaveSpecimenCardProps
 > = ({
   imageSource,
+  imageUris,
   width = STAR_FRAME_WIDTH,
   style,
   animate = true,
@@ -101,7 +103,17 @@ export const GlowingWaveSpecimenCard: React.FC<
     outerCardWidth * (1 - SPECIMEN_INSET.left - SPECIMEN_INSET.right);
   const specimenHeight =
     outerCardHeight * (1 - SPECIMEN_INSET.top - SPECIMEN_INSET.bottom);
-  const remoteSpecimenUri = resolveRemoteUri(imageSource);
+  const remoteCandidates = [
+    resolveRemoteUri(imageSource),
+    ...(imageUris ?? []),
+  ].filter((uri): uri is string => Boolean(uri));
+  const [remoteIndex, setRemoteIndex] = useState(0);
+  useEffect(() => {
+    setRemoteIndex(0);
+  }, [imageSource, imageUris]);
+  const remoteSpecimenUri =
+    remoteCandidates[Math.min(remoteIndex, remoteCandidates.length - 1)] ??
+    null;
 
   const starWave = useSharedValue(0);
 
@@ -193,11 +205,17 @@ export const GlowingWaveSpecimenCard: React.FC<
             ]}
           >
             {remoteSpecimenUri ? (
-              <CachedRemoteImage
-                uri={remoteSpecimenUri}
+              <AppImage
+                key={remoteSpecimenUri}
+                source={{ uri: remoteSpecimenUri }}
                 style={{ width: specimenWidth, height: specimenHeight }}
                 resizeMode="cover"
-                priority="high"
+                preferRNImage
+                onError={() =>
+                  setRemoteIndex((current) =>
+                    Math.min(current + 1, Math.max(remoteCandidates.length - 1, 0))
+                  )
+                }
               />
             ) : (
               <AppImage
@@ -238,5 +256,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: 2,
     zIndex: 3,
+    elevation: 4,
   },
 });

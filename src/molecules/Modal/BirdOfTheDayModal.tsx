@@ -133,37 +133,28 @@ export const BirdOfTheDayModal = ({
   const closeBg = isDark ? colors.surfaceSecondary : "#111111";
   const closeBorder = isDark ? colors.borderSecondary : "#6D6D6D";
 
-  const specimenSource = useMemo(() => {
-    if (typeof mushroomImage === "string" && mushroomImage.trim()) {
-      const trimmed = mushroomImage.trim();
-      if (
-        trimmed.startsWith("http://") ||
-        trimmed.startsWith("https://") ||
-        trimmed.startsWith("file://")
-      ) {
-        return { uri: trimmed };
-      }
-    }
-    if (mushroomImage && typeof mushroomImage === "object") {
-      return mushroomImage;
-    }
-
-    const resolved = resolveBirdHeroImageUrls(
+  const heroUris = useMemo(() => {
+    const explicit =
+      typeof mushroomImage === "string"
+        ? mushroomImage
+        : mushroomImage &&
+            typeof mushroomImage === "object" &&
+            "uri" in mushroomImage &&
+            typeof mushroomImage.uri === "string"
+          ? mushroomImage.uri
+          : undefined;
+    const uris = resolveBirdHeroImageUrls(
       canonicalName,
       mushroomImageUrls,
-      scientificName
+      scientificName,
+      explicit
     );
-    if (resolved[0]) {
-      return { uri: resolved[0] };
-    }
+    return uris;
+  }, [mushroomImage, mushroomImageUrls, canonicalName, scientificName]);
 
-    return Images.mineralSample;
-  }, [
-    mushroomImage,
-    mushroomImageUrls,
-    canonicalName,
-    scientificName,
-  ]);
+  const specimenSource = heroUris[0]
+    ? { uri: heroUris[0] }
+    : Images.mineralSample;
 
   const lightHeaderHeight = Math.round(
     layout.headerWidth / MUSHROOM_OF_DAY_HEADER_LIGHT_ASPECT
@@ -247,6 +238,7 @@ export const BirdOfTheDayModal = ({
             <GlowingWaveSpecimenCard
               key={mushroomId ?? mushroomName}
               imageSource={specimenSource}
+              imageUris={heroUris}
               animate={visible}
               width={layout.heroWidth}
             />
