@@ -1,3 +1,4 @@
+import { canSubmitFeedback } from '../../utils/feedbackValidation';
 /**
  * AppSheet – single dynamic component for all bottom sheets and popups.
  * One shared chrome (backdrop, sheet panel, background, handle, close); content by type.
@@ -3505,11 +3506,10 @@ function FeedbackContent({
   const [feedback, setFeedback] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const s = MODAL_STRINGS.feedbackModal;
-  const canSubmit =
-    name.trim().length > 0 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) &&
-    feedback.trim().length >= 10 &&
-    !submitting;
+  const canSubmit = canSubmitFeedback(
+    { name, email, message: feedback },
+    submitting
+  );
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
