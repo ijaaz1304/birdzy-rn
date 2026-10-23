@@ -1,3 +1,5 @@
+import { isGuestSettingsSession } from "../../../utils/settingsAccountAccess";
+import { LoginSecurityScreen } from "./LoginSecurityScreen";
 /**
  * Shared layout for Change password (Figma 7884:4492) and
  * Create password (Figma 7894:21034): email row + password row with a
@@ -27,6 +29,7 @@ export interface PasswordOverviewScreenProps {
 export const PasswordOverviewScreen: React.FC<PasswordOverviewScreenProps> = ({
   mode,
 }) => {
+  const guest = useAuthStore(isGuestSettingsSession);
   const c = useSettingsColors();
   const navigation = useNavigation();
   const { showToast } = useToast();
@@ -36,6 +39,7 @@ export const PasswordOverviewScreen: React.FC<PasswordOverviewScreenProps> = ({
   const isChange = mode === "change";
 
   const handleSubmit = async ({ newPassword }: { newPassword: string }) => {
+    if (guest) return;
     if (isChange) {
       await changePassword(newPassword);
     } else {
@@ -47,6 +51,8 @@ export const PasswordOverviewScreen: React.FC<PasswordOverviewScreenProps> = ({
   };
 
   const showGoogleIcon = !isChange && provider?.toLowerCase() === "google";
+
+  if (guest) return <LoginSecurityScreen />;
 
   return (
     <SafeAreaView

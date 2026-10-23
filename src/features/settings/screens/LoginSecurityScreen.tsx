@@ -1,3 +1,4 @@
+import { isGuestSettingsSession } from "../../../utils/settingsAccountAccess";
 /**
  * Login & Security Screen (Figma 7894:18302)
  * Email/password accounts can change their password; social accounts can create one.
@@ -23,9 +24,16 @@ type Nav = NativeStackNavigationProp<SettingsStackParamList, "LoginSecurity">;
 export const LoginSecurityScreen: React.FC = () => {
   const c = useSettingsColors();
   const navigation = useNavigation<Nav>();
+  const guest = useAuthStore(isGuestSettingsSession);
+  const guestId = useAuthStore((s) => s.guestId);
   const isSocial = useAuthStore((s) => !!s.user?.isSocial);
 
-  const rows = isSocial
+  const rows = guest
+    ? [
+        { title: "Log in", route: "Login" as const },
+        { title: "Sign up", route: "SignUp" as const },
+      ]
+    : isSocial
     ? [{ title: S.createPassword, route: "CreatePassword" as const }]
     : [{ title: S.changePassword, route: "ChangePassword" as const }];
 
@@ -40,7 +48,14 @@ export const LoginSecurityScreen: React.FC = () => {
           <TouchableOpacity
             key={row.route}
             style={styles.row}
-            onPress={() => navigation.navigate(row.route)}
+            onPress={() => {
+              if (row.route === "Login" || row.route === "SignUp") {
+                navigation.getParent()?.navigate("AuthStack", {
+                  screen: row.route,
+                  params: guestId ? { guestId, fromGuest: true } : undefined,
+                });
+              } else navigation.navigate(row.route);
+            }}
             activeOpacity={0.7}
             accessibilityRole="button"
           >

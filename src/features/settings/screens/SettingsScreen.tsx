@@ -1,3 +1,4 @@
+import { isGuestSettingsSession } from '../../../utils/settingsAccountAccess';
 /**
  * Settings Main Screen
  */
@@ -53,7 +54,7 @@ export const SettingsScreen: React.FC = () => {
   const { canChangeAppearance } = useThemeExperiment();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { user, isAuthenticated, token, guestId } = useAuthStore();
-  const isGuest = !!user?.isGuest;
+  const isGuest = useAuthStore(isGuestSettingsSession);
   const showLoginButton =
     !isAuthenticated || isGuest || (isAuthenticated && !!guestId);
   const isSignedIn = !showLoginButton;
@@ -232,6 +233,7 @@ export const SettingsScreen: React.FC = () => {
               onPress={handleLogin}
             />
           )}
+          {/* Login & Security is hidden for all users.
           {isSignedIn && (
             <SettingsItem
               icon="mail"
@@ -239,7 +241,7 @@ export const SettingsScreen: React.FC = () => {
               onPress={() => navigation.navigate("LoginSecurity")}
               showArrow
             />
-          )}
+          )} */}
           {/* Manage Subscription is hidden for all users. */}
         </SettingsSection>
 
