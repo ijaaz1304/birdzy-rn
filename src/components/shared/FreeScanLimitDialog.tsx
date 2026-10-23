@@ -127,11 +127,11 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Not Now"
+              accessibilityLabel="OK"
               style={[styles.button, styles.secondary]}
               onPress={close}
             >
-              <Text style={styles.buttonText}>Not Now</Text>
+              <Text style={styles.buttonText}>OK</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -145,11 +145,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     alignItems: "center",
     justifyContent: "center",
-    padding: 20,
+    padding: 16,
   },
   card: {
     width: "100%",
-    maxWidth: 335,
+    maxWidth: 360,
     borderRadius: 16,
     overflow: "hidden",
     backgroundColor: "#FFFFFF",

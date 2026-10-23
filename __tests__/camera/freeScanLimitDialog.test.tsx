@@ -62,7 +62,7 @@ it("waits for transitions before showing a blocked Submit request", async () => 
   await act(async () => settle());
   expect(visible()).toBe(true);
 });
-it("shows the Figma copy and can reopen after Not Now", async () => {
+it("shows the Figma copy and can reopen after OK", async () => {
   requestFreeScanLimitPrompt();
   await mount();
   await act(async () => settle());
@@ -75,7 +75,7 @@ it("shows the Figma copy and can reopen after Not Now", async () => {
           "You’ve used all 30 free scans. For unlimited scans, Go Premium"
       )
   ).toBe(true);
-  await press("Not Now");
+  await press("OK");
   expect(visible()).toBe(false);
   await act(async () => requestFreeScanLimitPrompt());
   await act(async () => settle());
