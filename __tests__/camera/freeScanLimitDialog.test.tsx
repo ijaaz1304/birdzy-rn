@@ -135,3 +135,19 @@ it("ignores a late allowance check that finishes after leaving the camera", asyn
   await mount();
   expect(visible()).toBe(false);
 });
+
+it("shows the introduction even if camera interactions never settle and acknowledges native display only once", async () => {
+  const acknowledge = jest.fn();
+  requestFreeScanLimitPrompt(true, acknowledge);
+  await mount();
+  expect(visible()).toBe(false);
+  expect(acknowledge).not.toHaveBeenCalled();
+  await act(async () => {
+    jest.advanceTimersByTime(600);
+  });
+  expect(visible()).toBe(true);
+  expect(acknowledge).not.toHaveBeenCalled();
+  await act(async () => renderer.root.findByType(Modal).props.onShow());
+  await act(async () => renderer.root.findByType(Modal).props.onShow());
+  expect(acknowledge).toHaveBeenCalledTimes(1);
+});

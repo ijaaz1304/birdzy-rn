@@ -3,7 +3,7 @@ import { AppState } from "react-native";
 import { activateFreeScanPromptSurface } from "../services/freeScanLimitPrompt";
 
 /** Keep the shared modal scoped to a visible identification input screen. */
-export function useFreeScanPromptSurface(active: boolean): void {
+export function useFreeScanPromptSurface(active: boolean): boolean {
   const [foreground, setForeground] = useState(
     AppState.currentState === "active"
   );
@@ -11,10 +11,12 @@ export function useFreeScanPromptSurface(active: boolean): void {
     const subscription = AppState.addEventListener("change", (state) => {
       setForeground(state === "active");
     });
+    setForeground(AppState.currentState === "active");
     return () => subscription.remove();
   }, []);
   useLayoutEffect(() => {
     if (active && foreground) return activateFreeScanPromptSurface();
     return undefined;
   }, [active, foreground]);
+  return active && foreground;
 }

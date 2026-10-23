@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import FreeScanClose from "../../assets/freeScanClose.svg";
 import {
+  acknowledgeFreeScanLimitPrompt,
   dismissFreeScanLimitPrompt,
   getFreeScanPromptSurfaceActive,
   getFreeScanLimitIntroduction,
@@ -43,10 +44,18 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
       setPresented(false);
       return;
     }
-    const task = InteractionManager.runAfterInteractions(() =>
-      setPresented(true)
-    );
-    return () => task.cancel();
+    let cancelled = false;
+    const present = () => {
+      if (!cancelled) setPresented(true);
+    };
+    const task = InteractionManager.runAfterInteractions(present);
+    // Camera animations must not postpone the introduction indefinitely.
+    const fallback = setTimeout(present, 600);
+    return () => {
+      cancelled = true;
+      clearTimeout(fallback);
+      task.cancel();
+    };
   }, [requested, canPresent, isPremium]);
   useEffect(
     () => () => {
@@ -72,6 +81,7 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
   return (
     <Modal
       visible={presented && requested && canPresent && !isPremium}
+      onShow={acknowledgeFreeScanLimitPrompt}
       transparent
       animationType="fade"
       onRequestClose={close}

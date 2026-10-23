@@ -146,7 +146,7 @@ export const CameraScreen: React.FC = () => {
   const navigation = useNavigation<CameraScreenNavigationProp>();
   const route = useRoute<RouteProp<CameraStackParamList, "CameraMain">>();
   const isFocused = useIsFocused();
-  useFreeScanPromptSurface(isFocused);
+  const freeScanSurfaceActive = useFreeScanPromptSurface(isFocused);
   const isCropRouteActive = useNavigationState(
     (state) => state.routes[state.index]?.name === "IdentifyImageCrop"
   );
@@ -208,13 +208,13 @@ export const CameraScreen: React.FC = () => {
   const isPremium = useSubscriptionStore(selectIsPremium);
   useEffect(() => {
     let mounted = true;
-    if (isFocused && isAppActive && !isExternalCameraReturn) {
+    if (freeScanSurfaceActive && isAppActive && !isExternalCameraReturn) {
       void requestFreeScanCameraEntry(() => mounted);
     }
     return () => {
       mounted = false;
     };
-  }, [isFocused, isAppActive, isExternalCameraReturn, isPremium]);
+  }, [freeScanSurfaceActive, isAppActive, isExternalCameraReturn, isPremium]);
 
   const { limit: photoLimit, refresh: refreshPhotoLimit } =
     usePhotoIdentificationLimit(!isPremium);

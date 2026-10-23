@@ -20,7 +20,7 @@ export function requestFreeScanCameraEntry(
     // Exhaustion is shown on the next Submit, never merely on camera entry.
     if (!(await canIdentify())) return;
     const scope = scanQuota.currentScope();
-    const key = `freeScanIntroduction_v1:${scope}`;
+    const key = `freeScanIntroductionShown_v2:${scope}`;
     if ((await AsyncStorage.getItem(key)) === "true") return;
     if (
       !isActive() ||
@@ -28,8 +28,10 @@ export function requestFreeScanCameraEntry(
       scanQuota.currentScope() !== scope
     )
       return;
-    requestFreeScanLimitPrompt(true);
-    await AsyncStorage.setItem(key, "true");
+    requestFreeScanLimitPrompt(true, async () => {
+      if (scanQuota.currentScope() === scope)
+        await AsyncStorage.setItem(key, "true");
+    });
   })()
     .catch(() => {
       // Retry on the next camera visit if storage is unavailable.

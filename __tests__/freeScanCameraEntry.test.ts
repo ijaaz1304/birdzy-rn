@@ -1,3 +1,4 @@
+import { acknowledgeFreeScanLimitPrompt } from "../src/services/freeScanLimitPrompt";
 import { activateFreeScanPromptSurface } from "../src/services/freeScanLimitPrompt";
 let releasePromptSurface: () => void;
 afterEach(() => releasePromptSurface?.());
@@ -44,6 +45,9 @@ it("introduces the free allowance once per account on camera entry", async () =>
   await requestFreeScanCameraEntry();
   expect(getFreeScanLimitPrompt()).toBe(true);
   expect(getFreeScanLimitIntroduction()).toBe(true);
+  acknowledgeFreeScanLimitPrompt();
+  await Promise.resolve();
+  await Promise.resolve();
   dismissFreeScanLimitPrompt();
   await requestFreeScanCameraEntry();
   expect(getFreeScanLimitPrompt()).toBe(false);
@@ -69,6 +73,10 @@ it("coalesces simultaneous entry checks", async () => {
     requestFreeScanCameraEntry(),
     requestFreeScanCameraEntry(),
   ]);
+  expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+  acknowledgeFreeScanLimitPrompt();
+  await Promise.resolve();
+  await Promise.resolve();
   expect(AsyncStorage.setItem).toHaveBeenCalledTimes(1);
 });
 
@@ -95,8 +103,11 @@ it("does not show a stale introduction after an account switch", async () => {
   expect(AsyncStorage.setItem).not.toHaveBeenCalled();
   await requestFreeScanCameraEntry();
   expect(getFreeScanLimitPrompt()).toBe(true);
+  acknowledgeFreeScanLimitPrompt();
+  await Promise.resolve();
+  await Promise.resolve();
   expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-    "freeScanIntroduction_v1:account:two",
+    "freeScanIntroductionShown_v2:account:two",
     "true"
   );
 });
@@ -116,5 +127,35 @@ it("retries the introduction on the next visit after a storage read fails", asyn
   await requestFreeScanCameraEntry();
   expect(getFreeScanLimitPrompt()).toBe(false);
   await requestFreeScanCameraEntry();
+  expect(getFreeScanLimitPrompt()).toBe(true);
+});
+
+it("retries an introduction that was requested but never actually displayed", async () => {
+  await requestFreeScanCameraEntry();
+  expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+  releasePromptSurface();
+  releasePromptSurface = activateFreeScanPromptSurface();
+  await requestFreeScanCameraEntry();
+  expect(getFreeScanLimitPrompt()).toBe(true);
+  acknowledgeFreeScanLimitPrompt();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(AsyncStorage.setItem).toHaveBeenCalledTimes(1);
+});
+it("does not consume the introduction while the foreground camera guard is inactive", async () => {
+  releasePromptSurface();
+  await requestFreeScanCameraEntry();
+  expect(getFreeScanLimitPrompt()).toBe(false);
+  expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+  releasePromptSurface = activateFreeScanPromptSurface();
+  await requestFreeScanCameraEntry();
+  expect(getFreeScanLimitPrompt()).toBe(true);
+});
+it("recovers a legacy requested-only flag that did not guarantee actual presentation", async () => {
+  (AsyncStorage.getItem as jest.Mock).mockImplementation(async (key) =>
+    key.startsWith("freeScanIntroduction_v1:") ? "true" : null
+  );
+  await requestFreeScanCameraEntry();
+  expect(getFreeScanLimitIntroduction()).toBe(true);
   expect(getFreeScanLimitPrompt()).toBe(true);
 });

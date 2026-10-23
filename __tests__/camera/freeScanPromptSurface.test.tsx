@@ -50,7 +50,7 @@ beforeEach(() => {
   jest
     .spyOn(InteractionManager, "runAfterInteractions")
     .mockImplementation((callback) => {
-      if (typeof callback === 'function') callback();
+      if (typeof callback === "function") callback();
       return { cancel: jest.fn() } as never;
     });
 });
@@ -92,4 +92,30 @@ it("clears the popup when the camera unmounts while the global host stays mounte
   expect(visible()).toBe(true);
   await render(false, false);
   expect(visible()).toBe(false);
+});
+
+it("retries the introduction when a first camera mount becomes foreground-ready", async () => {
+  function FirstVisitCamera() {
+    const ready = useFreeScanPromptSurface(true);
+    React.useEffect(() => {
+      if (ready) requestFreeScanLimitPrompt(true);
+    }, [ready]);
+    return (
+      <FreeScanLimitDialog active isPremium={false} onUpgrade={jest.fn()} />
+    );
+  }
+  Object.defineProperty(AppState, "currentState", {
+    configurable: true,
+    value: "inactive",
+  });
+  await act(async () => {
+    renderer = create(<FirstVisitCamera />);
+  });
+  expect(visible()).toBe(false);
+  Object.defineProperty(AppState, "currentState", {
+    configurable: true,
+    value: "active",
+  });
+  await act(async () => onAppState("active"));
+  expect(visible()).toBe(true);
 });
