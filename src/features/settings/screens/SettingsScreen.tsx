@@ -1,4 +1,5 @@
-import { isGuestSettingsSession } from '../../../utils/settingsAccountAccess';
+import { useDeferredModalOpen } from "../../../hooks/useDeferredModalOpen";
+import { isGuestSettingsSession } from "../../../utils/settingsAccountAccess";
 /**
  * Settings Main Screen
  */
@@ -58,7 +59,7 @@ export const SettingsScreen: React.FC = () => {
   const showLoginButton =
     !isAuthenticated || isGuest || (isAuthenticated && !!guestId);
   const isSignedIn = !showLoginButton;
-  const showLogout = shouldShowLogoutAction(user, guestId);
+  const showLogout = isSignedIn && shouldShowLogoutAction(user, guestId);
   const settingsColors = useSettingsColors();
   const appLogsEnabled = useAppLogsStore((s) => s.isEnabled);
   const setAppLogsEnabled = useAppLogsStore((s) => s.setEnabled);
@@ -75,6 +76,9 @@ export const SettingsScreen: React.FC = () => {
     useState(false);
   const [showRateUsModal, setShowRateUsModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const openFeedbackAfterRating = useDeferredModalOpen(() =>
+    setShowFeedbackModal(true)
+  );
   const [feedbackSource, setFeedbackSource] = useState<"rate_us" | "menu">(
     "menu"
   );
@@ -154,7 +158,7 @@ export const SettingsScreen: React.FC = () => {
     setShowRateUsModal(false);
     setLowRatingFromRateUs(rating);
     setFeedbackSource("rate_us");
-    setShowFeedbackModal(true);
+    openFeedbackAfterRating();
   };
 
   const handleRateUsHighRating = async (rating: number) => {
@@ -186,6 +190,7 @@ export const SettingsScreen: React.FC = () => {
         rating: data.rating ?? lowRatingFromRateUs,
         source: feedbackSource === "menu" ? "feedback" : "rate_us",
       });
+      if (feedbackSource === "rate_us") setHasRated(true);
       showToast("Thank you for your feedback!", "success");
       setShowFeedbackModal(false);
       setLowRatingFromRateUs(undefined);
@@ -250,12 +255,6 @@ export const SettingsScreen: React.FC = () => {
             icon="faq"
             title={M.faqs}
             onPress={() => navigation.navigate("FAQ")}
-            showArrow
-          />
-          <SettingsItem
-            icon="mail"
-            title={M.contactUs}
-            onPress={() => navigation.navigate("ContactUs")}
             showArrow
           />
           <SettingsItem

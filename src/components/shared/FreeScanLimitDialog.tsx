@@ -127,11 +127,11 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="OK"
+              accessibilityLabel="Okay"
               style={[styles.button, styles.secondary]}
               onPress={close}
             >
-              <Text style={styles.buttonText}>OK</Text>
+              <Text style={styles.buttonText}>Okay</Text>
             </Pressable>
           </View>
         </Pressable>

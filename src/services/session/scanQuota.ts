@@ -29,6 +29,7 @@ export const scanQuota = createScanAllowance({
           ? "device"
           : null,
       isGuest:
+        !!state.guestId ||
         !!user?.isGuest ||
         !!(state as { isGuest?: boolean }).isGuest ||
         !state.isAuthenticated,

@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     right: 60,
     textAlign: "center",
     fontFamily: FONTS.bold,
+    fontWeight: "700",
     fontSize: 18,
     lineHeight: 24,
   },

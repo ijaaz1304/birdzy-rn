@@ -85,7 +85,7 @@ export const FAQScreen: React.FC = () => {
                 <Text
                   variant="body"
                   size="medium"
-                  weight="semibold"
+                  weight="bold"
                   style={[
                     styles.question,
                     styles.text16Bold,

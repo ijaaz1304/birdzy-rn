@@ -14,6 +14,7 @@ export function requestFreeScanCameraEntry(
   if (checking)
     return checking.then(() => {
       if (isActive()) return requestFreeScanCameraEntry(isActive);
+      return undefined;
     });
   checking = (async () => {
     if (!isActive() || selectIsPremium(useSubscriptionStore.getState())) return;

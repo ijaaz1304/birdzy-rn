@@ -108,3 +108,16 @@ it("rechecks Premium when scan completion reads persisted usage", async () => {
   await completeFreeScanAttempt(start.attempt, "success");
   expect((await scanQuota.get()).used).toBe(0);
 });
+
+it("shares one guest allowance when only guestId identifies the session", async () => {
+  mockAuth = {
+    user: { id: "guest-a" },
+    guestId: "guest-a",
+    isAuthenticated: true,
+    isGuest: false,
+  };
+  expect((await success("guest-id-only")).remaining).toBe(29);
+  mockAuth.user = { id: "guest-b" };
+  mockAuth.guestId = "guest-b";
+  expect((await scanQuota.get()).remaining).toBe(29);
+});

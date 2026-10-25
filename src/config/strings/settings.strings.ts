@@ -64,7 +64,7 @@ export const SETTINGS_STRINGS = {
     loginPrompt:
       "Sign in to sync your data across devices and access premium features.",
     loginButton: "Sign In",
-    logOutConfirmTitle: "Log out?",
+    logOutConfirmTitle: "Are you sure you want to logout?",
     logOutConfirmMessage: "Are you sure you want to log out?",
     logOutConfirmYes: "Yes",
     logOutConfirmNoThanks: "No, Thanks",
@@ -80,11 +80,10 @@ export const SETTINGS_STRINGS = {
   preferencesLanguage: "Language",
   preferencesLanguageValue: "English (UK)",
   deleteAccount: {
-    title: "Delete Account?",
-    description:
-      "All your data will be lost and you will not be able to recover it. Are you sure you want to proceed?",
-    yes: "Yes",
-    no: "No",
+    title: "Do you want to delete this account?",
+    description: "",
+    yes: "Yes, Delete",
+    no: "No, Thanks",
   },
   preferences: {
     notifications: "Notifications",

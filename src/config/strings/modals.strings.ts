@@ -293,7 +293,7 @@ export const MODAL_STRINGS = {
     feedbackPlaceholderLong: "Feedback",
     feedbackMinError: "Feedback must be at least 10 characters",
     emailInvalidError: "Please enter a valid email address",
-    submit: "Continue",
+    submit: "Submit",
   },
 
   // Identification Feedback

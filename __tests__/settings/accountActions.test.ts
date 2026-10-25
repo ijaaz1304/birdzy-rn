@@ -13,3 +13,8 @@ describe("shouldShowLogoutAction", () => {
     expect(shouldShowLogoutAction({ isGuest: false }, null)).toBe(true);
   });
 });
+
+it("hides logout when there is no signed-in user", () => {
+  expect(shouldShowLogoutAction(null, null)).toBe(false);
+  expect(shouldShowLogoutAction(undefined, null)).toBe(false);
+});

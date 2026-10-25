@@ -1,4 +1,7 @@
-import { canSubmitFeedback } from '../../utils/feedbackValidation';
+import {
+  canSubmitFeedback,
+  isValidFeedbackEmail,
+} from "../../utils/feedbackValidation";
 /**
  * AppSheet – single dynamic component for all bottom sheets and popups.
  * One shared chrome (backdrop, sheet panel, background, handle, close); content by type.
@@ -2791,6 +2794,7 @@ function RateUsContent({
               activeOpacity={0.7}
               style={sheetStyles.rateStarHit}
               accessibilityRole="button"
+              accessibilityLabel={`Rate ${i} stars`}
               accessibilityState={{ selected: filled }}
             >
               <AppImage
@@ -2801,6 +2805,7 @@ function RateUsContent({
                 ]}
                 resizeMode="contain"
                 preferRNImage
+                pointerEvents="none"
               />
               <AppImage
                 source={Images.starRateFilled}
@@ -2810,6 +2815,7 @@ function RateUsContent({
                 ]}
                 resizeMode="contain"
                 preferRNImage
+                pointerEvents="none"
               />
             </TouchableOpacity>
           );
@@ -3547,6 +3553,8 @@ function FeedbackContent({
         </Text>
         <TextInput
           editable={!submitting}
+          accessibilityLabel="Your name"
+          autoCapitalize="words"
           placeholder={s.namePlaceholder}
           placeholderTextColor={theme.colors.textTertiary}
           value={name}
@@ -3563,6 +3571,7 @@ function FeedbackContent({
         />
         <TextInput
           editable={!submitting}
+          accessibilityLabel="Email"
           placeholder={s.emailPlaceholder}
           placeholderTextColor={theme.colors.textTertiary}
           value={email}
@@ -3581,6 +3590,7 @@ function FeedbackContent({
         />
         <TextInput
           editable={!submitting}
+          accessibilityLabel="Your message"
           placeholder={s.feedbackPlaceholder}
           placeholderTextColor={theme.colors.textTertiary}
           value={feedback}
@@ -3602,6 +3612,11 @@ function FeedbackContent({
         <Text color="textSecondary" style={sheetStyles.feedbackCharCount}>
           {feedback.length}/{FEEDBACK_MESSAGE_MAX_LENGTH}
         </Text>
+        {email.trim().length > 0 && !isValidFeedbackEmail(email) && (
+          <Text color="error" accessibilityLiveRegion="polite">
+            {s.emailInvalidError}
+          </Text>
+        )}
         <Button
           title={s.submit}
           variant="primary"

@@ -13,7 +13,7 @@ export interface FeedbackModalProps {
     email: string;
     feedback: string;
     rating?: number;
-  }) => void;
+  }) => void | Promise<void>;
   rating?: number;
 }
 

@@ -5,6 +5,9 @@ export type FeedbackFields = {
   rating?: number;
 };
 
+export const isValidFeedbackEmail = (email: string): boolean =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
 /** Settings feedback needs three filled fields; selecting a rating is optional. */
 export function canSubmitFeedback(
   fields: FeedbackFields,
@@ -13,7 +16,7 @@ export function canSubmitFeedback(
   return (
     !submitting &&
     fields.name.trim().length > 0 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email.trim()) &&
+    isValidFeedbackEmail(fields.email) &&
     fields.message.trim().length > 0
   );
 }

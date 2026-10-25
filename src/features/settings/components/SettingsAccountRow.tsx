@@ -66,7 +66,11 @@ export const SettingsAccountRow: React.FC<SettingsAccountRowProps> = ({
         <Text
           numberOfLines={1}
           ellipsizeMode="tail"
-          style={[styles.bodySubtitle, { color: c.text }]}
+          style={[
+            styles.bodySubtitle,
+            { color: c.text },
+            isGuest && styles.guestSubtitle,
+          ]}
         >
           {subtitle}
         </Text>
@@ -111,6 +115,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.bold,
     lineHeight: 20,
+  },
+  guestSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: FONTS.regular,
+    fontWeight: "400",
+    color: "#B0B0B0",
+    overflow: "hidden",
   },
   bodySubtitle: {
     fontSize: 14,

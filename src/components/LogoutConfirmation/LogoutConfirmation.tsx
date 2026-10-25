@@ -1,25 +1,24 @@
-/**
- * Logout Confirmation – delegates to AppModal (single dynamic popup/modal component).
- */
-
 import React from "react";
-import { AppModal } from "../AppModal/AppModal";
-
+import { useAuthStore } from "../../features/auth/auth.store";
+import { SettingsAccountDialog } from "../../features/settings/components/SettingsAccountDialog";
 export interface LogoutConfirmationProps {
   visible: boolean;
   onClose: () => void;
 }
-
-export const LogoutConfirmation: React.FC<LogoutConfirmationProps> = ({
+export function LogoutConfirmation({
   visible,
   onClose,
-}) => (
-  <AppModal
-    visible={visible}
-    onClose={onClose}
-    type="logoutConfirm"
-    payload={{}}
-  />
-);
-
+}: LogoutConfirmationProps) {
+  const { logout } = useAuthStore();
+  return (
+    <SettingsAccountDialog
+      visible={visible}
+      kind="logout"
+      onClose={onClose}
+      onConfirm={async () => {
+        await logout();
+      }}
+    />
+  );
+}
 export default LogoutConfirmation;

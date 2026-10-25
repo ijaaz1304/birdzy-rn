@@ -7,5 +7,5 @@ export function shouldShowLogoutAction(
   guestId?: string | null
 ): boolean {
   const isGuest = !!user?.isGuest || !!guestId;
-  return !isGuest;
+  return !!user && !isGuest;
 }

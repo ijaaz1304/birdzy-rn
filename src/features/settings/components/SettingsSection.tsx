@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     fontSize: 16,
     fontFamily: FONTS.bold,
+    fontWeight: "700",
     lineHeight: 24,
   },
   cardShadow: {
