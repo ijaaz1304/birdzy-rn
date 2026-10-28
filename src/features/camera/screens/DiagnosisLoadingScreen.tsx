@@ -236,15 +236,32 @@ export const DiagnosisLoadingScreen: React.FC = () => {
       const stopIdentificationTrace = async (
         outcome: "success" | "failure" | "limit" | "invalid_input"
       ) => {
-        await performanceService.addAttribute(
-          BIRD_IDENTIFICATION_TRACE,
-          "outcome",
-          outcome
-        );
-        await performanceService.stopTrace(BIRD_IDENTIFICATION_TRACE);
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+        try {
+          await Promise.race([
+            (async () => {
+              await performanceService.addAttribute(
+                BIRD_IDENTIFICATION_TRACE,
+                "outcome",
+                outcome
+              );
+              await performanceService.stopTrace(BIRD_IDENTIFICATION_TRACE);
+            })(),
+            new Promise<void>((resolve) => {
+              timeoutId = setTimeout(resolve, 1500);
+            }),
+          ]);
+        } catch (error) {
+          if (__DEV__) {
+            console.warn("Failed to stop identification trace:", error);
+          }
+        } finally {
+          if (timeoutId) clearTimeout(timeoutId);
+        }
       };
 
       if (isStepByStepMode) {
+        let navigated = false;
         try {
           const possibleMatches = await fetchStepByStepMatches();
           if (cancelled || !isMountedRef.current) return;
@@ -255,10 +272,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
             analyticsService.logEvent(EVENTS.identify_result, {
               result: "fail",
             });
-            await stopIdentificationTrace("failure");
-            if (!cancelled && isMountedRef.current) {
-              showStepByStepFailure();
-            }
+            void stopIdentificationTrace("failure");
             return;
           }
 
@@ -286,10 +300,14 @@ export const DiagnosisLoadingScreen: React.FC = () => {
           if (cancelled || !isMountedRef.current) return;
           void stopIdentificationTrace("success");
           navigateToPossibleMatches(possibleMatches, true);
+          navigated = true;
         } catch (error) {
           console.error("Step-by-step diagnosis error:", error);
-          await stopIdentificationTrace("failure");
-          if (!cancelled && isMountedRef.current) showStepByStepFailure();
+          void stopIdentificationTrace("failure");
+        } finally {
+          if (!navigated && !cancelled && isMountedRef.current) {
+            showStepByStepFailure();
+          }
         }
         return;
       }

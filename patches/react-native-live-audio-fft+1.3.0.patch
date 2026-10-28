@@ -384,7 +384,7 @@ index 490a226..5596e16 100644
              bufferSize = Math.max(bufferSize, options.getInt("bufferSize"));
          }
  
-+        recordingPcmBytes.reset();
++        // Preserve captured PCM when init recreates the thread on resume.
          recordThread = new RecordThread(audioSource, sampleRateInHz, channelConfig, audioFormat, bufferSize, reactContext);
      }
  

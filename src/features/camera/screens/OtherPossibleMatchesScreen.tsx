@@ -599,15 +599,6 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
 
   const renderMatchItem = ({ item, index }: { item: any; index: number }) => {
     const displayName = getMatchDisplayName(item);
-    const accuracyPct =
-      item.accuracy ??
-      (item.similarityScore != null
-        ? Math.round(
-            item.similarityScore <= 1
-              ? item.similarityScore * 100
-              : item.similarityScore
-          )
-        : 0);
     const imageUri = getMatchImageUri(item);
     const itemKey = item.id ?? item._id ?? `match-${index}`;
     const archetypeId = getMatchArchetypeId(item);
@@ -643,23 +634,6 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
             >
               {displayName}
             </Text>
-            <View style={styles.accuracyBlock}>
-              <Text
-                variant="body"
-                size="small"
-                weight="medium"
-                style={{ color: colors.textPrimary }}
-              >
-                {accuracyPct}%
-              </Text>
-              <Text
-                variant="body"
-                size="small"
-                style={{ color: colors.textSecondary }}
-              >
-                Accuracy Score
-              </Text>
-            </View>
           </View>
 
           <View
@@ -861,6 +835,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
                   stamp={soundStamp}
                   place={soundPlace}
                   birdCount={matches.length}
+                  audioUri={audioUri}
                   isPlaying={playingId === "user-recording"}
                   onTogglePlay={() => {
                     void toggleSound("user-recording", [audioUri]);
@@ -1140,17 +1115,13 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     zIndex: 1,
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingVertical: 4,
   },
   matchName: {
     fontFamily: FONTS.bold,
     fontSize: 16,
     lineHeight: 24,
-  },
-  accuracyBlock: {
-    alignItems: "flex-start",
-    gap: 0,
   },
   thumbnailWrap: {
     width: CARD_IMAGE_WIDTH,

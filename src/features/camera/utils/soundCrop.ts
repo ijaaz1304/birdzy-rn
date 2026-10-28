@@ -45,6 +45,10 @@ export function formatSoundClipLabel(seconds: number): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}s`;
 }
 
+export function formatSoundMmSs(seconds: number): string {
+  return formatSoundClipLabel(seconds).replace(/s$/, "");
+}
+
 export function formatSoundStamp(date: Date): string {
   const month = date.toLocaleString("en-US", { month: "short" });
   const day = date.getDate();

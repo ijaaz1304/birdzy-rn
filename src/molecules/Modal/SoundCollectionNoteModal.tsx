@@ -4,7 +4,7 @@ import { Text } from "../../atoms";
 import { CloseIcon } from "../../components/shared/CloseIcon";
 import { FONTS } from "../../common/typography";
 import { COLLECTION_STRINGS } from "../../config/strings/collection.strings";
-import { Radius } from "../../design";
+import { POPUP_BORDER_RADIUS } from "../../design-system/modalTokens";
 import { useTheme } from "../../hooks/useTheme";
 
 type Props = {
@@ -26,10 +26,24 @@ export function SoundCollectionNoteModal({ visible, onClose }: Props) {
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
-        <View style={[styles.card, { backgroundColor: colors.surfacePrimary }]}>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.surfacePrimary,
+              borderColor: colors.border0,
+            },
+          ]}
+        >
           <TouchableOpacity
             onPress={onClose}
-            style={[styles.close, { backgroundColor: colors.surfaceSecondary }]}
+            style={[
+              styles.close,
+              {
+                backgroundColor: colors.surfaceSecondary,
+                borderColor: colors.border0,
+              },
+            ]}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Close"
@@ -47,7 +61,9 @@ export function SoundCollectionNoteModal({ visible, onClose }: Props) {
             activeOpacity={0.85}
             style={[styles.okay, { backgroundColor: colors.primaryCTA }]}
           >
-            <Text style={styles.okayLabel}>{copy.okay}</Text>
+            <Text style={[styles.okayLabel, { color: colors.onPrimary }]}>
+              {copy.okay}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -66,11 +82,11 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 335,
-    borderRadius: Radius.lg,
+    borderRadius: POPUP_BORDER_RADIUS,
+    borderWidth: 1,
     paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 20,
-    gap: 8,
     alignItems: "center",
   },
   close: {
@@ -80,6 +96,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -88,7 +105,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 28,
     textAlign: "center",
-    marginTop: 8,
   },
   body: {
     fontFamily: FONTS.regular,
@@ -96,7 +112,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: "center",
     letterSpacing: -0.16,
-    marginBottom: 8,
+    marginTop: 8,
   },
   okay: {
     alignSelf: "stretch",
@@ -104,12 +120,11 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: 32,
   },
   okayLabel: {
     fontFamily: FONTS.medium,
     fontSize: 16,
     lineHeight: 24,
-    color: "#FFFFFF",
   },
 });

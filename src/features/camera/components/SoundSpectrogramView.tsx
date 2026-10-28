@@ -22,6 +22,49 @@ type Props = {
 
 const PLAYHEAD_COLOR = "#EF4444";
 const TILE_COUNT = 3;
+/** The placeholder spectrogram has a red marker baked into its center. */
+const EMBEDDED_PLAYHEAD_PX = 3;
+
+function SpectrogramWithoutCenterLine({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}) {
+  const half = width / 2;
+  const inset = EMBEDDED_PLAYHEAD_PX / 2;
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <View
+        style={[styles.halfClip, { left: 0, width: Math.max(0, half - inset) }]}
+      >
+        <AppImage
+          source={Images.soundSpectrogram}
+          style={{ position: "absolute", left: 0, width, height }}
+          resizeMode="stretch"
+        />
+      </View>
+      <View
+        style={[
+          styles.halfClip,
+          { left: half + inset, right: 0 },
+        ]}
+      >
+        <AppImage
+          source={Images.soundSpectrogram}
+          style={{
+            position: "absolute",
+            left: -(half + inset),
+            width,
+            height,
+          }}
+          resizeMode="stretch"
+        />
+      </View>
+    </View>
+  );
+}
 
 export function SoundSpectrogramView({
   height = 100,
@@ -84,6 +127,8 @@ export function SoundSpectrogramView({
             ))}
           </View>
         </View>
+      ) : playheadRatio != null && trackWidth > 0 ? (
+        <SpectrogramWithoutCenterLine width={trackWidth} height={height} />
       ) : (
         <AppImage
           source={Images.soundSpectrogram}
@@ -158,6 +203,12 @@ const styles = StyleSheet.create({
   tile: {
     position: "absolute",
     top: 0,
+  },
+  halfClip: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    overflow: "hidden",
   },
   dim: {
     position: "absolute",

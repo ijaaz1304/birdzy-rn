@@ -133,6 +133,8 @@ export const CAMERA_STRINGS = {
     tapToRecord: "Tap below to start recording",
     recording: "Recording...",
     recordedSound: "Recorded sound",
+    selectedWindow: "Selected: {seconds}s",
+    tapToPreview: "Tap to preview selected audio",
     minLength: "Please record at least 9 seconds", // UI uses formatMinRecordingLengthMessage()
     finalizingRecording: "Processing recording…",
     finalizingAudio: "Finalizing audio…",

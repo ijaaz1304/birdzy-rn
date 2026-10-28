@@ -703,7 +703,6 @@ export function buildMushroomSpecimenAddPayload(
     isWishlisted: options.isWishlisted ?? false,
     ...(collections.length > 0 ? { _collections: collections } : {}),
     birdType: edited.birdType,
-    flightPattern: edited.flightPattern,
     flightAltitude: edited.flightAltitude,
     diet: edited.diet,
     habitat: edited.habitat,

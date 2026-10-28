@@ -183,6 +183,44 @@ type BirdDetailsScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<RootStackParamList>
 >;
 
+function remoteHttpUrls(urls?: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of urls ?? []) {
+    const url = typeof raw === "string" ? raw.trim() : "";
+    if (!/^https?:\/\//i.test(url) || seen.has(url)) continue;
+    seen.add(url);
+    out.push(url);
+  }
+  return out;
+}
+
+/** Sound-identify recording URLs to store on the specimen (Identified sound library). */
+function identificationRecordingUrls(
+  source: string | undefined
+): string[] {
+  if (source !== "identification") return [];
+  return remoteHttpUrls(
+    useIdentificationResultsStore.getState().uploadedSoundUrls
+  );
+}
+
+function withIdentificationRecording(
+  source: string | undefined,
+  options: SpecimenAddOptions
+): SpecimenAddOptions {
+  const recorded = identificationRecordingUrls(source);
+  if (!recorded.length || options.userCapturedSounds?.length) return options;
+  return { ...options, userCapturedSounds: recorded };
+}
+
+function identificationRecordingPatch(source: string | undefined): {
+  userCapturedSounds?: string[];
+} {
+  const recorded = identificationRecordingUrls(source);
+  return recorded.length ? { userCapturedSounds: recorded } : {};
+}
+
 async function addMushroomSpecimenFromDetail(
   archetypeId: string,
   detail: MushroomDetail,
@@ -811,6 +849,33 @@ export const BirdDetailsScreen: React.FC = () => {
       navigateToCollectionTabScreen,
       source,
     ]
+  );
+
+  const pendingSoundNoteNavRef = useRef<{
+    collectionId: string;
+    collectionName: string | null;
+  } | null>(null);
+
+  const presentAddedCollection = React.useCallback(
+    async (collectionId: string, collectionName: string | null) => {
+      const uploaded =
+        useIdentificationResultsStore.getState().uploadedSoundUrls ?? [];
+      const hasRecording = uploaded.some(
+        (url) => typeof url === "string" && url.trim().length > 0
+      );
+      if (source === "identification" && hasRecording) {
+        const seen = await AsyncStorage.getItem(
+          UI_STATE_KEYS.HAS_SEEN_SOUND_COLLECTION_NOTE
+        );
+        if (seen !== "true") {
+          pendingSoundNoteNavRef.current = { collectionId, collectionName };
+          setShowSoundCollectionNote(true);
+          return;
+        }
+      }
+      scheduleNavigateToAddedCollection(collectionId, collectionName);
+    },
+    [scheduleNavigateToAddedCollection, source]
   );
 
   const handleBack = React.useCallback(() => {
@@ -1574,27 +1639,21 @@ export const BirdDetailsScreen: React.FC = () => {
     setActiveTab("sounds");
   }, [mushroomId]);
 
-  useEffect(() => {
-    if (!addedToCollectionInSession || source !== "identification") return;
-    void (async () => {
-      const uploaded =
-        useIdentificationResultsStore.getState().uploadedSoundUrls ?? [];
-      if (!uploaded.length) return;
-      const seen = await AsyncStorage.getItem(
-        UI_STATE_KEYS.HAS_SEEN_SOUND_COLLECTION_NOTE
-      );
-      if (seen === "true") return;
-      setShowSoundCollectionNote(true);
-    })();
-  }, [addedToCollectionInSession, source]);
-
   const dismissSoundCollectionNote = useCallback(async () => {
     setShowSoundCollectionNote(false);
     await AsyncStorage.setItem(
       UI_STATE_KEYS.HAS_SEEN_SOUND_COLLECTION_NOTE,
       "true"
     );
-  }, []);
+    const pending = pendingSoundNoteNavRef.current;
+    pendingSoundNoteNavRef.current = null;
+    if (pending) {
+      scheduleNavigateToAddedCollection(
+        pending.collectionId,
+        pending.collectionName
+      );
+    }
+  }, [scheduleNavigateToAddedCollection]);
 
   // Scroll to section when tab is selected (use onLayout offsets to avoid measureLayout ref errors)
   useEffect(() => {
@@ -2814,11 +2873,11 @@ export const BirdDetailsScreen: React.FC = () => {
               await addMushroomSpecimenFromDetail(
                 effectiveArchetypeId,
                 mushroomData,
-                {
+                withIdentificationRecording(source, {
                   collectionIds: targetCollectionId,
                   isIdentified: false,
                   isWishlisted: false,
-                }
+                })
               );
               useCollectionInvalidationStore.getState().invalidate();
               setNewlyCreatedCollectionIdForAnother(null);
@@ -2914,6 +2973,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     {
                       isIdentified: true,
                       isWishlisted: false,
+                      ...identificationRecordingPatch(source),
                     }
                   );
                   useCollectionInvalidationStore.getState().invalidate();
@@ -2925,7 +2985,10 @@ export const BirdDetailsScreen: React.FC = () => {
                   const sid = await addMushroomSpecimenFromDetail(
                     effectiveArchetypeId,
                     mushroomData,
-                    { isIdentified: true, isWishlisted: false }
+                    withIdentificationRecording(source, {
+                      isIdentified: true,
+                      isWishlisted: false,
+                    })
                   );
                   setSessionSpecimenIdFromArchetypeAdd(sid);
                   useCollectionInvalidationStore.getState().invalidate();
@@ -2939,7 +3002,7 @@ export const BirdDetailsScreen: React.FC = () => {
                 );
                 showToast("Added to Identified", "success");
                 setShowAddToCollectionSheet(false);
-                scheduleNavigateToAddedCollection(
+                void presentAddedCollection(
                   ADD_TO_COLLECTION_IDS.IDENTIFIED,
                   "Identified"
                 );
@@ -2953,6 +3016,13 @@ export const BirdDetailsScreen: React.FC = () => {
                 const wishlistSpecimenId = wishlistSpecimen?._id;
                 if (wishlistSpecimenId) {
                   setSessionSpecimenIdFromArchetypeAdd(String(wishlistSpecimenId));
+                  const recorded = identificationRecordingUrls(source);
+                  if (recorded.length) {
+                    await mushroomSpecimenService.updateSpecimen(
+                      String(wishlistSpecimenId),
+                      { userCapturedSounds: recorded }
+                    );
+                  }
                 }
                 useBirdsStore.getState().addFavorite(effectiveArchetypeId);
                 useWishlistInvalidationStore.getState().invalidate();
@@ -2966,7 +3036,7 @@ export const BirdDetailsScreen: React.FC = () => {
                 );
                 showToast("Added to Wishlist", "success");
                 setShowAddToCollectionSheet(false);
-                scheduleNavigateToAddedCollection(
+                void presentAddedCollection(
                   ADD_TO_COLLECTION_IDS.WISHLIST,
                   "Wishlist"
                 );
@@ -2996,6 +3066,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     _collections: normalizeCollectionIds(collectionId),
                     isIdentified: false,
                     isWishlisted: false,
+                    ...identificationRecordingPatch(source),
                   }
                 );
                 useCollectionInvalidationStore.getState().invalidate();
@@ -3014,10 +3085,7 @@ export const BirdDetailsScreen: React.FC = () => {
                 }
                 showToast("Added to collection", "success");
                 setShowAddToCollectionSheet(false);
-                scheduleNavigateToAddedCollection(
-                  collectionId,
-                  addedDisplayName
-                );
+                void presentAddedCollection(collectionId, addedDisplayName);
                 return;
               }
 
@@ -3047,11 +3115,11 @@ export const BirdDetailsScreen: React.FC = () => {
               const sid = await addMushroomSpecimenFromDetail(
                 effectiveArchetypeId,
                 mushroomData,
-                {
+                withIdentificationRecording(source, {
                   collectionIds: collectionId,
                   isIdentified: false,
                   isWishlisted: false,
-                }
+                })
               );
               setSessionSpecimenIdFromArchetypeAdd(sid);
               useCollectionInvalidationStore.getState().invalidate();
@@ -3070,10 +3138,7 @@ export const BirdDetailsScreen: React.FC = () => {
               }
               showToast("Added to collection", "success");
               setShowAddToCollectionSheet(false);
-              scheduleNavigateToAddedCollection(
-                collectionId,
-                addedDisplayNameNew
-              );
+              void presentAddedCollection(collectionId, addedDisplayNameNew);
             } catch (error: any) {
               console.error("Error adding to collection:", error);
               const reason =

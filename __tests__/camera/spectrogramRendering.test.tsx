@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { Animated, StyleSheet } from "react-native";
 import { act, create, ReactTestRenderer } from "react-test-renderer";
 import { LiveSpectrogramView } from "../../src/features/camera/components/LiveSpectrogramView";
 import { logSoundRenderCount } from "../../src/features/camera/utils/soundRecordLog";
@@ -26,9 +26,8 @@ function bitmapNodes(renderer: ReactTestRenderer) {
 function frontBitmap(renderer: ReactTestRenderer) {
   const images = bitmapNodes(renderer);
   return (
-    images.find(
-      (node) => StyleSheet.flatten(node.props.style).zIndex === 1
-    ) ?? images[0]
+    images.find((node) => StyleSheet.flatten(node.props.style).zIndex === 1) ??
+    images[0]
   );
 }
 
@@ -66,6 +65,7 @@ it("renders one bounded bitmap and does not rebuild it during crop parent update
     layout.props.onLayout({ nativeEvent: { layout: { width: 1000 } } });
   });
   expect(bitmapNodes(renderer!)).toHaveLength(1);
+  await promotePending(renderer!);
   const liveUri = frontBitmap(renderer!).props.source.uri;
   expect(pngWidth(liveUri)).toBe(SPECTROGRAM_DISPLAY_MAX_COLUMNS);
   expect(pngHeight(liveUri)).toBe(SPECTROGRAM_DISPLAY_MEL_BANDS);
@@ -111,6 +111,7 @@ it("keeps the painted bitmap until the next frame has loaded", async () => {
   await act(async () => {
     layout.props.onLayout({ nativeEvent: { layout: { width: 1000 } } });
   });
+  await promotePending(renderer!);
   const firstUri = frontBitmap(renderer!).props.source.uri;
   const nextColumns = columns.concat([columns[0].slice()]);
   await act(async () => {
@@ -133,4 +134,65 @@ it("publishes stable shallow snapshots rather than mutating React's previous col
   expect(initial).toHaveLength(0);
   expect(next.length).toBeGreaterThan(0);
   expect(next[0]).toBe(engine.columns[0]);
+});
+
+it("continues scrolling after the rolling history fills and clears on restart", async () => {
+  const timing = jest.spyOn(Animated, "timing");
+  let renderer: ReactTestRenderer;
+  const columns = Array.from({ length: 240 }, (_, x) => [x / 240]);
+  await act(async () => {
+    renderer = create(<LiveSpectrogramView columns={columns} />);
+  });
+  await act(async () => {
+    renderer!.root
+      .findAll((node) => typeof node.props.onLayout === "function")[0]
+      .props.onLayout({ nativeEvent: { layout: { width: 320 } } });
+  });
+  await promotePending(renderer!);
+  await act(async () => {
+    renderer!.update(
+      <LiveSpectrogramView
+        columns={[...columns.slice(4), [1], [0], [1], [0]]}
+      />
+    );
+  });
+  await promotePending(renderer!);
+  expect(timing).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      duration: (1000 * 4 * 512) / 22050,
+      useNativeDriver: true,
+    })
+  );
+  await act(async () => {
+    renderer!.update(<LiveSpectrogramView columns={[]} />);
+  });
+  expect(bitmapNodes(renderer!)).toHaveLength(0);
+  await act(async () => {
+    renderer!.unmount();
+  });
+  timing.mockRestore();
+});
+
+it("does not replace a decoding frame when newer audio arrives", async () => {
+  let renderer: ReactTestRenderer;
+  const columns = [[0.2], [0.8]];
+  await act(async () => {
+    renderer = create(<LiveSpectrogramView columns={columns} />);
+  });
+  await act(async () => {
+    renderer!.root
+      .findAll((node) => typeof node.props.onLayout === "function")[0]
+      .props.onLayout({ nativeEvent: { layout: { width: 320 } } });
+  });
+  const loadingUri = bitmapNodes(renderer!)[0].props.source.uri;
+  await act(async () => {
+    renderer!.update(<LiveSpectrogramView columns={[...columns, [1]]} />);
+  });
+  expect(bitmapNodes(renderer!)[0].props.source.uri).toBe(loadingUri);
+  await promotePending(renderer!);
+  expect(bitmapNodes(renderer!)).toHaveLength(2);
+  await act(async () => {
+    renderer!.unmount();
+  });
 });

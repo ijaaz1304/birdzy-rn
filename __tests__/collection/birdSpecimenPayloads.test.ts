@@ -86,12 +86,14 @@ describe("bird specimen API payloads", () => {
         scientificName: "Aburria aburri",
         commonName: "Wattled Guan",
         birdsLifeId: "22678440",
+        flightPattern: ["Undulating"],
         soundUrls: ["https://example.com/call.mp3"],
         imageUrls: ["https://example.com/bird.jpg"],
       },
       {
         commonName: "Wattled Guan",
         scientificName: "Aburria aburri",
+        flightPattern: "Undulating",
         images: [],
       },
       "6a61f6c55db631270434ae85",
@@ -105,6 +107,7 @@ describe("bird specimen API payloads", () => {
     expect(payload.scientificName).toBe("Aburria aburri");
     expect(payload.imageUrls).toEqual(["https://example.com/bird.jpg"]);
     expect(payload._collections).toEqual(["6a69ed932ed077f191c80368"]);
+    expect(payload).not.toHaveProperty("flightPattern");
     expect(payload).not.toHaveProperty("gbifId");
     expect(payload).not.toHaveProperty("mindatId");
     expect((payload as { userCapturedSounds?: string[] }).userCapturedSounds).toEqual([

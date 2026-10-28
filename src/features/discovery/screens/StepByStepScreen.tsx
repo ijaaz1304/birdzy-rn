@@ -85,8 +85,9 @@ export const StepByStepScreen: React.FC = () => {
   const [locationSource, setLocationSource] = useState<
     "search" | "current" | "recent" | null
   >(null);
-  /** Snapshot on entering location step — avoids showing Recently Used on first-ever pick. */
-  const [showRecentlyUsed, setShowRecentlyUsed] = useState(false);
+  const [wizardHydrated, setWizardHydrated] = useState(
+    useStepByStepStore.persist.hasHydrated()
+  );
 
   const question = WIZARD_QUESTIONS[questionIndex] ?? "location";
   const storeEditQuestion = useStepByStepStore((s) => s.editQuestion);
@@ -95,12 +96,25 @@ export const StepByStepScreen: React.FC = () => {
   );
 
   useEffect(() => {
-    if (phase === "question" && question === "location") {
-      setShowRecentlyUsed(
-        useStepByStepStore.getState().hasUsedWizardLocation
-      );
+    if (useStepByStepStore.persist.hasHydrated()) {
+      setWizardHydrated(true);
+      return;
     }
-  }, [phase, question, questionIndex]);
+    return useStepByStepStore.persist.onFinishHydration(() => {
+      setWizardHydrated(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!wizardHydrated) return;
+    if (phase !== "question" || question !== "location") return;
+    const state = useStepByStepStore.getState();
+    if (state.answers.location) return;
+    const latest = state.recentLocations[0];
+    if (!latest) return;
+    state.setLocation(latest);
+    setLocationSource("search");
+  }, [phase, question, wizardHydrated]);
 
   useFocusEffect(
     useCallback(() => {
@@ -126,7 +140,9 @@ export const StepByStepScreen: React.FC = () => {
   const applyLocation = useCallback(
     (location: WizardRecentLocation, source: "search" | "current" | "recent") => {
       setLocation(location);
-      rememberLocation(location);
+      if (source === "search" || source === "recent") {
+        rememberLocation(location);
+      }
       setLocationSource(source);
     },
     [rememberLocation, setLocation]
@@ -194,6 +210,17 @@ export const StepByStepScreen: React.FC = () => {
     }
   }, [answers.location, locationSource]);
 
+  const latestCustomSearch = recentLocations[0] ?? null;
+  const customFieldLabel =
+    locationSource === "current"
+      ? latestCustomSearch?.label ?? strings.enterLocation
+      : answers.location?.label ??
+        latestCustomSearch?.label ??
+        strings.enterLocation;
+  const customFieldFilled =
+    customFieldLabel !== strings.enterLocation &&
+    customFieldLabel.trim().length > 0;
+
   const renderQuestionBody = () => {
     switch (question) {
       case "location":
@@ -225,14 +252,14 @@ export const StepByStepScreen: React.FC = () => {
                     style={[
                       styles.locationRowLabel,
                       {
-                        color: answers.location
+                        color: customFieldFilled
                           ? colors.textPrimary
                           : colors.textTertiary,
                       },
                     ]}
                     numberOfLines={1}
                   >
-                    {answers.location?.label ?? strings.enterLocation}
+                    {customFieldLabel}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -269,7 +296,7 @@ export const StepByStepScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
 
-              {showRecentlyUsed && recentLocations.length > 0 ? (
+              {recentLocations.length > 0 ? (
                 <View style={styles.locationSection}>
                   <Text
                     style={[styles.fieldLabel, { color: colors.textPrimary }]}
@@ -443,8 +470,8 @@ export const StepByStepScreen: React.FC = () => {
       <ChangeLocationBottomSheet
         visible={showLocationSheet}
         onClose={() => setShowLocationSheet(false)}
-        variant={answers.location ? "custom" : "add"}
-        initialQuery={answers.location?.label}
+        variant={customFieldFilled ? "custom" : "add"}
+        initialQuery={customFieldFilled ? customFieldLabel : ""}
         onConfirm={(location) => {
           applyLocation(toRecentLocation(location), "search");
           setShowLocationSheet(false);

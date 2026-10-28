@@ -9,9 +9,24 @@ import {
   Modal,
   Platform,
   Pressable,
+  StyleSheet,
   Text,
 } from "react-native";
 import { FreeScanLimitDialog } from "../../src/components/shared/FreeScanLimitDialog";
+
+jest.mock("../../src/hooks/useTheme", () => ({
+  useTheme: () => ({
+    mode: "light",
+    colors: {
+      primaryCTA: "#725481",
+      onPrimary: "#FFFFFF",
+      surfacePrimary: "#FFFFFF",
+      border0: "#E7E7E7",
+      text: "#111111",
+      textPrimary: "#111111",
+    },
+  }),
+}));
 import {
   requestFreeScanLimitPrompt,
   dismissFreeScanLimitPrompt,
@@ -75,6 +90,17 @@ it("shows the Figma copy and can reopen after Okay", async () => {
           "You’ve used all 30 free scans. For unlimited scans, Go Premium"
       )
   ).toBe(true);
+  expect(
+    StyleSheet.flatten(
+      renderer.root.findByProps({ accessibilityLabel: "Go Premium" }).props
+        .style
+    ).backgroundColor
+  ).toBe("#785284");
+  expect(
+    StyleSheet.flatten(
+      renderer.root.findByProps({ accessibilityLabel: "Okay" }).props.style
+    ).backgroundColor
+  ).toBe("#FFFFFF");
   await press("Okay");
   expect(visible()).toBe(false);
   await act(async () => requestFreeScanLimitPrompt());

@@ -296,6 +296,7 @@ export const SoundNoMatchScreen: React.FC = () => {
                 stamp={soundStamp}
                 place={soundPlace}
                 birdCount={0}
+                audioUri={audioUri}
                 isPlaying={playingId === "user-recording"}
                 onTogglePlay={() => {
                   void toggleSound("user-recording", [audioUri]);

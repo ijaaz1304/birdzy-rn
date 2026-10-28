@@ -384,6 +384,7 @@ export type UpdateBirdSpecimenRequest = Partial<{
   "scientificClassification.species": string;
   birdType: string[];
   customLocation: string;
+  userCapturedSounds: string[];
   flightPattern: string[];
   flightSpeed: string;
   flightAltitude: string[];

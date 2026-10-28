@@ -322,7 +322,6 @@ class SoundIdentifyRecordingService {
       ...STREAM_OPTIONS,
     });
     LiveAudioStream.init(STREAM_OPTIONS);
-    getNativePcmModule()?.resetRecordingBuffer?.();
     this.attachPcmListener();
     LiveAudioStream.start();
     this.emitSpectrogramUpdate(true);
@@ -361,6 +360,8 @@ class SoundIdentifyRecordingService {
     this.vizQueue.length = 0;
     this.droppedVizChunks = 0;
     this.spectrogramEngine.reset();
+    this.lastSpectrogramEmitMs = 0;
+    getNativePcmModule()?.resetRecordingBuffer?.();
     this.recordingStartedAt = Date.now();
     this.pausedAt = null;
     this.pausedAccumMs = 0;

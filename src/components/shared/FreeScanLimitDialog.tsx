@@ -9,6 +9,13 @@ import {
   View,
 } from "react-native";
 import FreeScanClose from "../../assets/freeScanClose.svg";
+import { HOME_COLORS } from "../../constants/colorConstants";
+import {
+  getPopupPrimaryCtaTextColor,
+  getPopupSecondaryCtaStyle,
+  getPopupSecondaryCtaTextColor,
+} from "../../design-system/modalTokens";
+import { useTheme } from "../../hooks/useTheme";
 import {
   acknowledgeFreeScanLimitPrompt,
   dismissFreeScanLimitPrompt,
@@ -35,6 +42,7 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
     subscribeFreeScanLimitPrompt,
     getFreeScanLimitIntroduction
   );
+  const theme = useTheme();
   const upgradePending = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [presented, setPresented] = React.useState(false);
@@ -118,20 +126,37 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Go Premium"
-              style={[styles.button, styles.primary]}
+              style={[
+                styles.button,
+                {
+                  backgroundColor: HOME_COLORS.DISCOUNT_BANNER.CTA_BG_LIGHT,
+                },
+              ]}
               onPress={upgrade}
             >
-              <Text style={[styles.buttonText, styles.primaryText]}>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: getPopupPrimaryCtaTextColor(theme) },
+                ]}
+              >
                 Go Premium
               </Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Okay"
-              style={[styles.button, styles.secondary]}
+              style={[styles.button, getPopupSecondaryCtaStyle(theme)]}
               onPress={close}
             >
-              <Text style={styles.buttonText}>Okay</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: getPopupSecondaryCtaTextColor(theme) },
+                ]}
+              >
+                Okay
+              </Text>
             </Pressable>
           </View>
         </Pressable>
@@ -191,17 +216,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  primary: { backgroundColor: "#0C2A45" },
-  secondary: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E7E7E7",
-  },
   buttonText: {
     fontFamily: "Satoshi-Medium",
     fontSize: 16,
     lineHeight: 24,
-    color: "#111111",
   },
-  primaryText: { color: "#FFFFFF" },
 });

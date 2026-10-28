@@ -56,11 +56,14 @@ describe("soundIdentifyRecording.service", () => {
 
   it("re-inits PCM stream on Android resume", async () => {
     Platform.OS = "android";
+    const resetRecordingBuffer = jest.fn();
+    NativeModules.RNLiveAudioStream = { resetRecordingBuffer };
 
     await soundIdentifyRecordingService.startRecording();
     await soundIdentifyRecordingService.pauseRecording();
     await soundIdentifyRecordingService.resumeRecording();
 
+    expect(resetRecordingBuffer).toHaveBeenCalledTimes(1);
     expect(mockedLiveAudioStream.init).toHaveBeenCalledTimes(2);
     expect(mockedLiveAudioStream.on).toHaveBeenCalledTimes(2);
     expect(mockedLiveAudioStream.start).toHaveBeenCalledTimes(2);

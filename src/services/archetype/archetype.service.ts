@@ -29,6 +29,16 @@ import { useAppLogsStore } from "../../features/app-logs/app-logs.store";
 import { API_ENDPOINTS } from "../../constants/api";
 import { BIRD_ARCHETYPE_FILTER_DEFAULTS } from "../../constants/birdFilterDefaults";
 
+/** Temporary testing payload shared by every step-by-step search. */
+const STEP_BY_STEP_TEST_REQUEST: BirdStepByStepRequest = {
+  location: {
+    lat: 3.7,
+    lng: 101.7,
+  },
+  seenDate: "2026-06-26T10:00:00Z",
+  birdSize: ["Small", "Medium-Small"],
+};
+
 const wishlistLog = (
   level: "info" | "warn" | "error",
   message: string,
@@ -384,7 +394,10 @@ class ArchetypeService {
     };
   }> {
     try {
-      const response = await coreApi.stepByStep(body, pagination);
+      const response = await coreApi.stepByStep(
+        STEP_BY_STEP_TEST_REQUEST,
+        pagination
+      );
       if (response.error) {
         throw new ApiException(
           response.reason || "Failed to fetch step-by-step birds"

@@ -43,6 +43,10 @@ class SoundRecordingService {
   private playbackSession = 0;
   private playerHeld = false;
   private playbackEndHandler: (() => void) | undefined;
+  private playbackRange: { startSec: number; endSec: number } | null = null;
+  private rangeSeekAttempts = 0;
+  private rangeSeekInFlight = false;
+  private rangeStopIssued = false;
   private durationCache = new Map<string, number>();
   private durationListeners = new Set<(uri: string, sec: number) => void>();
   private playbackListeners = new Set<
@@ -165,10 +169,19 @@ class SoundRecordingService {
 
   async play(
     uri: string,
-    options?: { onEnd?: () => void }
+    options?: { onEnd?: () => void; startSec?: number; endSec?: number }
   ): Promise<void> {
     const session = ++this.playbackSession;
     this.playbackEndHandler = options?.onEnd;
+    const startSec = Math.max(0, options?.startSec ?? 0);
+    const endSec = options?.endSec;
+    this.playbackRange =
+      endSec != null && endSec > startSec + 0.05
+        ? { startSec, endSec }
+        : null;
+    this.rangeSeekAttempts = 0;
+    this.rangeSeekInFlight = false;
+    this.rangeStopIssued = false;
     try {
       await AudioRecorderPlayer.setVolume(1);
     } catch {
@@ -181,6 +194,16 @@ class SoundRecordingService {
     this.playerHeld = true;
     try {
       await AudioRecorderPlayer.startPlayer(uri);
+      try {
+        AudioRecorderPlayer.setSubscriptionDuration(0.1);
+      } catch {
+        // progress interval is best-effort; playback still starts
+      }
+      if (this.playbackRange) {
+        if (this.playbackRange.startSec > 0.05) {
+          await this.seekPlaybackRange(this.playbackRange.startSec);
+        }
+      }
     } catch (error) {
       if (session === this.playbackSession) this.playerHeld = false;
       throw error;
@@ -192,6 +215,9 @@ class SoundRecordingService {
   async stopPlayback(): Promise<void> {
     this.playbackSession += 1;
     this.playbackEndHandler = undefined;
+    this.playbackRange = null;
+    this.rangeSeekInFlight = false;
+    this.rangeStopIssued = false;
     this.emitPlayback(null);
     if (!this.playerHeld) {
       this.clearPlaybackListeners();
@@ -290,6 +316,24 @@ class SoundRecordingService {
       if (durationSec != null && durationSec > 0 && !this.durationCache.has(uri)) {
         this.rememberDuration(uri, durationSec);
       }
+      const range = this.playbackRange;
+      if (range) {
+        if (
+          positionSec + 0.25 < range.startSec &&
+          this.rangeSeekAttempts < 3 &&
+          !this.rangeSeekInFlight
+        ) {
+          this.rangeSeekAttempts += 1;
+          void this.seekPlaybackRange(range.startSec);
+          return;
+        }
+        if (!this.rangeStopIssued && positionSec >= range.endSec - 0.05) {
+          this.rangeStopIssued = true;
+          const onEnd = this.playbackEndHandler;
+          void this.stopPlayback().then(() => onEnd?.());
+          return;
+        }
+      }
       this.emitPlayback({
         uri,
         positionSec,
@@ -308,6 +352,18 @@ class SoundRecordingService {
       this.playbackEndHandler = undefined;
       onEnd?.();
     });
+  }
+
+  private async seekPlaybackRange(startSec: number): Promise<void> {
+    if (this.rangeSeekInFlight) return;
+    this.rangeSeekInFlight = true;
+    try {
+      await AudioRecorderPlayer.seekToPlayer(Math.round(startSec * 1000));
+    } catch {
+      // listener retries until the playhead reaches the selection
+    } finally {
+      this.rangeSeekInFlight = false;
+    }
   }
 
   private clearPlaybackListeners() {

@@ -9,7 +9,7 @@ import { useIsDark, useTheme } from "../../../hooks/useTheme";
 import { formatSoundClipLabel } from "../utils/soundCrop";
 import { SoundPlayButton } from "./SoundPlayButton";
 import { SoundSpectrogramView } from "./SoundSpectrogramView";
-import { usePlayingCountdown } from "../../collection/hooks/usePlayingCountdown";
+import { usePlayingCountdown, usePlaybackPlayhead } from "../../collection/hooks/usePlayingCountdown";
 
 type Props = {
   durationSec: number;
@@ -18,6 +18,8 @@ type Props = {
   birdCount: number;
   isPlaying: boolean;
   onTogglePlay: () => void;
+  /** Recording being played, so the playhead ignores other clips. */
+  audioUri?: string;
 };
 
 const copy = CAMERA_STRINGS.sound;
@@ -29,14 +31,16 @@ export function SoundSampleCard({
   birdCount,
   isPlaying,
   onTogglePlay,
+  audioUri,
 }: Props) {
   const theme = useTheme();
   const isDark = useIsDark();
   const cardBg = isDark ? theme.colors.surfacePrimary : APP_COLORS.surfaceWhite;
   const cardBorder = isDark ? theme.colors.border0 : APP_COLORS.borderLight;
   const birdsLabel = copy.birdsCount.replace("{count}", String(birdCount));
-  const remainingSec = usePlayingCountdown(isPlaying, durationSec);
+  const remainingSec = usePlayingCountdown(isPlaying, durationSec, audioUri);
   const shownSec = isPlaying ? remainingSec ?? durationSec : durationSec;
+  const playheadRatio = usePlaybackPlayhead(isPlaying, durationSec, audioUri);
 
   return (
     <View
@@ -45,7 +49,7 @@ export function SoundSampleCard({
         { backgroundColor: cardBg, borderColor: cardBorder },
       ]}
     >
-      <SoundSpectrogramView height={88} />
+      <SoundSpectrogramView height={88} playheadRatio={playheadRatio} />
       <View style={styles.row}>
         <SoundPlayButton isPlaying={isPlaying} onPress={onTogglePlay} />
         <View style={styles.copy}>

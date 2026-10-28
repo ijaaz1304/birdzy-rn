@@ -46,7 +46,9 @@ class MushroomSpecimenService {
     data: AddBirdSpecimenRequest | AddMushroomSpecimenRequest
   ): Promise<MushroomSpecimen> {
     try {
-      const response = await coreApi.addSpecimen(data);
+      const body = { ...data };
+      delete (body as { flightPattern?: string[] }).flightPattern;
+      const response = await coreApi.addSpecimen(body);
       if (response.error) {
         throw new ApiException(response.reason || "Failed to add specimen");
       }

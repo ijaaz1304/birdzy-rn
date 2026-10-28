@@ -3,15 +3,13 @@ import { useFreeScanPromptSurface } from '../../../hooks/useFreeScanPromptSurfac
 /**
  * Recorded-sound crop + identify UI (shared by SoundIdentify crop phase and SoundCrop route).
  */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
-import { runOnJS, useSharedValue } from "react-native-reanimated";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Text, NavBackIcon, Toggle } from "../../../atoms";
 import { HiddenRemoteImagePrefetcher } from "../../../components/AppImage/HiddenRemoteImagePrefetcher";
@@ -25,20 +23,19 @@ import {
   NoBirdDetectedModal,
   NoiseTooHighModal,
 } from "../components/BirdSoundErrorModals";
-import { LiveSpectrogramView } from "../components/LiveSpectrogramView";
-import { LiveSpectrogramCropOverlay } from "../components/LiveSpectrogramCropOverlay";
-import { SoundSpectrogramView } from "../components/SoundSpectrogramView";
+import { RecordedSoundPreview } from "../components/RecordedSoundPreview";
+// import { waveformPeaksFromColumns } from "../utils/waveformPeaks";
 import { meetsMinRecordingDuration } from "../constants/soundRecording.constants";
 import { useSoundIdentificationFlow } from "../hooks/useSoundIdentificationFlow";
 import { useLocationToggleFlow } from "../useLocationToggleFlow";
 import { shouldShowLocationBannerAsGranted } from "../locationToggle.helpers";
 import { useSoundRecordingSpectrogramStore } from "../soundRecordingSpectrogram.store";
+import { soundRecordingService } from "../../../services/audio/soundRecording.service";
 import { soundPerfRender } from "../utils/soundPerf";
 import {
   SOUND_CROP_DURATIONS,
   clampSoundCropStart,
   defaultSoundCropChip,
-  formatSoundClipLabel,
   formatSoundCropActionLabel,
   formatSoundStamp,
   isFullSoundCrop,
@@ -131,18 +128,14 @@ export function SoundRecordingCropContent({
 
   const goIdentify = () => {
     if (!canIdentify || isAnalyzing) return;
+    void soundRecordingService.stopPlayback();
+    setPreviewing(false);
     const usingFull = !chip || isFullSoundCrop(windowSec, durationSec);
     void startIdentification({
       audioUri,
       audioDurationSec: usingFull ? durationSec : windowSec,
       recordedAt,
-      cropStartSec: usingFull
-        ? undefined
-        : clampSoundCropStart(
-            cropStartRatio.value * durationSec,
-            windowSec,
-            durationSec
-          ),
+      cropStartSec: usingFull ? undefined : clampedStart,
       cropDurationSec: usingFull ? undefined : windowSec,
     });
   };
@@ -152,40 +145,44 @@ export function SoundRecordingCropContent({
     locationOn && locationLabel?.trim()
       ? locationLabel.trim()
       : copy.noLocation;
-  const startRatio = durationSec > 0 ? clampedStart / durationSec : 0;
-  const endRatio =
-    durationSec > 0 ? (clampedStart + windowSec) / durationSec : 1;
-
-  const cropStartRatio = useSharedValue(startRatio);
-  const cropEndRatio = useSharedValue(endRatio);
+  // const peaks = useMemo(
+  //   () => waveformPeaksFromColumns(spectrogramColumns),
+  //   [spectrogramColumns]
+  // );
+  const [previewing, setPreviewing] = useState(false);
+  const selectionKey = `${audioUri}:${clampedStart.toFixed(2)}:${windowSec.toFixed(2)}`;
+  const selectionKeyRef = useRef(selectionKey);
 
   useEffect(() => {
-    cropStartRatio.value = startRatio;
-    cropEndRatio.value = endRatio;
-  }, [cropEndRatio, cropStartRatio, endRatio, startRatio]);
+    return () => {
+      void soundRecordingService.stopPlayback();
+    };
+  }, []);
 
-  const trackWidth = useSharedValue(1);
-  const dragOrigin = useSharedValue(0);
-  const pan = Gesture.Pan()
-    .enabled(!isAnalyzing && durationSec > windowSec)
-    .onStart(() => {
-      dragOrigin.value = cropStartRatio.value * durationSec;
-    })
-    .onUpdate((event) => {
-      const deltaSec =
-        (event.translationX / Math.max(1, trackWidth.value)) * durationSec;
-      const nextStart = Math.min(
-        Math.max(0, dragOrigin.value + deltaSec),
-        Math.max(0, durationSec - windowSec)
-      );
-      cropStartRatio.value = durationSec > 0 ? nextStart / durationSec : 0;
-      cropEndRatio.value =
-        durationSec > 0 ? (nextStart + windowSec) / durationSec : 1;
-    })
-    .onFinalize(() => {
-      // Only commit to React when the drag ends; movement stays on the UI thread.
-      runOnJS(setStartSec)(cropStartRatio.value * durationSec);
-    });
+  useEffect(() => {
+    if (selectionKeyRef.current === selectionKey) return;
+    selectionKeyRef.current = selectionKey;
+    setPreviewing(false);
+    void soundRecordingService.stopPlayback();
+  }, [selectionKey]);
+
+  const togglePreview = () => {
+    if (isAnalyzing) return;
+    if (previewing) {
+      setPreviewing(false);
+      void soundRecordingService.stopPlayback();
+      return;
+    }
+    const endSec = Math.min(durationSec, clampedStart + windowSec);
+    setPreviewing(true);
+    void soundRecordingService
+      .play(audioUri, {
+        startSec: clampedStart,
+        endSec,
+        onEnd: () => setPreviewing(false),
+      })
+      .catch(() => setPreviewing(false));
+  };
 
   const actionLabel = isAnalyzing
     ? loadingPhase === "preparing"
@@ -197,8 +194,6 @@ export function SoundRecordingCropContent({
         copy.useFullRecording,
         copy.useCroppedRecording
       );
-
-  const hasSpectrogram = spectrogramColumns.length > 0;
 
   return (
     <>
@@ -233,14 +228,15 @@ export function SoundRecordingCropContent({
         </Text>
 
         <View style={styles.chips}>
-          {SOUND_CROP_DURATIONS.map((item) => {
-            const available = isSoundCropChipAvailable(item, durationSec);
+          {SOUND_CROP_DURATIONS.filter((item) =>
+            isSoundCropChipAvailable(item, durationSec)
+          ).map((item) => {
             const selected = chip === item;
             return (
               <TouchableOpacity
                 key={item}
                 onPress={() => selectChip(item)}
-                disabled={!available || isAnalyzing}
+                disabled={isAnalyzing}
                 style={[
                   styles.chip,
                   {
@@ -248,7 +244,7 @@ export function SoundRecordingCropContent({
                     backgroundColor: selected
                       ? colors.primaryCTA
                       : "transparent",
-                    opacity: available && !isAnalyzing ? 1 : 0.4,
+                    opacity: isAnalyzing ? 0.4 : 1,
                   },
                 ]}
               >
@@ -267,39 +263,16 @@ export function SoundRecordingCropContent({
           })}
         </View>
 
-        <GestureDetector gesture={pan}>
-          <View
-            collapsable={false}
-            style={styles.spectrogramTrack}
-            onLayout={(e) => {
-              trackWidth.value = e.nativeEvent.layout.width;
-            }}
-          >
-            <View style={styles.spectrogramStack}>
-              {hasSpectrogram ? (
-                <LiveSpectrogramView
-                  columns={spectrogramColumns}
-                  playheadCenter={false}
-                />
-              ) : (
-                <SoundSpectrogramView />
-              )}
-              <LiveSpectrogramCropOverlay
-                startRatio={cropStartRatio}
-                endRatio={cropEndRatio}
-              />
-            </View>
-          </View>
-        </GestureDetector>
-
-        <View style={styles.stamps}>
-          <Text style={[styles.stamp, { color: colors.primaryCTA }]}>
-            {formatSoundClipLabel(0)}
-          </Text>
-          <Text style={[styles.stamp, { color: colors.primaryCTA }]}>
-            {formatSoundClipLabel(durationSec)}
-          </Text>
-        </View>
+        <RecordedSoundPreview
+          columns={spectrogramColumns}
+          durationSec={durationSec}
+          windowSec={windowSec}
+          selectionStartSec={clampedStart}
+          isPlaying={previewing}
+          disabled={isAnalyzing}
+          onTogglePlay={togglePreview}
+          onSelectionStartChange={setStartSec}
+        />
 
         <Text style={[styles.meta, { color: colors.textSecondary }]}>
           {stamp} • {place}
@@ -448,23 +421,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     fontSize: 14,
     lineHeight: 20,
-  },
-  spectrogramTrack: {
-    width: "100%",
-  },
-  spectrogramStack: {
-    width: "100%",
-    position: "relative",
-  },
-  stamps: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  stamp: {
-    fontFamily: FONTS.bold,
-    fontSize: 12,
-    lineHeight: 16,
   },
   meta: {
     fontFamily: FONTS.regular,

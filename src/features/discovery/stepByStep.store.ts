@@ -7,7 +7,40 @@ import type {
   WizardRecentLocation,
 } from "./stepByStep.types";
 
-const MAX_RECENT_LOCATIONS = 4;
+const MAX_RECENT_LOCATIONS = 8;
+
+function sameRecentLocation(
+  a: WizardRecentLocation,
+  b: WizardRecentLocation
+): boolean {
+  const labelA = a.label.trim().toLowerCase();
+  const labelB = b.label.trim().toLowerCase();
+  if (labelA.length > 0 && labelA === labelB) return true;
+
+  const aHasCoords = a.latitude !== 0 || a.longitude !== 0;
+  const bHasCoords = b.latitude !== 0 || b.longitude !== 0;
+  return (
+    aHasCoords &&
+    bHasCoords &&
+    a.latitude === b.latitude &&
+    a.longitude === b.longitude
+  );
+}
+
+/** Newer entries stay first. Matching labels collapse; 0,0 coords do not. */
+export function mergeRecentLocations(
+  primary: WizardRecentLocation[],
+  secondary: WizardRecentLocation[]
+): WizardRecentLocation[] {
+  const next: WizardRecentLocation[] = [];
+  for (const location of [...primary, ...secondary]) {
+    if (!location?.label?.trim()) continue;
+    if (next.some((item) => sameRecentLocation(item, location))) continue;
+    next.push(location);
+    if (next.length >= MAX_RECENT_LOCATIONS) break;
+  }
+  return next;
+}
 
 const EMPTY_ANSWERS: WizardAnswers = {
   location: null,
@@ -79,23 +112,13 @@ export const useStepByStepStore = create<StepByStepState>()(
       setEditQuestion: (question) => set({ editQuestion: question }),
 
       rememberLocation: (location) =>
-        set((state) => {
-          const next = [
-            location,
-            ...state.recentLocations.filter(
-              (item) =>
-                item.label !== location.label &&
-                !(
-                  item.latitude === location.latitude &&
-                  item.longitude === location.longitude
-                )
-            ),
-          ].slice(0, MAX_RECENT_LOCATIONS);
-          return {
-            recentLocations: next,
-            hasUsedWizardLocation: true,
-          };
-        }),
+        set((state) => ({
+          recentLocations: mergeRecentLocations(
+            [location],
+            state.recentLocations
+          ),
+          hasUsedWizardLocation: true,
+        })),
 
       resetAnswers: () =>
         set({
@@ -110,6 +133,26 @@ export const useStepByStepStore = create<StepByStepState>()(
         recentLocations: state.recentLocations,
         hasUsedWizardLocation: state.hasUsedWizardLocation,
       }),
+      merge: (persistedState, currentState) => {
+        const persisted = (persistedState ?? {}) as {
+          recentLocations?: WizardRecentLocation[];
+          hasUsedWizardLocation?: boolean;
+        };
+        const recentLocations = mergeRecentLocations(
+          currentState.recentLocations ?? [],
+          Array.isArray(persisted.recentLocations)
+            ? persisted.recentLocations
+            : []
+        );
+        return {
+          ...currentState,
+          recentLocations,
+          hasUsedWizardLocation:
+            currentState.hasUsedWizardLocation ||
+            Boolean(persisted.hasUsedWizardLocation) ||
+            recentLocations.length > 0,
+        };
+      },
     }
   )
 );
