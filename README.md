@@ -1,3 +1,9 @@
+<!-- trackzio-handover:start -->
+## Birdzy handover and documentation
+
+Start at [docs/handover/README.md](docs/handover/README.md) for product, user flows, developer setup, environments, API/data, QA, releases and the 60-day ownership plan. Future fixes must update the relevant docs and [handover changelog](docs/handover/CHANGELOG.md) in the same change.
+<!-- trackzio-handover:end -->
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
