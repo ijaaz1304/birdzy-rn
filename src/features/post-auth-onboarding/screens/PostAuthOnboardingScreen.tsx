@@ -94,6 +94,14 @@ function pickDefaultYearlyPlanId(
   return (yearly?.id ?? plans[0]?.id ?? "yearly_birdzy_pack") as PlanId;
 }
 
+/** Figma "noti 2" illustration size (notification.webp is the same art at 4×) */
+const NOTIFICATION_HERO_DESIGN_SIZE = { width: 295, height: 239 } as const;
+/**
+ * Figma "travel-map 1" frame (location_post.webp is the same art at 4×).
+ * The map inside it renders at 226.8×209.9 at full size, as in Figma.
+ */
+const LOCATION_HERO_DESIGN_SIZE = { width: 335, height: 313 } as const;
+
 export const PostAuthOnboardingScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const token = useAuthStore((s) => s.token);
@@ -390,6 +398,21 @@ export const PostAuthOnboardingScreen: React.FC = () => {
     goToSlide(POST_AUTH_ONBOARDING_STEPS.SUBSCRIPTION);
   }, [finishToMainApp, goToSlide, registerDevice, skipPromoSlides, token]);
 
+  /**
+   * "Maybe later": skip the native notification prompt and continue onboarding.
+   * Not marked as prompted, so the app can still ask for notifications later.
+   */
+  const handleNotificationsMaybeLater = useCallback(() => {
+    analyticsService.logEvent(EVENTS.notification_permission_dismissed, {
+      source: "post_auth_onboarding_maybe_later",
+    });
+    if (skipPromoSlides) {
+      finishToMainApp();
+      return;
+    }
+    goToSlide(POST_AUTH_ONBOARDING_STEPS.SUBSCRIPTION);
+  }, [finishToMainApp, goToSlide, skipPromoSlides]);
+
   const handleLocationContinue = useCallback(async () => {
     if (locationAllowLoading) return;
     setLocationAllowLoading(true);
@@ -411,6 +434,12 @@ export const PostAuthOnboardingScreen: React.FC = () => {
     }
     void applyResolvedSlide(POST_AUTH_ONBOARDING_STEPS.NOTIFICATIONS);
   }, [applyResolvedSlide, locationAllowLoading, syncPermission]);
+
+  /** "Maybe later": skip the native location prompt and continue to notifications. */
+  const handleLocationMaybeLater = useCallback(() => {
+    if (locationAllowLoading) return;
+    void applyResolvedSlide(POST_AUTH_ONBOARDING_STEPS.NOTIFICATIONS);
+  }, [applyResolvedSlide, locationAllowLoading]);
 
   const renderSkip = (onPress: () => void) => (
     <TouchableOpacity
@@ -539,8 +568,15 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         onContinue={() => void handleLocationContinue()}
         continueLoading={locationAllowLoading}
         textPrimary={colors.textPrimary}
+        textSecondary={colors.textSecondary}
         primaryColor={colors.ctaSolidBackground}
         onPrimaryColor={colors.ctaTextDark}
+        title="Enable Location Access"
+        subtitle="Our identification accuracy exceeds 90% with location access"
+        heroDesignSize={LOCATION_HERO_DESIGN_SIZE}
+        continueLabel="Allow"
+        secondaryLabel="Maybe later"
+        onSecondaryPress={handleLocationMaybeLater}
       />
     </View>
   );
@@ -550,12 +586,16 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       <PostAuthLocationAccessSlide
         onContinue={handleEnableNotifications}
         textPrimary={colors.textPrimary}
+        textSecondary={colors.textSecondary}
         primaryColor={colors.ctaSolidBackground}
         onPrimaryColor={colors.ctaTextDark}
-        title="Important updates can come fast — don't miss them."
+        title={"Important updates\ncan come fast — don’t miss them!"}
         subtitle="Get alerts for new bird sightings, migration updates, and featured species."
         image={onboardingImages.notification}
-        continueLabel="Continue"
+        heroDesignSize={NOTIFICATION_HERO_DESIGN_SIZE}
+        continueLabel="Yes, keep me updated"
+        secondaryLabel="Maybe later"
+        onSecondaryPress={handleNotificationsMaybeLater}
       />
     </View>
   );

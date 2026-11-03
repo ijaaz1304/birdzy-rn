@@ -1,15 +1,15 @@
 /**
  * Pagination Dots Component for Onboarding
- * Smooth width/color interpolation driven by horizontal scroll offset.
+ * Figma: 8×8 circles, 4px gap; active/inactive differ only by color.
+ * Color interpolates smoothly with the horizontal scroll offset.
  */
 
 import React from "react";
 import { View, StyleSheet, Animated, type StyleProp, type ViewStyle } from "react-native";
 import { useTheme } from "../../../hooks/useTheme";
 
-const INACTIVE_DOT_WIDTH = 8;
-const ACTIVE_DOT_WIDTH = 24;
-const DOT_HEIGHT = 8;
+const DOT_SIZE = 8;
+const DOT_GAP = 4;
 
 export interface PaginationDotsProps {
   totalPages: number;
@@ -31,24 +31,12 @@ export const PaginationDots: React.FC<PaginationDotsProps> = ({
   return (
     <View style={[styles.container, containerStyle]}>
       {Array.from({ length: totalPages }).map((_, index) => {
-        const inputRange = [
-          (index - 1) * pageWidth,
-          index * pageWidth,
-          (index + 1) * pageWidth,
-        ];
-
-        const width = scrollX.interpolate({
-          inputRange,
-          outputRange: [
-            INACTIVE_DOT_WIDTH,
-            ACTIVE_DOT_WIDTH,
-            INACTIVE_DOT_WIDTH,
-          ],
-          extrapolate: "clamp",
-        });
-
         const backgroundColor = scrollX.interpolate({
-          inputRange,
+          inputRange: [
+            (index - 1) * pageWidth,
+            index * pageWidth,
+            (index + 1) * pageWidth,
+          ],
           outputRange: [inactiveColor, activeColor, inactiveColor],
           extrapolate: "clamp",
         });
@@ -56,13 +44,7 @@ export const PaginationDots: React.FC<PaginationDotsProps> = ({
         return (
           <Animated.View
             key={`dot-${index}`}
-            style={[
-              styles.dot,
-              {
-                width,
-                backgroundColor,
-              },
-            ]}
+            style={[styles.dot, { backgroundColor }]}
           />
         );
       })}
@@ -75,12 +57,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 8,
-    height: DOT_HEIGHT,
+    gap: DOT_GAP,
+    height: DOT_SIZE,
     width: "100%",
   },
   dot: {
-    height: DOT_HEIGHT,
-    borderRadius: 4,
+    width: DOT_SIZE,
+    height: DOT_SIZE,
+    borderRadius: DOT_SIZE / 2,
   },
 });

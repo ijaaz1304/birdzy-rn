@@ -19,7 +19,9 @@ import { HIT_SLOP } from "../../../constants/uiConstants";
 import { Button } from "../../../atoms";
 import {
   ONBOARDING_CTA_DARK,
+  ONBOARDING_CTA_HEIGHT,
   ONBOARDING_CTA_LIGHT_RADIUS,
+  getOnboardingCtaBottomPadding,
 } from "../onboardingCta.constants";
 import { ScreenContainer } from "../../../molecules/ScreenContainer/ScreenContainer";
 import { OnboardingPage } from "../components/OnboardingPage";
@@ -45,7 +47,7 @@ const AnimatedOnboardingList = Animated.createAnimatedComponent(
 );
 
 const ONBOARDING_CTA = {
-  minHeight: 48,
+  minHeight: ONBOARDING_CTA_HEIGHT,
   paddingVertical: 12,
   paddingHorizontal: spacing[4],
   borderRadius: ONBOARDING_CTA_LIGHT_RADIUS,
@@ -471,7 +473,7 @@ export const OnboardingScreenPhone: React.FC = () => {
         style={[
           styles.bottomSection,
           {
-            paddingBottom: Math.max(insets.bottom, 24) + 8,
+            paddingBottom: getOnboardingCtaBottomPadding(insets.bottom),
             opacity:
               ONBOARDING_PAGES[currentPage]?.illustration === "authProgress"
                 ? 0
