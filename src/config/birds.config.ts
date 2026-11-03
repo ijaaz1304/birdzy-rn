@@ -241,7 +241,7 @@ export const birdsAppConfig: AppConfig = {
       {
         title: "Discover thousands of birds like never before",
         subtitle:
-          "Scan with AI, explore a vast bird database, and connect with a nature-loving community.",
+          "Scan with AI, explore a vast birdabase, and connect with a nature-loving community,",
         imageKey: "auth_scans",
       },
       {

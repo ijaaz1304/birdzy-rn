@@ -247,8 +247,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
           styles.textSection,
           styles.onboardingTextShiftUp,
           styles.textSectionOnboardingInset,
-          styles.textSectionLeft,
+          styles.onboardingCopyStack,
           styles.textSectionFirstPage,
+          { width: Math.min(335, onboardingTextMaxWidth) },
         ]}
       >
         <Text
@@ -259,7 +260,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
             styles.title,
             styles.titleOnboarding,
             styles.titleLeftAlign,
-            { maxWidth: onboardingTextMaxWidth },
+            styles.onboardingCopyLine,
+            !isDark && { color: SCREEN_COLORS.LIGHT.text },
           ]}
         >
           {data.title}
@@ -268,11 +270,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
           variant="body"
           size="medium"
           color="textSecondary"
+          allowFontScaling={false}
           style={[
             styles.description,
             styles.descriptionOnboarding,
             styles.descriptionLeftAlign,
-            { maxWidth: onboardingTextMaxWidth },
+            styles.onboardingCopyLine,
+            !isDark && { color: "#5D5D5D" },
           ]}
         >
           {data.description}
@@ -960,9 +964,21 @@ const styles = StyleSheet.create({
   textSectionFirstPage: {
     marginBottom: 12,
   },
+  /** Figma content stack: 335px column, centered children, 16px gap */
+  onboardingCopyStack: {
+    alignSelf: "center",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 0,
+  },
+  onboardingCopyLine: {
+    alignSelf: "stretch",
+    width: "100%",
+  },
   paginationDotsBelowText: {
-    marginTop: 16,
-    alignSelf: "flex-start",
+    marginTop: 0,
+    alignSelf: "center",
   },
   /** Consistent horizontal inset — content already has 20px padding */
   textSectionOnboardingInset: {
@@ -989,17 +1005,21 @@ const styles = StyleSheet.create({
   titleOnboarding: {
     fontSize: 24,
     fontFamily: FONTS.bold,
+    fontWeight: "700",
     lineHeight: 32,
   },
   description: {
     textAlign: "left",
     marginBottom: 0,
   },
-  /** Light mode onboarding spec: Body/14px/Regular — 14px, 400, 20px line-height, Satoshi */
+  /** Light mode onboarding spec: Body/14px/Regular — 14px, 400, 20px line-height, Satoshi, #5D5D5D */
   descriptionOnboarding: {
     fontSize: 14,
     fontFamily: FONTS.regular,
+    fontStyle: "normal",
+    fontWeight: "400",
     lineHeight: 20,
+    includeFontPadding: false,
   },
   /** Last onboarding screen: Title/28px/Bold, center — omit lineHeight so Text applies safe spacing */
   titleAuthProgress: {
