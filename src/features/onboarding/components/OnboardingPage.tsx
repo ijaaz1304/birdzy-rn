@@ -256,12 +256,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
           variant="title"
           size="medium"
           weight="bold"
+          allowFontScaling={false}
           style={[
             styles.title,
             styles.titleOnboarding,
             styles.titleLeftAlign,
             styles.onboardingCopyLine,
-            !isDark && { color: SCREEN_COLORS.LIGHT.text },
+            !isDark && { color: "#091B21" },
           ]}
         >
           {data.title}
@@ -1001,12 +1002,14 @@ const styles = StyleSheet.create({
     textAlign: "left",
     alignSelf: "flex-start",
   },
-  /** Light mode onboarding spec: Title/24px/Semibold — 24px, 700, 32px line-height, Satoshi */
+  /** Light mode onboarding spec: Title/24px/Semibold — 24px, 700, 32px line-height, Satoshi, #091B21 */
   titleOnboarding: {
     fontSize: 24,
     fontFamily: FONTS.bold,
+    fontStyle: "normal",
     fontWeight: "700",
     lineHeight: 32,
+    includeFontPadding: false,
   },
   description: {
     textAlign: "left",
