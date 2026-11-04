@@ -16,6 +16,7 @@ import { Text } from "../../atoms";
 import { CancelIconLight, CancelIconDark } from "../../assets";
 
 import { spacing } from "../../design-system/spacing";
+import { FONTS } from "../../common/typography";
 import { UI_COLORS } from "../../constants/colorConstants";
 import { DARK_SURFACE_BRAND_1 } from "../../theme/colors/dark";
 
@@ -154,7 +155,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
         {leftIcon && (
           <Icon
             name={leftIcon}
-            size={20}
+            size={SEARCH_ICON_SIZE}
             color={theme.colors.textTertiary}
             style={styles.leftIcon}
           />
@@ -164,6 +165,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
         {editable || !onPressBar ? (
           <TextInput
             ref={inputRef}
+            allowFontScaling={false}
             style={[
               styles.input,
               {
@@ -198,8 +200,10 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
               variant="body"
               size="small"
               numberOfLines={1}
+              allowFontScaling={false}
               style={[
                 styles.input,
+                styles.inputLabel,
                 {
                   color: value ? textColor : theme.colors.textTertiary,
                 },
@@ -255,6 +259,15 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
   }
 );
 
+/** Figma 8028:18019 "Search Bar" — 24pt search icon */
+const SEARCH_ICON_SIZE = 24;
+
+/**
+ * Figma 8028:18019 "Search Bar":
+ * surface-primary bg, 1pt border-0 (#E7E7E7), radius 360 (theme textfield),
+ * padding 12/16 → 48pt tall, 12pt gap between icon and text.
+ * Text: Body/16px/Regular — Satoshi Regular 16/24, letter-spacing -0.16, tertiary (#888) placeholder.
+ */
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
@@ -266,12 +279,22 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   leftIcon: {
-    marginRight: 8,
+    marginRight: 12,
   },
   input: {
     flex: 1,
     paddingVertical: 0,
-    fontSize: 14,
+    paddingHorizontal: 0,
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    letterSpacing: -0.16,
+    /** Android: drop extra font padding so 16pt text centres in the 48pt bar */
+    includeFontPadding: false,
+    textAlignVertical: "center",
+  },
+  /** Non-editable (tap-to-search) label: Text can take the full 24pt line height */
+  inputLabel: {
+    lineHeight: 24,
   },
   inputPressable: {
     flex: 1,

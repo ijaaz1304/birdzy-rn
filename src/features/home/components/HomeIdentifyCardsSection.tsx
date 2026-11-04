@@ -1,6 +1,11 @@
 import { AppImage } from "@/components/AppImage";
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { AppText } from "../../../components/shared";
 import IdentifySoundArrow from "../../../assets/home/identify_sound_arrow.svg";
@@ -15,6 +20,13 @@ import { Radius } from "../../../design";
 /** Identify by sound card background */
 const SOUND_CARD_BG = "#01474F";
 const SOUND_PANEL_BG = "rgba(255,255,255,0.9)";
+/**
+ * Figma titles are single-line (whitespace-nowrap) at 14/20. Below this window
+ * width (iPhone SE / small Android) they use 12/16 so "Identify by sound"
+ * still fits on one line and both cards keep the same height.
+ * (Not adjustsFontSizeToFit — Android ignores minimumFontScale and shrinks too far.)
+ */
+const COMPACT_BREAKPOINT = 360;
 
 type Props = {
   onSoundPress: () => void;
@@ -30,6 +42,8 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
   const strings = HOME_STRINGS.discovery;
   const cardBg = isDark ? theme.colors.surfaceSecondary : "#EBE4EE";
   const titleColor = theme.colors.textPrimary;
+  const { width: windowWidth } = useWindowDimensions();
+  const isCompact = windowWidth < COMPACT_BREAKPOINT;
 
   return (
     <View style={styles.row}>
@@ -41,10 +55,10 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
         accessibilityLabel={strings.soundIdentify.title}
       >
         <View style={styles.soundHeader}>
-          <AppText
+          <AppText allowFontScaling={false}
             variant="body14"
             numberOfLines={1}
-            style={styles.soundTitle}
+            style={[styles.soundTitle, isCompact && styles.titleCompact]}
           >
             {strings.soundIdentify.title}
           </AppText>
@@ -68,9 +82,14 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
         style={[styles.card, { backgroundColor: cardBg }]}
       >
         <View style={styles.cardHeader}>
-          <AppText
+          <AppText allowFontScaling={false}
             variant="body14"
-            style={[styles.cardTitle, { color: titleColor }]}
+            numberOfLines={1}
+            style={[
+              styles.cardTitle,
+              isCompact && styles.titleCompact,
+              { color: titleColor },
+            ]}
           >
             {strings.identifyByPhoto.title}
           </AppText>
@@ -161,6 +180,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     flex: 1,
     paddingRight: 4,
+  },
+  /** Narrow screens (< COMPACT_BREAKPOINT): 12/16 keeps titles on one line */
+  titleCompact: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   photoIllustration: {
     height: 72,

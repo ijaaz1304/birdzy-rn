@@ -49,7 +49,7 @@ export const HomeBirdDiscoverySection: React.FC<Props> = ({
 
   return (
     <View style={styles.section}>
-      <AppText
+      <AppText allowFontScaling={false}
         variant="body16"
         style={{ fontFamily: FONTS.bold, color: colors.textPrimary }}
       >
@@ -70,14 +70,14 @@ export const HomeBirdDiscoverySection: React.FC<Props> = ({
             ]}
           >
             <MaterialIcons name={card.icon} size={22} color={colors.primary} />
-            <AppText
+            <AppText allowFontScaling={false}
               variant="body14"
               style={{ fontFamily: FONTS.bold, color: colors.textPrimary }}
               numberOfLines={2}
             >
               {card.title}
             </AppText>
-            <AppText variant="caption12" color="textSecondary" numberOfLines={2}>
+            <AppText allowFontScaling={false} variant="caption12" color="textSecondary" numberOfLines={2}>
               {card.description}
             </AppText>
           </TouchableOpacity>

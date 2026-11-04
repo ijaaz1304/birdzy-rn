@@ -159,7 +159,14 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
             styles.bannerCopy,
             {
               left: sc(EXPLORE_DESIGN.copy.left),
-              width: sc(EXPLORE_DESIGN.copy.width),
+              /**
+               * Fonts don't scale, so the copy box must never shrink below
+               * Figma's 158pt or the title/button wrap on small phones.
+               */
+              width: Math.max(
+                EXPLORE_DESIGN.copy.width,
+                sc(EXPLORE_DESIGN.copy.width)
+              ),
             },
           ]}
         >
@@ -201,7 +208,12 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
               },
             ]}
           >
-            <AppText variant="body14" style={{ fontFamily: FONTS.medium }}>
+            <AppText
+              allowFontScaling={false}
+              variant="body14"
+              numberOfLines={1}
+              style={{ fontFamily: FONTS.medium }}
+            >
               {strings.exploreMap}
             </AppText>
           </TouchableOpacity>
@@ -238,7 +250,7 @@ function ExploreRow({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <AppText
+      <AppText allowFontScaling={false}
         variant="body14"
         style={{ fontFamily: FONTS.bold, color: textColor }}
       >

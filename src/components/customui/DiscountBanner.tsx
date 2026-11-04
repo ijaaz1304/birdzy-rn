@@ -48,7 +48,7 @@ function renderTimerDigits(
   const timerText = `${formatCountdownSegment(timeLeftDisplay.hours)} : ${formatCountdownSegment(timeLeftDisplay.minutes)} : ${formatCountdownSegment(timeLeftDisplay.seconds)}`;
 
   return (
-    <Text
+    <Text allowFontScaling={false}
       style={[
         styles.timerBoxText,
         {
@@ -273,7 +273,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                   >
                     {discountPercent}%
                   </Text>
-                  <Text
+                  <Text allowFontScaling={false}
                     style={[
                       styles.offTextInline,
                       {
@@ -295,7 +295,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                   { marginTop: isDark ? scaleSize(4, scale) : 0 },
                 ]}
               >
-                <Text
+                <Text allowFontScaling={false}
                   style={[
                     styles.onSubscriptionLabel,
                     styles.onSubscriptionFirstLine,
@@ -309,7 +309,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                 >
                   {strings.discount.banner.on}
                 </Text>
-                <Text
+                <Text allowFontScaling={false}
                   style={[
                     styles.onSubscriptionLabel,
                     {
@@ -335,7 +335,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                   },
                 ]}
               >
-                <Text
+                <Text allowFontScaling={false}
                   style={[
                     styles.discountEndsLabel,
                     isDark ? styles.discountEndsLabelDark : styles.discountEndsLabelLight,

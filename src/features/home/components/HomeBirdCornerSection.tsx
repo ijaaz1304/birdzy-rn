@@ -42,14 +42,14 @@ const CornerCard: React.FC<CornerCardProps> = ({
       resizeMode="cover"
     >
       <View style={styles.cardCopy}>
-        <AppText
+        <AppText allowFontScaling={false}
           variant="body14"
           style={[styles.cardTitle, { color: textPrimary }]}
           numberOfLines={2}
         >
           {title}
         </AppText>
-        <AppText
+        <AppText allowFontScaling={false}
           variant="caption12"
           style={{ color: textSecondary, lineHeight: 16 }}
           numberOfLines={2}
@@ -82,7 +82,7 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
 
   return (
     <View style={styles.section}>
-      <AppText
+      <AppText allowFontScaling={false}
         variant="body16"
         style={[styles.sectionTitle, { fontFamily: FONTS.bold, color: textPrimary }]}
       >
@@ -120,13 +120,13 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
           resizeMode="stretch"
         >
           <View style={styles.libraryCopy}>
-            <AppText
+            <AppText allowFontScaling={false}
               variant="body14"
               style={[styles.cardTitle, { color: textPrimary }]}
             >
               {corner.birdSoundLibrary.title}
             </AppText>
-            <AppText variant="caption12" style={{ color: textSecondary, lineHeight: 16 }}>
+            <AppText allowFontScaling={false} variant="caption12" style={{ color: textSecondary, lineHeight: 16 }}>
               {corner.birdSoundLibrary.description}
             </AppText>
           </View>
