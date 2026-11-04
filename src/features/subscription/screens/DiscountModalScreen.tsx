@@ -5,6 +5,7 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useTheme } from "../../../hooks/useTheme";
@@ -22,7 +23,8 @@ type DiscountModalScreenRouteProp = RouteProp<
 
 export const DiscountModalScreen: React.FC = () => {
   const theme = useTheme();
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<SubscriptionStackParamList>>();
   const route = useRoute<DiscountModalScreenRouteProp>();
   const { discountCode } = route.params || {};
 
@@ -48,7 +50,7 @@ export const DiscountModalScreen: React.FC = () => {
             weight="bold"
             style={styles.title}
           >
-            Special Offer!
+            Subscription Plans
           </Text>
           <Text
             variant="body"
@@ -57,14 +59,13 @@ export const DiscountModalScreen: React.FC = () => {
             style={styles.description}
           >
             {discountCode
-              ? `Use code ${discountCode} for a discount!`
-              : "Enter a discount code to save on your subscription."}
+              ? `Review available plans in the store. Code ${discountCode} has not been applied.`
+              : "Review available subscription plans and offers. The store shows the final price before purchase."}
           </Text>
           <PrimaryButton
-            title="Apply Discount"
+            title="View Plans"
             onPress={() => {
-              // TODO: Implement discount application
-              navigation.goBack();
+              navigation.navigate("SubscriptionMain");
             }}
           />
         </Card>

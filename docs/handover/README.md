@@ -26,7 +26,7 @@ The handover is complete only when an incoming owner can run, explain, test, rel
 - [docs/API_CORE.md](../API_CORE.md)
 - [docs/API_DOMAIN_MAPPING.md](../API_DOMAIN_MAPPING.md)
 - [docs/sound-recording-device-qa.md](../sound-recording-device-qa.md)
-- `src/features/explore/README.md` (local source, not included in this docs-only publication)
+- [src/features/explore/README.md](../../src/features/explore/README.md)
 
 ## Documentation freshness
 

@@ -24,7 +24,6 @@ import {
   getBirdImageUrls,
   getBirdMatchImageUrls,
   isBirdRecord,
-  mapBirdIdentificationToPossibleMatch,
   birdIdentificationToLegacy,
   normalizeBirdIdentifyResponseLegacy,
   getBirdConservationTone,

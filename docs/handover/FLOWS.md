@@ -71,8 +71,24 @@ Open Explore from Home, search for a place or use location access, inspect activ
 
 **Acceptance/recovery:** Check map token, denied location, manual search, delayed requests, map-only retry, clusters, full-screen return, pagination, and dark mode.
 
-Evidence: `src/features/explore/screens/ExploreMapScreen.tsx` (local source, not included in this docs-only publication); `src/features/explore/README.md` (local source, not included in this docs-only publication).
+Evidence: [src/features/explore/screens/ExploreMapScreen.tsx](../../src/features/explore/screens/ExploreMapScreen.tsx); [src/features/explore/README.md](../../src/features/explore/README.md).
 
 ## Walkthrough record to complete with the incoming owner
 
 For each flow, record the build/environment, test account role, starting state, successful steps, recovery demonstrated, screenshot/video or test evidence, open defect and the person who can answer follow-ups. Keep tokens, receipts, personal media and account passwords out of the walkthrough notes.
+
+## Explore location search recovery — 2026-11-04
+
+Explore previously refused to search when `GEOCODING_API_KEY` was blank, even with a working `MAPBOX_ACCESS_TOKEN`. Forward suggestions now prefer the configured geocode.maps.co provider when its base URL and key are present; otherwise they use Mapbox Geocoding v6 with the existing public token. This follows Plantzy's configured-provider/fallback approach while retaining Explore's cancellation and debounce. No active environment values, variable names or loading rules changed; existing blank templates already include both keys.
+
+Mapbox requests start after three characters and 300 ms without edits, with provider pacing and a 12-second timeout. Temporary Mapbox suggestions are not cached or persisted. Provider failures remain visible; an invalid configured primary key does not silently switch providers. Reverse lookup still requires the original geocoding provider. Search uses HTTP and works independently of the native Mapbox module; the interactive map still requires a native rebuild.
+
+Selection now protects the chosen label from delayed blur callbacks. Validate on iOS and Android: type a city, choose a result with the keyboard open, confirm nearby results and map center update, clear/retype, and repeat in the expanded map. Live token check returned HTTP 200 with five Chennai features; device interaction remains unverified.
+
+## Audit corrections — 2026-11-04
+
+Feed notifications now belong to a stored account owner. Switching accounts or signing out clears the prior account's notification/read state; late subscription callbacks and refresh responses are ignored. Opening the notification list refreshes through the existing Firestore feed service instead of a placeholder. Same-account refresh preserves read IDs. The first post-upgrade ownership assignment clears unscoped legacy notification cache.
+
+The legacy Discount Code route now offers “View Plans” and opens SubscriptionMain. It explicitly says a supplied code has not been applied; the store controls actual eligibility and final price. There is no implemented arbitrary coupon redemption contract.
+
+Specimen PATCH transport preserves explicit empty editable arrays (including collections, habitat and captured sounds); omitted values remain unchanged and immutable image fields remain excluded. A caller must intentionally supply an empty list to clear it.

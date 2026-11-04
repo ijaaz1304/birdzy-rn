@@ -79,7 +79,7 @@ export function flattenBirdSpecimenUpdate(
   const assign = (key: string, value: unknown) => {
     if (!allowed.has(key)) return;
     if (value === undefined || value === "") return;
-    if (Array.isArray(value) && value.length === 0) return;
+    // Explicit empty arrays clear editable lists; omission means leave unchanged.
     out[key] = value;
   };
 

@@ -42,7 +42,7 @@ Implementation reference: [src/features/discovery/screens/StepByStepScreen.tsx](
 
 Open Explore from Home, search for a place or use location access, inspect activity on the map, switch Spotted Now / Year-round, select a group, and open bird details. Map filters affect map activity; seasonal tabs affect the nearby list.
 
-Implementation reference: `src/features/explore/screens/ExploreMapScreen.tsx` (local source, not included in this docs-only publication); `src/features/explore/README.md` (local source, not included in this docs-only publication).
+Implementation reference: [src/features/explore/screens/ExploreMapScreen.tsx](../../src/features/explore/screens/ExploreMapScreen.tsx); [src/features/explore/README.md](../../src/features/explore/README.md).
 
 ## Product decisions still needing a named owner
 

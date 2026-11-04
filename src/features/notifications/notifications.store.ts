@@ -32,6 +32,8 @@ export interface FeedNotificationDoc {
 }
 
 interface NotificationsState {
+  ownerUserId: string | null;
+  setOwner: (userId: string | null) => void;
   notifications: Notification[];
   unreadCount: number;
   isEnabled: boolean;
@@ -51,9 +53,25 @@ interface NotificationsState {
   fetchNotifications: () => Promise<void>;
 }
 
+let notificationOwnerGeneration = 0;
+let notificationOwnerAssigned = false;
+
 export const useNotificationsStore = create<NotificationsState>()(
   persist(
     (set, _get) => ({
+      ownerUserId: null,
+      setOwner: (userId) => {
+        notificationOwnerAssigned = true;
+        if (_get().ownerUserId !== userId) {
+          notificationOwnerGeneration++;
+          set({
+            ownerUserId: userId,
+            notifications: [],
+            unreadCount: 0,
+            isLoading: false,
+          });
+        }
+      },
       notifications: [],
       unreadCount: 0,
       isEnabled: true,
@@ -171,22 +189,56 @@ export const useNotificationsStore = create<NotificationsState>()(
       },
 
       fetchNotifications: async () => {
+        const { useAuthStore } = require("../auth/auth.store");
+        const userId: string | null = useAuthStore.getState().user?.id ?? null;
+        _get().setOwner(userId);
+        if (!userId || _get().isLoading) return;
         set({ isLoading: true });
+        const generation = notificationOwnerGeneration;
+        const current = () =>
+          generation === notificationOwnerGeneration &&
+          _get().ownerUserId === userId &&
+          useAuthStore.getState().user?.id === userId;
         try {
-          // TODO: Implement actual notifications fetch API call
-          // const notifications = await notificationsService.getNotifications();
-          // set({ notifications, isLoading: false });
-
-          // Placeholder
-          set({ isLoading: false });
+          const {
+            feedService,
+          } = require("../../services/firebase/feed.service");
+          const docs = await feedService.fetchFeedNotificationDocuments(userId);
+          if (current()) _get().setNotificationsFromFirestore(docs);
         } catch (error) {
-          set({ isLoading: false });
+          if (__DEV__) console.warn("Notification refresh failed", error);
+        } finally {
+          if (current()) set({ isLoading: false });
         }
       },
     }),
     {
       name: "birdzy-notifications-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        ownerUserId: state.ownerUserId,
+        notifications: state.notifications,
+        unreadCount: state.unreadCount,
+        isEnabled: state.isEnabled,
+      }),
+      merge: (persisted, current) => {
+        const saved = persisted as Partial<NotificationsState> | undefined;
+        // Async hydration must not restore another account after setOwner ran.
+        if (
+          !saved?.ownerUserId ||
+          (notificationOwnerAssigned &&
+            saved.ownerUserId !== current.ownerUserId)
+        )
+          return current;
+        return {
+          ...current,
+          ownerUserId: saved.ownerUserId,
+          notifications: saved.notifications ?? [],
+          unreadCount: saved.unreadCount ?? 0,
+          isEnabled: saved.isEnabled ?? current.isEnabled,
+          isLoading: false,
+        };
+      },
     }
   )
 );

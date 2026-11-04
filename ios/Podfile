@@ -144,6 +144,13 @@ target 'Birdzy' do
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |build_config|
         build_config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+        # Resource/privacy pods may declare iOS 8–13; modern Xcode rejects them.
+        # Raise only outdated targets to React Native's supported minimum.
+        minimum_ios = Gem::Version.new(min_ios_version_supported)
+        pod_ios = build_config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if pod_ios && Gem::Version.correct?(pod_ios) && Gem::Version.new(pod_ios) < minimum_ios
+          build_config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
+        end
       end
     end
     installer.aggregate_targets.each do |aggregate_target|

@@ -403,35 +403,6 @@ class AIService {
       throw normalizeError(error);
     }
   }
-
-  /**
-   * Get mineral information
-   */
-  async getMushroomInfo(_mushroomId: string): Promise<string[]> {
-    // TODO: Implement actual mushroom information retrieval
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          "Quartz is one of the most common minerals on Earth",
-          "Composed of silicon dioxide (SiO₂)",
-          "Forms in igneous, sedimentary, and metamorphic rocks",
-          "Used in electronics, glass, and jewelry",
-        ]);
-      }, 500);
-    });
-  }
-
-  /**
-   * Diagnose rock type from image.
-   * Use identifyMushroom for mushroom identification; this is for disease/diagnosis flows.
-   */
-  async diagnoseRock(_imageUri: string): Promise<DiagnosisResult> {
-    return Promise.reject(
-      new Error(
-        "diagnoseRock is not implemented. Use identifyMushroom for mushroom identification."
-      )
-    );
-  }
 }
 
 export const aiService = new AIService();

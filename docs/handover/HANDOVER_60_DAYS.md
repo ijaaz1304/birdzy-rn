@@ -96,3 +96,9 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 - [ ] 2026-11-04: Incoming mobile owner (unassigned) to verify the rebuilt iOS/Android Mapbox module, interactive Explore and missing-module fallback; device acceptance remains open.
 
 - [ ] 2026-11-04: API/mobile owner (unassigned) to confirm successful authenticated POST map GeoJSON response on the Bird deployment after the GET 404 correction.
+
+- [ ] 2026-11-04: Mobile owner (unassigned) to verify Explore city search/selection with keyboard open, clear/retype and expanded map on both platforms. Provider HTTP acceptance passed; device interaction remains open.
+
+- [ ] 2026-11-04 audit: Assign mobile/backend/QA owners and verify account-isolated notifications, actual Firestore refresh, specimen list clearing, discount-to-plans navigation, and rebuilt native maps on both platforms. Mock/service checks are recorded in CHANGELOG; device/store acceptance remains open.
+
+- [ ] 2026-11-04: User will run native builds. Audit build was stopped at user request; record resulting build links, map/device checks and release acceptance here.

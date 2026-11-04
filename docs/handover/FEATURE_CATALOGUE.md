@@ -51,7 +51,7 @@ This map is derived from the current source tree. A folder or screen declaration
 - [src/navigation/index.ts](../../src/navigation/index.ts)
 - [src/navigation/FeedStack.tsx](../../src/navigation/FeedStack.tsx)
 - [src/navigation/identifyFlowScreenOptions.ts](../../src/navigation/identifyFlowScreenOptions.ts)
-- `src/navigation/ExploreStack.tsx` (local source, not included in this docs-only publication)
+- [src/navigation/ExploreStack.tsx](../../src/navigation/ExploreStack.tsx)
 - [src/navigation/deepLinking/deferredDeepLink.ts](../../src/navigation/deepLinking/deferredDeepLink.ts)
 - [src/navigation/deepLinking/deepLinkAnalytics.ts](../../src/navigation/deepLinking/deepLinkAnalytics.ts)
 - [src/navigation/deepLinking/deepLinkAuthFlow.ts](../../src/navigation/deepLinking/deepLinkAuthFlow.ts)

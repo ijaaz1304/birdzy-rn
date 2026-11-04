@@ -38,7 +38,7 @@ Source: [src/features/discovery/screens/StepByStepScreen.tsx](../../src/features
 
 - [ ] Check map token, denied location, manual search, delayed requests, map-only retry, clusters, full-screen return, pagination, and dark mode.
 
-Source: `src/features/explore/screens/ExploreMapScreen.tsx` (local source, not included in this docs-only publication); `src/features/explore/README.md` (local source, not included in this docs-only publication).
+Source: [src/features/explore/screens/ExploreMapScreen.tsx](../../src/features/explore/screens/ExploreMapScreen.tsx); [src/features/explore/README.md](../../src/features/explore/README.md).
 
 ## Commands
 
@@ -65,3 +65,13 @@ A reproducible bug description, expected/actual state, redacted request/response
 
 - [docs/ANALYTICS_EVENTS_QA.md](../ANALYTICS_EVENTS_QA.md)
 - [docs/sound-recording-device-qa.md](../sound-recording-device-qa.md)
+
+## Explore location search regression
+
+Run `npx jest __tests__/explore --runInBand`. The geocoding regression covers missing separate geocoding key with Mapbox available, coordinate order/range validation, no temporary Mapbox cache, minimum query length, cancellation and provider error handling. On both platforms, also verify suggestion taps while the keyboard is open, no old label restoration after selection, new coordinates driving results, and expanded-map search. These device checks remain open as of 2026-11-04.
+
+## App audit validation — 2026-11-04
+
+The camera prompt tests now supply the real light-theme context, matching the app host, including the foreground-ready first-visit scenario. Notification regressions cover account isolation, same-account retention, actual service refresh and stale sign-out responses; specimen regressions cover clearing editable arrays. Version-store regression checks the installed native version. Run the full Jest suite plus TypeScript, app-wide ESLint and both image verification scripts.
+
+Device acceptance remains open: sign out/switch accounts while the notification list is loading; open View Plans from the legacy discount route; clear an editable specimen list and reload it; verify native Mapbox tiles, search, expansion and selection on both platforms. Provider/store/backend availability is not established by mocked tests.

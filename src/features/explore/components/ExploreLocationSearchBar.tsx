@@ -47,6 +47,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState(locationLabel);
+  const selectedLabelRef = useRef(locationLabel);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { suggestions, isLoading, error, cancel } = useLocationSuggestions(
     query,
@@ -56,6 +57,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
     cancel();
     setQuery(locationLabel);
     setSelectedLabel(locationLabel);
+    selectedLabelRef.current = locationLabel;
   }, [locationLabel, cancel]);
   useEffect(
     () => () => {
@@ -66,10 +68,14 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
 
   const handleSelect = useCallback(
     (item: GeocodingSearchResult) => {
+      if (blurTimer.current) clearTimeout(blurTimer.current);
       cancel();
       Keyboard.dismiss();
       setQuery(item.name);
       setSelectedLabel(item.name);
+      selectedLabelRef.current = item.name;
+      // Dismissing the keyboard can schedule onBlur with the previous label.
+      if (blurTimer.current) clearTimeout(blurTimer.current);
       setIsFocused(false);
       onSelectLocation({
         latitude: item.location.latitude,
@@ -84,6 +90,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
     cancel();
     setQuery("");
     setSelectedLabel("");
+    selectedLabelRef.current = "";
   }, [cancel]);
 
   const renderItem = useCallback(
@@ -156,7 +163,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
               // Nothing was picked from the dropdown — restore the
               // previously selected label instead of leaving the field
               // blank or showing abandoned typed text.
-              setQuery(selectedLabel);
+              setQuery(selectedLabelRef.current);
             }, 150);
           }}
         />

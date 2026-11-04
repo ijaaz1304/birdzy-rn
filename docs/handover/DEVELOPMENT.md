@@ -85,3 +85,7 @@ If Explore reports `@rnmapbox/maps native code not available`, the installed bin
 Close the old app before opening the rebuilt installation. Verify Explore on that installation: map tiles, search, selection and expanded map, plus nearby results. Do not treat a JavaScript bundle as native-linking verification.
 
 `ExploreMapView.tsx` checks `NativeModules.RNMBXModule` before loading the SDK-backed `ExploreMapView.nativeMap.tsx`. Older binaries display an update message while location search and nearby results remain accessible. This fallback does not provide an interactive map; a native rebuild is required. No environment variable names or loading behavior changed.
+
+## App audit changes — 2026-11-04
+
+The Podfile normalizes outdated pod deployment targets to React Native's minimum. Reinstall pods after pulling it. The version store reads the installed version from react-native-device-info; a deployed latest/minimum-version contract is still absent, so this is not a working remote update-enforcement system. Notifications persist an ownerUserId and clear unscoped/other-account cached state on owner assignment. Keep account generation checks when changing refresh behavior.

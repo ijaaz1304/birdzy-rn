@@ -50,7 +50,6 @@ import { COLLECTION_STRINGS } from "../../../config/strings/collection.strings";
 import type { BirdSoundsScreenParams } from "../../../navigation/types";
 import { buildBirdSoundListItems } from "../utils/birdSoundListItems";
 import type { MushroomDetail } from "../../../types/mushrooms.types";
-import type { LookAlike } from "../../../services/api/features/core.api.types";
 import { getDisplayName } from "../../../utils/mushroomDisplayUtils";
 import { FIGMA_TOKENS } from "../../../design-system/colors/figmaTokens";
 

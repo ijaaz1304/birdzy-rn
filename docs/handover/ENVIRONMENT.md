@@ -223,3 +223,15 @@ Seen in: `.env`, `.env.dev`, `.env.example`, `.env.prod`. Source: [src/constants
 - [ ] Sign-in, identify, one saved record, enabled map/location features, push and sandbox purchase/restore work on the selected build.
 - [ ] Secret values are absent from docs, screenshots, tickets and ordinary debug logs.
 - [ ] Credential restrictions, billing owner, rotation process and recovery owner are recorded in [the access checklist](HANDOVER_60_DAYS.md).
+
+## Explore location search recovery — 2026-11-04
+
+Explore previously refused to search when `GEOCODING_API_KEY` was blank, even with a working `MAPBOX_ACCESS_TOKEN`. Forward suggestions now prefer the configured geocode.maps.co provider when its base URL and key are present; otherwise they use Mapbox Geocoding v6 with the existing public token. This follows Plantzy's configured-provider/fallback approach while retaining Explore's cancellation and debounce. No active environment values, variable names or loading rules changed; existing blank templates already include both keys.
+
+Mapbox requests start after three characters and 300 ms without edits, with provider pacing and a 12-second timeout. Temporary Mapbox suggestions are not cached or persisted. Provider failures remain visible; an invalid configured primary key does not silently switch providers. Reverse lookup still requires the original geocoding provider. Search uses HTTP and works independently of the native Mapbox module; the interactive map still requires a native rebuild.
+
+Selection now protects the chosen label from delayed blur callbacks. Validate on iOS and Android: type a city, choose a result with the keyboard open, confirm nearby results and map center update, clear/retype, and repeat in the expanded map. Live token check returned HTTP 200 with five Chennai features; device interaction remains unverified.
+
+## iOS pod compatibility — 2026-11-04
+
+The Podfile post-install hook raises pod deployment targets below React Native's minimum to that minimum (currently iOS 15.1), including privacy/resource targets. Higher declared targets are preserved. This fixes modern Xcode rejecting inherited iOS 8–13 targets. Regenerate with `npm run pod:install`; do not hand-edit generated Pods projects. No environment keys changed.

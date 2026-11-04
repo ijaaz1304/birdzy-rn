@@ -14,7 +14,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import {
-  CARD_COLORS,
   SCREEN_COLORS,
   SUBSCRIPTION_COLORS,
 } from "../../../constants/colorConstants";

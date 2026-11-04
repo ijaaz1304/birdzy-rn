@@ -28,6 +28,17 @@ import {
 } from "../../src/features/collection/editMushroomDetails.utils";
 
 describe("bird specimen API payloads", () => {
+  it("preserves explicit empty editable lists while excluding immutable images", () => {
+    expect(
+      flattenBirdSpecimenUpdate({
+        _collections: [],
+        userCapturedSounds: [],
+        habitat: [],
+        imageUrls: [],
+        commonName: undefined,
+      })
+    ).toEqual({ _collections: [], userCapturedSounds: [], habitat: [] });
+  });
   it("flattens nested classification and watching tips for PATCH", () => {
     const flat = flattenBirdSpecimenUpdate({
       commonName: "House Sparrow",

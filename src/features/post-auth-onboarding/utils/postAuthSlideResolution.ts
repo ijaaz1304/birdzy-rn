@@ -3,7 +3,6 @@ import {
   shouldSkipNotificationPermissionPrompt,
 } from "../../../services/permissions/permissionPromptSkip";
 import { POST_AUTH_ONBOARDING_STEPS } from "../constants";
-import { isPostAuthPromoSlide } from "./skipPromoSlides";
 
 export type PostAuthSlideResolution =
   | { kind: "slide"; slide: number }

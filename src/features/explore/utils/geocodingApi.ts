@@ -1,9 +1,13 @@
 /**
- * Forward & reverse geocoding via geocode.maps.co (OpenStreetMap / Nominatim).
- * Used for identify location label and Change Location search.
+ * Explore geocoding: configured geocode.maps.co for forward/reverse lookup,
+ * or Mapbox forward search when the separate geocoding key is absent.
  */
 
-import { GEOCODING_API_BASE_URL, GEOCODING_API_KEY } from "@/constants/env";
+import {
+  GEOCODING_API_BASE_URL,
+  GEOCODING_API_KEY,
+  MAPBOX_ACCESS_TOKEN,
+} from "@/constants/env";
 import { createRequestGate } from "./abortableRequest";
 import { isValidCoordinate } from "./locationCoordinates";
 import { logLocation, logLocationError } from "@/utils/locationDebug";
@@ -72,7 +76,8 @@ const searchCache = new Map<
 
 async function fetchNominatim(
   url: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  useMapbox = false
 ): Promise<unknown> {
   return requestGeocoding(async () => {
     const controller = new AbortController();
@@ -89,7 +94,9 @@ async function fetchNominatim(
         signal: controller.signal,
         headers: {
           Accept: "application/json",
-          Authorization: `Bearer ${GEOCODING_API_KEY}`,
+          ...(!useMapbox
+            ? { Authorization: `Bearer ${GEOCODING_API_KEY}` }
+            : {}),
         },
       });
       if (!response.ok) {
@@ -222,6 +229,14 @@ export async function searchAddressSuggestions(
 ): Promise<GeocodingSearchResult[]> {
   const trimmed = query.trim();
   if (trimmed.length < 3) return [];
+  if (!hasGeocodingConfig() && MAPBOX_ACCESS_TOKEN?.trim()) {
+    try {
+      return await searchMapbox(trimmed, options.signal);
+    } catch (error) {
+      if (options.throwOnError || options.signal?.aborted) throw error;
+      return [];
+    }
+  }
   if (!hasGeocodingConfig()) {
     if (options.throwOnError)
       throw new Error(
@@ -283,4 +298,57 @@ export async function geocodeAddress(
     longitude: first.location.longitude,
     formattedAddress: first.formattedAddress || first.name,
   };
+}
+
+/** Temporary Mapbox suggestions are used in-session only, never cached. */
+async function searchMapbox(
+  query: string,
+  signal?: AbortSignal
+): Promise<GeocodingSearchResult[]> {
+  const url = new URL("https://api.mapbox.com/search/geocode/v6/forward");
+  url.searchParams.set("q", query);
+  url.searchParams.set("access_token", MAPBOX_ACCESS_TOKEN.trim());
+  url.searchParams.set("limit", "5");
+  url.searchParams.set("autocomplete", "true");
+  const data = (await fetchNominatim(url.toString(), signal, true)) as {
+    features?: Array<{
+      id?: string;
+      geometry?: { coordinates?: number[] };
+      properties?: {
+        mapbox_id?: string;
+        full_address?: string;
+        name?: string;
+        place_formatted?: string;
+      };
+    }>;
+  };
+  if (!Array.isArray(data?.features))
+    throw new Error("Unable to search locations. Please try again.");
+  return data.features.flatMap((feature) => {
+    const coordinates = feature.geometry?.coordinates;
+    const longitude = coordinates?.[0];
+    const latitude = coordinates?.[1];
+    const properties = feature.properties;
+    const label =
+      properties?.full_address ||
+      [properties?.name, properties?.place_formatted]
+        .filter(Boolean)
+        .join(", ");
+    if (
+      typeof latitude !== "number" ||
+      typeof longitude !== "number" ||
+      !isValidCoordinate(latitude, longitude) ||
+      !label
+    )
+      return [];
+    return [
+      {
+        placeId:
+          properties?.mapbox_id || feature.id || `${latitude},${longitude}`,
+        name: label,
+        formattedAddress: label,
+        location: { latitude, longitude },
+      },
+    ];
+  });
 }

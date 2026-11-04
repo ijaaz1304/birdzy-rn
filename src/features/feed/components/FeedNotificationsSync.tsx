@@ -25,9 +25,12 @@ export const FeedNotificationsSync: React.FC = () => {
   }, [userId]);
 
   useEffect(() => {
+    useNotificationsStore.getState().setOwner(userId ?? null);
     if (!userId) return;
+    let active = true;
 
     const unsub = feedService.subscribeToFeedNotifications(userId, (docs) => {
+      if (!active || useAuthStore.getState().user?.id !== userId) return;
       const mapped: FeedNotificationBannerDoc[] = docs.map((d) => ({
         id: d.id,
         type: d.type,
@@ -51,7 +54,10 @@ export const FeedNotificationsSync: React.FC = () => {
       })();
     });
 
-    return unsub;
+    return () => {
+      active = false;
+      unsub();
+    };
   }, [userId, setNotificationsFromFirestore]);
 
   return null;

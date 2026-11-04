@@ -80,7 +80,7 @@ These are path declarations found in source, intended as navigation aids for a d
 - Core/domain API: resolve this app’s origin from [src/constants/env.ts](../../src/constants/env.ts).
 - Firebase: review tracked native configuration, rules/indexes and Firebase initialization before changes to feeds, notifications or media.
 - Billing: [src/features/subscription](../../src/features/subscription) owns the client purchase/restore path; store product setup and backend confirmation still need console/backend ownership.
-- `src/features/explore/services/explore.api.ts` (local source, not included in this docs-only publication)
+- [src/features/explore/services/explore.api.ts](../../src/features/explore/services/explore.api.ts)
 - [src/services/ai/ai.service.ts](../../src/services/ai/ai.service.ts)
 
 ## Change approach for an API contract
@@ -95,3 +95,9 @@ These are path declarations found in source, intended as navigation aids for a d
 ## Explore map method correction — 2026-11-04
 
 Explore uses `POST /core/archetypes/explore-map-geojson` with no request body; explicit `bbox` and scalar trait filters remain query parameters. This matches the Shroomzy client in `Shroom-Ai/src/services/api/features/explore.api.ts`. The previously implemented GET returned a user-reported 404 from the Bird API. The client still expects a raw GeoJSON FeatureCollection and preserves authentication, cancellation and independent map rate limiting. A successful authenticated POST against the deployed Bird backend remains to be verified; the method change is verified by mocked client tests, not a live response.
+
+## Audit corrections — 2026-11-04
+
+`flattenBirdSpecimenUpdate` now preserves explicit empty arrays for editable list fields, instead of silently discarding clearing requests. Unknown/immutable fields remain excluded. Mock contract regressions cover this; live clearing semantics still require backend acceptance.
+
+Notification-list refresh uses `feedService.fetchFeedNotificationDocuments` and the existing Firestore subscription remains active. Refresh results are scoped to the current owner/generation; stale responses cannot repopulate a different account's state. No new HTTP endpoint was invented.

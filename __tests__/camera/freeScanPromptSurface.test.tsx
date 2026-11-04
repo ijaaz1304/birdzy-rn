@@ -1,4 +1,6 @@
 import React from "react";
+import { ThemeContext } from "../../src/app/ThemeProvider";
+import { themes } from "../../src/design-system/themes";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { AppState, InteractionManager, Modal } from "react-native";
 import { useFreeScanPromptSurface } from "../../src/hooks/useFreeScanPromptSurface";
@@ -22,10 +24,16 @@ function Root({
   mounted?: boolean;
 }) {
   return (
-    <>
+    <ThemeContext.Provider
+      value={{
+        theme: themes.light,
+        themeMode: "light",
+        setThemeMode: jest.fn(),
+      }}
+    >
       {mounted && <Camera focused={camera} />}
       <FreeScanLimitDialog active isPremium={false} onUpgrade={jest.fn()} />
-    </>
+    </ThemeContext.Provider>
   );
 }
 const visible = () => renderer.root.findByType(Modal).props.visible;
@@ -109,7 +117,17 @@ it("retries the introduction when a first camera mount becomes foreground-ready"
     value: "inactive",
   });
   await act(async () => {
-    renderer = create(<FirstVisitCamera />);
+    renderer = create(
+      <ThemeContext.Provider
+        value={{
+          theme: themes.light,
+          themeMode: "light",
+          setThemeMode: jest.fn(),
+        }}
+      >
+        <FirstVisitCamera />
+      </ThemeContext.Provider>
+    );
   });
   expect(visible()).toBe(false);
   Object.defineProperty(AppState, "currentState", {
