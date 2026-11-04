@@ -1,3 +1,4 @@
+import { flattenBirdSpecimenUpdate } from "../../services/api/features/birdSpecimenUpdate";
 import {
   FruitingSeason,
   LookAlike,
@@ -335,9 +336,7 @@ export function parseEditableMushroomData(
     userCapturedSounds: Array.isArray(raw.userCapturedSounds)
       ? (raw.userCapturedSounds as string[]).filter(Boolean)
       : [],
-    flightPattern: joinList(
-      raw.flightPattern as string[] | string | undefined
-    ),
+    flightPattern: joinList(raw.flightPattern as string[] | string | undefined),
     flightAltitude: joinList(
       raw.flightAltitude as string[] | string | undefined
     ),
@@ -384,112 +383,7 @@ export function parseEditableMushroomData(
   };
 }
 
-export function flattenBirdSpecimenUpdate(
-  payload: Record<string, unknown>
-): Record<string, unknown> {
-  const nestedKeys = [
-    "scientificClassification",
-    "birdWatchingTips",
-    "rangeDetails",
-    "potentialHazards",
-    "profile",
-  ] as const;
-
-  const allowed = new Set([
-    "commonName",
-    "scientificName",
-    "summary",
-    "wikipediaLink",
-    "birdType",
-    "customLocation",
-    "flightPattern",
-    "flightSpeed",
-    "flightAltitude",
-    "diet",
-    "habitat",
-    "lifeExpectancyInWild",
-    "conservationStatus",
-    "funFacts",
-    "lengthRange",
-    "wingspanRange",
-    "weightRange",
-    "keyIdentificationMarks",
-    "dominantColors",
-    "sexDifferences",
-    "isIdentified",
-    "isOwned",
-    "matchScore",
-    "_collections",
-    "_archetype",
-    "scientificClassification.kingdom",
-    "scientificClassification.phylum",
-    "scientificClassification.class",
-    "scientificClassification.order",
-    "scientificClassification.family",
-    "scientificClassification.genus",
-    "scientificClassification.species",
-    "birdWatchingTips.bestTime",
-    "birdWatchingTips.preferredLocations",
-    "birdWatchingTips.behavioralCues",
-    "potentialHazards.toHumans",
-    "potentialHazards.toPets",
-    "potentialHazards.tobirds",
-    "rangeDetails.yearRound",
-    "rangeDetails.migration",
-    "rangeDetails.breeding",
-    "rangeDetails.nonBreeding",
-    "profile.size",
-    "profile.familyDescription",
-    "profile.shape",
-    "profile.beak",
-    "profile.tailShape",
-    "profile.legCharacteristics",
-    "profile.feedingBehavior",
-    "profile.vocalBehavior",
-    "profile.territoriality",
-    "profile.socialBehavior",
-    "profile.dietType",
-    "profile.feedingStyle",
-    "profile.breedingSeason",
-    "profile.nestType",
-    "profile.nestingMaterial",
-    "profile.parentalCare",
-    "profile.residentStatus",
-    "profile.migrationPath",
-    "profile.seasonalPresence",
-  ]);
-
-  const out: Record<string, unknown> = {};
-  const assign = (key: string, value: unknown) => {
-    if (!allowed.has(key)) return;
-    if (value === undefined || value === "") return;
-    if (Array.isArray(value) && value.length === 0) return;
-    out[key] = value;
-  };
-
-  for (const prefix of nestedKeys) {
-    const nested = payload[prefix];
-    if (nested && typeof nested === "object" && !Array.isArray(nested)) {
-      for (const [key, value] of Object.entries(
-        nested as Record<string, unknown>
-      )) {
-        assign(`${prefix}.${key}`, value);
-      }
-    }
-  }
-
-  if (payload.isWishlisted === false) {
-    out.isWishlisted = false;
-  }
-
-  for (const [key, value] of Object.entries(payload)) {
-    if ((nestedKeys as readonly string[]).includes(key)) continue;
-    if (key === "isWishlisted") continue;
-    assign(key, value);
-  }
-
-  return out;
-}
+export { flattenBirdSpecimenUpdate } from "../../services/api/features/birdSpecimenUpdate";
 
 export function buildMushroomUpdatePayload(
   formData: EditableMushroomData
@@ -683,6 +577,22 @@ export function buildMushroomSpecimenAddPayload(
       : undefined);
 
   const payload: Record<string, unknown> = {
+    ...Object.fromEntries(
+      [
+        "scientificClassification",
+        "birdWatchingTips",
+        "rangeDetails",
+        "potentialHazards",
+        "flightSpeed",
+        "lifeExpectancyInWild",
+        "funFacts",
+        "similarBirds",
+        "sexDifferences",
+        "analyticsUrl",
+      ]
+        .filter((key) => archetypeRaw[key] !== undefined)
+        .map((key) => [key, archetypeRaw[key]])
+    ),
     scientificName,
     imageUrls: resolvedImageUrls,
     defaultImageUrl: resolvedImageUrls[0],
@@ -701,8 +611,9 @@ export function buildMushroomSpecimenAddPayload(
     _archetype: archetypeId,
     isIdentified: options.isIdentified ?? false,
     isWishlisted: options.isWishlisted ?? false,
-    ...(collections.length > 0 ? { _collections: collections } : {}),
+    _collections: collections,
     birdType: edited.birdType,
+    flightPattern: edited.flightPattern,
     flightAltitude: edited.flightAltitude,
     diet: edited.diet,
     habitat: edited.habitat,
@@ -714,6 +625,25 @@ export function buildMushroomSpecimenAddPayload(
     keyIdentificationMarks: edited.keyIdentificationMarks,
     customLocation: edited.customLocation,
   };
+
+  // POST accepts nested objects; PATCH uses flattened keys. Preserve edited values in both.
+  for (const prefix of [
+    "scientificClassification",
+    "birdWatchingTips",
+    "rangeDetails",
+    "potentialHazards",
+  ]) {
+    const nested = {
+      ...(payload[prefix] as Record<string, unknown> | undefined),
+    };
+    for (const [key, value] of Object.entries(edited)) {
+      if (key.startsWith(`${prefix}.`))
+        nested[key.slice(prefix.length + 1)] = value;
+    }
+    if (Object.keys(nested).length) payload[prefix] = nested;
+  }
+  if (!scientificName)
+    throw new Error("A scientific name is required to save this bird.");
 
   return Object.fromEntries(
     Object.entries(payload).filter(([, v]) => v !== undefined)

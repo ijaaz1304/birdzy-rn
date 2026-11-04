@@ -981,6 +981,8 @@ export const useAuthStore = create<AuthState>()(
 
       // Shared cleanup: clear session AsyncStorage, session, stores, cache (used by logout and deleteProfile).
       _clearAllSessionAndStorage: async () => {
+        const { useNotificationsStore } = require("../notifications/notifications.store");
+        useNotificationsStore.getState().setOwner(null);
         let themeMode: import("../../design-system/themes").ThemeMode = "system";
         try {
           const { useThemeStore } = require("../theme/theme.store");
@@ -1016,6 +1018,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { useBirdsStore } = require("../catalogue/birds.store");
           useBirdsStore.getState().reset();
+          const { useExploreStore } = require("../explore/explore.store");
+          useExploreStore.getState().reset();
         } catch (e) {
           /* ignore */
         }

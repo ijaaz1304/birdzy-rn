@@ -1517,11 +1517,49 @@ PODS:
   - libwebp/sharpyuv (1.5.0)
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
+  - MapboxCommon (24.23.1):
+    - Turf (= 4.0.0)
+  - MapboxCoreMaps (11.23.1):
+    - MapboxCommon (= 24.23.1)
+  - MapboxMaps (11.23.1):
+    - MapboxCommon (= 24.23.1)
+    - MapboxCoreMaps (= 11.23.1)
+    - Turf (= 4.0.0)
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
+  - NitroAudioRecorderPlayer (4.5.0):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - NitroModules
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - NitroIap (14.7.7):
     - boost
     - DoubleConversion
@@ -3354,34 +3392,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-cameraroll (7.10.2):
-    - boost
-    - DoubleConversion
-    - fast_float
-    - fmt
-    - glog
-    - hermes-engine
-    - RCT-Folly
-    - RCT-Folly/Fabric
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - SocketRocket
-    - Yoga
   - react-native-fbsdk-next (13.4.3):
     - React-Core
     - react-native-fbsdk-next/Core (= 13.4.3)
@@ -4113,6 +4123,8 @@ PODS:
   - RecaptchaInterop (101.0.0)
   - RNAppleAuthentication (2.5.1):
     - React-Core
+  - RNAudioPcmStream (1.3.0):
+    - React
   - RNCAsyncStorage (2.2.0):
     - boost
     - DoubleConversion
@@ -4357,6 +4369,38 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - TOCropViewController (~> 2.8.0)
+    - Yoga
+  - rnmapbox-maps (10.3.6):
+    - MapboxMaps (~> 11.23.1)
+    - React
+    - React-Core
+    - rnmapbox-maps/DynamicLibrary (= 10.3.6)
+    - Turf
+  - rnmapbox-maps/DynamicLibrary (10.3.6):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - hermes-engine
+    - MapboxMaps (~> 11.23.1)
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - React-Core
+    - React-featureflags
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Turf
     - Yoga
   - RNNotifee (9.1.8):
     - React-Core
@@ -4724,6 +4768,7 @@ PODS:
     - SDWebImage/Core (~> 5.10)
   - SocketRocket (0.7.1)
   - TOCropViewController (2.8.0)
+  - Turf (4.0.0)
   - VisionCamera (4.7.3):
     - VisionCamera/Core (= 4.7.3)
     - VisionCamera/React (= 4.7.3)
@@ -4742,6 +4787,7 @@ DEPENDENCIES:
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - GTMSessionFetcher/Core (~> 3.4)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - NitroAudioRecorderPlayer (from `../node_modules/react-native-audio-recorder-player`)
   - NitroIap (from `../node_modules/react-native-iap`)
   - NitroModules (from `../node_modules/react-native-nitro-modules`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
@@ -4779,7 +4825,6 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - "react-native-blur (from `../node_modules/@react-native-community/blur`)"
-  - "react-native-cameraroll (from `../node_modules/@react-native-camera-roll/camera-roll`)"
   - react-native-fbsdk-next (from `../node_modules/react-native-fbsdk-next`)
   - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
   - "react-native-image-editor (from `../node_modules/@react-native-community/image-editor`)"
@@ -4821,6 +4866,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeWebPFormat (from `../node_modules/react-native-webp-format`)
   - "RNAppleAuthentication (from `../node_modules/@invertase/react-native-apple-authentication`)"
+  - RNAudioPcmStream (from `../node_modules/react-native-live-audio-fft`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
@@ -4838,6 +4884,7 @@ DEPENDENCIES:
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
   - RNImageCropPicker (from `../node_modules/react-native-image-crop-picker`)
+  - "rnmapbox-maps (from `../node_modules/@rnmapbox/maps`)"
   - "RNNotifee (from `../node_modules/@notifee/react-native`)"
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -4892,6 +4939,9 @@ SPEC REPOS:
     - GTMSessionFetcher
     - leveldb-library
     - libwebp
+    - MapboxCommon
+    - MapboxCoreMaps
+    - MapboxMaps
     - nanopb
     - openiap
     - PromisesObjC
@@ -4901,6 +4951,7 @@ SPEC REPOS:
     - SDWebImageWebPCoder
     - SocketRocket
     - TOCropViewController
+    - Turf
 
 EXTERNAL SOURCES:
   boost:
@@ -4920,6 +4971,8 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782
+  NitroAudioRecorderPlayer:
+    :path: "../node_modules/react-native-audio-recorder-player"
   NitroIap:
     :path: "../node_modules/react-native-iap"
   NitroModules:
@@ -4992,8 +5045,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
   react-native-blur:
     :path: "../node_modules/@react-native-community/blur"
-  react-native-cameraroll:
-    :path: "../node_modules/@react-native-camera-roll/camera-roll"
   react-native-fbsdk-next:
     :path: "../node_modules/react-native-fbsdk-next"
   react-native-geolocation:
@@ -5076,6 +5127,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-webp-format"
   RNAppleAuthentication:
     :path: "../node_modules/@invertase/react-native-apple-authentication"
+  RNAudioPcmStream:
+    :path: "../node_modules/react-native-live-audio-fft"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
@@ -5110,6 +5163,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-google-signin/google-signin"
   RNImageCropPicker:
     :path: "../node_modules/react-native-image-crop-picker"
+  rnmapbox-maps:
+    :path: "../node_modules/@rnmapbox/maps"
   RNNotifee:
     :path: "../node_modules/@notifee/react-native"
   RNPermissions:
@@ -5177,7 +5232,11 @@ SPEC CHECKSUMS:
   hermes-engine: 35c763d57c9832d0eef764316ca1c4d043581394
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
+  MapboxCommon: d006256c4643860a7b3046af45d1671569b6c5ac
+  MapboxCoreMaps: de1a4461d0ab5d65d907f06e8d82fdbe06bb3213
+  MapboxMaps: 22340ae0e0d47b2e4761019b1d6c569ab04e088d
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  NitroAudioRecorderPlayer: 6b6b954cc2e1b9b66b38daada5542f6a91ecfc39
   NitroIap: da91c0aea440609d0de58ed8fe0675626bb33d19
   NitroModules: dc0498a88cf704dd691cb49b1f3659726aff2ba5
   openiap: ab2a58a26223bf7167dd47d42e0532f97ed7dae4
@@ -5217,7 +5276,6 @@ SPEC CHECKSUMS:
   React-Mapbuffer: f84e59c14ff145295fbd029c5be16805aabe98d2
   React-microtasksnativemodule: 584eb07c9b1f1e684fe63b7fae61ed865f8f228f
   react-native-blur: 981b2ec64b3084ecf98812333f2a8c6e83643a1e
-  react-native-cameraroll: aa5f6fe38b5574f1066a37ceaad5ece494a157a5
   react-native-fbsdk-next: 4fa40d3b1df411ed9bc3cca899572b41f58a4dae
   react-native-geolocation: 6a788ce9bd63469be6b9d181f403ddec235234eb
   react-native-image-editor: 386ea89e59a28d4407aad7673d7fac3bcf7957b7
@@ -5260,6 +5318,7 @@ SPEC CHECKSUMS:
   ReactNativeWebPFormat: 5ffd25da8747549ef32c2ef33fd4b1edd9237c9f
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   RNAppleAuthentication: d6fe579e5f43cf8db54bdc48518bccea61c592a4
+  RNAudioPcmStream: 14df4ecbc32729a463ad0a6e971a4cb2e2d86908
   RNCAsyncStorage: 8857fb173af29664cb90897903902dc8533e36cc
   RNCClipboard: 4eea71d801c880175c12f6ab14332ca86fed935f
   RNCMaskedView: 8bfc13a356455b15d56114738f4d2a804769c1bf
@@ -5277,8 +5336,9 @@ SPEC CHECKSUMS:
   RNGestureHandler: c6f6f26fef9654b198c2e91445b7cf9ddfa31c05
   RNGoogleSignin: 9c5c73089b78fd865f9a6758fc05ef7da7bd2be2
   RNImageCropPicker: 53721829357e8d8d00b1391662d29e263f05c067
+  rnmapbox-maps: f48d61e23ccf7e2bdaac3026cb89947cc3432f49
   RNNotifee: 4a6ee5c7deaf00e005050052d73ee6315dff7ec9
-  RNPermissions: ab76e2129c53e8df988699aaf92295b3c902255f
+  RNPermissions: 0a379dc4de63193dc51e148afb5ae865b6cb64f1
   RNReanimated: 4fd677a02b37abe0906377252d3317840fff0f18
   RNScreens: d61eb089662cb40d69a76e2ab4f428a2a9f32b09
   RNSVG: 46be54b3378a27b412e0c290e41fecd69ffa1171
@@ -5288,9 +5348,10 @@ SPEC CHECKSUMS:
   SDWebImageWebPCoder: 908b83b6adda48effe7667cd2b7f78c897e5111d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   TOCropViewController: 797deaf39c90e6e9ddd848d88817f6b9a8a09888
+  Turf: c9eb11a65d96af58cac523460fd40fec5061b081
   VisionCamera: 68d40255fa8866e815cbbb063730102d3da276fd
   Yoga: 9b30b783a17681321b52ac507a37219d7d795ace
 
-PODFILE CHECKSUM: 2c2a391f48fd67b8be87fc2f8d7a3d62c0233825
+PODFILE CHECKSUM: 8fd6c445105f962201acca1b6e672869d2b9fc5c
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.15.2

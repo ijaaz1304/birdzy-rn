@@ -1,0 +1,13 @@
+---
+description: Update app handover and product/developer documentation with every fix or change
+alwaysApply: true
+---
+
+Read `docs/handover/README.md` and `docs/handover/MAINTENANCE.md` before app changes.
+For every fix, feature, behavior-changing refactor, API/environment/configuration change or release:
+- Update the affected product, flow, developer, API/data, environment, QA or release docs in the same change.
+- Append a dated `docs/handover/CHANGELOG.md` entry with the problem/change, real validation and remaining follow-up.
+- Keep environment names/loading rules and blank examples aligned; never copy credentials or personal data into docs.
+- Preserve existing specialist guides and update their relevant sections/links.
+- Distinguish planned, source-implemented, automated-tested, device-tested and released behavior.
+- Keep unknown owners and unverified handover tasks open; update actual acceptance in `HANDOVER_60_DAYS.md`.

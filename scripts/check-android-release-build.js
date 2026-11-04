@@ -27,7 +27,7 @@ const envPath = path.join(root, '.env');
 const CONFIG = {
   dev: {
     label: 'Dev',
-    webClientPrefix: '511567649411-',
+    webClientPrefix: '480281695791-',
     envCommand: 'npm run env:dev',
     googleServices: 'android/app/src/dev/google-services.json',
     packageName: 'com.trackzio.birds.dev',
@@ -35,7 +35,7 @@ const CONFIG = {
   },
   prod: {
     label: 'Prod',
-    webClientPrefix: '921492151587-',
+    webClientPrefix: '123389676792-',
     envCommand: 'npm run env:prod',
     googleServices: 'android/app/src/prod/google-services.json',
     packageName: 'com.trackzio.birds',

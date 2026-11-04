@@ -20,6 +20,7 @@ type Props = {
   title: string;
   subtitle?: string;
   starred?: boolean;
+  starDisabled?: boolean;
   remindersCount?: number;
   onPress?: () => void;
   onStarPress?: () => void;
@@ -41,6 +42,7 @@ const AppCard: React.FC<Props> = React.memo(
     title,
     subtitle,
     starred = false,
+    starDisabled = false,
     remindersCount,
     onPress,
     onStarPress,
@@ -123,6 +125,8 @@ const AppCard: React.FC<Props> = React.memo(
 
           {onStarPress != null && (
             <TouchableOpacity
+              disabled={starDisabled}
+              accessibilityState={{ disabled: starDisabled, busy: starDisabled }}
               onPress={(e) => {
                 e.stopPropagation?.();
                 onStarPress();
@@ -230,6 +234,7 @@ const AppCard: React.FC<Props> = React.memo(
       prevProps.title === nextProps.title &&
       prevProps.subtitle === nextProps.subtitle &&
       prevProps.starred === nextProps.starred &&
+      prevProps.starDisabled === nextProps.starDisabled &&
       prevProps.remindersCount === nextProps.remindersCount &&
       imageEqual &&
       imageUrlsEqual &&

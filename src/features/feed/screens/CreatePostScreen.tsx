@@ -5,7 +5,7 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, ScrollView, TouchableOpacity, Alert, ActivityIndicator, StyleSheet, TextInput, KeyboardAvoidingView, Keyboard, Platform, useWindowDimensions, InteractionManager, type KeyboardEvent } from "react-native";
+import { View, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, TextInput, KeyboardAvoidingView, Keyboard, Platform, useWindowDimensions, InteractionManager, type KeyboardEvent } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Icon from "react-native-vector-icons/Ionicons";
 import {

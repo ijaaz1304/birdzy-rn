@@ -3,6 +3,7 @@
  */
 
 import { create } from "zustand";
+import { getVersion } from "react-native-device-info";
 
 export interface VersionInfo {
   currentVersion: string;
@@ -38,8 +39,8 @@ export const useVersionStore = create<VersionState>((set) => ({
       // const versionInfo = await versionService.checkVersion();
       // set({ versionInfo, lastChecked: new Date().toISOString(), isLoading: false });
 
-      // Placeholder - get from package.json
-      const currentVersion = "0.0.1"; // TODO: Get from package.json or app config
+      // Installed native version may differ from the JavaScript package version.
+      const currentVersion = getVersion();
       const versionInfo: VersionInfo = {
         currentVersion,
         latestVersion: currentVersion,

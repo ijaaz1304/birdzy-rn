@@ -66,8 +66,11 @@ async function ensureLocalAudioUri(uri: string): Promise<string> {
   }
   const pathName = trimmed.split("?")[0]?.split("/").pop() || "recording.m4a";
   const safeName = pathName.replace(/[^a-zA-Z0-9._-]/g, "_") || "recording.m4a";
-  const dest = `${RNFS.CachesDirectoryPath}/gallery-identify-${Date.now()}-${safeName}`;
-  const result = await RNFS.downloadFile({ fromUrl: trimmed, toFile: dest }).promise;
+  const dest = `${
+    RNFS.CachesDirectoryPath
+  }/gallery-identify-${Date.now()}-${safeName}`;
+  const result = await RNFS.downloadFile({ fromUrl: trimmed, toFile: dest })
+    .promise;
   if (result.statusCode != null && result.statusCode >= 400) {
     throw new Error("Could not download this recording");
   }
@@ -87,6 +90,10 @@ class AIService {
     matchesFoundCount: number;
   }> {
     try {
+      if ((imageUris?.length ?? 0) > 2)
+        throw new ApiException(
+          "Maximum 2 image files allowed for identification"
+        );
       if (!imageUris?.length) {
         throw new ApiException(
           "At least one image is required for identification"
@@ -179,9 +186,11 @@ class AIService {
         );
       }
 
-      const data = response.data;
-      const matchesFoundCount = data?.matchesFoundCount ?? 0;
-
+      if (!Array.isArray(response.data?.matches)) {
+        throw new ApiException(
+          "Invalid identification response. Please try again."
+        );
+      }
       // Birdzy uses Bird API identification shapes
       const birdResult = normalizeBirdIdentifyResponseLegacy(
         response as unknown as BirdIdentifyResponse
@@ -245,6 +254,10 @@ class AIService {
         );
       }
 
+      if (!Array.isArray(response.data?.matches))
+        throw new ApiException(
+          "Invalid identification response. Please try again."
+        );
       const legacy = normalizeBirdIdentifyResponseLegacy(response);
       return {
         imageUrls: legacy.imageUrls,
@@ -264,6 +277,76 @@ class AIService {
     }
   }
 
+  private async prepareAssistantImages(
+    imageUris?: string[] | any[]
+  ): Promise<any[] | undefined> {
+    if ((imageUris?.length ?? 0) > 5)
+      throw new ApiException("Maximum 5 files allowed");
+    const uris: string[] = [];
+    if (imageUris && imageUris.length > 0) {
+      for (const item of imageUris) {
+        if (item && typeof item === "object" && item.uri) {
+          if (typeof item.uri === "string" && item.uri.trim()) {
+            uris.push(item.uri);
+          }
+        } else if (typeof item === "string" && item.trim()) {
+          uris.push(item);
+        }
+      }
+    }
+
+    // Ensure images stay under backend 5MB limit (same strategy as identifyMushroom)
+    let files: any[] | undefined;
+    if (uris.length > 0) {
+      const processedList: ProcessedImage[] = [];
+      for (const uri of uris) {
+        try {
+          const processed = await processImage(uri, DEFAULT_CONFIG);
+          processedList.push(processed);
+        } catch (err) {
+          if (err instanceof ImageProcessingError && err.code === "TOO_LARGE") {
+            try {
+              const processed = await processImage(uri, STRICT_CONFIG);
+              processedList.push(processed);
+            } catch (retryErr) {
+              throw new ApiException(
+                getImageProcessingErrorMessage(
+                  retryErr instanceof ImageProcessingError
+                    ? retryErr
+                    : new ImageProcessingError(
+                        String(retryErr),
+                        "PROCESSING_FAILED"
+                      )
+                )
+              );
+            }
+          } else {
+            throw new ApiException(
+              getImageProcessingErrorMessage(
+                err instanceof ImageProcessingError
+                  ? err
+                  : new ImageProcessingError(
+                      err instanceof Error ? err.message : String(err),
+                      "PROCESSING_FAILED"
+                    )
+              )
+            );
+          }
+        }
+      }
+
+      files = processedList.map((p) => ({
+        uri: p.uri,
+        type: p.type,
+        name: p.fileName,
+        // coreApi.chat size guard checks fileSize/size when present
+        fileSize: p.fileSize,
+      }));
+    }
+
+    return files;
+  }
+
   /**
    * Got bitten assistant (POST /got-bitten).
    */
@@ -272,32 +355,18 @@ class AIService {
     imageUris?: string[] | any[];
   }): Promise<string> {
     try {
-      const files: Array<{ uri: string; type?: string; name?: string }> = [];
-      if (params.imageUris?.length) {
-        for (const item of params.imageUris) {
-          const uri =
-            typeof item === "string"
-              ? item
-              : typeof item?.uri === "string"
-              ? item.uri
-              : "";
-          if (uri.trim()) {
-            files.push({
-              uri: uri.trim(),
-              type: "image/jpeg",
-              name: "photo.jpg",
-            });
-          }
-        }
-      }
+      const files = await this.prepareAssistantImages(params.imageUris);
       const response = await coreApi.gotBitten({
         message: params.message,
-        images: files.length ? files : undefined,
+        images: files,
       });
       if (response.error) {
         throw new ApiException(response.reason || "Request failed");
       }
-      const reply = response.data?.reply?.trim() ?? "";
+      const reply =
+        typeof response.data?.reply === "string"
+          ? response.data.reply.trim()
+          : "";
       return reply || cannedEmptyAiReply();
     } catch (error) {
       throw normalizeError(error);
@@ -313,70 +382,7 @@ class AIService {
   async chat(message?: string, imageUris?: string[] | any[]): Promise<string> {
     try {
       // Normalize optional images to string URIs
-      const uris: string[] = [];
-      if (imageUris && imageUris.length > 0) {
-        for (const item of imageUris) {
-          if (item && typeof item === "object" && item.uri) {
-            if (typeof item.uri === "string" && item.uri.trim()) {
-              uris.push(item.uri);
-            }
-          } else if (typeof item === "string" && item.trim()) {
-            uris.push(item);
-          }
-        }
-      }
-
-      // Ensure images stay under backend 5MB limit (same strategy as identifyMushroom)
-      let files: any[] | undefined;
-      if (uris.length > 0) {
-        const processedList: ProcessedImage[] = [];
-        for (const uri of uris) {
-          try {
-            const processed = await processImage(uri, DEFAULT_CONFIG);
-            processedList.push(processed);
-          } catch (err) {
-            if (
-              err instanceof ImageProcessingError &&
-              err.code === "TOO_LARGE"
-            ) {
-              try {
-                const processed = await processImage(uri, STRICT_CONFIG);
-                processedList.push(processed);
-              } catch (retryErr) {
-                throw new ApiException(
-                  getImageProcessingErrorMessage(
-                    retryErr instanceof ImageProcessingError
-                      ? retryErr
-                      : new ImageProcessingError(
-                          String(retryErr),
-                          "PROCESSING_FAILED"
-                        )
-                  )
-                );
-              }
-            } else {
-              throw new ApiException(
-                getImageProcessingErrorMessage(
-                  err instanceof ImageProcessingError
-                    ? err
-                    : new ImageProcessingError(
-                        err instanceof Error ? err.message : String(err),
-                        "PROCESSING_FAILED"
-                      )
-                )
-              );
-            }
-          }
-        }
-
-        files = processedList.map((p) => ({
-          uri: p.uri,
-          type: p.type,
-          name: p.fileName,
-          // coreApi.chat size guard checks fileSize/size when present
-          fileSize: p.fileSize,
-        }));
-      }
+      const files = await this.prepareAssistantImages(imageUris);
 
       const response = await coreApi.chat(message, files);
 
@@ -385,43 +391,17 @@ class AIService {
       }
 
       // Handle empty response (known issue mentioned in API docs)
-      if (!response.data.reply || response.data.reply.trim() === "") {
+      if (
+        typeof response.data?.reply !== "string" ||
+        !response.data.reply.trim()
+      ) {
         return cannedEmptyAiReply();
       }
 
-      return response.data.reply;
+      return response.data.reply.trim();
     } catch (error) {
       throw normalizeError(error);
     }
-  }
-
-  /**
-   * Get mineral information
-   */
-  async getMushroomInfo(_mushroomId: string): Promise<string[]> {
-    // TODO: Implement actual mushroom information retrieval
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          "Quartz is one of the most common minerals on Earth",
-          "Composed of silicon dioxide (SiO₂)",
-          "Forms in igneous, sedimentary, and metamorphic rocks",
-          "Used in electronics, glass, and jewelry",
-        ]);
-      }, 500);
-    });
-  }
-
-  /**
-   * Diagnose rock type from image.
-   * Use identifyMushroom for mushroom identification; this is for disease/diagnosis flows.
-   */
-  async diagnoseRock(_imageUri: string): Promise<DiagnosisResult> {
-    return Promise.reject(
-      new Error(
-        "diagnoseRock is not implemented. Use identifyMushroom for mushroom identification."
-      )
-    );
   }
 }
 

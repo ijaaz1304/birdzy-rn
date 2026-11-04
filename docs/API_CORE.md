@@ -268,3 +268,29 @@ Current mapper (`mushroomApiMappers.ts`) expects mushroom-oriented stats — **m
 | `src/features/catalogue/mushrooms.store.ts` | Catalogue state |
 | `src/features/camera/identifyImageFlow.ts` | Identify pipeline |
 | `docs/API_AUTH.md` | Auth module (already aligned) |
+
+
+## Integration follow-up — 2 November 2026
+
+Checked all 26 routes in the supplied Bird Core Module contract against transport methods and feature/service call sites. Regression coverage lives in `__tests__/api/`, `__tests__/explore/`, and the existing specimen-payload and wizard tests.
+
+- Step-by-step forwards the selected location, date and size; the old shared test payload is removed. Only documented fields reach the server, and the wizard and nearby previews start at page 1.
+- Catalogue Near You paginates beyond its first 40 birds, uses backend totals, deduplicates appended species and discards responses from a previous tab. Collection previews display the backend total instead of preview length.
+- POST specimen payloads preserve flight pattern and bird metadata. Edited classification and watching tips use nested POST objects; PATCH normalizes nested fields to dot notation at the transport boundary. Existing recording updates remain supported.
+- Image identification limits uploads to two files. Both assistants share image processing and enforce nonempty input, five-file and under-5-MB limits. Missing/empty assistant replies use the existing retry copy.
+- Multipart calls wait for auth initialization, attach JWT, recover one rejected JWT, preserve backend quota errors, and bound the response read. Quota errors and ambiguous network failures never trigger automatic upload retries.
+- The deprecated filter helper now uses `/core/archetypes/filteritems`. Bird filter selector types replace the old mineral selector signature.
+- The already verified `/core/gallery/audio` route stays primary; a 404 falls back to the supplied document's `/gallery/audio` route. Other errors never trigger a second request.
+- Explore endpoints are also registered in the shared endpoint constants; feature-owned services and artwork remain under `src/features/explore`.
+
+Validation uses mocked HTTP transports; no live identification, uploads, account mutations or deployed backend availability checks were performed. Older migration status tables above are historical. UI profile extensions and recording fields are not fully described in the supplied contract; existing supported call sites are retained rather than assuming the document is an exhaustive description of those extensions.
+
+## Explore map method correction — 2026-11-04
+
+Explore uses `POST /core/archetypes/explore-map-geojson` with no request body; explicit `bbox` and scalar trait filters remain query parameters. This matches the Shroomzy client in `Shroom-Ai/src/services/api/features/explore.api.ts`. The previously implemented GET returned a user-reported 404 from the Bird API. The client still expects a raw GeoJSON FeatureCollection and preserves authentication, cancellation and independent map rate limiting. A successful authenticated POST against the deployed Bird backend remains to be verified; the method change is verified by mocked client tests, not a live response.
+
+## Audit corrections — 2026-11-04
+
+`flattenBirdSpecimenUpdate` now preserves explicit empty arrays for editable list fields, instead of silently discarding clearing requests. Unknown/immutable fields remain excluded. Mock contract regressions cover this; live clearing semantics still require backend acceptance.
+
+Notification-list refresh uses `feedService.fetchFeedNotificationDocuments` and the existing Firestore subscription remains active. Refresh results are scoped to the current owner/generation; stale responses cannot repopulate a different account's state. No new HTTP endpoint was invented.

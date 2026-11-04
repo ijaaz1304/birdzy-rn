@@ -500,7 +500,7 @@ export const BirdDetailsScreen: React.FC = () => {
   const isInCollectionFromDetails =
     mushroomData?.isIdentified === true || addedToCollectionInSession;
   const canAddToCollectionFromCatalogue =
-    source === "catalogue" &&
+    (source === "catalogue" || source === "explore") &&
     collectionName !== "Wishlist" &&
     !isInCollectionFromDetails;
   const canRemoveFromCollectionFromDetails =
@@ -774,7 +774,7 @@ export const BirdDetailsScreen: React.FC = () => {
     (addedCollectionId: string, addedCollectionDisplayName: string | null) => {
       if (isSameCollectionAsRoute(addedCollectionId)) return;
       // Catalogue details stays on this screen so Add / Remove from Collection can be used here.
-      if (source === "catalogue") return;
+      if (source === "catalogue" || source === "explore") return;
 
       if (navigateAfterAddTimeoutRef.current) {
         clearTimeout(navigateAfterAddTimeoutRef.current);
@@ -936,6 +936,11 @@ export const BirdDetailsScreen: React.FC = () => {
         return;
       }
       navigateToCollectionMain();
+      return;
+    }
+
+    if (source === "explore") {
+      navigation.goBack();
       return;
     }
 
@@ -1603,7 +1608,7 @@ export const BirdDetailsScreen: React.FC = () => {
       setIsWishlisted(false);
       return;
     }
-    if (source === "catalogue" || source === "birdOfTheDay") {
+    if (source === "catalogue" || source === "explore" || source === "birdOfTheDay") {
       setIsWishlisted(
         favorites.includes(effectiveArchetypeId) ||
           mushroomData?.isWishlisted === true
@@ -2713,7 +2718,7 @@ export const BirdDetailsScreen: React.FC = () => {
               InteractionManager.runAfterInteractions(() => {
                 requestAnimationFrame(() => {
                   dismissMushroomDetailsOverlays();
-                  if (source === "catalogue") {
+                  if (source === "catalogue" || source === "explore") {
                     return;
                   }
                   if (collectionName === "Wishlist") {

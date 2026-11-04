@@ -1,3 +1,4 @@
+import type { BirdArchetypeFilterRequest } from "../api/features/bird.api.types";
 /**
  * MushroomArchetype Service
  * Business logic layer for archetype (public catalog) operations
@@ -7,7 +8,6 @@ import { coreApi } from "../api/features/core.api";
 import {
   MushroomArchetype,
   MushroomArchetypeListItem,
-  MushroomArchetypeFilterParams,
   MushroomArchetypeFilterRequest,
   MushroomSpecimen,
   MushroomSpecimenListItem,
@@ -21,6 +21,7 @@ import {
   normalizeMushroomDetail,
 } from "../../utils/mushroomApiMappers";
 import type {
+  BirdArchetypeFilterParams,
   BirdStepByStepRequest,
   BirdGalleryAudioResponse,
 } from "../api/features/bird.api.types";
@@ -28,16 +29,6 @@ import { mushroomSpecimenService } from "../specimen/mushroomSpecimen.service";
 import { useAppLogsStore } from "../../features/app-logs/app-logs.store";
 import { API_ENDPOINTS } from "../../constants/api";
 import { BIRD_ARCHETYPE_FILTER_DEFAULTS } from "../../constants/birdFilterDefaults";
-
-/** Temporary testing payload shared by every step-by-step search. */
-const STEP_BY_STEP_TEST_REQUEST: BirdStepByStepRequest = {
-  location: {
-    lat: 3.7,
-    lng: 101.7,
-  },
-  seenDate: "2026-06-26T10:00:00Z",
-  birdSize: ["Small", "Medium-Small"],
-};
 
 const wishlistLog = (
   level: "info" | "warn" | "error",
@@ -64,8 +55,8 @@ function isDuplicateSpecimenError(error: unknown): boolean {
     error instanceof ApiException
       ? error.message
       : error instanceof Error
-        ? error.message
-        : String(error);
+      ? error.message
+      : String(error);
   return /E11000|duplicate key/i.test(message);
 }
 
@@ -73,10 +64,10 @@ class ArchetypeService {
   /**
    * Get filter items for archetypes
    */
-  async getFilterItems(params?: MushroomArchetypeFilterParams) {
+  async getFilterItems(params?: BirdArchetypeFilterParams) {
     try {
       const response = await coreApi.getArchetypeFilterItems(
-        (params ?? BIRD_ARCHETYPE_FILTER_DEFAULTS) as MushroomArchetypeFilterParams
+        params ?? BIRD_ARCHETYPE_FILTER_DEFAULTS
       );
       if (response.error) {
         throw new ApiException(response.reason || "Failed to get filter items");
@@ -91,7 +82,7 @@ class ArchetypeService {
    * Fetch all archetypes with filters and pagination
    */
   async fetchAllArchetypes(
-    filters?: MushroomArchetypeFilterRequest,
+    filters?: BirdArchetypeFilterRequest | MushroomArchetypeFilterRequest,
     pagination?: {
       pageNo?: number;
       pageSize?: number;
@@ -228,10 +219,14 @@ class ArchetypeService {
           throw new ApiException("This is already identified, can't wishlist.");
         }
         if (specimens.length > 0) {
-          wishlistLog("warn", "[Wishlist] add: blocked (already in collection)", {
-            archetypeId: id,
-            specimenCount: specimens.length,
-          });
+          wishlistLog(
+            "warn",
+            "[Wishlist] add: blocked (already in collection)",
+            {
+              archetypeId: id,
+              specimenCount: specimens.length,
+            }
+          );
           throw new ApiException(
             "This bird is already in your collection. The server couldn't add it to wishlist."
           );
@@ -292,10 +287,14 @@ class ArchetypeService {
             response.reason || "Failed to remove wishlist archetype"
           );
         }
-        wishlistLog("warn", "[Wishlist] remove: API not found, clearing specimens", {
-          archetypeId: id,
-          reason: response.reason ?? null,
-        });
+        wishlistLog(
+          "warn",
+          "[Wishlist] remove: API not found, clearing specimens",
+          {
+            archetypeId: id,
+            reason: response.reason ?? null,
+          }
+        );
       }
 
       await this.clearWishlistedSpecimensForArchetype(id);
@@ -330,10 +329,14 @@ class ArchetypeService {
         if (!row.isIdentified) {
           try {
             await mushroomSpecimenService.deleteSpecimen(sid);
-            wishlistLog("info", "[Wishlist] remove: deleted wishlist specimen", {
-              archetypeId,
-              specimenId: sid,
-            });
+            wishlistLog(
+              "info",
+              "[Wishlist] remove: deleted wishlist specimen",
+              {
+                archetypeId,
+                specimenId: sid,
+              }
+            );
           } catch {
             wishlistLog("warn", "[Wishlist] remove: failed to clear specimen", {
               archetypeId,
@@ -394,10 +397,7 @@ class ArchetypeService {
     };
   }> {
     try {
-      const response = await coreApi.stepByStep(
-        STEP_BY_STEP_TEST_REQUEST,
-        pagination
-      );
+      const response = await coreApi.stepByStep(body, pagination);
       if (response.error) {
         throw new ApiException(
           response.reason || "Failed to fetch step-by-step birds"
