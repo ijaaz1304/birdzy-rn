@@ -449,7 +449,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       style={styles.skipButton}
     >
-      <RNText style={[styles.skipText, { color: colors.textPrimary }]}>Skip</RNText>
+      <RNText allowFontScaling={false} style={[styles.skipText, { color: colors.textPrimary }]}>Skip</RNText>
     </TouchableOpacity>
   );
 
@@ -536,7 +536,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         onPress={() => void refetchPrices()}
         style={styles.retryBanner}
       >
-        <RNText style={[styles.retryText, { color: colors.textSecondary }]}>
+        <RNText allowFontScaling={false} style={[styles.retryText, { color: colors.textSecondary }]}>
           Couldn&apos;t load prices. Tap to retry.
         </RNText>
       </TouchableOpacity>

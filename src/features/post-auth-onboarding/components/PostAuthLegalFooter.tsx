@@ -26,12 +26,12 @@ export const PostAuthLegalFooter: React.FC<Props> = ({
   return (
   <View style={styles.wrap}>
     <TouchableOpacity onPress={onTerms} style={styles.linkButton}>
-      <Text style={[styles.link, { color: linkColor }]}>
+      <Text allowFontScaling={false} style={[styles.link, { color: linkColor }]}>
         Terms of Service
       </Text>
     </TouchableOpacity>
     <TouchableOpacity onPress={onPrivacy} style={styles.linkButton}>
-      <Text style={[styles.link, { color: linkColor }]}>
+      <Text allowFontScaling={false} style={[styles.link, { color: linkColor }]}>
         Privacy Policy
       </Text>
     </TouchableOpacity>
@@ -40,7 +40,7 @@ export const PostAuthLegalFooter: React.FC<Props> = ({
       disabled={isRestoring}
       style={styles.linkButton}
     >
-      <Text style={[styles.link, { color: linkColor }]}>
+      <Text allowFontScaling={false} style={[styles.link, { color: linkColor }]}>
         {isRestoring ? "Restoring…" : "Restore Purchase"}
       </Text>
     </TouchableOpacity>

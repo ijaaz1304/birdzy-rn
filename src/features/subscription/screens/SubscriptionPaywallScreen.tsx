@@ -339,7 +339,7 @@ export const SubscriptionPaywallScreen: React.FC = () => {
               >
                 <NavBackIcon color={paywallColors.textPrimary} />
               </TouchableOpacity>
-              <Text
+              <Text allowFontScaling={false}
                 style={[
                   styles.headerTitle,
                   { color: paywallColors.textPrimary },
@@ -382,7 +382,7 @@ export const SubscriptionPaywallScreen: React.FC = () => {
                         style={styles.discountPillIcon}
                         resizeMode="contain"
                       />
-                      <Text style={styles.discountPillText}>
+                      <Text allowFontScaling={false} style={styles.discountPillText}>
                         {has50Discount ? "Discount ends in" : "Discount in"}{" "}
                         {formatCountdownSegment(discountCountdown.hours)}:
                         {formatCountdownSegment(discountCountdown.minutes)}:
@@ -403,7 +403,7 @@ export const SubscriptionPaywallScreen: React.FC = () => {
                     onPress={refetchPrices}
                     style={styles.retryBanner}
                   >
-                    <Text
+                    <Text allowFontScaling={false}
                       style={[
                         styles.retryText,
                         { color: paywallColors.textSecondary },

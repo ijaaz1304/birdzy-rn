@@ -70,7 +70,7 @@ export const PostAuthPlanCard: React.FC<Props> = ({
       <View style={styles.row}>
         <View style={styles.leftCol}>
           <View style={styles.titleRow}>
-            <Text
+            <Text allowFontScaling={false}
               style={[styles.title, { color: colors.textPrimary }]}
               numberOfLines={1}
             >
@@ -79,12 +79,12 @@ export const PostAuthPlanCard: React.FC<Props> = ({
             {showPopular ? <PostAuthPopularBadge colors={colors} /> : null}
           </View>
           {trialLabel ? (
-            <Text style={[styles.trialLabel, { color: colors.textDisabled }]}>
+            <Text allowFontScaling={false} style={[styles.trialLabel, { color: colors.textDisabled }]}>
               {trialLabel}
             </Text>
           ) : null}
         </View>
-        <Text
+        <Text allowFontScaling={false}
           style={[
             styles.price,
             { color: colors.textPrimary, fontSize: priceFontSize },
