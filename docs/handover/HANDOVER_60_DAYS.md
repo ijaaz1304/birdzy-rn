@@ -102,3 +102,5 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 - [ ] 2026-11-04 audit: Assign mobile/backend/QA owners and verify account-isolated notifications, actual Firestore refresh, specimen list clearing, discount-to-plans navigation, and rebuilt native maps on both platforms. Mock/service checks are recorded in CHANGELOG; device/store acceptance remains open.
 
 - [ ] 2026-11-04: User will run native builds. Audit build was stopped at user request; record resulting build links, map/device checks and release acceptance here.
+
+- [ ] 2026-11-04: eMudhra patch acceptance — assign mobile/release and QA owners; verify patched iOS Firestore dependencies, production archive, Firebase device flows, TestFlight, published version and user update adoption. Builds are user-run; release/device acceptance remains open. See [remediation guide](../firebase-emudhra.md).

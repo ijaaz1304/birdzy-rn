@@ -66,3 +66,7 @@ Use `origin` for `https://github.com/Trackzio-Mobile-Apps/birdzy-react-native.gi
 Check `git remote -v` after cloning/configuring a checkout. Normal commands are `git pull --ff-only origin main` and `git push origin main:main`. Do not add the personal mirror as a second origin push URL. Mirror publication is a separate deliberate operation, and must resolve that repository's own push-protection findings first.
 
 GitHub rejected the personal mirror because commit `75d7054` contains Mapbox values in the tracked environment files. Inspection confirmed those Mapbox values use the public `pk.*` prefix, not `sk.*`; values are intentionally omitted here. No protection bypass, token change, commit-history rewrite or force push was performed. The historical mirror rejection remains unresolved for explicit mirror pushes; its owner must choose the correct false-positive review or history cleanup before using that destination. Other checkouts with the old dual-push setup need the same local remote separation.
+
+## eMudhra Firestore security release — 2026-11-04
+
+Follow [the app remediation guide](../firebase-emudhra.md). Verify both FirebaseFirestore and FirebaseFirestoreInternal resolve to 12.19.3 before archiving; an umbrella/Analytics version of 12.19.0 is expected for this backport approach. Native builds, TestFlight, real-device acceptance, store build-number selection and rollout remain with the release owner/user. Existing installed builds stay affected until users update.

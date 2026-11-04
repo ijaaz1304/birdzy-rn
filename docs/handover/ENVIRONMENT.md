@@ -235,3 +235,7 @@ Selection now protects the chosen label from delayed blur callbacks. Validate on
 ## iOS pod compatibility — 2026-11-04
 
 The Podfile post-install hook raises pod deployment targets below React Native's minimum to that minimum (currently iOS 15.1), including privacy/resource targets. Higher declared targets are preserved. This fixes modern Xcode rejecting inherited iOS 8–13 targets. Regenerate with `npm run pod:install`; do not hand-edit generated Pods projects. No environment keys changed.
+
+## eMudhra native SDK pin — 2026-11-04
+
+The iOS Podfile selects the compatible Firebase 12.19 base and explicitly pins Firestore 12.19.3. This adds no environment variable or credential. See [the remediation guide](../firebase-emudhra.md) for the component-version distinction and native installation checks.
