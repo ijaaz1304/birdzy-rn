@@ -58,3 +58,11 @@ Available infrastructure commands (run only for the intended environment with re
 First determine whether the problem is a client build, backend/provider outage, configuration change, bad store product state or data migration. Preserve the failing version and redacted diagnostics. Use a previous compatible build or a verified feature switch only when that rollback path exists; do not assume a store release or a server-side migration is instantly reversible.
 
 The incoming owner must demonstrate where to pause a rollout, who can change provider/backend configuration, how to restore a known-good configuration, and how to verify data/entitlement consistency afterward. Record actual console links and owners in the handover checklist. No ownership is implied by access to this Git checkout.
+
+## Git pull/push destinations — 2026-11-04
+
+Use `origin` for `https://github.com/Trackzio-Mobile-Apps/birdzy-react-native.git`. The local checkout previously had two push URLs under origin, so one push could succeed for the organization and still fail overall when the personal mirror rejected it. This checkout now keeps `https://github.com/ijaaz1304/birdzy-rn.git` as the separate `personal-mirror` remote; ordinary origin pushes no longer publish there. Remotes are local Git configuration and are not installed by pulling documentation.
+
+Check `git remote -v` after cloning/configuring a checkout. Normal commands are `git pull --ff-only origin main` and `git push origin main:main`. Do not add the personal mirror as a second origin push URL. Mirror publication is a separate deliberate operation, and must resolve that repository's own push-protection findings first.
+
+GitHub rejected the personal mirror because commit `75d7054` contains Mapbox values in the tracked environment files. Inspection confirmed those Mapbox values use the public `pk.*` prefix, not `sk.*`; values are intentionally omitted here. No protection bypass, token change, commit-history rewrite or force push was performed. The historical mirror rejection remains unresolved for explicit mirror pushes; its owner must choose the correct false-positive review or history cleanup before using that destination. Other checkouts with the old dual-push setup need the same local remote separation.
