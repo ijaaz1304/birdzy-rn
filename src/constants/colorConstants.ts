@@ -370,7 +370,8 @@ export const HOME_COLORS = {
     BG_LIGHT: "#F5F5F5",
     BG_DARK: "#1A1A1A",
     /** 50% OFF and body text – Figma 8598:66213 (dark text on purple gradient) */
-    HEADLINE_LIGHT: "#111111",
+    /** Figma text-icon-primary (light) */
+    HEADLINE_LIGHT: "#091B21",
     HEADLINE_DARK: "#FFFFFF",
     ENDS_LABEL_LIGHT: "#5D5D5D",
     /** Timer box background */

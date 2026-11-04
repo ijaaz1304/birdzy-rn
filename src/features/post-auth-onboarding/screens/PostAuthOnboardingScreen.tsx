@@ -101,6 +101,8 @@ const NOTIFICATION_HERO_DESIGN_SIZE = { width: 295, height: 239 } as const;
  * The map inside it renders at 226.8×209.9 at full size, as in Figma.
  */
 const LOCATION_HERO_DESIGN_SIZE = { width: 335, height: 313 } as const;
+/** Figma text-icon-primary (light) for the surprise slide title */
+const SURPRISE_TITLE_COLOR_LIGHT = "#091B21";
 
 export const PostAuthOnboardingScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -622,7 +624,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         <View
           style={[
             styles.discountTimerOverlay,
-            { top: layout.subscriptionDiscountTimerTop },
+            { top: layout.postAuthDiscountTimerTop },
           ]}
         >
           <PostAuthDiscountTimerPill />
@@ -643,6 +645,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
               styles.horizontalPlanRow,
               {
                 marginTop: layout.subscriptionPlanRowMarginTop,
+                marginBottom: layout.postAuthPlanRowMarginBottom,
               },
             ]}
           >
@@ -664,15 +667,11 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       >
         <Text
           variant="title"
-          size="small"
-          weight="semibold"
+          size="large"
+          allowFontScaling={false}
           style={[
             styles.surpriseTitle,
-            {
-              color: colors.textPrimary,
-              fontSize: layout.slideTitleFontSize,
-              lineHeight: layout.slideTitleLineHeight,
-            },
+            { color: isDark ? colors.textPrimary : SURPRISE_TITLE_COLOR_LIGHT },
           ]}
         >
           We got a little surprise{"\n"}for you!
@@ -719,8 +718,11 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       <View
         style={[
           styles.subscriptionBody,
+          styles.discountBodyTopAligned,
           {
-            paddingTop: layout.subscriptionTopPadding,
+            // Figma: "Especially for you!" starts 72pt below the status bar
+            // (52pt nav + 20pt padding); our Skip header is 48pt.
+            paddingTop: layout.postAuthDiscountSlideContentTop,
             paddingBottom: layout.subscriptionBodyPaddingBottom,
           },
         ]}
@@ -742,6 +744,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
               styles.horizontalPlanRow,
               {
                 marginTop: layout.subscriptionPlanRowMarginTop,
+                marginBottom: layout.postAuthPlanRowMarginBottom,
               },
             ]}
           >
@@ -846,6 +849,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
     position: "relative",
   },
+  /** Discount slide: header + carousel pinned to the top like Figma (not centered) */
+  discountBodyTopAligned: {
+    justifyContent: "flex-start",
+  },
   discountTimerOverlay: {
     position: "absolute",
     left: 0,
@@ -857,8 +864,15 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
+  /** Figma Title/28px/Bold — 28px, 700, 36px line-height, center, 335 wide */
   surpriseTitle: {
     textAlign: "center",
+    fontFamily: FONTS.bold,
+    fontStyle: "normal",
+    fontWeight: "700",
+    fontSize: 28,
+    lineHeight: 36,
+    includeFontPadding: false,
     width: POST_AUTH_LAYOUT.contentWidth,
     maxWidth: "100%",
     flexShrink: 0,

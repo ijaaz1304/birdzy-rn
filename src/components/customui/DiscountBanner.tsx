@@ -260,6 +260,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
               <View style={styles.headlineSub1}>
                 <View style={[styles.percentOffRow, !isDark && styles.percentOffRowLight]}>
                   <Text
+                    allowFontScaling={false}
                     style={[
                       styles.bigPercent,
                     !isDark && styles.bigPercentLight,
@@ -526,8 +527,15 @@ const styles = StyleSheet.create({
   bigPercent: {
     fontFamily: FONTS.bold,
   },
+  /**
+   * Figma Title/32px/Black — Satoshi Black (900), 32/40 (size scales with banner width).
+   * Weight comes from the Satoshi-Black face itself; adding fontWeight would make
+   * Android synthesize extra bold on top of it.
+   */
   bigPercentLight: {
     fontFamily: FONTS.black,
+    fontStyle: "normal",
+    includeFontPadding: false,
   },
   offTextInline: {
     fontFamily: FONTS.bold,

@@ -101,7 +101,13 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
           >
             {strings.title}
           </AppText>
-          <AppText variant="caption12" color="textSecondary">
+          {/* Figma Caption/12px/Regular — #5D5D5D, 12/16, ligatures off, 158 wide */}
+          <AppText
+            variant="caption12"
+            color={theme.colors.textSecondary}
+            allowFontScaling={false}
+            style={styles.bannerDescription}
+          >
             {strings.description}
           </AppText>
           <TouchableOpacity
@@ -204,6 +210,14 @@ const styles = StyleSheet.create({
     width: 158,
     gap: 16,
     zIndex: 1,
+  },
+  /** Figma Caption/12px/Regular: Satoshi Regular 400, 12/16, 'liga' off, 'clig' off */
+  bannerDescription: {
+    fontFamily: FONTS.regular,
+    fontStyle: "normal",
+    fontSize: 12,
+    lineHeight: 16,
+    fontVariant: ["no-common-ligatures"],
   },
   bannerTitle: {
     fontFamily: FONTS.bold,
