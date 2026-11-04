@@ -335,9 +335,10 @@ export const FEED_COLORS = {
 
   // FAB (Floating Action Button) — Feed & Collection create button (Figma 8035:46238)
   FAB: {
+    /** Figma 8025:83777 Create chip (rendered): surface-brand-1-accent #EDE4EF, button/text-color/brand #785284 */
     LIGHT: {
-      BACKGROUND: APP_COLORS.createButtonBg,
-      TEXT: APP_COLORS.createButtonFg,
+      BACKGROUND: "#EDE4EF",
+      TEXT: "#785284",
     },
     DARK: {
       BACKGROUND: APP_COLORS.createButtonBg,

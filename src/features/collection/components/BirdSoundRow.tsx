@@ -40,7 +40,13 @@ export function BirdSoundRow({
 
   return (
     <TouchableOpacity
-      style={[styles.row, { backgroundColor: surfaceSecondary }]}
+      style={[
+        styles.row,
+        {
+          backgroundColor: surfaceSecondary,
+          borderColor: theme.colors.border0 ?? SOUND_ROW_BORDER,
+        },
+      ]}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityRole="button"
@@ -65,7 +71,7 @@ export function BirdSoundRow({
       <View style={styles.content}>
         <View style={styles.titleRow}>
           <View style={styles.titleGroup}>
-            <Text
+            <Text allowFontScaling={false}
               style={[styles.title, { color: textPrimary }]}
               numberOfLines={1}
             >
@@ -73,22 +79,22 @@ export function BirdSoundRow({
             </Text>
             {item.isUserRecording ? (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{strings.myRecording}</Text>
+                <Text allowFontScaling={false} style={styles.badgeText}>{strings.myRecording}</Text>
               </View>
             ) : null}
           </View>
           {durationText ? (
-            <Text style={[styles.duration, { color: textSecondary }]}>
+            <Text allowFontScaling={false} style={[styles.duration, { color: textSecondary }]}>
               {durationText}
             </Text>
           ) : isPlaying ? (
-            <Text style={[styles.duration, { color: textSecondary }]}>
+            <Text allowFontScaling={false} style={[styles.duration, { color: textSecondary }]}>
               {strings.playing}
             </Text>
           ) : null}
         </View>
         {item.metaLine ? (
-          <Text
+          <Text allowFontScaling={false}
             style={[styles.meta, { color: textSecondary }]}
             numberOfLines={1}
           >
@@ -100,6 +106,9 @@ export function BirdSoundRow({
   );
 }
 
+/** Figma border-0 */
+const SOUND_ROW_BORDER = "#E7E7E7";
+
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
@@ -108,6 +117,8 @@ const styles = StyleSheet.create({
     padding: spacing[2],
     borderRadius: Radius.md,
     minHeight: 60,
+    /** Figma "Sound": 1pt border-0 (colour set at render from the theme) */
+    borderWidth: 1,
   },
   playButton: {
     width: 40,

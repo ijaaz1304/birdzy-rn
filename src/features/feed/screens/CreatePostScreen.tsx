@@ -23,7 +23,7 @@ import {
 } from "../../camera/iosGallerySelection";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
-import { FEED_COLORS, UI_COLORS } from "../../../constants/colorConstants";
+import { UI_COLORS } from "../../../constants/colorConstants";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { Text } from "../../../atoms";
 import { Avatar } from "../../../atoms";
@@ -63,7 +63,6 @@ import { FONTS } from "../../../common/typography";
 
 const CREATE_POST_LOG = "[CreatePost]";
 
-import { spacing } from "../../../design-system/spacing";
 
 const IMAGE_PREVIEW_HEIGHT = 280;
 const POST_IMAGE_OVERLAY_BG = "#F5EBEB";
@@ -550,10 +549,9 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
     }
   };
 
-  const backgroundFillColor =
-    theme.mode === "dark"
-      ? FEED_COLORS.BACKGROUND_FILL_DARK
-      : FEED_COLORS.BACKGROUND_FILL_LIGHT;
+  const postDisabled = !content.trim() || uploading;
+  /** Figma 8025:84417 — Create post sits on surface-primary (white in light mode) */
+  const backgroundFillColor = theme.colors.surfacePrimary;
 
   if (isEditMode && loadingPost) {
     return (
@@ -565,7 +563,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
         ]}
       >
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text variant="body" color="textSecondary" style={{ marginTop: 12 }}>
+        <Text allowFontScaling={false} variant="body" color="textSecondary" style={{ marginTop: 12 }}>
           Loading post...
         </Text>
       </View>
@@ -581,10 +579,11 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
       >
         {/* Header: Create post (left), X button (right) */}
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-          <Text
+          <Text allowFontScaling={false}
             variant="display"
             size="medium"
             weight="bold"
+            numberOfLines={1}
             style={[styles.headerTitle, { color: theme.colors.text }]}
           >
             {isEditMode ? "Edit post" : "Create post"}
@@ -594,9 +593,9 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
             activeOpacity={0.8}
             hitSlop={HIT_SLOP.CLOSE}
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
               justifyContent: "center",
               alignItems: "center",
             }}
@@ -611,8 +610,15 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
 
         {/* User Info - Avatar + Username at top */}
         <View style={styles.userRow}>
-          <Avatar name={displayName} size={40} source={user?.avatar} />
-          <Text variant="body" size="medium" weight="semibold" color="text">
+          <Avatar name={displayName} size={AVATAR_SIZE} source={user?.avatar} />
+          <Text
+            allowFontScaling={false}
+            variant="body"
+            size="medium"
+            color="text"
+            numberOfLines={1}
+            style={styles.authorName}
+          >
             {displayName}
           </Text>
         </View>
@@ -625,6 +631,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
         >
           {/* Title (optional) */}
           <TextInput
+            allowFontScaling={false}
             style={[
               styles.titleInput,
               {
@@ -632,13 +639,14 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
               },
             ]}
             placeholder={createPost.titlePlaceholder}
-            placeholderTextColor={UI_COLORS.TEXT_TERTIARY}
+            placeholderTextColor={theme.colors.textSecondary}
             value={title}
             onChangeText={setTitle}
             editable={!uploading}
           />
           {/* Description */}
           <TextInput
+            allowFontScaling={false}
             style={[
               styles.contentInput,
               {
@@ -659,7 +667,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
             <View
               style={[
                 styles.imagePreviewsStack,
-                { marginHorizontal: -spacing[4], width: screenWidth },
+                { marginHorizontal: -SIDE_MARGIN, width: screenWidth },
               ]}
             >
               {selectedImages.map((uri, index) => (
@@ -687,7 +695,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
                       size={20}
                       color={POST_IMAGE_OVERLAY_FG}
                     />
-                    <Text
+                    <Text allowFontScaling={false}
                       variant="body"
                       size="small"
                       weight="medium"
@@ -725,7 +733,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
                   },
                 ]}
               />
-              <Text
+              <Text allowFontScaling={false}
                 variant="body"
                 size="small"
                 color="text"
@@ -742,7 +750,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
           style={[
             styles.footer,
             {
-              borderTopColor: theme.colors.border,
+              borderTopColor: theme.colors.border0 ?? theme.colors.border,
               backgroundColor: backgroundFillColor,
               paddingBottom: isKeyboardVisible
                 ? 12
@@ -765,8 +773,8 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
               activeOpacity={0.7}
             >
               <UploadIconSvg
-                width={24}
-                height={24}
+                width={MEDIA_ICON_SIZE}
+                height={MEDIA_ICON_SIZE}
                 color={isDark ? UI_COLORS.WHITE : UI_COLORS.BLACK}
               />
             </TouchableOpacity>
@@ -794,9 +802,14 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
             variant="primary"
             size="medium"
             onPress={handlePost}
-            disabled={!content.trim() || uploading}
+            disabled={postDisabled}
             loading={uploading}
-            style={styles.postButton}
+            allowFontScaling={false}
+            style={[styles.postButton, postDisabled && styles.postButtonDisabled]}
+            textStyle={{
+              ...styles.postButtonText,
+              ...(postDisabled ? styles.postButtonTextDisabled : null),
+            }}
           />
         </View>
 
@@ -828,6 +841,14 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
   );
 };
 
+/** Figma 8025:84417 layout */
+const SIDE_MARGIN = 20;
+const AVATAR_SIZE = 24;
+const MEDIA_ICON_SIZE = 20;
+/** Figma surface-disabled / button text-color disabled */
+const POST_DISABLED_BG = "#D1D1D1";
+const POST_DISABLED_TEXT = "#B0B0B0";
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -837,44 +858,68 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 24,
   },
+  /** Figma Top Navigation Bar: 20 left / 12 right, 12 vertical (52pt with the 40pt close button + insets) */
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing[4],
+    gap: 8,
+    paddingLeft: SIDE_MARGIN,
+    paddingRight: 12,
     paddingTop: 16,
-    paddingBottom: 8,
+    paddingBottom: 6,
   },
+  /** Figma Title/18px/Bold */
   headerTitle: {
+    flex: 1,
+    fontFamily: FONTS.bold,
     fontSize: 18,
+    lineHeight: 24,
   },
+  /** Figma author row: 16pt top, 20pt sides, 8pt avatar→name */
   userRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing[4],
-    paddingVertical: 12,
-    gap: 12,
+    paddingHorizontal: SIDE_MARGIN,
+    paddingTop: 16,
+    gap: 8,
+  },
+  /** Figma Caption/12px/Medium */
+  authorName: {
+    flexShrink: 1,
+    fontFamily: FONTS.medium,
+    fontSize: 12,
+    lineHeight: 16,
   },
   content: {
     flex: 1,
   },
+  /** Figma: 16pt between author row and inputs, 20pt sides */
   contentContainer: {
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: SIDE_MARGIN,
+    paddingTop: 16,
     paddingBottom: 24,
   },
+  /** Figma "Add Title (Optional)": Body/16px/Bold, 4pt above the body text */
   titleInput: {
-    fontSize: 17,
     fontFamily: FONTS.bold,
-    paddingVertical: 8,
+    fontSize: 16,
+    lineHeight: 24,
+    paddingVertical: 0,
     paddingHorizontal: 0,
     marginBottom: 4,
+    includeFontPadding: false,
   },
+  /** Figma helper text: Body/14px/Regular */
   contentInput: {
-    fontSize: 15,
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
     minHeight: 120,
-    paddingVertical: 4,
+    paddingVertical: 0,
     paddingHorizontal: 0,
     textAlignVertical: "top",
+    includeFontPadding: false,
   },
   imagePreviewsStack: {
     marginTop: 16,
@@ -916,12 +961,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: POST_IMAGE_OVERLAY_BG,
   },
+  /** Figma Bottom Navigation Bar: 12pt top, 20pt sides, 1pt border-0 top (bottom padding set at render) */
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
+    paddingHorizontal: SIDE_MARGIN,
+    paddingTop: 12,
     borderTopWidth: 1,
   },
   mediaActions: {
@@ -929,16 +975,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
   },
+  /** Figma Button-Icon: 32pt tall, 6pt horizontal padding, 20pt icon */
   mediaButton: {
-    padding: 8,
+    height: 32,
+    paddingHorizontal: 6,
+    justifyContent: "center",
+    alignItems: "center",
   },
   mediaIcon: {
-    width: 22,
-    height: 22,
+    width: MEDIA_ICON_SIZE,
+    height: MEDIA_ICON_SIZE,
   },
+  /** Figma Button: 44pt, 16/10 padding, radius 24 */
   postButton: {
-    minWidth: 50,
-    paddingHorizontal: 20,
+    minWidth: 64,
+    height: 44,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+  },
+  /** Figma disabled: surface-disabled bg, no 50% fade */
+  postButtonDisabled: {
+    backgroundColor: POST_DISABLED_BG,
+    opacity: 1,
+  },
+  /** Figma Button/16px: Medium 16/24 */
+  postButtonText: {
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  postButtonTextDisabled: {
+    color: POST_DISABLED_TEXT,
   },
   uploadProgressContainer: {
     marginTop: 16,

@@ -166,6 +166,9 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
           <TextInput
             ref={inputRef}
             allowFontScaling={false}
+            /* Figma: cursor uses the brand colour (text-icon-brand-1) */
+            cursorColor={theme.colors.borderBrand}
+            selectionColor={theme.colors.borderBrand}
             style={[
               styles.input,
               {

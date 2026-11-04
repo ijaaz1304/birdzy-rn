@@ -18,6 +18,8 @@ export interface ButtonProps extends Omit<TouchableOpacityProps, "style"> {
   fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
   textStyle?: TextStyle;
+  /** Pass false to keep the label at its design size regardless of the OS font-size setting. Default true. */
+  allowFontScaling?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -29,6 +31,7 @@ export const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
   style,
   textStyle,
+  allowFontScaling = true,
   ...props
 }) => {
   const theme = useTheme();
@@ -109,7 +112,9 @@ export const Button: React.FC<ButtonProps> = ({
           size={size === "small" ? "medium" : "large"}
           weight="semibold"
           numberOfLines={1}
-          adjustsFontSizeToFit
+          allowFontScaling={allowFontScaling}
+          /* Fixed-size labels (allowFontScaling=false) keep their design size; Android ignores minimumFontScale and over-shrinks */
+          adjustsFontSizeToFit={allowFontScaling}
           minimumFontScale={0.85}
           style={[{ color: getTextColor(), textAlign: "center" }, textStyle]}
         >

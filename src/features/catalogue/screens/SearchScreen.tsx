@@ -44,7 +44,7 @@ import { useToast } from "../../../hooks";
 import { RemoveFromWishlistConfirmation } from "../../../components/RemoveFromWishlistConfirmation";
 import { Radius } from "../../../design";
 
-import { spacing } from "../../../design-system/spacing";
+import { FONTS } from "../../../common/typography";
 
 import { APP_COLORS } from "../../../config/colors";
 import { CATALOGUE_STRINGS } from "../../../config/strings/catalogue.strings";
@@ -446,18 +446,16 @@ export const SearchScreen: React.FC = () => {
             { backgroundColor: colors.surfaceSecondary },
           ]}
         >
-          <View
-            style={[
-              styles.header,
-              styles.headerWithSearch,
-              { paddingHorizontal: Space[4] },
-            ]}
-          >
+          {/* Figma 8025:101790 — back (24) · search bar (flex 1) · filter (48), 8pt gaps, 20pt side margin */}
+          <View style={[styles.header, styles.headerWithSearch]}>
             <TouchableOpacity
               onPress={handleBackToCatalogue}
               style={styles.backButton}
+              hitSlop={BACK_HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
             >
-              <NavBackIcon color={colors.textPrimary} />
+              <NavBackIcon color={colors.textPrimary} size={24} />
             </TouchableOpacity>
             <View style={styles.searchBarInHeader}>
               <SearchBar
@@ -506,7 +504,11 @@ export const SearchScreen: React.FC = () => {
             <View
               style={[
                 styles.suggestionsWrap,
-                { top: 64, left: Space[4], right: Space[4] },
+                {
+                  top: SEARCH_HEADER_TOP + SEARCH_BAR_HEIGHT + 4,
+                  left: SEARCH_SIDE_MARGIN,
+                  right: SEARCH_SIDE_MARGIN,
+                },
               ]}
             >
               <SearchSuggestions
@@ -612,11 +614,14 @@ export const SearchScreen: React.FC = () => {
               </View>
             )
           ) : (
-            <View style={styles.emptyContainer}>
-              <EmptyState
-                title="Start searching"
-                subtitle="Partial words will not be searched."
-              />
+            /* Figma 8025:101794 — single centred hint 24pt below the bar (Body/14px/Regular, text-secondary) */
+            <View style={styles.searchHintWrap}>
+              <Text
+                allowFontScaling={false}
+                style={[styles.searchHint, { color: colors.textSecondary }]}
+              >
+                Partial words will not be searched.
+              </Text>
             </View>
           )}
         </View>
@@ -655,6 +660,12 @@ export const SearchScreen: React.FC = () => {
   );
 };
 
+/** Figma 8025:101789 search header layout */
+const SEARCH_SIDE_MARGIN = 20;
+const SEARCH_HEADER_TOP = 8;
+const SEARCH_BAR_HEIGHT = 48;
+const BACK_HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -675,7 +686,22 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: spacing[4],
+    paddingHorizontal: SEARCH_SIDE_MARGIN,
+    paddingTop: SEARCH_HEADER_TOP,
+    /** 8 here + 16 hint padding = Figma's 24pt gap; also spaces results/chips below */
+    paddingBottom: 8,
+  },
+  searchHintWrap: {
+    paddingTop: 16,
+    paddingHorizontal: SEARCH_SIDE_MARGIN,
+    alignItems: "center",
+  },
+  /** Figma Body/14px/Regular: Satoshi Regular 14/20, text-secondary (#5D5D5D) */
+  searchHint: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
   },
   suggestionsWrap: {
     position: "absolute",
@@ -686,9 +712,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
   },
+  /** Figma: 24pt back icon (touch area extended with hitSlop) */
   backButton: {
-    width: 44,
-    height: 44,
+    width: 24,
+    height: 24,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -702,7 +729,7 @@ const styles = StyleSheet.create({
   headerWithSearch: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 8,
   },
   searchBarInHeader: {
     flex: 1,
