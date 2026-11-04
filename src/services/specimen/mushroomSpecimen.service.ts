@@ -1,3 +1,4 @@
+import type { BirdSpecimenFilterRequest } from "../api/features/bird.api.types";
 /**
  * Mushroom specimen service
  * Business logic layer for specimen operations
@@ -11,11 +12,13 @@ import {
   MushroomSpecimenFilterRequest,
   AddMushroomSpecimenRequest,
   UpdateMushroomSpecimenRequest,
-  MushroomArchetypeFilterParams,
   AddBirdSpecimenRequest,
   UpdateBirdSpecimenRequest,
 } from "../api/features/core.api.types";
-import { normalizeSpecimenListItem, normalizeMushroomDetail } from "../../utils/mushroomApiMappers";
+import {
+  normalizeSpecimenListItem,
+  normalizeMushroomDetail,
+} from "../../utils/mushroomApiMappers";
 import { ApiException, normalizeError } from "../api/errors";
 import { BIRD_ARCHETYPE_FILTER_DEFAULTS } from "../../constants/birdFilterDefaults";
 import type { BirdArchetypeFilterParams } from "../api/features/bird.api.types";
@@ -28,7 +31,7 @@ class MushroomSpecimenService {
   async getFilterItems(params?: BirdArchetypeFilterParams) {
     try {
       const response = await coreApi.getArchetypeFilterItems(
-        (params ?? BIRD_ARCHETYPE_FILTER_DEFAULTS) as MushroomArchetypeFilterParams
+        params ?? BIRD_ARCHETYPE_FILTER_DEFAULTS
       );
       if (response.error) {
         throw new ApiException(response.reason || "Failed to get filter items");
@@ -46,9 +49,7 @@ class MushroomSpecimenService {
     data: AddBirdSpecimenRequest | AddMushroomSpecimenRequest
   ): Promise<MushroomSpecimen> {
     try {
-      const body = { ...data };
-      delete (body as { flightPattern?: string[] }).flightPattern;
-      const response = await coreApi.addSpecimen(body);
+      const response = await coreApi.addSpecimen(data);
       if (response.error) {
         throw new ApiException(response.reason || "Failed to add specimen");
       }
@@ -62,7 +63,7 @@ class MushroomSpecimenService {
    * Fetch all specimens with filters and pagination
    */
   async fetchAllSpecimens(
-    filters?: MushroomSpecimenFilterRequest,
+    filters?: BirdSpecimenFilterRequest | MushroomSpecimenFilterRequest,
     pagination?: {
       pageNo?: number;
       pageSize?: number;

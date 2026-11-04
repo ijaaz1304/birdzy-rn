@@ -73,3 +73,15 @@ After adding/changing a native dependency, update the lockfile, iOS pods and pla
 ## Check documentation links and examples
 
 Run `python3 docs/handover/check_docs.py` from the repository root after updating this pack. It checks handover links and ensures example environment values remain blank; it does not validate app runtime behavior.
+
+## Mapbox native module missing (2026-11-04)
+
+If Explore reports `@rnmapbox/maps native code not available`, the installed binary has no `RNMBXModule`. A public token or Metro reload cannot install native code. The Mapbox dependency, Podfile hooks and Android Maven repository are already configured. Rebuild and install the matching app flavor:
+
+- iOS development: `npm run pod:install`, then `npm run ios:dev`.
+- iOS production configuration: `npm run pod:install`, then `npm run ios:prod`.
+- Android: `npm run android:dev` or `npm run android:prod` for the installed flavor.
+
+Close the old app before opening the rebuilt installation. Verify Explore on that installation: map tiles, search, selection and expanded map, plus nearby results. Do not treat a JavaScript bundle as native-linking verification.
+
+`ExploreMapView.tsx` checks `NativeModules.RNMBXModule` before loading the SDK-backed `ExploreMapView.nativeMap.tsx`. Older binaries display an update message while location search and nearby results remain accessible. This fallback does not provide an interactive map; a native rebuild is required. No environment variable names or loading behavior changed.

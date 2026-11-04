@@ -1,3 +1,4 @@
+import { ExploreStack } from "./ExploreStack";
 import { FreeScanLimitHost } from "../components/shared/FreeScanLimitHost";
 import { navigateToSubscriptionMain } from "../utils/navigation";
 /**
@@ -1020,6 +1021,7 @@ export const RootNavigator: React.FC<RootNavigatorProps> = ({
           />
           <Stack.Screen name="AuthStack" component={AuthStack} />
           <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen name="ExploreStack" component={ExploreStack} />
           {/* Modal/Overlay Stacks */}
           <Stack.Screen
             name="SettingsStack"

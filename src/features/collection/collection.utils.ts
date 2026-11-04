@@ -6,9 +6,7 @@ import {
   normalizeArchetypeListItem,
   resolveSpecimenArchetypeId,
 } from "../../utils/mushroomApiMappers";
-import {
-  resolveMushroomImageUrlsForDisplay,
-} from "../../utils/mushroomCardUtils";
+import { resolveMushroomImageUrlsForDisplay } from "../../utils/mushroomCardUtils";
 import { getPrimaryCommonName } from "../../utils/mushroomDisplayUtils";
 
 /** Virtual collection card on Collection screen — opens Catalogue Near You tab. */
@@ -22,7 +20,7 @@ export async function fetchNearYouCollectionPreview(): Promise<{
     const discovery = await resolveBirdDiscoveryLocation();
     if (!discovery) return { count: 0, images: [] };
 
-    const { data } = await archetypeService.stepByStep(
+    const { data, pagination } = await archetypeService.stepByStep(
       {
         location: {
           lat: discovery.coords[0],
@@ -31,7 +29,7 @@ export async function fetchNearYouCollectionPreview(): Promise<{
         seenDate: new Date().toISOString().slice(0, 10),
         region: discovery.source !== "gps" ? discovery.regionId : undefined,
       },
-      { pageNo: 0, pageSize: 4 }
+      { pageNo: 1, pageSize: 4 }
     );
 
     const images: string[] = [];
@@ -53,7 +51,7 @@ export async function fetchNearYouCollectionPreview(): Promise<{
       if (images.length >= 4) break;
     }
 
-    return { count: data.length, images };
+    return { count: pagination.totalCount, images };
   } catch {
     return { count: 0, images: [] };
   }
@@ -61,10 +59,7 @@ export async function fetchNearYouCollectionPreview(): Promise<{
 
 /** Preview URLs for a collection card (max 4). */
 export function getCollectionPreviewImages(
-  col: Pick<
-    Collection,
-    "representativeImages" | "representImage" | "imageUrl"
-  >
+  col: Pick<Collection, "representativeImages" | "representImage" | "imageUrl">
 ): string[] {
   const fromList = col.representativeImages?.filter(Boolean) ?? [];
   if (fromList.length > 0) return fromList.slice(0, 4);

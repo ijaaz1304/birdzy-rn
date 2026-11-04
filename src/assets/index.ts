@@ -40,8 +40,8 @@ export { default as HomeTabIcon } from "./common/bottomTab/home.svg";
 export { default as CatalogueTabIcon } from "./common/bottomTab/catalogue.svg";
 export { default as FeedTabIcon } from "./common/bottomTab/feed.svg";
 export { default as CollectionTabIcon } from "./common/bottomTab/collection.svg";
-export { default as ExploreHotspotIcon } from "./home/explore_hotspot.svg";
-export { default as ExplorePinIcon } from "./home/explore_pin.svg";
+export { default as ExploreHotspotIcon } from "../features/explore/assets/home-hotspot.svg";
+export { default as ExplorePinIcon } from "../features/explore/assets/home-pin.svg";
 export { default as SoundLibraryFilterIcon } from "./discovery/icons/filter.svg";
 export { default as SoundLibraryPlayIcon } from "./discovery/icons/play.svg";
 export { default as SoundLibraryEditIcon } from "./discovery/icons/edit.svg";
@@ -458,7 +458,7 @@ export const Images = {
   homeIdentifyByPhoto: require("./home/identify_by_photo_inner.png"),
   homeWizardBanner: require("./home/wizard_banner.png"),
   wizardFindYourBird: require("./discovery/wizard/find_your_bird.png"),
-  homeExploreNearYouMap: require("./home/explore_near_you_map.png"),
+  homeExploreNearYouMap: require("../features/explore/assets/home-map.png"),
   homeExploreNearYouBanner: require("./home/explore_near_you_banner.png"),
   homeBirdOfDayCard: require("./home/bird_of_the_day_home.webp"),
   homeAskAiCardIcon: require("./home/ask_ai_home.webp"),

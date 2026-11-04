@@ -10,6 +10,8 @@ import { ApiError, ApiResponse } from "./types";
  * Custom API exception class
  */
 export class ApiException extends Error {
+  /** Retained for bounded retry of read requests. */
+  retryAfter?: string;
   constructor(
     public message: string,
     public status?: number,
@@ -139,7 +141,10 @@ export function normalizeError(error: unknown): ApiException {
         ? "Session expired. Please sign in again."
         : backendReason || data?.message || error.message || "An error occurred";
 
-    return new ApiException(message, status, data?.code, data, data?.errors);
+    const normalized = new ApiException(message, status, data?.code, data, data?.errors);
+    const retryAfter = response.headers?.["retry-after"];
+    if (typeof retryAfter === "string" || typeof retryAfter === "number") normalized.retryAfter = String(retryAfter);
+    return normalized;
   }
 
   if (error instanceof Error) {

@@ -1016,6 +1016,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { useBirdsStore } = require("../catalogue/birds.store");
           useBirdsStore.getState().reset();
+          const { useExploreStore } = require("../explore/explore.store");
+          useExploreStore.getState().reset();
         } catch (e) {
           /* ignore */
         }

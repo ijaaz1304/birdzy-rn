@@ -107,6 +107,7 @@ use_frameworks! :linkage => :static
 # react-native-permissions: with use_frameworks!, force RNPermissions to build as static
 # so permission handlers are correctly linked (fixes "No permission handler detected")
 pre_install do |installer|
+  $RNMapboxMaps.pre_install(installer)
   installer.pod_targets.each do |pod|
     if pod.name.eql?('RNPermissions')
       def pod.build_type
@@ -132,6 +133,7 @@ target 'Birdzy' do
   pod 'SDWebImageWebPCoder', '~> 0.8.4'
 
   post_install do |installer|
+    $RNMapboxMaps.post_install(installer)
     react_native_post_install(
       installer,
       config[:reactNativePath],

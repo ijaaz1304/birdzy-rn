@@ -5,10 +5,12 @@ import { useStepByStepStore } from "../stepByStep.store";
 import { wizardSizeApiValue, toWizardSeenDateIso } from "./stepByStepAnswers";
 import { mapStepByStepItemToPossibleMatch } from "./mapStepByStepMatches";
 
-export async function fetchStepByStepMatches(): Promise<PossibleMatchListItem[]> {
+export async function fetchStepByStepMatches(): Promise<
+  PossibleMatchListItem[]
+> {
   const { answers } = useStepByStepStore.getState();
   const stored = answers.location;
-  let discovery = stored
+  const discovery = stored
     ? {
         coords: [stored.latitude, stored.longitude] as [number, number],
         source: "gps" as const,
@@ -18,12 +20,9 @@ export async function fetchStepByStepMatches(): Promise<PossibleMatchListItem[]>
     : await resolveBirdDiscoveryLocation();
 
   if (!discovery) {
-    discovery = {
-      coords: [30, 0],
-      source: "global",
-      label: "Global",
-      regionId: "global",
-    };
+    throw new Error(
+      "Choose a location or enable location access before searching for nearby birds."
+    );
   }
 
   const { data } = await archetypeService.stepByStep(
@@ -36,7 +35,7 @@ export async function fetchStepByStepMatches(): Promise<PossibleMatchListItem[]>
       birdSize: wizardSizeApiValue(answers.sizeIndex),
       region: discovery.source !== "gps" ? discovery.regionId : undefined,
     },
-    { pageNo: 0, pageSize: 60 }
+    { pageNo: 1, pageSize: 60 }
   );
 
   return data.map(mapStepByStepItemToPossibleMatch);

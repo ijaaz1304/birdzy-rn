@@ -55,3 +55,7 @@ The Mapbox public token was configured locally. Device rendering, live backend c
 ## Close an item only with evidence
 
 Record the actual owner, changed commit/configuration, verification level and result, remaining limitation and closure date. If the backend/store owner must act, keep the item open rather than marking a frontend-only change as a full fix.
+
+## 2026-11-04 native Mapbox verification
+
+Explore now handles binaries missing Mapbox without an import crash, but installing a native rebuild is required for maps. The attempted simulator build was blocked by pre-existing pod deployment targets below Xcode's supported iOS minimum. Reconcile pod deployment targets with the app minimum and installed Xcode, reinstall pods, rebuild the correct flavor, and verify map tiles/selection on a device. Owner unassigned; acceptance open.

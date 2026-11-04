@@ -10,7 +10,19 @@ import React, {
   useEffect,
   useRef,
 } from "react";
-import { View, StyleSheet, FlatList, TouchableOpacity, ScrollView, RefreshControl, ViewToken, KeyboardAvoidingView, Platform, Text as RNText, useWindowDimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ScrollView,
+  RefreshControl,
+  ViewToken,
+  KeyboardAvoidingView,
+  Platform,
+  Text as RNText,
+  useWindowDimensions,
+} from "react-native";
 import { Icon } from "../../../atoms";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -70,7 +82,10 @@ import {
   isCatalogueAllTabWarm,
   warmCatalogueListThumbnailCache,
 } from "../warmCatalogueList";
-import { getCatalogueTabFilters, normalizeArchetypeListItem } from "../../../utils/mushroomApiMappers";
+import {
+  getCatalogueTabFilters,
+  normalizeArchetypeListItem,
+} from "../../../utils/mushroomApiMappers";
 import type { MushroomListItem } from "../../../types/mushrooms.types";
 
 type CatalogueTabCache = {
@@ -120,8 +135,7 @@ export const CatalogueScreen: React.FC = () => {
   const Space = theme.spacing;
   const { width: windowWidth } = useWindowDimensions();
   const catalogueCardWidth = useMemo(
-    () =>
-      (windowWidth - CATALOGUE_GRID_H_PADDING * 2 - CATALOGUE_GRID_GAP) / 2,
+    () => (windowWidth - CATALOGUE_GRID_H_PADDING * 2 - CATALOGUE_GRID_GAP) / 2,
     [windowWidth]
   );
   const navigation = useNavigation<CatalogueScreenNavigationProp>();
@@ -169,9 +183,7 @@ export const CatalogueScreen: React.FC = () => {
     favorites,
     toggleFavorite,
   } = useBirdsStore();
-  const suppressedWishlistIds = useBirdsStore(
-    (s) => s.suppressedWishlistIds
-  );
+  const suppressedWishlistIds = useBirdsStore((s) => s.suppressedWishlistIds);
   const isFirstCatalogueFocus = useRef(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -191,7 +203,9 @@ export const CatalogueScreen: React.FC = () => {
   }>({});
   const tabCacheRef = useRef<Record<string, CatalogueTabCache>>({});
   const tabScrollRef = useRef<ScrollView>(null);
-  const tabLayoutsRef = useRef<Record<string, { x: number; width: number }>>({});
+  const tabLayoutsRef = useRef<Record<string, { x: number; width: number }>>(
+    {}
+  );
   const flatListRef = useRef<FlatList<CatalogueCardItem>>(null);
   const loadGenerationRef = useRef(0);
   const catalogueContextRef = useRef({
@@ -347,7 +361,7 @@ export const CatalogueScreen: React.FC = () => {
             keepPrevious
           );
         } else if (selectedTab === CATEGORIES.NEAR_YOU) {
-          if (pageNo > 0) return;
+          if (!append) useBirdsStore.setState({ isLoading: true, error: null });
           const discovery = await resolveBirdDiscoveryLocation();
           if (!discovery) {
             useBirdsStore.setState({
@@ -359,7 +373,7 @@ export const CatalogueScreen: React.FC = () => {
             });
             return;
           }
-          const { data } = await archetypeService.stepByStep(
+          const { data, pagination } = await archetypeService.stepByStep(
             {
               location: {
                 lat: discovery.coords[0],
@@ -369,16 +383,33 @@ export const CatalogueScreen: React.FC = () => {
               region:
                 discovery.source !== "gps" ? discovery.regionId : undefined,
             },
-            { pageNo: 0, pageSize: 40 }
+            { pageNo: pageNo + 1, pageSize: 40 }
           );
-          useBirdsStore.setState({
-            mushrooms: data.map((item) =>
-              normalizeArchetypeListItem(item as unknown as Record<string, unknown>)
-            ),
-            totalCount: data.length,
-            currentPage: 0,
-            isLoading: false,
-            error: null,
+          if (generation !== loadGenerationRef.current) return;
+          const nextItems = data.map((item) =>
+            normalizeArchetypeListItem(
+              item as unknown as Record<string, unknown>
+            )
+          );
+          useBirdsStore.setState((state) => {
+            const items = new Map(
+              (append ? state.mushrooms : []).map((item) => [
+                item.archetypeId,
+                item,
+              ])
+            );
+            nextItems.forEach((item) => items.set(item.archetypeId, item));
+            const mushrooms = [...items.values()];
+            return {
+              mushrooms,
+              totalCount:
+                append && mushrooms.length === state.mushrooms.length
+                  ? mushrooms.length
+                  : pagination.totalCount,
+              currentPage: pageNo,
+              isLoading: false,
+              error: null,
+            };
           });
         } else if (selectedTab === CATEGORIES.ALL) {
           await fetchMushrooms(
@@ -403,6 +434,18 @@ export const CatalogueScreen: React.FC = () => {
         }
         persistTabCache(selectedTab, filters);
       } catch (error) {
+        if (
+          selectedTab === CATEGORIES.NEAR_YOU &&
+          generation === loadGenerationRef.current
+        ) {
+          useBirdsStore.setState({
+            isLoading: false,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Unable to load nearby birds. Please try again.",
+          });
+        }
         if (!isSessionExpiryError(error)) {
           console.error("Error loading minerals:", error);
         }
@@ -644,50 +687,50 @@ export const CatalogueScreen: React.FC = () => {
         ? false
         : favorites.includes(item.id) || item.isWishlisted === true;
       return (
-      <AppCard
-        image={item.image}
-        imageUrls={item.imageUrls}
-        title={item.name}
-        subtitle={item.scientificName}
-        enableImageCarousel={false}
-        onPress={() =>
-          handleItemPress(item.id, item.imageUrls?.[0] ?? item.image?.uri)
-        }
-        starred={isStarred}
-        showSoundButton
-        hasSound={(item.soundUrls?.length ?? 0) > 0}
-        soundPlaying={playingId === item.id}
-        onSoundPress={() => {
-          void toggleSound(item.id, item.soundUrls);
-        }}
-        onStarPress={() => {
-          void (async () => {
-            if (isStarred) {
-              setPendingWishlistRemove({ id: item.id, name: item.name });
-              setShowRemoveWishlistConfirm(true);
-              return;
-            }
-            const result = await toggleFavorite(item.id);
-            if (result === "added") {
-              showToast(strings.collection.favorite.added, "success");
-            } else if (result === "removed") {
-              showToast(strings.collection.favorite.removed, "success");
-            } else {
-              showToast(strings.collection.favorite.addFailed, "error");
-            }
-          })();
-        }}
-        style={[
-          styles.itemCardWrapper,
-          {
-            width: catalogueCardWidth,
-            borderWidth: 1,
-            borderColor: cardBorderColor,
-            borderRadius: Radius.md,
-            backgroundColor: cardBg,
-          },
-        ]}
-      />
+        <AppCard
+          image={item.image}
+          imageUrls={item.imageUrls}
+          title={item.name}
+          subtitle={item.scientificName}
+          enableImageCarousel={false}
+          onPress={() =>
+            handleItemPress(item.id, item.imageUrls?.[0] ?? item.image?.uri)
+          }
+          starred={isStarred}
+          showSoundButton
+          hasSound={(item.soundUrls?.length ?? 0) > 0}
+          soundPlaying={playingId === item.id}
+          onSoundPress={() => {
+            void toggleSound(item.id, item.soundUrls);
+          }}
+          onStarPress={() => {
+            void (async () => {
+              if (isStarred) {
+                setPendingWishlistRemove({ id: item.id, name: item.name });
+                setShowRemoveWishlistConfirm(true);
+                return;
+              }
+              const result = await toggleFavorite(item.id);
+              if (result === "added") {
+                showToast(strings.collection.favorite.added, "success");
+              } else if (result === "removed") {
+                showToast(strings.collection.favorite.removed, "success");
+              } else {
+                showToast(strings.collection.favorite.addFailed, "error");
+              }
+            })();
+          }}
+          style={[
+            styles.itemCardWrapper,
+            {
+              width: catalogueCardWidth,
+              borderWidth: 1,
+              borderColor: cardBorderColor,
+              borderRadius: Radius.md,
+              backgroundColor: cardBg,
+            },
+          ]}
+        />
       );
     },
     [
@@ -784,11 +827,7 @@ export const CatalogueScreen: React.FC = () => {
                   activeOpacity={0.8}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Icon
-                    name="filter"
-                    size={24}
-                    color={colors.textPrimary}
-                  />
+                  <Icon name="filter" size={24} color={colors.textPrimary} />
                   {totalFilterCount > 0 && (
                     <View
                       style={[
@@ -884,7 +923,10 @@ export const CatalogueScreen: React.FC = () => {
                 variant="title"
                 size="small"
                 weight="bold"
-                style={[styles.filterResultsHeading, { color: colors.textPrimary, paddingHorizontal: Space[4] }]}
+                style={[
+                  styles.filterResultsHeading,
+                  { color: colors.textPrimary, paddingHorizontal: Space[4] },
+                ]}
               >
                 {strings.catalogue.screen.results}
               </Text>
@@ -938,7 +980,10 @@ export const CatalogueScreen: React.FC = () => {
                       style={styles.filterChipClose}
                       activeOpacity={0.7}
                     >
-                      <CloseIcon isDark={isDark} style={styles.filterChipCloseIcon} />
+                      <CloseIcon
+                        isDark={isDark}
+                        style={styles.filterChipCloseIcon}
+                      />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -948,7 +993,12 @@ export const CatalogueScreen: React.FC = () => {
 
           {/* Skeletons only on first empty load — tab switches keep previous cards until new data arrives */}
           {isLoading && filteredItems.length === 0 ? (
-            <View style={[styles.skeletonContainer, { paddingHorizontal: Space[4] }]}>
+            <View
+              style={[
+                styles.skeletonContainer,
+                { paddingHorizontal: Space[4] },
+              ]}
+            >
               {Array.from({ length: SKELETON_COUNTS.CATALOGUE }).map((_, i) => (
                 <View key={i} style={styles.skeletonItem}>
                   <CardSkeleton height={220} borderRadius={12} />

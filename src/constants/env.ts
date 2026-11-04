@@ -15,6 +15,7 @@
 
 // Try to import from @env (react-native-dotenv) or use fallback
 let envVars: {
+  MAPBOX_ACCESS_TOKEN?: string;
   GOOGLE_MAPS_API_KEY?: string;
   GOOGLE_GEOCODING_API_BASE_URL?: string;
   GOOGLE_PLACES_API_BASE_URL?: string;
@@ -59,6 +60,7 @@ try {
   // In React Native, process.env may not work, so you'll need to set these manually
   // or install react-native-dotenv/react-native-config
   envVars = {
+    MAPBOX_ACCESS_TOKEN: process.env.MAPBOX_ACCESS_TOKEN || "",
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || "",
     GOOGLE_GEOCODING_API_BASE_URL:
       process.env.GOOGLE_GEOCODING_API_BASE_URL ||
@@ -278,3 +280,6 @@ if (!GOOGLE_MAPS_API_KEY && __DEV__) {
     "   Note: Weather API is handled by backend - no key needed in frontend."
   );
 }
+
+/** Public Mapbox token used by Explore. */
+export const MAPBOX_ACCESS_TOKEN = envVars.MAPBOX_ACCESS_TOKEN || "";

@@ -1,3 +1,4 @@
+import { HomeExploreNearYouSection } from "../../explore/components/HomeExploreNearYouSection";
 /**
  * Home Screen - UI Implementation
  */
@@ -45,8 +46,6 @@ import DiscountBanner from "../../../components/customui/DiscountBanner";
 import {
   HomeIdentifyCardsSection,
   HomeWizardBanner,
-  HomeExploreNearYouSection,
-  EXPLORE_NEAR_YOU_CATEGORIES,
   HomeBirdCornerSection,
 } from "../components";
 import { useIdentificationEntry } from "../../camera/IdentificationEntryProvider";
@@ -866,33 +865,9 @@ export const HomeScreen = () => {
 
           <View style={styles.sectionBlock}>
             <HomeExploreNearYouSection
-              onExploreMap={() => {
-                rootNavigation.navigate("MainTabs", {
-                  screen: "Catalogue",
-                  params: {
-                    screen: "CatalogueMain",
-                    params: { category: EXPLORE_NEAR_YOU_CATEGORIES.map },
-                  },
-                });
-              }}
-              onGrowingNow={() => {
-                rootNavigation.navigate("MainTabs", {
-                  screen: "Catalogue",
-                  params: {
-                    screen: "CatalogueMain",
-                    params: { category: EXPLORE_NEAR_YOU_CATEGORIES.growing },
-                  },
-                });
-              }}
-              onYearRound={() => {
-                rootNavigation.navigate("MainTabs", {
-                  screen: "Catalogue",
-                  params: {
-                    screen: "CatalogueMain",
-                    params: { category: EXPLORE_NEAR_YOU_CATEGORIES.yearRound },
-                  },
-                });
-              }}
+              onExploreMap={() => rootNavigation.navigate("ExploreStack", { screen: "ExploreMap" })}
+              onGrowingNow={() => rootNavigation.navigate("ExploreStack", { screen: "ExploreMap", params: { initialTab: "growingNow" } })}
+              onYearRound={() => rootNavigation.navigate("ExploreStack", { screen: "ExploreMap", params: { initialTab: "yearRound" } })}
             />
           </View>
 

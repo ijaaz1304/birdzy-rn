@@ -92,3 +92,7 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 
 - [ ] Mapbox account/token restrictions and billing owner, geocoding provider access, map API contract and species/observation ID mapping.
 - [ ] Actual device evidence for map loading/retry, selection, expansion, location denial and explicit place search.
+
+- [ ] 2026-11-04: Incoming mobile owner (unassigned) to verify the rebuilt iOS/Android Mapbox module, interactive Explore and missing-module fallback; device acceptance remains open.
+
+- [ ] 2026-11-04: API/mobile owner (unassigned) to confirm successful authenticated POST map GeoJSON response on the Bird deployment after the GET 404 correction.

@@ -91,3 +91,7 @@ These are path declarations found in source, intended as navigation aids for a d
 4. Distinguish completed-empty, permission/limit, server/network failure and malformed data; keep retry behavior appropriate to read versus mutation semantics.
 5. Test stale response/account switching, pagination duplicates and rollback after failed optimism.
 6. Update this guide, the relevant specialist API doc and [CHANGELOG.md](CHANGELOG.md), including any required backend deployment coordination.
+
+## Explore map method correction — 2026-11-04
+
+Explore uses `POST /core/archetypes/explore-map-geojson` with no request body; explicit `bbox` and scalar trait filters remain query parameters. This matches the Shroomzy client in `Shroom-Ai/src/services/api/features/explore.api.ts`. The previously implemented GET returned a user-reported 404 from the Bird API. The client still expects a raw GeoJSON FeatureCollection and preserves authentication, cancellation and independent map rate limiting. A successful authenticated POST against the deployed Bird backend remains to be verified; the method change is verified by mocked client tests, not a live response.

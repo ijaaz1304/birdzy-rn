@@ -250,6 +250,7 @@ export type CollectionStackParamList = {
     source?:
       | "collection"
       | "catalogue"
+      | "explore"
       | "identification"
       | "birdOfTheDay"
       | "quiz";
@@ -425,7 +426,18 @@ export type BirdPersonalityStackParamList = {
   };
 };
 
+export type ExploreStackParamList = {
+  ExploreMap:
+    | {
+        initialLocation?: { lat: number; lng: number; label?: string };
+        initialTab?: "growingNow" | "yearRound";
+      }
+    | undefined;
+  BirdDetails: { mushroomId: string; source: "explore" };
+};
+
 export type RootStackParamList = {
+  ExploreStack: NavigatorScreenParams<ExploreStackParamList>;
   Splash: undefined;
   Onboarding: { initialPage?: number } | undefined;
   PostAuthOnboarding: undefined;

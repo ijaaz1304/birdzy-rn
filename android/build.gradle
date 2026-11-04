@@ -20,6 +20,12 @@ buildscript {
     }
 }
 
+allprojects {
+    repositories {
+        maven { url 'https://api.mapbox.com/downloads/v2/releases/maven' }
+    }
+}
+
 apply plugin: "com.facebook.react.rootproject"
 
 // Skip release lint across all autolinked modules (OOM on large RN apps). Applied at
