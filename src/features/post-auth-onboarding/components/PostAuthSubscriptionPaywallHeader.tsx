@@ -14,10 +14,10 @@ export const PostAuthSubscriptionPaywallHeader: React.FC<Props> = ({
   colors,
 }) => (
   <View style={styles.wrap}>
-    <Text style={[styles.title, { color: colors.textPrimary }]}>
+    <Text allowFontScaling={false} style={[styles.title, { color: colors.textPrimary }]}>
       Especially for you!
     </Text>
-    <Text style={[styles.subtitle, { color: colors.textPrimary }]}>
+    <Text allowFontScaling={false} style={[styles.subtitle, { color: colors.textPrimary }]}>
       Unlock unlimited scans, explore detailed insights and featured birds of
       the day.
     </Text>

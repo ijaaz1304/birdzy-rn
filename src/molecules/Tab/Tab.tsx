@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { FONTS } from "../../common/typography";
 import { TouchableOpacity, TouchableOpacityProps, StyleSheet, ViewStyle } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { Text } from "../../atoms";
@@ -69,7 +70,8 @@ const TabComponent: React.FC<TabProps> = ({
   };
 
   const textSize = size === "small" ? "small" : "medium";
-  const lineHeight = textSize === "small" ? 16 : 18;
+  /** Figma tab-atom Body/14px: 14/20 (small stays 12/16) */
+  const lineHeight = textSize === "small" ? 16 : 20;
 
   return (
     <TouchableOpacity
@@ -83,7 +85,15 @@ const TabComponent: React.FC<TabProps> = ({
         size={textSize}
         color={active ? "primary" : "textSecondary"}
         weight="normal"
-        style={[{ color: textColor, lineHeight }]}
+        allowFontScaling={false}
+        /* Figma tab-atom: active = Medium (brand), inactive = Regular (secondary) */
+        style={[
+          {
+            color: textColor,
+            lineHeight,
+            fontFamily: active ? FONTS.medium : FONTS.regular,
+          },
+        ]}
         numberOfLines={1}
         ellipsizeMode="tail"
       >
