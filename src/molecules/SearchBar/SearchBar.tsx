@@ -163,8 +163,33 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
 
         {/* Input — when not editable, optional onPressBar handles navigation */}
         {editable || !onPressBar ? (
+          <View style={styles.inputWrap}>
+          {/*
+            Figma 8025:101792 placeholder: one line, tail-ellipsised ("Find birds by name,…").
+            Android's native placeholder can't ellipsise — it wraps and gets clipped — so it's
+            drawn as an overlay Text while the field is empty (screen readers still get it
+            via accessibilityLabel on the input).
+          */}
+          {!hasValue ? (
+            <View style={styles.placeholderOverlay} pointerEvents="none">
+              <Text
+                allowFontScaling={false}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={[
+                  styles.input,
+                  styles.placeholderText,
+                  { color: theme.colors.textTertiary },
+                  inputStyle,
+                ]}
+              >
+                {placeholder}
+              </Text>
+            </View>
+          ) : null}
           <TextInput
             ref={inputRef}
+            accessibilityLabel={props.accessibilityLabel ?? placeholder}
             allowFontScaling={false}
             /* Figma: cursor uses the brand colour (text-icon-brand-1) */
             cursorColor={theme.colors.borderBrand}
@@ -176,8 +201,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
               },
               inputStyle,
             ]}
-            placeholder={placeholder}
-            placeholderTextColor={theme.colors.textTertiary}
+            placeholder=""
             editable={editable && !disabled}
             value={value}
             onChangeText={onChangeText}
@@ -192,6 +216,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
             pointerEvents={editable && !disabled ? "auto" : "none"}
             {...props}
           />
+          </View>
         ) : (
           <TouchableOpacity
             style={styles.inputPressable}
@@ -294,6 +319,22 @@ const styles = StyleSheet.create({
     /** Android: drop extra font padding so 16pt text centres in the 48pt bar */
     includeFontPadding: false,
     textAlignVertical: "center",
+  },
+  /** Holds the input and its overlay placeholder; takes the space between icon and actions */
+  inputWrap: {
+    flex: 1,
+    alignSelf: "stretch",
+    justifyContent: "center",
+  },
+  /** Fills the input area and centres the placeholder vertically */
+  placeholderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+  },
+  /** Same typography as the input; single line with "…" (Body/16px/Regular 16/24) */
+  placeholderText: {
+    flex: 0,
+    lineHeight: 24,
   },
   /** Non-editable (tap-to-search) label: Text can take the full 24pt line height */
   inputLabel: {
