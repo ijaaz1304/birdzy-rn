@@ -33,6 +33,8 @@ Evidence: [src/features/camera/CameraScreen.tsx](../../src/features/camera/Camer
 
 Browse/search/filter, open the selected birds record, then add to wishlist or a collection. Reopen the saved specimen to edit or remove it. Backend acknowledgement should determine the final durable state; a failed mutation must not leave a permanently optimistic counter or star.
 
+From identification, Add to Collection uploads the user photo to `posts/images` and sends that public Storage URL first on `POST /core/specimen/add`, including Identified and Wishlist. Specimen update does not accept image fields. If a specimen already exists, the client creates a new row with the photo and deletes the previous row. Collection display uses the inner photo when fetchAll glues a catalogue folder onto the stored URL. Device confirmation of this save is still open.
+
 Check page indexing for the specific endpoint, overlapping pages, filter changes, back navigation, duplicates and private-versus-public IDs. Verify saved media and comments survive a reload. See [API and data](API_AND_DATA.md) for source locations.
 
 ## Purchase and restore

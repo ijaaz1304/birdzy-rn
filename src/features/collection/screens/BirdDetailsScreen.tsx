@@ -6,7 +6,18 @@
 import { AppImage } from "@/components/AppImage";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Platform, TextInput, ActivityIndicator, KeyboardAvoidingView, Pressable, InteractionManager } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+  TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Pressable,
+  InteractionManager,
+} from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -20,7 +31,10 @@ import {
   CompositeNavigationProp,
   CommonActions,
 } from "@react-navigation/native";
-import { NavigationService, navigateToSubscriptionMain } from "../../../utils/navigation";
+import {
+  NavigationService,
+  navigateToSubscriptionMain,
+} from "../../../utils/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { Text, NavBackIcon } from "../../../atoms";
@@ -28,7 +42,10 @@ import {
   CollectionStackParamList,
   RootStackParamList,
 } from "../../../navigation/types";
-import { ReportModal, REPORT_MODAL_KEYBOARD_COOLDOWN_MS } from "../../../molecules/ReportModal";
+import {
+  ReportModal,
+  REPORT_MODAL_KEYBOARD_COOLDOWN_MS,
+} from "../../../molecules/ReportModal";
 import { MushroomDetail } from "../../../types/mushrooms.types";
 import { mushroomSpecimenService } from "../../../services/specimen/mushroomSpecimen.service";
 import { CardSkeleton } from "../../../components/skeleton";
@@ -39,9 +56,7 @@ import {
   getPrimaryCommonName,
   resolveCommonNameFieldsFromRaw,
 } from "../../../utils/mushroomDisplayUtils";
-import {
-  getMushroomImageUrls,
-} from "../../../config/mushroomImageUrls.config";
+import { getMushroomImageUrls } from "../../../config/mushroomImageUrls.config";
 import { formatTitleCase } from "../../../utils";
 import { resolveArchetypeId } from "../../../utils/navigationIds";
 import { resolveMushroomImageUrlsForDisplay } from "../../../utils/mushroomCardUtils";
@@ -71,6 +86,11 @@ import {
   buildMushroomSpecimenAddFromRaw,
   type SpecimenAddOptions,
 } from "../editMushroomDetails.utils";
+import {
+  imageUrlsWithUserCaptureFirst,
+  isRemoteImageUrl,
+} from "../userCollectionPhoto";
+import { uploadUserCaptureForCollection } from "../uploadUserCollectionPhoto";
 import {
   useSubscriptionStore,
   selectIsPremium,
@@ -196,9 +216,7 @@ function remoteHttpUrls(urls?: string[]): string[] {
 }
 
 /** Sound-identify recording URLs to store on the specimen (Identified sound library). */
-function identificationRecordingUrls(
-  source: string | undefined
-): string[] {
+function identificationRecordingUrls(source: string | undefined): string[] {
   if (source !== "identification") return [];
   return remoteHttpUrls(
     useIdentificationResultsStore.getState().uploadedSoundUrls
@@ -226,10 +244,33 @@ async function addMushroomSpecimenFromDetail(
   detail: MushroomDetail,
   options: SpecimenAddOptions
 ): Promise<string> {
+  const { localCaptureUri, ...addOptions } = options;
+  let nextOptions = addOptions;
+  const local = localCaptureUri?.trim();
+  if (local) {
+    let uploaded: string;
+    try {
+      uploaded = await uploadUserCaptureForCollection(local);
+    } catch (error) {
+      console.error("Error uploading identification photo:", error);
+      throw new Error("Could not upload your photo. Try again.");
+    }
+    if (!isRemoteImageUrl(uploaded)) {
+      throw new Error("Could not upload your photo. Try again.");
+    }
+    nextOptions = {
+      ...addOptions,
+      userPhotoUrl: uploaded,
+      userCapturedImages: imageUrlsWithUserCaptureFirst(
+        uploaded,
+        addOptions.userCapturedImages ?? []
+      ),
+    };
+  }
   const payload = buildMushroomSpecimenAddFromRaw(
     detail as unknown as Record<string, unknown>,
     archetypeId,
-    options
+    nextOptions
   );
   const specimen = await mushroomSpecimenService.addSpecimen(payload);
   const sid = specimen?.id ?? (specimen as { _id?: string } | undefined)?._id;
@@ -237,6 +278,39 @@ async function addMushroomSpecimenFromDetail(
     throw new Error("Failed to create specimen");
   }
   return String(sid);
+}
+
+async function saveSpecimenWithOptionalUserPhoto(args: {
+  archetypeId: string;
+  detail: MushroomDetail;
+  source: string | undefined;
+  captureUri: string | undefined;
+  options: SpecimenAddOptions;
+  replacingSpecimenId?: string;
+}): Promise<string> {
+  const sid = await addMushroomSpecimenFromDetail(
+    args.archetypeId,
+    args.detail,
+    withIdentificationRecording(args.source, {
+      ...args.options,
+      ...(args.captureUri ? { localCaptureUri: args.captureUri } : {}),
+    })
+  );
+  if (
+    args.captureUri &&
+    args.replacingSpecimenId &&
+    args.replacingSpecimenId !== sid
+  ) {
+    try {
+      await mushroomSpecimenService.deleteSpecimen(args.replacingSpecimenId);
+    } catch (error) {
+      console.error(
+        "Saved the photo but could not remove the previous specimen:",
+        error
+      );
+    }
+  }
+  return sid;
 }
 
 /** Shorten image URLs for app logs (avoid huge strings). */
@@ -313,9 +387,7 @@ export const BirdDetailsScreen: React.FC = () => {
     source === "identification" ||
     (source === "collection" && collectionName === "Identified");
   const favorites = useBirdsStore((s) => s.favorites);
-  const suppressedWishlistIds = useBirdsStore(
-    (s) => s.suppressedWishlistIds
-  );
+  const suppressedWishlistIds = useBirdsStore((s) => s.suppressedWishlistIds);
   const isDark = useIsDark();
 
   const screenColors = isDark ? SCREEN_COLORS.DARK : SCREEN_COLORS.LIGHT;
@@ -1005,14 +1077,13 @@ export const BirdDetailsScreen: React.FC = () => {
         )
       : undefined;
     const archetypeId =
-      (typeof resolvedArchetypeId === "string" &&
-        resolvedArchetypeId.trim()) ||
+      (typeof resolvedArchetypeId === "string" && resolvedArchetypeId.trim()) ||
       fromData ||
       (idType === "specimen"
         ? ""
         : typeof mushroomId === "string"
-          ? mushroomId.trim()
-          : "");
+        ? mushroomId.trim()
+        : "");
     const specimenId =
       routeSpecimenId ??
       sessionSpecimenIdFromArchetypeAdd ??
@@ -1242,7 +1313,9 @@ export const BirdDetailsScreen: React.FC = () => {
             return;
           }
           if (mushroomId) {
-            const detail = await archetypeService.getArchetypeDetails(mushroomId);
+            const detail = await archetypeService.getArchetypeDetails(
+              mushroomId
+            );
             if (detail) {
               const matchRow = otherMatches?.find(
                 (m: { id?: string; _id?: string }) =>
@@ -1292,9 +1365,7 @@ export const BirdDetailsScreen: React.FC = () => {
           // 1) Normalize specimen: snake_case → camelCase for Overview/Category/Name Origin
           const fromSpecimen = {
             ...specimen,
-            ...(archetypeId
-              ? { archetypeId, _archetype: archetypeId }
-              : {}),
+            ...(archetypeId ? { archetypeId, _archetype: archetypeId } : {}),
             mindatId: pick(s, "mindatId", "mindat_id") ?? s.mindatId,
             scientificName:
               pick(s, "scientificName", "scientific_name") ?? s.scientificName,
@@ -1510,7 +1581,9 @@ export const BirdDetailsScreen: React.FC = () => {
         const detail = await archetypeService.getArchetypeDetails(mushroomId);
         if (detail) {
           setMushroomData(
-            normalizeMushroomDetail(detail as unknown as Record<string, unknown>)
+            normalizeMushroomDetail(
+              detail as unknown as Record<string, unknown>
+            )
           );
         } else {
           setMushroomData(null);
@@ -1608,7 +1681,11 @@ export const BirdDetailsScreen: React.FC = () => {
       setIsWishlisted(false);
       return;
     }
-    if (source === "catalogue" || source === "explore" || source === "birdOfTheDay") {
+    if (
+      source === "catalogue" ||
+      source === "explore" ||
+      source === "birdOfTheDay"
+    ) {
       setIsWishlisted(
         favorites.includes(effectiveArchetypeId) ||
           mushroomData?.isWishlisted === true
@@ -2077,9 +2154,7 @@ export const BirdDetailsScreen: React.FC = () => {
             }
             surfacePrimary={isDark ? SHEET_COLORS.DARK : SHEET_COLORS.LIGHT}
             surfaceSecondary={
-              isDark
-                ? APP_COLORS.surfaceAuthDark
-                : APP_COLORS.surfaceAuthLight
+              isDark ? APP_COLORS.surfaceAuthDark : APP_COLORS.surfaceAuthLight
             }
             onNavigatePremium={() =>
               navigation.getParent()?.navigate("SubscriptionStack", {
@@ -2118,9 +2193,11 @@ export const BirdDetailsScreen: React.FC = () => {
                   match: item,
                 };
               });
-              useIdentificationResultsStore.getState().setResults(
-                matches as unknown as import("../../../utils/mushroomApiMappers").PossibleMatchListItem[]
-              );
+              useIdentificationResultsStore
+                .getState()
+                .setResults(
+                  matches as unknown as import("../../../utils/mushroomApiMappers").PossibleMatchListItem[]
+                );
               analyticsService.logEvent(EVENTS.identification_view_all, {
                 mushroom_id: String(mushroomId),
                 source: String(source ?? "unknown"),
@@ -2332,9 +2409,7 @@ export const BirdDetailsScreen: React.FC = () => {
                           useBirdsStore
                             .getState()
                             .addFavorite(effectiveArchetypeId);
-                          useWishlistInvalidationStore
-                            .getState()
-                            .invalidate();
+                          useWishlistInvalidationStore.getState().invalidate();
                           showToast("Added to wishlist", "success");
                         } catch (e: any) {
                           showToast(
@@ -2566,43 +2641,62 @@ export const BirdDetailsScreen: React.FC = () => {
         />
 
         <>
-            <LocationPermissionPopup
-              visible={detailsLocationFlow.showLocationPopup}
-              onClose={detailsLocationFlow.closeLocationPopups}
-              onAllowLocation={() =>
-                void detailsLocationFlow.handleAllowLocation()
-              }
-              onCustomLocation={detailsLocationFlow.openCustomLocationSheet}
-              loading={detailsLocationFlow.locationLoading}
-            />
-            <LocationManageAccessPopup
-              visible={detailsLocationFlow.showManagePopup}
-              onClose={detailsLocationFlow.closeLocationPopups}
-              onCustomLocation={detailsLocationFlow.openCustomLocationSheet}
-              onGoToSettings={detailsLocationFlow.handleOpenSettings}
-            />
-            <ChangeLocationBottomSheet
-              visible={detailsLocationFlow.showChangeLocationSheet}
-              onClose={detailsLocationFlow.closeChangeLocationSheet}
-              initialQuery={
-                detailsLocationFlow.appliedCustomLocationAddress ??
-                (mushroomData as { customLocation?: string } | null)
-                  ?.customLocation ??
-                ""
-              }
-              variant={
-                (mushroomData as { customLocation?: string } | null)
-                  ?.customLocation ||
-                detailsLocationFlow.appliedCustomLocationAddress
-                  ? "custom"
-                  : "add"
-              }
-              onConfirm={(location) => {
-                detailsLocationFlow.applyCustomLocation(location);
-                setMushroomData((prev) => {
-                  if (!prev) return prev;
-                  const next = {
-                    ...prev,
+          <LocationPermissionPopup
+            visible={detailsLocationFlow.showLocationPopup}
+            onClose={detailsLocationFlow.closeLocationPopups}
+            onAllowLocation={() =>
+              void detailsLocationFlow.handleAllowLocation()
+            }
+            onCustomLocation={detailsLocationFlow.openCustomLocationSheet}
+            loading={detailsLocationFlow.locationLoading}
+          />
+          <LocationManageAccessPopup
+            visible={detailsLocationFlow.showManagePopup}
+            onClose={detailsLocationFlow.closeLocationPopups}
+            onCustomLocation={detailsLocationFlow.openCustomLocationSheet}
+            onGoToSettings={detailsLocationFlow.handleOpenSettings}
+          />
+          <ChangeLocationBottomSheet
+            visible={detailsLocationFlow.showChangeLocationSheet}
+            onClose={detailsLocationFlow.closeChangeLocationSheet}
+            initialQuery={
+              detailsLocationFlow.appliedCustomLocationAddress ??
+              (mushroomData as { customLocation?: string } | null)
+                ?.customLocation ??
+              ""
+            }
+            variant={
+              (mushroomData as { customLocation?: string } | null)
+                ?.customLocation ||
+              detailsLocationFlow.appliedCustomLocationAddress
+                ? "custom"
+                : "add"
+            }
+            onConfirm={(location) => {
+              detailsLocationFlow.applyCustomLocation(location);
+              setMushroomData((prev) => {
+                if (!prev) return prev;
+                const next = {
+                  ...prev,
+                  customLocation: location.address,
+                  gpsLocation:
+                    Number.isFinite(location.latitude) &&
+                    Number.isFinite(location.longitude)
+                      ? {
+                          latitude: location.latitude,
+                          longitude: location.longitude,
+                        }
+                      : (prev as { gpsLocation?: unknown }).gpsLocation,
+                } as typeof prev;
+                return next;
+              });
+              const specimenId =
+                routeSpecimenId ??
+                sessionSpecimenIdFromArchetypeAdd ??
+                undefined;
+              if (specimenId) {
+                void mushroomSpecimenService
+                  .updateSpecimen(specimenId, {
                     customLocation: location.address,
                     gpsLocation:
                       Number.isFinite(location.latitude) &&
@@ -2611,33 +2705,14 @@ export const BirdDetailsScreen: React.FC = () => {
                             latitude: location.latitude,
                             longitude: location.longitude,
                           }
-                        : (prev as { gpsLocation?: unknown }).gpsLocation,
-                  } as typeof prev;
-                  return next;
-                });
-                const specimenId =
-                  routeSpecimenId ??
-                  sessionSpecimenIdFromArchetypeAdd ??
-                  undefined;
-                if (specimenId) {
-                  void mushroomSpecimenService
-                    .updateSpecimen(specimenId, {
-                      customLocation: location.address,
-                      gpsLocation:
-                        Number.isFinite(location.latitude) &&
-                        Number.isFinite(location.longitude)
-                          ? {
-                              latitude: location.latitude,
-                              longitude: location.longitude,
-                            }
-                          : undefined,
-                    })
-                    .catch(() => {
-                      // Local UI already updated; persist can retry from edit.
-                    });
-                }
-              }}
-            />
+                        : undefined,
+                  })
+                  .catch(() => {
+                    // Local UI already updated; persist can retry from edit.
+                  });
+              }
+            }}
+          />
         </>
 
         {/* Report Modal */}
@@ -2653,7 +2728,9 @@ export const BirdDetailsScreen: React.FC = () => {
               } = require("../../../services/rating/ratingFeedback.service");
               await sendRatingFeedback({
                 domain: "Birds",
-                message: `Bird: ${getDisplayName(mushroomData ?? {})}\n${message}`,
+                message: `Bird: ${getDisplayName(
+                  mushroomData ?? {}
+                )}\n${message}`,
               });
               showToast("Report submitted successfully", "success");
             } catch (error) {
@@ -2875,15 +2952,20 @@ export const BirdDetailsScreen: React.FC = () => {
                 }
               }
 
-              await addMushroomSpecimenFromDetail(
-                effectiveArchetypeId,
-                mushroomData,
-                withIdentificationRecording(source, {
+              await saveSpecimenWithOptionalUserPhoto({
+                archetypeId: effectiveArchetypeId,
+                detail: mushroomData,
+                source,
+                captureUri:
+                  source === "identification"
+                    ? identificationImage?.uri?.trim()
+                    : undefined,
+                options: {
                   collectionIds: targetCollectionId,
                   isIdentified: false,
                   isWishlisted: false,
-                })
-              );
+                },
+              });
               useCollectionInvalidationStore.getState().invalidate();
               setNewlyCreatedCollectionIdForAnother(null);
               showToast(
@@ -2969,10 +3051,14 @@ export const BirdDetailsScreen: React.FC = () => {
             setAddingToCollection(true);
             const resolvedSpecimenId =
               routeSpecimenId ?? sessionSpecimenIdFromArchetypeAdd ?? undefined;
+            const captureUri =
+              source === "identification"
+                ? identificationImage?.uri?.trim()
+                : undefined;
 
             try {
               if (collectionId === ADD_TO_COLLECTION_IDS.IDENTIFIED) {
-                if (resolvedSpecimenId) {
+                if (resolvedSpecimenId && !captureUri) {
                   await mushroomSpecimenService.updateSpecimen(
                     resolvedSpecimenId,
                     {
@@ -2987,14 +3073,16 @@ export const BirdDetailsScreen: React.FC = () => {
                     showToast("Failed to add to collection", "error");
                     return;
                   }
-                  const sid = await addMushroomSpecimenFromDetail(
-                    effectiveArchetypeId,
-                    mushroomData,
-                    withIdentificationRecording(source, {
-                      isIdentified: true,
-                      isWishlisted: false,
-                    })
-                  );
+                  const sid = await saveSpecimenWithOptionalUserPhoto({
+                    archetypeId: effectiveArchetypeId,
+                    detail: mushroomData,
+                    source,
+                    captureUri,
+                    options: { isIdentified: true, isWishlisted: false },
+                    replacingSpecimenId: captureUri
+                      ? resolvedSpecimenId
+                      : undefined,
+                  });
                   setSessionSpecimenIdFromArchetypeAdd(sid);
                   useCollectionInvalidationStore.getState().invalidate();
                 }
@@ -3014,19 +3102,37 @@ export const BirdDetailsScreen: React.FC = () => {
                 return;
               }
               if (collectionId === ADD_TO_COLLECTION_IDS.WISHLIST) {
-                const wishlistSpecimen =
-                  await archetypeService.addWishlistArchetype(
-                    effectiveArchetypeId
-                  );
-                const wishlistSpecimenId = wishlistSpecimen?._id;
-                if (wishlistSpecimenId) {
-                  setSessionSpecimenIdFromArchetypeAdd(String(wishlistSpecimenId));
-                  const recorded = identificationRecordingUrls(source);
-                  if (recorded.length) {
-                    await mushroomSpecimenService.updateSpecimen(
-                      String(wishlistSpecimenId),
-                      { userCapturedSounds: recorded }
+                if (captureUri) {
+                  if (!mushroomData) {
+                    showToast("Failed to add to collection", "error");
+                    return;
+                  }
+                  const sid = await saveSpecimenWithOptionalUserPhoto({
+                    archetypeId: effectiveArchetypeId,
+                    detail: mushroomData,
+                    source,
+                    captureUri,
+                    options: { isIdentified: false, isWishlisted: true },
+                    replacingSpecimenId: resolvedSpecimenId,
+                  });
+                  setSessionSpecimenIdFromArchetypeAdd(sid);
+                } else {
+                  const wishlistSpecimen =
+                    await archetypeService.addWishlistArchetype(
+                      effectiveArchetypeId
                     );
+                  const wishlistSpecimenId = wishlistSpecimen?._id;
+                  if (wishlistSpecimenId) {
+                    setSessionSpecimenIdFromArchetypeAdd(
+                      String(wishlistSpecimenId)
+                    );
+                    const recorded = identificationRecordingUrls(source);
+                    if (recorded.length) {
+                      await mushroomSpecimenService.updateSpecimen(
+                        String(wishlistSpecimenId),
+                        { userCapturedSounds: recorded }
+                      );
+                    }
                   }
                 }
                 useBirdsStore.getState().addFavorite(effectiveArchetypeId);
@@ -3062,6 +3168,44 @@ export const BirdDetailsScreen: React.FC = () => {
                 }
               } catch (_) {
                 // Proceed if we can't fetch (e.g. network); backend may still enforce
+              }
+
+              if (resolvedSpecimenId && captureUri) {
+                if (!mushroomData) {
+                  showToast("Failed to add to collection", "error");
+                  return;
+                }
+                const sid = await saveSpecimenWithOptionalUserPhoto({
+                  archetypeId: effectiveArchetypeId,
+                  detail: mushroomData,
+                  source,
+                  captureUri,
+                  options: {
+                    collectionIds: collectionId,
+                    isIdentified: false,
+                    isWishlisted: false,
+                  },
+                  replacingSpecimenId: resolvedSpecimenId,
+                });
+                setSessionSpecimenIdFromArchetypeAdd(sid);
+                useCollectionInvalidationStore.getState().invalidate();
+                setAddedToCollectionInSession(true);
+                setLastAddedCollectionId(collectionId);
+                setNewlyCreatedCollectionId(null);
+                let addedDisplayName: string | null = null;
+                try {
+                  const details = await collectionService.getCollectionDetails(
+                    collectionId
+                  );
+                  addedDisplayName = details?.name ?? null;
+                  setLastAddedCollectionName(addedDisplayName);
+                } catch {
+                  setLastAddedCollectionName(null);
+                }
+                showToast("Added to collection", "success");
+                setShowAddToCollectionSheet(false);
+                void presentAddedCollection(collectionId, addedDisplayName);
+                return;
               }
 
               if (resolvedSpecimenId) {
@@ -3117,15 +3261,17 @@ export const BirdDetailsScreen: React.FC = () => {
                 showToast("Failed to add to collection", "error");
                 return;
               }
-              const sid = await addMushroomSpecimenFromDetail(
-                effectiveArchetypeId,
-                mushroomData,
-                withIdentificationRecording(source, {
+              const sid = await saveSpecimenWithOptionalUserPhoto({
+                archetypeId: effectiveArchetypeId,
+                detail: mushroomData,
+                source,
+                captureUri,
+                options: {
                   collectionIds: collectionId,
                   isIdentified: false,
                   isWishlisted: false,
-                })
-              );
+                },
+              });
               setSessionSpecimenIdFromArchetypeAdd(sid);
               useCollectionInvalidationStore.getState().invalidate();
               setAddedToCollectionInSession(true);
@@ -3267,88 +3413,82 @@ export const BirdDetailsScreen: React.FC = () => {
                   <View
                     style={[styles.aiRockTitleContainer, { marginTop: 16 }]}
                   >
-                      <View style={styles.birdNameRow}>
-                        <View style={styles.birdNameCopy}>
+                    <View style={styles.birdNameRow}>
+                      <View style={styles.birdNameCopy}>
+                        <Text
+                          style={{
+                            ...NAME_HEADING,
+                            fontSize: 24,
+                            color: isDark ? TEXT_PRIMARY : NAME_HEADING.color,
+                          }}
+                        >
+                          {formatTitleCase(getDisplayName(mushroomData))}
+                        </Text>
+                        {getMushroomDisplayScientificFromFields(
+                          mushroomData
+                        ) ? (
                           <Text
-                            style={{
-                              ...NAME_HEADING,
-                              fontSize: 24,
-                              color: isDark
-                                ? TEXT_PRIMARY
-                                : NAME_HEADING.color,
-                            }}
+                            style={[
+                              styles.aiSynonym,
+                              {
+                                ...SYNONYM_AND_UNIT,
+                                fontSize: 16,
+                                lineHeight: 24,
+                                marginTop: 4,
+                              },
+                            ]}
                           >
-                            {formatTitleCase(getDisplayName(mushroomData))}
+                            (
+                            {formatTitleCase(
+                              getMushroomDisplayScientificFromFields(
+                                mushroomData
+                              )!
+                            )}
+                            )
                           </Text>
-                          {getMushroomDisplayScientificFromFields(
-                            mushroomData
-                          ) ? (
-                            <Text
-                              style={[
-                                styles.aiSynonym,
-                                {
-                                  ...SYNONYM_AND_UNIT,
-                                  fontSize: 16,
-                                  lineHeight: 24,
-                                  marginTop: 4,
-                                },
-                              ]}
-                            >
-                              (
-                              {formatTitleCase(
-                                getMushroomDisplayScientificFromFields(
-                                  mushroomData
-                                )!
-                              )}
-                              )
-                            </Text>
-                          ) : null}
-                        </View>
-                        {(mushroomData.soundUrls?.length ?? 0) > 0 ? (
-                          <TouchableOpacity
-                            style={styles.birdNameSoundButton}
-                            onPress={() => {
-                              const url = mushroomData.soundUrls?.find(
-                                (item) =>
-                                  typeof item === "string" && item.trim()
-                              );
-                              if (!url) return;
-                              void (async () => {
-                                if (nameSoundPlaying) {
-                                  setNameSoundPlaying(false);
-                                  void soundRecordingService.stopPlayback();
-                                  return;
-                                }
-                                setNameSoundPlaying(true);
-                                try {
-                                  await soundRecordingService.play(url, {
-                                    onEnd: () => setNameSoundPlaying(false),
-                                  });
-                                } catch {
-                                  setNameSoundPlaying(false);
-                                }
-                              })();
-                            }}
-                            accessibilityRole="button"
-                            accessibilityLabel={
-                              nameSoundPlaying
-                                ? COLLECTION_STRINGS.birdDetails
-                                    .nameSoundStopA11y
-                                : COLLECTION_STRINGS.birdDetails.nameSoundA11y
-                            }
-                          >
-                            <CatalogueVolumeIcon
-                              width={24}
-                              height={24}
-                              color={
-                                isDark
-                                  ? TEXT_PRIMARY
-                                  : APP_COLORS.surfaceDark
-                              }
-                            />
-                          </TouchableOpacity>
                         ) : null}
                       </View>
+                      {(mushroomData.soundUrls?.length ?? 0) > 0 ? (
+                        <TouchableOpacity
+                          style={styles.birdNameSoundButton}
+                          onPress={() => {
+                            const url = mushroomData.soundUrls?.find(
+                              (item) => typeof item === "string" && item.trim()
+                            );
+                            if (!url) return;
+                            void (async () => {
+                              if (nameSoundPlaying) {
+                                setNameSoundPlaying(false);
+                                void soundRecordingService.stopPlayback();
+                                return;
+                              }
+                              setNameSoundPlaying(true);
+                              try {
+                                await soundRecordingService.play(url, {
+                                  onEnd: () => setNameSoundPlaying(false),
+                                });
+                              } catch {
+                                setNameSoundPlaying(false);
+                              }
+                            })();
+                          }}
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            nameSoundPlaying
+                              ? COLLECTION_STRINGS.birdDetails.nameSoundStopA11y
+                              : COLLECTION_STRINGS.birdDetails.nameSoundA11y
+                          }
+                        >
+                          <CatalogueVolumeIcon
+                            width={24}
+                            height={24}
+                            color={
+                              isDark ? TEXT_PRIMARY : APP_COLORS.surfaceDark
+                            }
+                          />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
                     {/*
                       Name-origin chip hidden for now (Figma polish).
                     {nameOrigin ? (
@@ -3656,7 +3796,6 @@ export const BirdDetailsScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           )}
-
       </SafeAreaView>
 
       <UpgradeModal
@@ -3674,9 +3813,7 @@ export const BirdDetailsScreen: React.FC = () => {
         visible={showRemoveFromWishlistConfirm}
         onClose={() => setShowRemoveFromWishlistConfirm(false)}
         onConfirm={handleConfirmRemoveFromWishlist}
-        mushroomName={
-          mushroomData ? getDisplayName(mushroomData) : undefined
-        }
+        mushroomName={mushroomData ? getDisplayName(mushroomData) : undefined}
       />
     </>
   );

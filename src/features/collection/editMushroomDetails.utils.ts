@@ -12,6 +12,7 @@ import { extractBirdProfile } from "../../utils/birdApiMappers";
 import { APP_COLORS } from "../../config/colors";
 import { COLLECTION_STRINGS } from "../../config/strings/collection.strings";
 import { normalizeCollectionIds } from "./collection.utils";
+import { imageUrlsWithUserCaptureFirst } from "./userCollectionPhoto";
 
 export type EditMushroomTabId =
   | "overview"
@@ -479,6 +480,10 @@ export type SpecimenAddOptions = {
   comment?: string;
   userCapturedSounds?: string[];
   userCapturedImages?: string[];
+  /** Public URL of the photo the user took. Prepended to imageUrls on POST only. */
+  userPhotoUrl?: string;
+  /** Local identification capture. Callers upload this before building the payload. */
+  localCaptureUri?: string;
 };
 
 export function resolveSpecimenGbifId(raw: Record<string, unknown>): string {
@@ -527,8 +532,12 @@ export function buildMushroomSpecimenAddPayload(
   const imageUrls = (formData.images || [])
     .filter((p) => !p.isDeleted && p.uri)
     .map((p) => p.uri);
-  const resolvedImageUrls =
+  const catalogueImageUrls =
     imageUrls.length > 0 ? imageUrls : getArchetypeImageUrls(archetypeRaw);
+  const resolvedImageUrls = imageUrlsWithUserCaptureFirst(
+    options.userPhotoUrl,
+    catalogueImageUrls
+  );
 
   if (resolvedImageUrls.length === 0) {
     throw new Error("At least one image is required to save this bird.");
@@ -570,11 +579,13 @@ export function buildMushroomSpecimenAddPayload(
     (Array.isArray(archetypeRaw.userCapturedSounds)
       ? (archetypeRaw.userCapturedSounds as string[]).filter(Boolean)
       : undefined);
-  const userCapturedImages =
-    options.userCapturedImages ??
-    (Array.isArray(archetypeRaw.userCapturedImages)
-      ? (archetypeRaw.userCapturedImages as string[]).filter(Boolean)
-      : undefined);
+  const capturedFromRecord = Array.isArray(archetypeRaw.userCapturedImages)
+    ? (archetypeRaw.userCapturedImages as string[]).filter(Boolean)
+    : [];
+  const userCapturedImages = imageUrlsWithUserCaptureFirst(
+    options.userPhotoUrl,
+    options.userCapturedImages ?? capturedFromRecord
+  );
 
   const payload: Record<string, unknown> = {
     ...Object.fromEntries(

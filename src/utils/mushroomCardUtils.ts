@@ -10,6 +10,7 @@ import {
   getMushroomImageUrlFromMatch,
   getMushroomImageUrls,
 } from "../config/mushroomImageUrls.config";
+import { toPublicStorageDisplayUrl } from "../features/collection/userCollectionPhoto";
 import { sanitizeBirdImageUrl } from "./birdApiMappers";
 
 /** Mushroom-like object with optional name arrays and scientific/canonical names. */
@@ -106,7 +107,7 @@ export function resolveMushroomImageUrlsForDisplay(
       u.startsWith("https://") ||
       u.startsWith("file://")
     ) {
-      return u;
+      return toPublicStorageDisplayUrl(u);
     }
     return getMushroomImageUrlFromMatch(nameForPath, u) ?? u;
   });
@@ -133,9 +134,15 @@ export function resolveBirdHeroImageUrls(
   const nameForPath = canonicalName?.trim() || fallbackMineralName?.trim();
   const direct: string[] = [];
   const sanitizedDefault = sanitizeBirdImageUrl(defaultImageUrl);
-  if (sanitizedDefault) direct.push(sanitizedDefault);
+  if (sanitizedDefault) {
+    const displayDefault = toPublicStorageDisplayUrl(sanitizedDefault);
+    if (displayDefault) direct.push(displayDefault);
+  }
   for (const uri of normalizeImageUrls(imageUrls)) {
-    if (isDirectImageUri(uri) && !direct.includes(uri)) direct.push(uri);
+    const display = toPublicStorageDisplayUrl(uri);
+    if (isDirectImageUri(display) && !direct.includes(display)) {
+      direct.push(display);
+    }
   }
   if (direct.length > 0) return direct;
 
@@ -160,7 +167,7 @@ export function getFirstImageUri(
 ): { uri: string } | undefined {
   const uris = normalizeImageUrls(imageUrls);
   if (uris.length === 0) return undefined;
-  return { uri: uris[0] };
+  return { uri: toPublicStorageDisplayUrl(uris[0]) };
 }
 
 /**
