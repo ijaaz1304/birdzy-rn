@@ -4,6 +4,7 @@
 
 import Geolocation from '@react-native-community/geolocation';
 import { AppRegistry } from 'react-native';
+import { registerAndroidBackgroundPush } from './src/services/notifications/backgroundPush';
 import App from './App';
 import { name as appName } from './app.json';
 
@@ -30,5 +31,7 @@ if (__DEV__) {
     !!global.navigator?.geolocation,
   );
 }
+
+registerAndroidBackgroundPush();
 
 AppRegistry.registerComponent(appName, () => App);

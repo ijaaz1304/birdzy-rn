@@ -104,3 +104,7 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 - [ ] 2026-11-04: User will run native builds. Audit build was stopped at user request; record resulting build links, map/device checks and release acceptance here.
 
 - [ ] 2026-11-04: eMudhra patch acceptance — assign mobile/release and QA owners; verify patched iOS Firestore dependencies, production archive, Firebase device flows, TestFlight, published version and user update adoption. Builds are user-run; release/device acceptance remains open. See [remediation guide](../firebase-emudhra.md).
+
+## Remote push acceptance — 2026-11-09
+
+- [ ] Owner unassigned. Verify Android foreground, background and Recents-exit delivery and taps, plus signed iOS Debug and TestFlight/APNs delivery and taps. See [the device QA notes](../../docs/handover/QA_AND_OPERATIONS.md#remote-push-in-background-and-after-app-exit). Builds and physical-device checks are open.

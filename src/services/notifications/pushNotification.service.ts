@@ -72,9 +72,9 @@ export const setupForegroundNotificationListener = () => {
 
     unsubscribe = messagingModule().onMessage(async (remoteMessage: any) => {
       console.log("Foreground notification received:", remoteMessage);
-      const title = remoteMessage.notification?.title || "New Notification";
-      const body = remoteMessage.notification?.body || "";
       const data = remoteMessage.data || {};
+      const title = remoteMessage.notification?.title || data.title || "New Notification";
+      const body = remoteMessage.notification?.body || data.body || "";
 
       try {
         analyticsService.logEvent(EVENTS.notification_received, {
@@ -156,12 +156,15 @@ export const setupNotificationTapListener = () => {
  * Setup background notification handler
  * Handles notifications when app is in background
  */
+let backgroundTapListenerRegistered = false;
+
 export const setupBackgroundNotificationHandler = () => {
   getMessaging().then((messagingModule) => {
     if (!messagingModule) {
       return;
     }
 
+    if (backgroundTapListenerRegistered) return;
     messagingModule().onNotificationOpenedApp((remoteMessage: any) => {
       console.log("Background notification opened:", remoteMessage);
       try {
@@ -172,6 +175,7 @@ export const setupBackgroundNotificationHandler = () => {
       } catch (_) {}
       handleNotificationNavigation(remoteMessage.data);
     });
+    backgroundTapListenerRegistered = true;
   });
 };
 
