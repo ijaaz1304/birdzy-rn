@@ -25,6 +25,8 @@ Evidence: [App.tsx](../../App.tsx); [src/features/auth/auth.store.ts](../../src/
 5. Render candidate matches, an empty/no-match state, a usage-limit state, or a recoverable request error.
 6. Open details, then save or organize the selected result without confusing archetype and specimen IDs.
 
+**Camera permission screens (Figma 8558:25287):** Android shows the native camera dialog at most twice (deny → in-app "Allow access"; second deny → "Go to settings" from then on); iOS shows it once, then "Go to settings". Both in-app screens use the Figma chrome from `CameraPermissionGateChrome`: back + flash on top, gallery (works), greyed-out shutter and flip camera at the bottom. Only back and gallery respond to taps.
+
 **Recovery to demonstrate:** first denial, repeated denial/settings return, cancel/back during upload, background/foreground, slow/offline server, no match, duplicate submit and free allowance exhaustion.
 
 Evidence: [src/features/camera/CameraScreen.tsx](../../src/features/camera/CameraScreen.tsx); [src/services/api/features/core.api.ts](../../src/services/api/features/core.api.ts); [src/features/collection/screens/BirdDetailsScreen.tsx](../../src/features/collection/screens/BirdDetailsScreen.tsx).

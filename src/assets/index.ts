@@ -34,6 +34,8 @@ export {
   IDENTIFICATION_TIP_LIGHT_IMAGE_LIST,
 } from "./identificationTipImages";
 export { default as IdentificationScannerOverlay } from "./identification/scanner.svg";
+/** Figma Illustration/take photo (8567:1851) — transparent, for dark camera permission screens */
+export { default as CameraTakePhotoIllustrationSvg } from "./camera/take_photo_illustration.svg";
 export { default as CatalogueVolumeIcon } from "./catalogue/icons/volume_high.svg";
 export { default as BirdSizeScaleGraphic } from "./collection/details/bird/size_scale.svg";
 export { default as HomeTabIcon } from "./common/bottomTab/home.svg";

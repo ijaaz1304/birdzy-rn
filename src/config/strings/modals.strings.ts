@@ -18,9 +18,10 @@ export const MODAL_STRINGS = {
     },
     cameraPermission: {
       title: "Improve Identification With Camera",
-      subtitle: "To identify birds around you, we need access to your camera.",
+      subtitle:
+        "To identify birds around you, Birds AI needs access to your camera.",
       enableButton: "Continue",
-      allowAccessButton: "Allow Access",
+      allowAccessButton: "Allow access",
       openSettings: "Go to settings",
       deniedTitle: "Camera permission needed",
       deniedSubtitle:

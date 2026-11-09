@@ -78,6 +78,10 @@ import { IdentificationLocationBanner } from "./components/IdentificationLocatio
 import { CameraImageSlots } from "./components/CameraImageSlots";
 import { CameraIdentifyReview } from "./components/CameraIdentifyReview";
 import { CameraPermissionInlineState } from "./components/CameraPermissionInlineState";
+import {
+  CameraPermissionGateChrome,
+  getCameraPermissionGateContentInset,
+} from "./components/CameraPermissionGateChrome";
 import { CameraDailyScanBanner } from "./components/CameraDailyScanBanner";
 import { CameraScanCountBadge } from "./components/CameraScanCountBadge";
 import { usePhotoIdentificationLimit } from "./hooks/usePhotoIdentificationLimit";
@@ -311,7 +315,7 @@ export const CameraScreen: React.FC = () => {
 
   const showCameraPermissionInline = !!cameraPermissionInline && !hasPermission;
 
-  /** Allow Access / Go to Settings — plain gate UI only, no camera chrome. */
+  /** Allow Access / Go to Settings — Figma gate chrome (CameraPermissionGateChrome) instead of live camera UI. */
   const isCameraPermissionGateActive =
     permissionChecked &&
     !hasPermission &&
@@ -1223,7 +1227,9 @@ export const CameraScreen: React.FC = () => {
         {
           backgroundColor: showUpgradeSheet
             ? theme.colors.background
-            : CAMERA_BG_FALLBACK,
+            : isCameraPermissionGateActive
+              ? APP_COLORS.cameraPermissionSurface
+              : CAMERA_BG_FALLBACK,
         },
       ]}
     >
@@ -1282,23 +1288,34 @@ export const CameraScreen: React.FC = () => {
               <CameraCaptureOverlay layout={captureFrameLayout} />
             )}
 
-            {/* Top-left: back — circular bg matches flash control */}
-            <TouchableOpacity
-              onPress={handleBackPress}
-              style={[
-                styles.topNavButton,
-                styles.topNavButtonLeft,
-                styles.topNavButtonBack,
-                showIdentifyReview && styles.topNavButtonRaised,
-                {
-                  top: insets.top + 12,
-                },
-              ]}
-              activeOpacity={0.8}
-              hitSlop={HIT_SLOP.CLOSE}
-            >
-              <NavBackIcon color="#FFFFFF" size={CAPTURE_TOP_ICON_SIZE} />
-            </TouchableOpacity>
+            {/* Permission gate: Figma back/flash + gallery/disabled shutter/flip chrome */}
+            {isCameraPermissionGateActive ? (
+              <CameraPermissionGateChrome
+                topInset={insets.top}
+                bottomInset={insets.bottom}
+                onBack={handleBackPress}
+                onGallery={openGallery}
+                galleryDisabled={isNativeDialogActive}
+              />
+            ) : (
+              /* Top-left: back — circular bg matches flash control */
+              <TouchableOpacity
+                onPress={handleBackPress}
+                style={[
+                  styles.topNavButton,
+                  styles.topNavButtonLeft,
+                  styles.topNavButtonBack,
+                  showIdentifyReview && styles.topNavButtonRaised,
+                  {
+                    top: insets.top + 12,
+                  },
+                ]}
+                activeOpacity={0.8}
+                hitSlop={HIT_SLOP.CLOSE}
+              >
+                <NavBackIcon color="#FFFFFF" size={CAPTURE_TOP_ICON_SIZE} />
+              </TouchableOpacity>
+            )}
 
             {/* Top-center: photo tips — free users, matching the other camera apps */}
             {!isPremium &&
@@ -1413,9 +1430,15 @@ export const CameraScreen: React.FC = () => {
               <View
                 style={[
                   styles.cameraPermissionInlineHost,
+                  // Figma centers the permission content on the full screen;
+                  // symmetric inset keeps it clear of both bars on short screens.
                   {
-                    top: insets.top + 120,
-                    bottom: Math.max(insets.bottom, 8) + 76,
+                    top: 0,
+                    bottom: 0,
+                    paddingVertical: getCameraPermissionGateContentInset(
+                      insets.top,
+                      insets.bottom
+                    ),
                   },
                 ]}
                 pointerEvents="box-none"
