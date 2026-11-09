@@ -91,3 +91,11 @@ Rewrote the upgrade document as a reusable product/release brief at the user's r
 ## 2026-11-04 — Word security brief
 
 Created [the Word version](../eMudhra_Security_Update_Brief.docx) of the generic product/release brief, including separate copy-ready Cursor and Claude prompts. Preserved generic platform scope and removed app-specific/code locations from the deliverable. Validation: final DOCX rendered to four pages and every page visually inspected; title styling, prompt lists, content presence, generic scope and document links checked. No app/dependency changes, builds or releases performed.
+
+## 2026-11-09 — Background and cold-start push notifications
+
+- Added Android data-only FCM display through the existing Notifee channel and aligned Debug and Release iOS APNs entitlements with their signing environments. The scene forwards cold-start notification responses to the installed notification-center delegate. Added data title/body fallback in the foreground and deduplicated the FCM tap listener.
+- Updated [QA_AND_OPERATIONS.md](../../docs/handover/QA_AND_OPERATIONS.md) with the payload, signing and device QA cases.
+- JS/TS syntax checks and the mocked Android background-handler smoke check passed. Xcode project and entitlement lint passed. SceneDelegate Swift syntax parsing passed.
+- The repository-wide TypeScript check and handover link checker passed.
+- Open with owner unassigned: signed builds and physical-device delivery and tap validation using the real server payloads. Direct APNs routing remains unverified.

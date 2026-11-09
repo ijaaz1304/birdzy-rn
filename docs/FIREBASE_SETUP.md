@@ -364,3 +364,8 @@ Native config (from Console):
 - `docs/ENV_SETUP.md` — `.env.dev` / `.env.prod` and `APP_ENV`
 - `docs/GOOGLE_SIGNIN_TROUBLESHOOTING.md` — SHA-1 and `google-services.json` issues
 - `docs/CI_CD_SETUP.md` — release signing and Firebase SHA alignment
+
+
+## Background and cold-start remote push
+
+See [the remote push setup and device QA notes](handover/QA_AND_OPERATIONS.md#remote-push-in-background-and-after-app-exit) for payload, signing and routing checks.
