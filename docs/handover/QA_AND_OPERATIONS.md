@@ -68,7 +68,14 @@ A reproducible bug description, expected/actual state, redacted request/response
 
 ## Explore location search regression
 
-Run `npx jest __tests__/explore --runInBand`. The geocoding regression covers missing separate geocoding key with Mapbox available, coordinate order/range validation, no temporary Mapbox cache, minimum query length, cancellation and provider error handling. On both platforms, also verify suggestion taps while the keyboard is open, no old label restoration after selection, new coordinates driving results, and expanded-map search. These device checks remain open as of 2026-11-04.
+Run `npx jest __tests__/explore --runInBand`. The geocoding regression covers missing separate geocoding key with Mapbox available, coordinate order/range validation, no temporary Mapbox cache, minimum query length, cancellation and provider error handling. Explore UI regressions also cover Home banner permission labels and full-banner taps, Catalogue entry button/banner via `useExploreEntry`, equal Spotted Now / Year-round tab halves, empty/filtered empty wording, and Android vs iOS first-ask location copy. On both platforms, also verify suggestion taps while the keyboard is open, no old label restoration after selection, new coordinates driving results, and expanded-map search. These device checks remain open as of 2026-11-04.
+
+### Explore entry and permission UI — 2026-11-11
+
+- [ ] Home: with location off, banner says "Enable Location"; tapping empty banner area opens the permission popup; after grant it says "Explore Map". Rows stay label-only (no counts).
+- [ ] Catalogue: "Explore Near You" pill and map banner open the same permission flow; banner hidden while filters are applied; brand outline visible on the map edge in light and dark.
+- [ ] Explore map: Spotted Now / Year-round take equal halves; empty list uses body appearance wording; filtered empty mentions filters.
+- [ ] Android first-ask popup: "Enable Location Access" / "Allow Location". iOS unchanged: "Improve Identification With Location" / "Continue".
 
 ## App audit validation — 2026-11-04
 

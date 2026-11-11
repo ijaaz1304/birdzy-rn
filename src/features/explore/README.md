@@ -5,11 +5,12 @@ Ported from Shroomzy's `codex/explore-reliability-fixes` branch (local reference
 ## Updating the feature
 
 - `assets/`: Home map artwork, empty-state artwork and map controls. Replace files in place to update the visuals together; `assets/index.ts` is the asset registry.
-- `content/explore.strings.ts`: Home copy, screen labels and accessibility text.
-- `content/explore.colors.ts`: Search border, tab colors, map activity colors and matching legend colors.
+- `content/explore.strings.ts`: Home copy, screen labels, empty/filtered/wide empty states and accessibility text.
+- `content/explore.colors.ts`: Search border, tab colors, map activity colors, home/catalogue map-banner outline and matching legend colors.
 - `content/explore.config.ts`: API paths, supported map filters and map search radius (100 km).
+- `useExploreEntry.tsx` / `useExploreLocationToggleFlow.ts` / `useLocationPermissionGranted.ts`: shared Home and Catalogue entry into Explore with the location-permission flow.
 - `services/`: Location-only nearby list API, bird GeoJSON API and response processing.
-- `components/`, `screens/`, `hooks/`, `utils/`: Explore-specific UI and behavior. Shared account, wishlist, permission and bird detail components remain integrated with Birdzy.
+- `components/` (`HomeExploreNearYouSection`, `ExploreEntryButton`, `ExploreTabBar`, …), `screens/`, `hooks/`, `utils/`: Explore-specific UI and behavior. Shared account, wishlist, permission and bird detail components remain integrated with Birdzy.
 
 Species images are supplied by the Birdzy API (`defaultImageUrl`, falling back to `imageUrls`); they are not bundled placeholder sightings.
 

@@ -115,3 +115,8 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 - [x] Implemented source guards and automated lifecycle regressions for the audited request/listener/mutation paths.
 - [ ] Owner unassigned. Complete the duplicate-call device/backend/sandbox checklist in QA_AND_OPERATIONS.md, attach build/device/network-trace evidence and profile list renders on both platforms.
 - [ ] Owner unassigned. Resolve the remaining project-wide test/compiler baseline issues recorded in CHANGELOG.md before release acceptance.
+
+## Explore entry UI acceptance — 11 November 2026
+
+- [x] Source: shared `useExploreEntry`, Home/Catalogue banners, equal Spotted Now / Year-round tabs, empty-state wording/style, Android first-ask copy.
+- [ ] Owner unassigned. Complete the Explore entry and permission UI checklist in QA_AND_OPERATIONS.md on physical devices (Android + iOS).

@@ -11,4 +11,10 @@ export const EXPLORE_COLORS = {
   selectedFill: "#725481",
   selectedOpacity: 0.2,
   selectedBackground: "rgba(114,84,129,0.2)",
+  /** Brand outline along the home/catalogue map-banner edge. */
+  mapOutlineLight: "#C7630C",
+  mapOutlineDark: "#F7B23A",
+  /** Thin border around the standalone Catalogue map panel. */
+  panelBorderLight: "#EAD3AD",
+  panelBorderDark: "#3A2E1C",
 } as const;

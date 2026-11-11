@@ -69,11 +69,13 @@ export function getLocationFirstAskUiCopy(): PermissionPromptCopy {
       openSettingsLabel: MODAL_STRINGS.bottomSheets.locationManageAccess.goToSettings,
     };
   }
-  const c = PERMISSIONS_STRINGS.location;
+  // Android: the Figma "Enable Location Access" popup. Older copy came from
+  // PERMISSIONS_STRINGS.location and mentioned weather / plant care.
+  const c = CAMERA_STRINGS.galleryLocationAccess;
   return {
     title: c.title,
-    subtitle: c.message,
-    continueLabel: c.buttonLabel,
+    subtitle: c.subtitle,
+    continueLabel: MODAL_STRINGS.bottomSheets.enableLocation.allowButton,
     openSettingsLabel: "Go to Settings",
   };
 }

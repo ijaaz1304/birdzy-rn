@@ -14,6 +14,8 @@ export const MODAL_STRINGS = {
       subtitle:
         "Use your location to improve Near You results and step-by-step suggestions for your area.",
       enableButton: "Continue",
+      /** Android first-ask primary button (Figma). iOS keeps enableButton. */
+      allowButton: "Allow Location",
       customLocationButton: "Custom Location",
     },
     cameraPermission: {
