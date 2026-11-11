@@ -1,4 +1,6 @@
 import { HomeExploreNearYouSection } from "../../explore/components/HomeExploreNearYouSection";
+import { useExploreEntry } from "../../explore/useExploreEntry";
+import { useLocationPermissionGranted } from "../../explore/useLocationPermissionGranted";
 /**
  * Home Screen - UI Implementation
  */
@@ -154,6 +156,10 @@ export const HomeScreen = () => {
   const isHomeFocused = useIsFocused();
   const isHomeFocusedRef = useRef(isHomeFocused);
   isHomeFocusedRef.current = isHomeFocused;
+  const { openExplore, popups: explorePopups } = useExploreEntry();
+  const locationPermissionGranted = useLocationPermissionGranted();
+  const openExploreFromHome = (tab: "growingNow" | "yearRound") =>
+    openExplore(tab);
 
   // Get app configuration
   const homeConfig = useFeatureConfig("home");
@@ -865,9 +871,10 @@ export const HomeScreen = () => {
 
           <View style={styles.sectionBlock}>
             <HomeExploreNearYouSection
-              onExploreMap={() => rootNavigation.navigate("ExploreStack", { screen: "ExploreMap" })}
-              onGrowingNow={() => rootNavigation.navigate("ExploreStack", { screen: "ExploreMap", params: { initialTab: "growingNow" } })}
-              onYearRound={() => rootNavigation.navigate("ExploreStack", { screen: "ExploreMap", params: { initialTab: "yearRound" } })}
+              onExploreMap={() => void openExploreFromHome("growingNow")}
+              onGrowingNow={() => void openExploreFromHome("growingNow")}
+              onYearRound={() => void openExploreFromHome("yearRound")}
+              locationGranted={locationPermissionGranted !== false}
             />
           </View>
 
@@ -1048,6 +1055,7 @@ export const HomeScreen = () => {
       />
 
       {/* Rock Personality modals converted to screens - navigation handled directly */}
+      {explorePopups}
     </SafeAreaView>
   );
 };

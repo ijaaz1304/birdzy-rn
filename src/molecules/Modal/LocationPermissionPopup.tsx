@@ -17,6 +17,7 @@ import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Text } from "../../atoms";
 import { Images } from "../../assets";
 import { MODAL_STRINGS } from "../../config/strings/modals.strings";
+import { getLocationFirstAskUiCopy } from "../../services/permissions/permissionUiCopy";
 import { OVERLAY_COLORS } from "../../constants/colorConstants";
 import { getPopupChromeStyle } from "../../design-system/modalTokens";
 
@@ -45,7 +46,9 @@ export const LocationPermissionPopup: React.FC<
   const colors = theme.colors;
   const spacing = theme.spacing;
   const radius = theme.radius;
-  const copy = MODAL_STRINGS.bottomSheets.enableLocation;
+  const copy = getLocationFirstAskUiCopy();
+  const customLocationButton =
+    MODAL_STRINGS.bottomSheets.enableLocation.customLocationButton;
 
   useEffect(() => {
     if (!visible) return undefined;
@@ -136,7 +139,7 @@ export const LocationPermissionPopup: React.FC<
                 weight="semibold"
                 style={{ color: colors.onPrimary }}
               >
-                {copy.enableButton}
+                {copy.continueLabel}
               </Text>
             )}
           </TouchableOpacity>
@@ -156,7 +159,7 @@ export const LocationPermissionPopup: React.FC<
               disabled={loading}
             >
               <Text variant="body" size="medium" weight="semibold">
-                {copy.customLocationButton}
+                {customLocationButton}
               </Text>
             </TouchableOpacity>
           ) : null}

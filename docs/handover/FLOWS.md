@@ -69,11 +69,11 @@ Evidence: [src/features/discovery/screens/StepByStepScreen.tsx](../../src/featur
 
 ## Explore Near You
 
-Open Explore from Home, search for a place or use location access, inspect activity on the map, switch Spotted Now / Year-round, select a group, and open bird details. Map filters affect map activity; seasonal tabs affect the nearby list.
+Open Explore from the Home banner (whole panel tappable), the Spotted Now / Year-round rows, or Catalogue's "Explore Near You" button and map banner. Home and Catalogue share [useExploreEntry](../../src/features/explore/useExploreEntry.tsx): location access is requested first ("Enable Location Access" on Android, existing iOS App Review wording), then the map opens. The Home / Catalogue banner reads "Enable Location" while access is off and "Explore Map" when it is on; the Catalogue banner is hidden while catalogue filters are applied. On the map, switch Spotted Now / Year-round (equal halves of the tab row), select a group, and open bird details. Map filters affect map activity; seasonal tabs affect the nearby list.
 
-**Acceptance/recovery:** Check map token, denied location, manual search, delayed requests, map-only retry, clusters, full-screen return, pagination, and dark mode.
+**Acceptance/recovery:** Check map token, denied location from Home and Catalogue, Android first-ask copy, custom location sheet, manual search, delayed requests, map-only retry, clusters, full-screen return, pagination, empty/filtered empty states, and dark mode.
 
-Evidence: [src/features/explore/screens/ExploreMapScreen.tsx](../../src/features/explore/screens/ExploreMapScreen.tsx); [src/features/explore/README.md](../../src/features/explore/README.md).
+Evidence: [src/features/explore/screens/ExploreMapScreen.tsx](../../src/features/explore/screens/ExploreMapScreen.tsx); [src/features/explore/useExploreEntry.tsx](../../src/features/explore/useExploreEntry.tsx); [src/features/explore/README.md](../../src/features/explore/README.md).
 
 ## Walkthrough record to complete with the incoming owner
 

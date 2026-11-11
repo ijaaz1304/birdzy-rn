@@ -86,7 +86,8 @@ export const HOME_STRINGS = {
       description:
         "Discover bird sightings, hotspots, and species around your area.",
       exploreMap: "Explore Map",
-      growingNow: "Growing Now",
+      growingNow: "Spotted Now",
+      enableLocationText: "Enable Location",
       yearRound: "Year-round",
     },
     stepByStep: {

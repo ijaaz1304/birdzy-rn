@@ -29,6 +29,8 @@ type Props = {
   onEndReached?: () => Promise<void>;
   selectionActive?: boolean;
   hasMore?: boolean;
+  /** Filters are applied, so the empty state suggests changing them. */
+  filtered?: boolean;
 };
 
 /** Own each item's pending state; serialize taps and reconcile with shared wishlist state. */
@@ -116,6 +118,7 @@ export const ExploreResultList: React.FC<Props> = ({
   onEndReached,
   selectionActive,
   hasMore,
+  filtered = false,
 }) => {
   const theme = useTheme();
   return (
@@ -156,7 +159,7 @@ export const ExploreResultList: React.FC<Props> = ({
             <Text>{EXPLORE_COPY.selectionEmpty}</Text>
           </View>
         ) : (
-          <ExploreEmptyState />
+          <ExploreEmptyState filtered={filtered} />
         )
       }
       onEndReached={

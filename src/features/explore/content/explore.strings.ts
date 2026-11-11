@@ -6,7 +6,19 @@ export const EXPLORE_STRINGS = {
   emptyState: {
     title: "No birds found in this area.",
     subtitle:
-      "We couldn't find nearby birds for this location. Try searching another place.",
+      "We couldn't find any bird activity in the current map area. Try exploring nearby areas.",
+  },
+  /** The same, while filters are applied: points at the filters first. */
+  filteredEmptyState: {
+    title: "No birds found in this area.",
+    subtitle:
+      "We couldn't find bird activity near the selected location with these filters. Try changing the filters or searching another location.",
+  },
+  /** Shown when nothing is found but the map is zoomed out past what is searched. */
+  wideEmptyState: {
+    title: "Zoom in to see birds.",
+    subtitle:
+      "This view is too wide to search, so only the area around the middle of the map is checked. Zoom in on the map to see the birds nearby.",
   },
   errorState: {
     title: "Something went wrong.",
@@ -19,6 +31,7 @@ export const EXPLORE_HOME_STRINGS = {
   title: "Explore Near You",
   description: "Discover birds around you",
   exploreMap: "Explore Map",
+  enableLocation: "Enable Location",
   growingNow: "Spotted Now",
   yearRound: "Year-round",
 };

@@ -18,6 +18,12 @@ export interface EmptyStateProps {
   emoji?: string;
   title?: string;
   subtitle?: string;
+  /**
+   * "default" is the large heading used across the app. "body" is a lighter
+   * heading (16 px medium) over a 14 px message in a 263 dp column, as in the
+   * Explore Near You design.
+   */
+  appearance?: "default" | "body";
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
@@ -27,8 +33,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   emoji,
   title,
   subtitle,
+  appearance = "default",
 }) => {
   const theme = useTheme();
+  const body = appearance === "body";
   const colors = theme.colors;
 
   return (
@@ -57,9 +65,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       ) : null}
       {title ? (
         <Text
-          variant="title"
-          size="medium"
-          weight="semibold"
+          variant={body ? "body" : "title"}
+          size={body ? "large" : "medium"}
+          weight={body ? "medium" : "semibold"}
           style={styles.title}
           numberOfLines={1}
           adjustsFontSizeToFit
@@ -71,9 +79,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {subtitle ? (
         <Text
           variant="body"
-          size={title ? "small" : "medium"}
+          size={body || !title ? "medium" : "small"}
           color="textSecondary"
-          style={[styles.subtitle, !title && styles.subtitleOnly]}
+          style={[
+            styles.subtitle,
+            !title && styles.subtitleOnly,
+            body && styles.subtitleBody,
+          ]}
         >
           {subtitle}
         </Text>
@@ -108,6 +120,10 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: 4,
     textAlign: "center",
+  },
+  subtitleBody: {
+    marginTop: 4,
+    maxWidth: 263,
   },
   subtitleOnly: {
     marginTop: spacing[2],

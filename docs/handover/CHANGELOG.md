@@ -112,3 +112,17 @@ Updated docs/handover/DEVELOPMENT.md, docs/handover/QA_AND_OPERATIONS.md, this c
 Follow-up audit: a visible `getProfile` that was abandoned after an account change cleared without resetting `isLoading`, which could leave the loader stuck. Ownership is now per visible load; a superseded or abandoned call clears only its own loader. Added a lifecycle regression for that case.
 
 Validation: `npx jest __tests__/lifecycle --runInBand --no-coverage` passed (10 suites, 26 tests), including delayed wishlist refresh and the abandoned getProfile loader case. `python3 docs/handover/check_docs.py` reported OK (14 handover pages, 289 local links). Physical-device navigation, real push delivery, sandbox billing, release builds and render profiling were not run. QA/release owner remains unassigned; complete the documented acceptance checklist. Changes remain local.
+
+## 2026-11-11 — Explore Near You entry, tabs, empty state and Android location copy
+
+Ported the Shroomzy `fix/explore_bugs` Explore UI fixes into Birdzy (birds wording; Spotted Now instead of Growing Now):
+
+- Home banner: whole panel tappable; "Enable Location" when location is off, "Explore Map" when on; no row counts. Shared [useExploreEntry](../../src/features/explore/useExploreEntry.tsx) + [useLocationPermissionGranted](../../src/features/explore/useLocationPermissionGranted.ts).
+- Catalogue: "Explore Near You" pill and map banner above category tabs use the same entry hook; banner hidden while filters are applied; brand orange/yellow outline on the map edge.
+- Explore tabs: Spotted Now / Year-round equal halves via [ExploreTabBar](../../src/features/explore/components/ExploreTabBar.tsx).
+- Empty state: design wording (default / filtered / wide) and `EmptyState` `appearance="body"`.
+- Android first-ask location popup: "Enable Location Access" with "Allow Location"; iOS App Review copy unchanged.
+
+Updated [FLOWS.md](FLOWS.md), [QA_AND_OPERATIONS.md](QA_AND_OPERATIONS.md), [explore README](../../src/features/explore/README.md) and this changelog. No environment or credential changes.
+
+Validation: `npx jest` on the seven new Explore/Home UI suites passed (7 suites / 21 tests). `python3 docs/handover/check_docs.py` reported OK (14 handover pages, 297 local links). Existing broader Explore API suites and device acceptance for Home/Catalogue entry, Android popup and map outline were not run; QA owner unassigned.

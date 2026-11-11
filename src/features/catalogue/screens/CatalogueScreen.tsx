@@ -67,6 +67,10 @@ import { resolveBirdDiscoveryLocation } from "../../../utils/birdDiscoveryLocati
 import { isSessionExpiryError } from "../../../services/api/errors";
 
 import { Radius } from "../../../design";
+import { useExploreEntry } from "../../explore/useExploreEntry";
+import { useLocationPermissionGranted } from "../../explore/useLocationPermissionGranted";
+import { ExploreEntryButton } from "../../explore/components/ExploreEntryButton";
+import { HomeExploreNearYouSection } from "../../explore/components/HomeExploreNearYouSection";
 
 import {
   mapMushroomToCatalogueCard,
@@ -153,6 +157,8 @@ export const CatalogueScreen: React.FC = () => {
     Record<string, string[]> | undefined
   >(undefined);
   const strings = useStrings();
+  const { openExplore, popups: explorePopups } = useExploreEntry();
+  const locationPermissionGranted = useLocationPermissionGranted();
   const { showToast } = useToast();
   const { playingId, toggleSound } = useCatalogueCardSound();
 
@@ -306,15 +312,6 @@ export const CatalogueScreen: React.FC = () => {
     },
     [filters, scrollTabIntoView, selectedTab]
   );
-
-  const handleExploreNearYou = useCallback(() => {
-    if (selectedTab === CATEGORIES.NEAR_YOU) {
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-      scrollTabIntoView(CATEGORIES.NEAR_YOU, true);
-      return;
-    }
-    handleTabPress(CATEGORIES.NEAR_YOU);
-  }, [handleTabPress, scrollTabIntoView, selectedTab]);
 
   // Load minerals function - reusable for refresh and pagination
   const loadMinerals = useCallback(
@@ -788,25 +785,10 @@ export const CatalogueScreen: React.FC = () => {
               <Text variant="title" size="large" weight="bold">
                 {catalogueConfig.screenTitle}
               </Text>
-              <TouchableOpacity
-                style={[
-                  styles.headerPill,
-                  { backgroundColor: colors.primaryCTA },
-                ]}
-                onPress={handleExploreNearYou}
-                activeOpacity={0.85}
-                accessibilityRole="button"
-                accessibilityLabel={strings.catalogue.screen.exploreNearYou}
-              >
-                <Text
-                  variant="body"
-                  size="small"
-                  weight="medium"
-                  color="onPrimary"
-                >
-                  {strings.catalogue.screen.exploreNearYou}
-                </Text>
-              </TouchableOpacity>
+              <ExploreEntryButton
+                label={strings.catalogue.screen.exploreNearYou}
+                onPress={() => void openExplore("growingNow")}
+              />
             </View>
             <View style={styles.searchRow}>
               <View style={styles.searchBarInHeader}>
@@ -861,6 +843,23 @@ export const CatalogueScreen: React.FC = () => {
 
         {/* Main content below header */}
         <View style={styles.contentBelowHeader}>
+          {!hasActiveFilters && (
+            <View
+              style={[
+                styles.exploreHeader,
+                { paddingHorizontal: Space[4], marginBottom: Space[2] },
+              ]}
+            >
+              <HomeExploreNearYouSection
+                showRows={false}
+                sideMargin={Space[4]}
+                onExploreMap={() => void openExplore("growingNow")}
+                onGrowingNow={() => void openExplore("growingNow")}
+                onYearRound={() => void openExplore("yearRound")}
+                locationGranted={locationPermissionGranted !== false}
+              />
+            </View>
+          )}
           {/* Category Tabs – hidden when filters are active */}
           {!hasActiveFilters && (
             <ScrollView
@@ -875,6 +874,7 @@ export const CatalogueScreen: React.FC = () => {
                 {
                   paddingHorizontal: Space[4],
                   marginBottom: Space[2],
+                  flexGrow: 0,
                 },
               ]}
             >
@@ -1128,6 +1128,7 @@ export const CatalogueScreen: React.FC = () => {
         }}
         mushroomName={pendingWishlistRemove?.name}
       />
+      {explorePopups}
     </SafeAreaView>
   );
 };
@@ -1252,14 +1253,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     gap: 8,
-  },
-  headerPill: {
-    height: 32,
-    paddingHorizontal: 12,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
   },
   searchRow: {
     flexDirection: "row",

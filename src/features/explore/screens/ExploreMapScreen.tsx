@@ -24,11 +24,12 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ExploreStackParamList } from "../../../navigation/types";
 import { Text, NavBackIcon, Icon } from "../../../atoms";
-import { useTheme, useIsDark } from "../../../hooks/useTheme";
+import { useTheme } from "../../../hooks/useTheme";
 import { ExploreMapView } from "../components/ExploreMapView";
 import { ExploreLocationSearchBar } from "../components/ExploreLocationSearchBar";
 
 import { ExploreResultList } from "../components/ExploreResultList";
+import { ExploreTabBar } from "../components/ExploreTabBar";
 import { AppCard } from "../../../components/shared";
 import FilterModal from "../../../organisms/FilterModal/FilterModal";
 
@@ -40,7 +41,6 @@ import { exploreService } from "@/features/explore/services/explore.service";
 const FILTER_FIELDS = EXPLORE_MAP_FILTERS;
 export const ExploreMapScreen: React.FC = () => {
   const theme = useTheme();
-  const isDark = useIsDark();
   const navigation =
     useNavigation<
       NativeStackNavigationProp<ExploreStackParamList, "ExploreMap">
@@ -317,53 +317,19 @@ export const ExploreMapScreen: React.FC = () => {
       <Text style={styles.scopeDescription} size="small" color="textSecondary">
         {EXPLORE_SCOPE_DESCRIPTION(EXPLORE.SEARCH_RADIUS_KM)}
       </Text>
-      <View style={styles.tabs}>
-        {(["growingNow", "yearRound"] as const).map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: activeTab === tab }}
-            style={[
-              styles.tab,
-              activeTab === tab && {
-                borderBottomColor: isDark
-                  ? theme.colors.textBrand
-                  : EXPLORE_COLORS.activeTab,
-              },
-            ]}
-            onPress={() => setTab(tab)}
-          >
-            <Text
-              variant="body"
-              weight={activeTab === tab ? "medium" : "normal"}
-              style={[
-                styles.tabText,
-                {
-                  color:
-                    activeTab === tab
-                      ? isDark
-                        ? theme.colors.textBrand
-                        : EXPLORE_COLORS.activeTab
-                      : isDark
-                      ? theme.colors.textSecondary
-                      : EXPLORE_COLORS.inactiveTab,
-                },
-              ]}
-            >
-              {tab === "growingNow"
-                ? EXPLORE_COPY.spottedNow
-                : EXPLORE_COPY.yearRound}
-              {tabs && queryMatchesLocation
-                ? ` (${
-                    tab === "growingNow"
-                      ? tabs.spottedNowCount
-                      : tabs.yearRoundCount
-                  })`
-                : ""}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <ExploreTabBar
+        activeTab={activeTab}
+        horizontalMargin={16}
+        counts={{
+          growingNow:
+            tabs && queryMatchesLocation ? tabs.spottedNowCount : null,
+          yearRound:
+            tabs && queryMatchesLocation ? tabs.yearRoundCount : null,
+        }}
+        onSelect={(tab) => {
+          void setTab(tab);
+        }}
+      />
       {selectedBirdsLifeIds && queryMatchesLocation && (
         <View style={styles.selection}>
           <Text variant="body" size="small" color="textSecondary">
@@ -412,6 +378,7 @@ export const ExploreMapScreen: React.FC = () => {
             onRetry={retry}
             selectionActive={!!selectedBirdsLifeIds}
             hasMore={data.length < (pagination?.totalCount ?? 0)}
+            filtered={Object.keys(filters).length > 0}
             onEndReached={loadMore}
             onCardPress={(id) =>
               navigation.navigate("BirdDetails", {
@@ -494,22 +461,6 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   currentLocationValue: { flex: 1 },
-  tabs: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-  },
-  tabText: { fontSize: 16, lineHeight: 24, letterSpacing: 0 },
   selection: {
     flexDirection: "row",
     flexWrap: "wrap",
