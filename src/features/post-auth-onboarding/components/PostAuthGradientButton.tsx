@@ -28,7 +28,7 @@ export const PostAuthGradientButton: React.FC<Props> = ({
   const content = loading ? (
     <ActivityIndicator color={colors.ctaTextDark} />
   ) : (
-    <Text style={[styles.label, { color: colors.ctaTextDark }]}>{title}</Text>
+    <Text allowFontScaling={false} style={[styles.label, { color: colors.ctaTextDark }]}>{title}</Text>
   );
 
   return (

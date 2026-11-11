@@ -94,6 +94,16 @@ function pickDefaultYearlyPlanId(
   return (yearly?.id ?? plans[0]?.id ?? "yearly_birdzy_pack") as PlanId;
 }
 
+/** Figma "noti 2" illustration size (notification.webp is the same art at 4×) */
+const NOTIFICATION_HERO_DESIGN_SIZE = { width: 295, height: 239 } as const;
+/**
+ * Figma "travel-map 1" frame (location_post.webp is the same art at 4×).
+ * The map inside it renders at 226.8×209.9 at full size, as in Figma.
+ */
+const LOCATION_HERO_DESIGN_SIZE = { width: 335, height: 313 } as const;
+/** Figma text-icon-primary (light) for the surprise slide title */
+const SURPRISE_TITLE_COLOR_LIGHT = "#091B21";
+
 export const PostAuthOnboardingScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const token = useAuthStore((s) => s.token);
@@ -390,6 +400,21 @@ export const PostAuthOnboardingScreen: React.FC = () => {
     goToSlide(POST_AUTH_ONBOARDING_STEPS.SUBSCRIPTION);
   }, [finishToMainApp, goToSlide, registerDevice, skipPromoSlides, token]);
 
+  /**
+   * "Maybe later": skip the native notification prompt and continue onboarding.
+   * Not marked as prompted, so the app can still ask for notifications later.
+   */
+  const handleNotificationsMaybeLater = useCallback(() => {
+    analyticsService.logEvent(EVENTS.notification_permission_dismissed, {
+      source: "post_auth_onboarding_maybe_later",
+    });
+    if (skipPromoSlides) {
+      finishToMainApp();
+      return;
+    }
+    goToSlide(POST_AUTH_ONBOARDING_STEPS.SUBSCRIPTION);
+  }, [finishToMainApp, goToSlide, skipPromoSlides]);
+
   const handleLocationContinue = useCallback(async () => {
     if (locationAllowLoading) return;
     setLocationAllowLoading(true);
@@ -412,13 +437,19 @@ export const PostAuthOnboardingScreen: React.FC = () => {
     void applyResolvedSlide(POST_AUTH_ONBOARDING_STEPS.NOTIFICATIONS);
   }, [applyResolvedSlide, locationAllowLoading, syncPermission]);
 
+  /** "Maybe later": skip the native location prompt and continue to notifications. */
+  const handleLocationMaybeLater = useCallback(() => {
+    if (locationAllowLoading) return;
+    void applyResolvedSlide(POST_AUTH_ONBOARDING_STEPS.NOTIFICATIONS);
+  }, [applyResolvedSlide, locationAllowLoading]);
+
   const renderSkip = (onPress: () => void) => (
     <TouchableOpacity
       onPress={onPress}
       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       style={styles.skipButton}
     >
-      <RNText style={[styles.skipText, { color: colors.textPrimary }]}>Skip</RNText>
+      <RNText allowFontScaling={false} style={[styles.skipText, { color: colors.textPrimary }]}>Skip</RNText>
     </TouchableOpacity>
   );
 
@@ -505,7 +536,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         onPress={() => void refetchPrices()}
         style={styles.retryBanner}
       >
-        <RNText style={[styles.retryText, { color: colors.textSecondary }]}>
+        <RNText allowFontScaling={false} style={[styles.retryText, { color: colors.textSecondary }]}>
           Couldn&apos;t load prices. Tap to retry.
         </RNText>
       </TouchableOpacity>
@@ -539,8 +570,15 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         onContinue={() => void handleLocationContinue()}
         continueLoading={locationAllowLoading}
         textPrimary={colors.textPrimary}
+        textSecondary={colors.textSecondary}
         primaryColor={colors.ctaSolidBackground}
         onPrimaryColor={colors.ctaTextDark}
+        title="Enable Location Access"
+        subtitle="Our identification accuracy exceeds 90% with location access"
+        heroDesignSize={LOCATION_HERO_DESIGN_SIZE}
+        continueLabel="Allow"
+        secondaryLabel="Maybe later"
+        onSecondaryPress={handleLocationMaybeLater}
       />
     </View>
   );
@@ -550,12 +588,16 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       <PostAuthLocationAccessSlide
         onContinue={handleEnableNotifications}
         textPrimary={colors.textPrimary}
+        textSecondary={colors.textSecondary}
         primaryColor={colors.ctaSolidBackground}
         onPrimaryColor={colors.ctaTextDark}
-        title="Important updates can come fast — don't miss them."
+        title={"Important updates\ncan come fast — don’t miss them!"}
         subtitle="Get alerts for new bird sightings, migration updates, and featured species."
         image={onboardingImages.notification}
-        continueLabel="Continue"
+        heroDesignSize={NOTIFICATION_HERO_DESIGN_SIZE}
+        continueLabel="Yes, keep me updated"
+        secondaryLabel="Maybe later"
+        onSecondaryPress={handleNotificationsMaybeLater}
       />
     </View>
   );
@@ -582,7 +624,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         <View
           style={[
             styles.discountTimerOverlay,
-            { top: layout.subscriptionDiscountTimerTop },
+            { top: layout.postAuthDiscountTimerTop },
           ]}
         >
           <PostAuthDiscountTimerPill />
@@ -603,6 +645,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
               styles.horizontalPlanRow,
               {
                 marginTop: layout.subscriptionPlanRowMarginTop,
+                marginBottom: layout.postAuthPlanRowMarginBottom,
               },
             ]}
           >
@@ -624,15 +667,11 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       >
         <Text
           variant="title"
-          size="small"
-          weight="semibold"
+          size="large"
+          allowFontScaling={false}
           style={[
             styles.surpriseTitle,
-            {
-              color: colors.textPrimary,
-              fontSize: layout.slideTitleFontSize,
-              lineHeight: layout.slideTitleLineHeight,
-            },
+            { color: isDark ? colors.textPrimary : SURPRISE_TITLE_COLOR_LIGHT },
           ]}
         >
           We got a little surprise{"\n"}for you!
@@ -679,8 +718,11 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       <View
         style={[
           styles.subscriptionBody,
+          styles.discountBodyTopAligned,
           {
-            paddingTop: layout.subscriptionTopPadding,
+            // Figma: "Especially for you!" starts 72pt below the status bar
+            // (52pt nav + 20pt padding); our Skip header is 48pt.
+            paddingTop: layout.postAuthDiscountSlideContentTop,
             paddingBottom: layout.subscriptionBodyPaddingBottom,
           },
         ]}
@@ -702,6 +744,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
               styles.horizontalPlanRow,
               {
                 marginTop: layout.subscriptionPlanRowMarginTop,
+                marginBottom: layout.postAuthPlanRowMarginBottom,
               },
             ]}
           >
@@ -806,6 +849,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
     position: "relative",
   },
+  /** Discount slide: header + carousel pinned to the top like Figma (not centered) */
+  discountBodyTopAligned: {
+    justifyContent: "flex-start",
+  },
   discountTimerOverlay: {
     position: "absolute",
     left: 0,
@@ -817,8 +864,15 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
+  /** Figma Title/28px/Bold — 28px, 700, 36px line-height, center, 335 wide */
   surpriseTitle: {
     textAlign: "center",
+    fontFamily: FONTS.bold,
+    fontStyle: "normal",
+    fontWeight: "700",
+    fontSize: 28,
+    lineHeight: 36,
+    includeFontPadding: false,
     width: POST_AUTH_LAYOUT.contentWidth,
     maxWidth: "100%",
     flexShrink: 0,

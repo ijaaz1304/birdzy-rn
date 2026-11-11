@@ -1852,7 +1852,7 @@ export const BirdDetailsScreen: React.FC = () => {
         edges={["top"]}
       >
         <View style={styles.loadingContainer}>
-          <Text variant="body" size="medium" style={{ marginBottom: 16 }}>
+          <Text allowFontScaling={false} variant="body" size="medium" style={{ marginBottom: 16 }}>
             No bird data available
           </Text>
           <TouchableOpacity
@@ -1864,7 +1864,7 @@ export const BirdDetailsScreen: React.FC = () => {
               borderRadius: Radius.sm,
             }}
           >
-            <Text
+            <Text allowFontScaling={false}
               variant="body"
               size="medium"
               style={{ color: colors.onPrimary }}
@@ -1965,7 +1965,7 @@ export const BirdDetailsScreen: React.FC = () => {
                   resizeMode="contain"
                 />
               </View>
-              <Text
+              <Text allowFontScaling={false}
                 variant="headline"
                 size="medium"
                 weight="bold"
@@ -1976,7 +1976,7 @@ export const BirdDetailsScreen: React.FC = () => {
             </View>
           ) : (
             <>
-              <Text
+              <Text allowFontScaling={false}
                 variant="headline"
                 size="medium"
                 weight="bold"
@@ -1984,7 +1984,7 @@ export const BirdDetailsScreen: React.FC = () => {
               >
                 {MODAL_STRINGS.identificationFeedback.title}
               </Text>
-              <Text
+              <Text allowFontScaling={false}
                 variant="body"
                 size="medium"
                 color="textSecondary"
@@ -2029,7 +2029,7 @@ export const BirdDetailsScreen: React.FC = () => {
                   );
                 })}
               </View>
-              <Text
+              <Text allowFontScaling={false}
                 variant="body"
                 size="small"
                 weight="medium"
@@ -2106,7 +2106,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     style={styles.rateMatchSpinner}
                   />
                 ) : null}
-                <Text
+                <Text allowFontScaling={false}
                   variant="label"
                   size="medium"
                   weight="medium"
@@ -2288,7 +2288,7 @@ export const BirdDetailsScreen: React.FC = () => {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <NavBackIcon color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text
+          <Text allowFontScaling={false}
             variant="title"
             size="medium"
             weight="semibold"
@@ -2365,7 +2365,7 @@ export const BirdDetailsScreen: React.FC = () => {
                       : DetailsMoreEditLight;
                     return <EditIcon width={20} height={20} />;
                   })()}
-                  <Text
+                  <Text allowFontScaling={false}
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2433,7 +2433,7 @@ export const BirdDetailsScreen: React.FC = () => {
                           : AddStarIcon;
                         return <StarIcon width={20} height={20} />;
                       })()}
-                      <Text
+                      <Text allowFontScaling={false}
                         variant="body"
                         size="medium"
                         style={{ marginLeft: spacing[2] }}
@@ -2465,7 +2465,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     size={20}
                     color={colors.textPrimary}
                   />
-                  <Text
+                  <Text allowFontScaling={false}
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2491,7 +2491,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     style={styles.menuItemIcon}
                     resizeMode="contain"
                   />
-                  <Text
+                  <Text allowFontScaling={false}
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2517,7 +2517,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     size={20}
                     color={colors.textPrimary}
                   />
-                  <Text
+                  <Text allowFontScaling={false}
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2548,7 +2548,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     : DetailsMoreShareLight;
                   return <ShareIcon width={20} height={20} />;
                 })()}
-                <Text
+                <Text allowFontScaling={false}
                   variant="body"
                   size="medium"
                   style={{ marginLeft: spacing[2] }}
@@ -2569,7 +2569,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     : DetailsMoreReportLight;
                   return <ReportIcon width={20} height={20} />;
                 })()}
-                <Text
+                <Text allowFontScaling={false}
                   variant="body"
                   size="medium"
                   style={{ marginLeft: spacing[2] }}
@@ -2590,7 +2590,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     size={20}
                     color={colors.textPrimary}
                   />
-                  <Text
+                  <Text allowFontScaling={false}
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2617,7 +2617,7 @@ export const BirdDetailsScreen: React.FC = () => {
                         : DetailsMoreRemoveLight;
                       return <RemoveIcon width={20} height={20} />;
                     })()}
-                    <Text
+                    <Text allowFontScaling={false}
                       variant="body"
                       size="medium"
                       style={{ marginLeft: spacing[2] }}
@@ -3416,6 +3416,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     <View style={styles.birdNameRow}>
                       <View style={styles.birdNameCopy}>
                         <Text
+                          allowFontScaling={false}
                           style={{
                             ...NAME_HEADING,
                             fontSize: 24,
@@ -3428,10 +3429,13 @@ export const BirdDetailsScreen: React.FC = () => {
                           mushroomData
                         ) ? (
                           <Text
+                            allowFontScaling={false}
                             style={[
                               styles.aiSynonym,
                               {
                                 ...SYNONYM_AND_UNIT,
+                                /* Figma 8609:23927 — Body/16px/Medium, secondary, not italic */
+                                fontFamily: FONTS.medium,
                                 fontSize: 16,
                                 lineHeight: 24,
                                 marginTop: 4,
@@ -3499,7 +3503,7 @@ export const BirdDetailsScreen: React.FC = () => {
                             { backgroundColor: nameOriginBg },
                           ]}
                         >
-                          <Text style={SUB_TEXT_SPEC}>{nameOrigin}</Text>
+                          <Text allowFontScaling={false} style={SUB_TEXT_SPEC}>{nameOrigin}</Text>
                           <AppImage
                             source={Images.detailPinned}
                             style={styles.aiNameOriginPinnedIcon}
@@ -3546,22 +3550,24 @@ export const BirdDetailsScreen: React.FC = () => {
                           },
                         ]}
                       >
-                        <Text
+                        <Text allowFontScaling={false}
                           variant="body"
                           size="medium"
                           weight={activeTab === tab.id ? "bold" : "normal"}
                           numberOfLines={1}
                           style={[
                             styles.aiTabLabel,
+                            /* Figma tab-atom: 16/24 — active Medium brand, inactive Regular secondary (-0.16) */
                             activeTab === tab.id
                               ? {
-                                  fontSize: 14,
+                                  fontFamily: FONTS.medium,
                                   color:
                                     spec.TAB_ACTIVE_TEXT ??
                                     theme.colors.primary,
                                 }
                               : {
-                                  fontSize: 14,
+                                  fontFamily: FONTS.regular,
+                                  letterSpacing: -0.16,
                                   color:
                                     spec.TAB_INACTIVE_TEXT ??
                                     theme.colors.textSecondary,
@@ -3640,7 +3646,7 @@ export const BirdDetailsScreen: React.FC = () => {
                       ]}
                       activeOpacity={0.8}
                     >
-                      <Text
+                      <Text allowFontScaling={false}
                         variant="label"
                         size="medium"
                         weight="normal"
@@ -3709,7 +3715,7 @@ export const BirdDetailsScreen: React.FC = () => {
                 style={{ width: 20, height: 20 }}
                 resizeMode="contain"
               />
-              <Text
+              <Text allowFontScaling={false}
                 variant="label"
                 size="medium"
                 weight="normal"
@@ -3776,7 +3782,7 @@ export const BirdDetailsScreen: React.FC = () => {
                 ]}
                 activeOpacity={0.8}
               >
-                <Text
+                <Text allowFontScaling={false}
                   variant="label"
                   size="medium"
                   weight="semibold"
@@ -3843,9 +3849,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  /** Figma Top Navigation Bar title — Title/18px/Bold, 18/24 */
   headerCenter: {
     flex: 1,
     textAlign: "center",
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    lineHeight: 24,
   },
   menuIcon: {
     width: 40,
@@ -4158,7 +4168,7 @@ const styles = StyleSheet.create({
   },
   aiSynonym: {
     marginTop: 8,
-    fontStyle: "italic",
+    fontStyle: "normal",
     alignSelf: "stretch",
     textAlign: "left",
   },
@@ -4213,12 +4223,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 4,
   },
+  /** Figma tab-atom: 32pt tall, 12pt horizontal padding, 8pt gap to the Pro badge */
   aiTabScrollable: {
     flexShrink: 0,
+    height: 32,
     paddingHorizontal: 12,
+    gap: 8,
   },
   aiTabLabel: {
-    fontSize: 14,
+    fontSize: 16,
+    lineHeight: 24,
   },
   aiTabBadge: {
     width: 20,

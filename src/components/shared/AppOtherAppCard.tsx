@@ -84,7 +84,7 @@ const AppOtherAppCard: React.FC<Props> = ({
           />
         </View>
         <View style={styles.horizontalTextBlock}>
-          <AppText
+          <AppText allowFontScaling={false}
             variant="title18"
             color={colors.textPrimary}
             style={styles.horizontalTitle}
@@ -92,7 +92,7 @@ const AppOtherAppCard: React.FC<Props> = ({
           >
             {title}
           </AppText>
-          <AppText
+          <AppText allowFontScaling={false}
             variant="body14"
             color={colors.textSecondary}
             numberOfLines={2}
@@ -108,7 +108,7 @@ const AppOtherAppCard: React.FC<Props> = ({
           onPress={onPress}
           activeOpacity={0.8}
         >
-          <Text
+          <Text allowFontScaling={false}
             style={[
               styles.horizontalButtonText,
               typography.button.medium,
@@ -148,7 +148,7 @@ const AppOtherAppCard: React.FC<Props> = ({
             onError={() => setImageError(true)}
           />
         </View>
-        <AppText
+        <AppText allowFontScaling={false}
           variant="button14"
           color={colors.textPrimary}
           style={styles.title}
@@ -156,7 +156,7 @@ const AppOtherAppCard: React.FC<Props> = ({
         >
           {title}
         </AppText>
-        <AppText
+        <AppText allowFontScaling={false}
           variant="caption12"
           color={colors.textSecondary}
           style={styles.subtitle}
@@ -176,7 +176,7 @@ const AppOtherAppCard: React.FC<Props> = ({
         onPress={onPress}
         activeOpacity={0.8}
       >
-        <Text
+        <Text allowFontScaling={false}
           style={[
             styles.buttonText,
             typography.button.medium,

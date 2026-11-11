@@ -25,23 +25,45 @@ import { Radius } from "../../../design";
 const EXPLORE_BANNER_BG = "#F5EBEB";
 const EXPLORE_OUTER_BORDER = "#E7E7E7";
 const EXPLORE_INNER_BORDER = "#E9EFD2";
+/** Figma text-icon-primary (light) */
+const EXPLORE_TITLE_COLOR_LIGHT = "#091B21";
 const CARD_PADDING = 8;
 const CARD_BORDER_WIDTH = 1;
 const SIDE_MARGIN = 20;
 const STANDALONE_MAP_OVERHANG = 45;
-const MAP = { left: 128, top: 4, width: 264, height: 194 };
+
+/**
+ * Figma 8230:72835 "banner - Op2" at a 375pt screen (banner 319×154).
+ * Everything below is scaled by (measured banner width / 319).
+ */
+const EXPLORE_DESIGN = {
+  bannerWidth: 319,
+  bannerHeight: 154,
+  /** Map art 236×173 at (141, 8); overflows right/bottom and is clipped */
+  map: { left: 141, top: 8, width: 236, height: 173 },
+  /** Pin 24×24 at (130, 37) inside the map art */
+  pin: { left: 130, top: 37, size: 24 },
+  hotspotSize: 12,
+  /** Copy block 158 wide, 15 from the left */
+  copy: { left: 15, width: 158 },
+} as const;
+const EXPLORE_MIN_SCALE = 0.85;
+const EXPLORE_MAX_SCALE = 1.3;
+
 /**
  * Left and top edge of the map shape, in map-box units, traced from the
  * transparent edge of the home map art. Brand stroke is drawn over the grey.
+ * Coordinates match EXPLORE_DESIGN.map (236×173).
  */
 const MAP_OUTLINE_POINTS =
-  "70.6,192.5 1.1,150.5 36.7,107.3 37.3,71.1 55.1,32.7 105.1,10 176.3,18.9 229.1,0.6";
+  "63.2,172.5 1.0,134.5 32.9,95.8 33.4,63.4 49.3,29.2 94.1,8.9 157.8,16.9 205.1,0.5";
 
+/** Figma 8230:72836 — hotspot positions inside the 236×173 map art */
 const MAP_HOTSPOTS = [
-  { left: 109, top: 36 },
-  { left: 188, top: 96 },
-  { left: 105, top: 132 },
-  { left: 39, top: 111 },
+  { left: 96.79, top: 32 },
+  { left: 168, top: 86 },
+  { left: 94, top: 118 },
+  { left: 35, top: 99 },
 ] as const;
 
 type Props = {
@@ -83,12 +105,27 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
     const w = e.nativeEvent.layout.width;
     if (Math.abs(w - panelWidth) >= 1) setPanelWidth(w);
   };
+
+  /**
+   * Responsive: scale the banner (height, map art, hotspots, pin, copy box)
+   * with its measured width relative to Figma's 319pt banner. Font sizes stay
+   * at Figma values. Clamped so tiny/huge widths stay sensible.
+   */
+  const [bannerWidth, setBannerWidth] = useState<number>(
+    EXPLORE_DESIGN.bannerWidth
+  );
+  const bannerScale = Math.min(
+    EXPLORE_MAX_SCALE,
+    Math.max(EXPLORE_MIN_SCALE, bannerWidth / EXPLORE_DESIGN.bannerWidth)
+  );
+  const sc = (value: number) => Math.round(value * bannerScale * 10) / 10;
+
   const buttonLabel = locationGranted
     ? strings.exploreMap
     : strings.enableLocation;
   const mapLeft = panelOnly
-    ? panelWidth - (MAP.width - STANDALONE_MAP_OVERHANG)
-    : MAP.left;
+    ? panelWidth - (sc(EXPLORE_DESIGN.map.width) - STANDALONE_MAP_OVERHANG)
+    : sc(EXPLORE_DESIGN.map.left);
   const outline = isDark
     ? EXPLORE_COLORS.mapOutlineDark
     : EXPLORE_COLORS.mapOutlineLight;
@@ -118,11 +155,16 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
         onPress={onExploreMap}
         accessibilityRole="button"
         accessibilityLabel={buttonLabel}
-        onLayout={onPanelLayout}
+        onLayout={(e) => {
+          onPanelLayout(e);
+          const w = Math.round(e.nativeEvent.layout.width);
+          if (w > 0 && w !== bannerWidth) setBannerWidth(w);
+        }}
         style={[
           styles.banner,
           panelOnly && { borderRadius: 0 },
           {
+            height: sc(EXPLORE_DESIGN.bannerHeight),
             backgroundColor: isDark
               ? theme.colors.surfaceSecondary
               : EXPLORE_BANNER_BG,
@@ -131,7 +173,15 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
         ]}
       >
         <View
-          style={[styles.mapArt, { left: mapLeft }]}
+          style={[
+            styles.mapArt,
+            {
+              left: mapLeft,
+              top: sc(EXPLORE_DESIGN.map.top),
+              width: sc(EXPLORE_DESIGN.map.width),
+              height: sc(EXPLORE_DESIGN.map.height),
+            },
+          ]}
           pointerEvents="none"
         >
           <AppImage
@@ -142,7 +192,7 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
           <Svg
             width="100%"
             height="100%"
-            viewBox={`0 0 ${MAP.width} ${MAP.height}`}
+            viewBox={`0 0 ${EXPLORE_DESIGN.map.width} ${EXPLORE_DESIGN.map.height}`}
             preserveAspectRatio="none"
             style={StyleSheet.absoluteFill}
           >
@@ -158,25 +208,80 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
           {MAP_HOTSPOTS.map((spot) => (
             <View
               key={`${spot.left}-${spot.top}`}
-              style={[styles.hotspot, { left: spot.left, top: spot.top }]}
+              style={[
+                styles.hotspot,
+                {
+                  left: sc(spot.left),
+                  top: sc(spot.top),
+                  width: sc(EXPLORE_DESIGN.hotspotSize),
+                  height: sc(EXPLORE_DESIGN.hotspotSize),
+                },
+              ]}
             >
-              <ExploreHotspotIcon width={12} height={12} />
+              <ExploreHotspotIcon
+                width={sc(EXPLORE_DESIGN.hotspotSize)}
+                height={sc(EXPLORE_DESIGN.hotspotSize)}
+              />
             </View>
           ))}
-          <View style={styles.pin}>
-            <ExplorePinIcon width={24} height={24} />
+          <View
+            style={[
+              styles.pin,
+              {
+                left: sc(EXPLORE_DESIGN.pin.left),
+                top: sc(EXPLORE_DESIGN.pin.top),
+                width: sc(EXPLORE_DESIGN.pin.size),
+                height: sc(EXPLORE_DESIGN.pin.size),
+              },
+            ]}
+          >
+            <ExplorePinIcon
+              width={sc(EXPLORE_DESIGN.pin.size)}
+              height={sc(EXPLORE_DESIGN.pin.size)}
+            />
           </View>
         </View>
-        <View style={styles.bannerCopy} pointerEvents="none">
-          <AppText
-            variant="title18"
-            style={[styles.bannerTitle, { color: theme.colors.textPrimary }]}
-          >
-            {strings.title}
-          </AppText>
-          <AppText variant="caption12" color="textSecondary">
-            {strings.description}
-          </AppText>
+        <View
+          style={[
+            styles.bannerCopy,
+            {
+              left: sc(EXPLORE_DESIGN.copy.left),
+              /**
+               * Fonts don't scale, so the copy box must never shrink below
+               * Figma's 158pt or the title/button wrap on small phones.
+               */
+              width: Math.max(
+                EXPLORE_DESIGN.copy.width,
+                sc(EXPLORE_DESIGN.copy.width)
+              ),
+            },
+          ]}
+          pointerEvents="none"
+        >
+          <View style={styles.bannerTextGroup}>
+            <AppText
+              variant="title18"
+              allowFontScaling={false}
+              style={[
+                styles.bannerTitle,
+                {
+                  color: isDark
+                    ? theme.colors.textPrimary
+                    : EXPLORE_TITLE_COLOR_LIGHT,
+                },
+              ]}
+            >
+              {strings.title}
+            </AppText>
+            <AppText
+              variant="caption12"
+              color="textSecondary"
+              allowFontScaling={false}
+              style={styles.bannerDescription}
+            >
+              {strings.description}
+            </AppText>
+          </View>
           <View
             importantForAccessibility="no-hide-descendants"
             accessibilityElementsHidden
@@ -188,7 +293,12 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
               },
             ]}
           >
-            <AppText variant="body14" style={{ fontFamily: FONTS.medium }}>
+            <AppText
+              allowFontScaling={false}
+              variant="body14"
+              numberOfLines={1}
+              style={{ fontFamily: FONTS.medium }}
+            >
               {buttonLabel}
             </AppText>
           </View>
@@ -230,6 +340,7 @@ function ExploreRow({
       activeOpacity={0.7}
     >
       <AppText
+        allowFontScaling={false}
         variant="body14"
         style={{ fontFamily: FONTS.bold, color: textColor }}
       >
@@ -249,18 +360,16 @@ const styles = StyleSheet.create({
     gap: 8,
     overflow: "hidden",
   },
+  /** Height is set at render: EXPLORE_DESIGN.bannerHeight × scale */
   banner: {
-    height: 172,
     borderRadius: Radius.md,
     borderWidth: 1,
     overflow: "hidden",
     position: "relative",
   },
+  /** Position/size set at render from EXPLORE_DESIGN.map × scale */
   mapArt: {
     position: "absolute",
-    top: MAP.top,
-    width: MAP.width,
-    height: MAP.height,
   },
   dimMapImage: { opacity: 0.45 },
   mapImage: {
@@ -269,27 +378,36 @@ const styles = StyleSheet.create({
   },
   hotspot: {
     position: "absolute",
-    width: 12,
-    height: 12,
   },
+  /** Position/size set at render from EXPLORE_DESIGN.pin × scale */
   pin: {
     position: "absolute",
-    left: 146,
-    top: 41,
-    width: 24,
-    height: 24,
   },
+  /** Figma: copy block vertically centered; left/width set at render (15 / 158 × scale) */
   bannerCopy: {
     position: "absolute",
-    left: 15,
-    top: "50%",
-    transform: [{ translateY: -52 }],
-    width: 158,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
     gap: 16,
     zIndex: 1,
   },
+  bannerTextGroup: {
+    width: "100%",
+    gap: 2,
+  },
+  /** Figma Caption/12px/Regular: Satoshi Regular 400, 12/16, 'liga' off, 'clig' off */
+  bannerDescription: {
+    fontFamily: FONTS.regular,
+    fontStyle: "normal",
+    fontSize: 12,
+    lineHeight: 16,
+    fontVariant: ["no-common-ligatures"],
+  },
   bannerTitle: {
     fontFamily: FONTS.bold,
+    fontStyle: "normal",
+    fontSize: 18,
     lineHeight: 24,
   },
   mapButton: {

@@ -56,6 +56,10 @@ import { FIGMA_TOKENS } from "../../../design-system/colors/figmaTokens";
 const LAYOUT_MARGIN = 20;
 const SECTION_DIVIDER_BORDER_LIGHT = "#E7E7E7";
 const SECTION_DIVIDER_BORDER_DARK = "#333333";
+/** Locked (non-pro) sections: true = centred divider heading (old design), false = Figma 231:48904 plain heading */
+const USE_DIVIDER_HEADING_FOR_LOCKED = false;
+/** Figma surface-brand-1-accent — Overview description card (light) */
+const OVERVIEW_CARD_BG_LIGHT = "#F5EBEB";
 
 function formatSimilarityAccuracy(score?: number | null): string | null {
   if (score == null || Number.isNaN(score)) return null;
@@ -82,7 +86,7 @@ function SectionDividerHeading({
       <View
         style={[styles.sectionDividerLine, { backgroundColor: dividerColor }]}
       />
-      <Text style={styles.sectionDividerLabel}>{title}</Text>
+      <Text allowFontScaling={false} style={styles.sectionDividerLabel}>{title}</Text>
       <View
         style={[styles.sectionDividerLine, { backgroundColor: dividerColor }]}
       />
@@ -103,14 +107,19 @@ function SectionTopicHeading({
   useDividerStyle: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
-  if (useDividerStyle) {
+  /**
+   * Figma 231:48904 (Property 1=Variant2, non-pro) uses the same left-aligned
+   * Title/18px/Bold heading as unlocked sections, so the centred divider
+   * heading (older Figma 9170:26307) is off unless explicitly re-enabled.
+   */
+  if (useDividerStyle && USE_DIVIDER_HEADING_FOR_LOCKED) {
     return (
       <SectionDividerHeading title={title} isDark={isDark} style={style} />
     );
   }
 
   return (
-    <Text style={[styles.sectionTitlePlain, { color: textPrimary }, style]}>
+    <Text allowFontScaling={false} style={[styles.sectionTitlePlain, { color: textPrimary }, style]}>
       {title}
     </Text>
   );
@@ -180,7 +189,7 @@ function TaxonomyRows({
   const hasMore = rows.length > 3;
 
   const heading = (
-    <Text
+    <Text allowFontScaling={false}
       style={[
         styles.sectionTitlePlain,
         { color: textPrimary },
@@ -249,7 +258,7 @@ function LocationLockedPrompt({
               style={styles.locationLockedIcon}
               resizeMode="contain"
             />
-            <Text
+            <Text allowFontScaling={false}
               style={[styles.locationLockedMessage, { color: textPrimary }]}
             >
               Enable location to see findings
@@ -260,7 +269,7 @@ function LocationLockedPrompt({
             style={styles.locationLockedButton}
             activeOpacity={0.85}
           >
-            <Text style={styles.locationLockedButtonText}>Enable Location</Text>
+            <Text allowFontScaling={false} style={styles.locationLockedButtonText}>Enable Location</Text>
           </TouchableOpacity>
         </View>
       </AppImageBackground>
@@ -557,17 +566,17 @@ function CustomLocationSection({
   return (
     <View style={styles.locationBlock}>
       {!hasSpecimenGps && locationLabel ? (
-        <Text style={[styles.locationText, { color: textSecondary }]}>
+        <Text allowFontScaling={false} style={[styles.locationText, { color: textSecondary }]}>
           {locationLabel}
         </Text>
       ) : null}
-      <Text style={[styles.sectionTitlePlain, { color: textPrimary }]}>
+      <Text allowFontScaling={false} style={[styles.sectionTitlePlain, { color: textPrimary }]}>
         {sectionTitle}
       </Text>
       {countryMapLoading || showMapLoading ? (
         <View style={styles.mapLoading}>
           <MaterialIcons name="location-on" size={40} color={textSecondary} />
-          <Text style={{ color: textSecondary, marginTop: 8 }}>
+          <Text allowFontScaling={false} style={{ color: textSecondary, marginTop: 8 }}>
             Loading location…
           </Text>
         </View>
@@ -680,21 +689,21 @@ function SimilarSpeciesCards({
               activeOpacity={0.9}
             >
               <View style={styles.similarCardBody}>
-                <Text
+                <Text allowFontScaling={false}
                   style={[styles.similarCardName, { color: textPrimary }]}
                   numberOfLines={1}
                 >
                   {getDisplayName(item) || item.scientificName}
                 </Text>
                 {score ? (
-                  <Text
+                  <Text allowFontScaling={false}
                     style={[styles.similarCardScore, { color: textSecondary }]}
                   >
                     {score} Accuracy
                   </Text>
                 ) : null}
                 {item.scientificName ? (
-                  <Text
+                  <Text allowFontScaling={false}
                     style={[
                       styles.similarCardScientific,
                       { color: textSecondary },
@@ -818,7 +827,7 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
           style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
         >
           <View style={styles.soundsHeader}>
-            <Text
+            <Text allowFontScaling={false}
               style={[
                 styles.sectionTitlePlain,
                 styles.sectionTitlePlainCompact,
@@ -834,7 +843,7 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
                 onPress={openBirdSounds}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Text style={[styles.soundsViewAll, { color: textPrimary }]}>
+                <Text allowFontScaling={false} style={[styles.soundsViewAll, { color: textPrimary }]}>
                   {birdStrings.sounds.viewAll}
                 </Text>
               </TouchableOpacity>
@@ -862,23 +871,34 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
         {...registerLayout("overview")}
         style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
       >
-        <Text style={[styles.sectionTitlePlain, { color: textPrimary }]}>
+        <Text allowFontScaling={false} style={[styles.sectionTitlePlain, { color: textPrimary }]}>
           Overview
         </Text>
+        {/* Figma 8609:33835 — surface-brand-1-accent card, Body/14px/Regular in text-primary */}
         <View
           style={[
             styles.descriptionCard,
-            { backgroundColor: surfaceSecondary },
+            {
+              backgroundColor: isDark
+                ? surfaceSecondary
+                : OVERVIEW_CARD_BG_LIGHT,
+            },
           ]}
         >
           {detailedDescription ? (
-            <Text style={[styles.descriptionText, { color: textSecondary }]}>
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.descriptionText,
+                { color: isDark ? textSecondary : textPrimary },
+              ]}
+            >
               {detailedDescription}
             </Text>
           ) : null}
           {wikipediaUrl ? (
             <TouchableOpacity onPress={() => Linking.openURL(wikipediaUrl)}>
-              <Text style={styles.wikipediaLink}>Wikipedia</Text>
+              <Text allowFontScaling={false} style={styles.wikipediaLink}>Wikipedia</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -932,7 +952,7 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
                     activeOpacity={0.8}
                     style={styles.similarSeeAllWrap}
                   >
-                    <Text style={styles.similarSeeAll}>See all</Text>
+                    <Text allowFontScaling={false} style={styles.similarSeeAll}>See all</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>

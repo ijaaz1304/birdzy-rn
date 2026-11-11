@@ -699,7 +699,13 @@ export const HomeScreen = () => {
               },
             ]}
           >
-            <View style={[screenStyles.headerLeft, { gap: Space[2] }]}>
+            <View
+              style={[
+                screenStyles.headerLeft,
+                styles.headerLeftFlexible,
+                { gap: Space[2] },
+              ]}
+            >
               <TouchableOpacity
                 onPress={() => {
                   rootNavigation.navigate("SettingsStack", {
@@ -736,7 +742,13 @@ export const HomeScreen = () => {
                   />
                 )}
               </TouchableOpacity>
-              <AppText variant="title18">
+              {/* Figma Body/16px/Medium — truncates so Go Pro + search never get pushed off-screen */}
+              <AppText
+                allowFontScaling={false}
+                variant="body16"
+                numberOfLines={1}
+                style={styles.greeting}
+              >
                 {homeConfig.header.greeting(userName)}
               </AppText>
             </View>
@@ -899,7 +911,7 @@ export const HomeScreen = () => {
 
           <View style={styles.sectionBlock}>
             <View style={[layoutStyles.rowBetween, { marginBottom: Space[4] }]}>
-              <AppText
+              <AppText allowFontScaling={false}
                 variant="body16"
                 color={colors.textPrimary}
                 style={{ fontFamily: FONTS.bold }}
@@ -913,7 +925,7 @@ export const HomeScreen = () => {
                 }}
                 activeOpacity={0.7}
               >
-                <AppText
+                <AppText allowFontScaling={false}
                   variant="caption12"
                   color={colors.textPrimary}
                   style={{ fontFamily: FONTS.medium }}
@@ -1074,6 +1086,19 @@ const styles = StyleSheet.create({
   },
   headerRightActions: {
     gap: 4,
+  },
+  /** Left side takes the leftover width so a long name can't push the actions off-screen */
+  headerLeftFlexible: {
+    flex: 1,
+    minWidth: 0,
+    /** Figma: 8pt between greeting and the Go Pro / search actions */
+    marginRight: 8,
+  },
+  greeting: {
+    flexShrink: 1,
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
   },
   goProIconButton: {
     width: HOME_LAYOUT.GO_PRO_IMAGE_WIDTH,

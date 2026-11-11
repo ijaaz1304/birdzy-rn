@@ -47,6 +47,12 @@ export type PostAuthLayoutMetrics = {
   subscriptionBodyPaddingBottom: number;
   subscriptionPlanRowMarginTop: number;
   subscriptionDiscountTimerTop: number;
+  /** Post-auth onboarding subscription slide — discount pill offset (Figma 72pt below status bar). */
+  postAuthDiscountTimerTop: number;
+  /** Post-auth paywall — space between plan cards and the CTA (Figma 36pt). */
+  postAuthPlanRowMarginBottom: number;
+  /** Post-auth discount slide — top offset for the "Especially for you!" header. */
+  postAuthDiscountSlideContentTop: number;
   subscriptionCarouselMarginTop: number;
   subscriptionBottomPadding: number;
   subscriptionCarouselIconSize: number;
@@ -171,6 +177,19 @@ export function usePostAuthLayoutMetrics(): PostAuthLayoutMetrics {
           : 0
         : 4,
       subscriptionDiscountTimerTop: 0,
+      /**
+       * Post-auth subscription slide: Figma puts the discount pill 20pt below the
+       * 52pt nav (72pt under the status bar). Our Skip header is 48pt, so offset
+       * 24pt on regular phones; tighter on short screens so it clears the carousel.
+       */
+      postAuthDiscountTimerTop: isVeryCompact ? 8 : isCompact ? 16 : 24,
+      /**
+       * Post-auth paywall: Figma has 36pt between the plan cards and the CTA
+       * (cards end y=660, button starts y=696). Tighter on short screens.
+       */
+      postAuthPlanRowMarginBottom: isVeryCompact ? 16 : isCompact ? 24 : 36,
+      /** Discount slide: title 72pt below status bar in Figma (48pt header + 24). */
+      postAuthDiscountSlideContentTop: isVeryCompact ? 8 : isCompact ? 16 : 24,
       subscriptionCarouselMarginTop: isVeryCompact ? 8 : isCompact ? 10 : 12,
       subscriptionBottomPadding: spaciousSubscription
         ? isCompact

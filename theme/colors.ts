@@ -127,6 +127,12 @@ export const APP_COLORS = {
   surfaceDarkAlt: '#2A2A2A',
   surfaceLightAlt: '#F0F0F0',
   surfaceDarkMuted: '#1a1a1a',
+  /** Figma color/grey/950 — identify camera permission (Allow access / Go to settings) screens */
+  cameraPermissionSurface: '#091B21',
+  /** Figma color/surface/surface-brand-1 — camera permission CTA */
+  cameraPermissionCta: '#785284',
+  /** Figma color/text-&-icon/text-&-icon-secondary (dark) — camera permission body text */
+  cameraPermissionTextSecondary: '#D1D1D1',
   iconBgDark: '#6D6D6D',
   linkBlue: '#007AFF',
   brandLightBlue: '#FCB182',

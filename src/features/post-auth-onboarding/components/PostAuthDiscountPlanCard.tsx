@@ -69,7 +69,7 @@ export const PostAuthDiscountPlanCard: React.FC<Props> = ({
       <View style={styles.row}>
         <View style={styles.leftCol}>
           <View style={styles.titleRow}>
-            <Text
+            <Text allowFontScaling={false}
               style={[styles.title, { color: colors.textPrimary }]}
               numberOfLines={1}
             >
@@ -78,25 +78,25 @@ export const PostAuthDiscountPlanCard: React.FC<Props> = ({
             {showPopular ? <PostAuthPopularBadge colors={colors} /> : null}
           </View>
           {trialLabel ? (
-            <Text style={[styles.trialLabel, { color: colors.textDisabled }]}>
+            <Text allowFontScaling={false} style={[styles.trialLabel, { color: colors.textDisabled }]}>
               {trialLabel}
             </Text>
           ) : null}
         </View>
         <View style={styles.priceCol}>
-          <Text style={[styles.discountLabel, { color: colors.discountRed }]}>
+          <Text allowFontScaling={false} style={[styles.discountLabel, { color: colors.discountRed }]}>
             {discountLabel}
           </Text>
           <View style={styles.priceRow}>
             {originalPrice ? (
-              <Text
+              <Text allowFontScaling={false}
                 style={[styles.originalPrice, { color: colors.textDisabled }]}
                 numberOfLines={1}
               >
                 {originalPrice}
               </Text>
             ) : null}
-            <Text
+            <Text allowFontScaling={false}
               style={[
                 styles.price,
                 { color: colors.textPrimary, fontSize: priceFontSize },

@@ -149,10 +149,10 @@ export const PostAuthSubscriptionFeatureCarousel: React.FC<Props> = ({
               resizeMode="contain"
               preferRNImage={isDark}
             />
-            <Text style={[styles.title, { color: colors.textPrimary }]}>
+            <Text allowFontScaling={false} style={[styles.title, { color: colors.textPrimary }]}>
               {item.title}
             </Text>
-            <Text style={[styles.subtitle, { color: colors.textPrimary }]}>
+            <Text allowFontScaling={false} style={[styles.subtitle, { color: colors.textPrimary }]}>
               {item.subtitle}
             </Text>
           </View>
