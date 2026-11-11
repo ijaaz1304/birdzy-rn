@@ -1,3 +1,4 @@
+import { coalesceInFlight } from "../../utils/coalesceInFlight";
 /**
  * Firestore Feed Service
  * Handles feed posts CRUD operations with real-time updates
@@ -1012,11 +1013,12 @@ class FeedService {
     userId: string,
     actorUserName?: string
   ): Promise<boolean> {
-    try {
-      const postRef = this.getFirestore()
-        .collection(this.COLLECTION)
-        .doc(postId);
-      const postDoc = await postRef.get();
+    return coalesceInFlight(`feed:like:${userId}:${postId}`, async () => {
+      try {
+        const postRef = this.getFirestore()
+          .collection(this.COLLECTION)
+          .doc(postId);
+        const postDoc = await postRef.get();
 
       if (!postDoc.exists) {
         throw new Error("Post not found");
@@ -1041,29 +1043,34 @@ class FeedService {
           likes: this.getFieldValue().arrayUnion(userId),
         });
 
-        analyticsService.logEvent(EVENTS.post_liked, { post_id: postId });
-        analyticsService.logEvent(EVENTS.feed_like, { post_id: postId });
+          analyticsService.logEvent(EVENTS.post_liked, { post_id: postId });
+          analyticsService.logEvent(EVENTS.feed_like, { post_id: postId });
 
-        // In-app notification for post owner (Firebase only, no external backend)
-        if (postOwnerId && postOwnerId !== userId && isFirebaseInitialized()) {
-          try {
-            await this.writeFeedNotification(postOwnerId, {
-              type: "like",
-              actorUserId: userId,
-              actorUserName: (actorUserName ?? "").trim() || "Someone",
-              postId,
-            });
-          } catch (e) {
-            if (__DEV__)
-              console.warn("writeFeedNotification (like) failed:", e);
+          // In-app notification for post owner (Firebase only, no external backend)
+          if (
+            postOwnerId &&
+            postOwnerId !== userId &&
+            isFirebaseInitialized()
+          ) {
+            try {
+              await this.writeFeedNotification(postOwnerId, {
+                type: "like",
+                actorUserId: userId,
+                actorUserName: (actorUserName ?? "").trim() || "Someone",
+                postId,
+              });
+            } catch (e) {
+              if (__DEV__)
+                console.warn("writeFeedNotification (like) failed:", e);
+            }
           }
+          return true;
         }
-        return true;
+      } catch (error) {
+        console.error("Error toggling like:", error);
+        throw error;
       }
-    } catch (error) {
-      console.error("Error toggling like:", error);
-      throw error;
-    }
+    });
   }
 
   /**

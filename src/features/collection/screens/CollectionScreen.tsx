@@ -5,12 +5,17 @@
 import React, {
   useState,
   useEffect,
+  useRef,
   useCallback,
   useMemo,
 } from "react";
 import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import {
+  useNavigation,
+  useFocusEffect,
+  useIsFocused,
+} from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme } from "../../../hooks/useTheme";
 import { Text } from "../../../atoms";
@@ -47,6 +52,10 @@ import {
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
 import { useWishlistInvalidationStore } from "../wishlistInvalidation.store";
+import {
+  planWishlistCollectionRefresh,
+  runWishlistCollectionRefresh,
+} from "../wishlistCollectionRefresh";
 import {
   useSubscriptionStore,
   selectIsPremium,
@@ -143,260 +152,283 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
     collections.length > 0 ? collections : emptyCasePlaceholders;
 
   // Load collections function - reusable for refresh. When not logged in or empty, still show partitioned grid (Identified, Wishlist, Owned).
+  const collectionLoadRef = useRef<{
+    identity: string;
+    promise: Promise<void>;
+  } | null>(null);
+  const collectionOwnerRef = useRef(user?.id ?? "");
+  collectionOwnerRef.current = user?.id ?? "";
+  useEffect(() => {
+    collectionOwnerRef.current = user?.id ?? "";
+    return () => {
+      collectionOwnerRef.current = "";
+    };
+  }, [user?.id]);
+
   const loadCollections = useCallback(async () => {
-    const log = useAppLogsStore.getState();
-    // Wait for persisted auth to rehydrate (reinstall / cold start); avoids skipping API while user/token are still restoring.
-    if (!hasHydrated) {
-      log.debug(`${COL_LOG} loadCollections skipped (auth not hydrated yet)`);
-      return;
-    }
-
-    if (!user?.id) {
-      log.info(`${COL_LOG} loadCollections: no user id — placeholders only`);
-      const placeholders = DEFAULT_COLLECTION_NAMES.map((name) =>
-        defaultCollectionPlaceholder(name)
-      );
-      setCollections(placeholders);
-      setIsLoading(false);
-      return;
-    }
-
-    log.info(`${COL_LOG} loadCollections start`, {
-      userIdSuffix: user.id.slice(-8),
-      isPremium,
-    });
-
-    try {
-      setIsLoading(true);
-      let listResult = await collectionService.fetchAllCollections({
-        pageNo: PAGINATION.INITIAL_PAGE,
-        pageSize: PAGINATION.COLLECTION_PAGE_SIZE,
-      });
-      let didStatsRetry = false;
-      // Reinstall / cold login: list can briefly be empty while session is ready, or shape mismatched until normalized.
-      // If stats say the user has collections but the list is empty, retry once after a short delay.
-      if (listResult.data.length === 0 && user?.id) {
-        try {
-          const stats = await collectionService.getCollectionStats();
-          log.info(`${COL_LOG} empty list — stats check`, {
-            totalCollections: stats.totalCollections,
-            willRetry: stats.totalCollections > 0,
-          });
-          if (stats.totalCollections > 0) {
-            didStatsRetry = true;
-            await new Promise<void>((resolve) => setTimeout(resolve, 500));
-            listResult = await collectionService.fetchAllCollections({
-              pageNo: PAGINATION.INITIAL_PAGE,
-              pageSize: PAGINATION.COLLECTION_PAGE_SIZE,
-            });
-            log.info(`${COL_LOG} stats retry fetch done`, {
-              count: listResult.data.length,
-            });
-          }
-        } catch (e) {
-          log.warn(`${COL_LOG} stats/retry branch failed`, {
-            message: e instanceof Error ? e.message : String(e),
-          });
-        }
+    const identity = user?.id ?? "";
+    if (collectionLoadRef.current?.identity === identity)
+      return collectionLoadRef.current.promise;
+    const isCurrent = () => collectionOwnerRef.current === identity;
+    const pending = (async () => {
+      const log = useAppLogsStore.getState();
+      // Wait for persisted auth to rehydrate (reinstall / cold start); avoids skipping API while user/token are still restoring.
+      if (!hasHydrated) {
+        log.debug(`${COL_LOG} loadCollections skipped (auth not hydrated yet)`);
+        return;
       }
 
-      const response = listResult;
-      const mappedFromApi: Collection[] = response.data.map((col) => ({
-        collectionId: col.collectionId,
-        name: col.name,
-        description: col.description,
-        count: col.specimenCount || 0,
-        createdAt: col.createdAt
-          ? new Date(col.createdAt).toLocaleDateString()
-          : "Recently",
-        images: getCollectionPreviewImages(col),
-      }));
-      // Order: Identified first, Wishlist second, then rest; merge defaults if API didn't return them
-      const byName = new Map<string, Collection>();
-      mappedFromApi.forEach((c) => byName.set(c.name, c));
-      const merged: Collection[] = DEFAULT_COLLECTION_NAMES.map(
-        (name) => byName.get(name) ?? defaultCollectionPlaceholder(name)
-      );
-      const others = mappedFromApi.filter(
-        (c) => !DEFAULT_COLLECTION_NAMES.includes(c.name as any)
-      );
-      const userCreatedCount = [...merged, ...others].filter((c) =>
-        isUserCreatedCollectionName(c.name)
-      ).length;
-      log.info(`${COL_LOG} loadCollections mapped`, {
-        apiRowCount: mappedFromApi.length,
-        othersCount: others.length,
-        userCreatedCount,
-        didStatsRetry,
+      if (!user?.id) {
+        log.info(`${COL_LOG} loadCollections: no user id — placeholders only`);
+        const placeholders = DEFAULT_COLLECTION_NAMES.map((name) =>
+          defaultCollectionPlaceholder(name)
+        );
+        if (isCurrent()) setCollections(placeholders);
+        if (isCurrent()) setIsLoading(false);
+        return;
+      }
+
+      log.info(`${COL_LOG} loadCollections start`, {
+        userIdSuffix: user.id.slice(-8),
+        isPremium,
       });
 
-      // Identified, Wishlist & Near You: specimen / location APIs for card previews.
       try {
-        const [identifiedRes, wishlistRes, nearYouPreview] = await Promise.all([
-          mushroomSpecimenService.fetchAllSpecimens(
-            { isIdentified: [true] },
-            { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
-          ),
-          mushroomSpecimenService.fetchAllSpecimens(
-            { isWishlisted: [true] },
-            { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
-          ),
-          fetchNearYouCollectionPreview(),
-        ]);
-        const identifiedSpecimenImages = toSpecimenPreviewImages(
-          identifiedRes.data as unknown as Parameters<
-            typeof toSpecimenPreviewImages
-          >[0]
-        );
-        const wishlistSpecimenImages = toSpecimenPreviewImages(
-          wishlistRes.data as unknown as Parameters<
-            typeof toSpecimenPreviewImages
-          >[0]
-        );
-        const identifiedPreview = resolveSystemCollectionCardPreview({
-          specimenTotalCount: identifiedRes.pagination?.totalCount,
-          specimenRowCount: identifiedRes.data.length,
-          specimenImages: identifiedSpecimenImages,
+        if (isCurrent()) setIsLoading(true);
+        let listResult = await collectionService.fetchAllCollections({
+          pageNo: PAGINATION.INITIAL_PAGE,
+          pageSize: PAGINATION.COLLECTION_PAGE_SIZE,
         });
-        const wishlistPreview = resolveSystemCollectionCardPreview({
-          specimenTotalCount: wishlistRes.pagination?.totalCount,
-          specimenRowCount: wishlistRes.data.length,
-          specimenImages: wishlistSpecimenImages,
+        let didStatsRetry = false;
+        // Reinstall / cold login: list can briefly be empty while session is ready, or shape mismatched until normalized.
+        // If stats say the user has collections but the list is empty, retry once after a short delay.
+        if (listResult.data.length === 0 && user?.id) {
+          try {
+            const stats = await collectionService.getCollectionStats();
+            log.info(`${COL_LOG} empty list — stats check`, {
+              totalCollections: stats.totalCollections,
+              willRetry: stats.totalCollections > 0,
+            });
+            if (stats.totalCollections > 0) {
+              didStatsRetry = true;
+              await new Promise<void>((resolve) => setTimeout(resolve, 500));
+              listResult = await collectionService.fetchAllCollections({
+                pageNo: PAGINATION.INITIAL_PAGE,
+                pageSize: PAGINATION.COLLECTION_PAGE_SIZE,
+              });
+              log.info(`${COL_LOG} stats retry fetch done`, {
+                count: listResult.data.length,
+              });
+            }
+          } catch (e) {
+            log.warn(`${COL_LOG} stats/retry branch failed`, {
+              message: e instanceof Error ? e.message : String(e),
+            });
+          }
+        }
+
+        const response = listResult;
+        const mappedFromApi: Collection[] = response.data.map((col) => ({
+          collectionId: col.collectionId,
+          name: col.name,
+          description: col.description,
+          count: col.specimenCount || 0,
+          createdAt: col.createdAt
+            ? new Date(col.createdAt).toLocaleDateString()
+            : "Recently",
+          images: getCollectionPreviewImages(col),
+        }));
+        // Order: Identified first, Wishlist second, then rest; merge defaults if API didn't return them
+        const byName = new Map<string, Collection>();
+        mappedFromApi.forEach((c) => byName.set(c.name, c));
+        const merged: Collection[] = DEFAULT_COLLECTION_NAMES.map(
+          (name) => byName.get(name) ?? defaultCollectionPlaceholder(name)
+        );
+        const others = mappedFromApi.filter(
+          (c) => !DEFAULT_COLLECTION_NAMES.includes(c.name as any)
+        );
+        const userCreatedCount = [...merged, ...others].filter((c) =>
+          isUserCreatedCollectionName(c.name)
+        ).length;
+        log.info(`${COL_LOG} loadCollections mapped`, {
+          apiRowCount: mappedFromApi.length,
+          othersCount: others.length,
+          userCreatedCount,
+          didStatsRetry,
         });
-        merged[0] =
-          merged[0].name === "Identified"
-            ? {
-                ...merged[0],
-                count: identifiedPreview.count,
-                images: identifiedPreview.images,
-              }
-            : merged[0];
-        merged[1] =
-          merged[1].name === "Wishlist"
-            ? {
-                ...merged[1],
-                count: wishlistPreview.count,
-                images: wishlistPreview.images,
-              }
-            : merged[1];
-        merged[2] =
-          merged[2]?.name === NEAR_YOU_COLLECTION_NAME
-            ? {
-                ...merged[2],
+
+        // Identified, Wishlist & Near You: specimen / location APIs for card previews.
+        try {
+          const [identifiedRes, wishlistRes, nearYouPreview] =
+            await Promise.all([
+              mushroomSpecimenService.fetchAllSpecimens(
+                { isIdentified: [true] },
+                { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
+              ),
+              mushroomSpecimenService.fetchAllSpecimens(
+                { isWishlisted: [true] },
+                { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
+              ),
+              fetchNearYouCollectionPreview(),
+            ]);
+          const identifiedSpecimenImages = toSpecimenPreviewImages(
+            identifiedRes.data as unknown as Parameters<
+              typeof toSpecimenPreviewImages
+            >[0]
+          );
+          const wishlistSpecimenImages = toSpecimenPreviewImages(
+            wishlistRes.data as unknown as Parameters<
+              typeof toSpecimenPreviewImages
+            >[0]
+          );
+          const identifiedPreview = resolveSystemCollectionCardPreview({
+            specimenTotalCount: identifiedRes.pagination?.totalCount,
+            specimenRowCount: identifiedRes.data.length,
+            specimenImages: identifiedSpecimenImages,
+          });
+          const wishlistPreview = resolveSystemCollectionCardPreview({
+            specimenTotalCount: wishlistRes.pagination?.totalCount,
+            specimenRowCount: wishlistRes.data.length,
+            specimenImages: wishlistSpecimenImages,
+          });
+          merged[0] =
+            merged[0].name === "Identified"
+              ? {
+                  ...merged[0],
+                  count: identifiedPreview.count,
+                  images: identifiedPreview.images,
+                }
+              : merged[0];
+          merged[1] =
+            merged[1].name === "Wishlist"
+              ? {
+                  ...merged[1],
+                  count: wishlistPreview.count,
+                  images: wishlistPreview.images,
+                }
+              : merged[1];
+          merged[2] =
+            merged[2]?.name === NEAR_YOU_COLLECTION_NAME
+              ? {
+                  ...merged[2],
+                  count: nearYouPreview.count,
+                  images: nearYouPreview.images,
+                  createdAt: strings.collection.collections.nearYouSubtitle,
+                }
+              : merged[2];
+        } catch (_) {}
+
+        // User-created collections only: pass both collectionId (query) and _collections (body)
+        let enrichedOthers = others;
+        if (others.length > 0) {
+          try {
+            enrichedOthers = await Promise.all(
+              others.map(async (c) => {
+                if (!c.collectionId) return c;
+                const res = await mushroomSpecimenService.fetchAllSpecimens(
+                  { _collections: [c.collectionId] },
+                  {
+                    pageNo: 0,
+                    pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE,
+                    collectionId: c.collectionId,
+                  }
+                );
+                const specimenImages = toSpecimenPreviewImages(
+                  res.data as unknown as Parameters<
+                    typeof toSpecimenPreviewImages
+                  >[0]
+                );
+                return {
+                  ...c,
+                  count: res.pagination?.totalCount ?? c.count,
+                  images: pickCollectionCardPreviewImages(
+                    specimenImages,
+                    resolveCollectionPreviewUrls(
+                      c.images as string[] | undefined
+                    )
+                  ),
+                };
+              })
+            );
+          } catch (_) {}
+        }
+
+        if (isCurrent()) setCollections([...merged, ...enrichedOthers]);
+        log.info(`${COL_LOG} loadCollections success`, {
+          totalCards: merged.length + enrichedOthers.length,
+          customWithMissingId: enrichedOthers.filter(
+            (o) => !o.collectionId?.trim()
+          ).length,
+        });
+      } catch (error) {
+        console.error("Error loading collections:", error);
+        useAppLogsStore.getState().error(`${COL_LOG} loadCollections error`, {
+          message: error instanceof Error ? error.message : String(error),
+        });
+        // Set default collections on error: Identified, Wishlist; then fetch counts from specimen API
+        let defaults = DEFAULT_COLLECTION_NAMES.map((name) =>
+          defaultCollectionPlaceholder(name)
+        );
+        try {
+          const [identifiedRes, wishlistRes, nearYouPreview] =
+            await Promise.all([
+              mushroomSpecimenService.fetchAllSpecimens(
+                { isIdentified: [true] },
+                { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
+              ),
+              mushroomSpecimenService.fetchAllSpecimens(
+                { isWishlisted: [true] },
+                { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
+              ),
+              fetchNearYouCollectionPreview(),
+            ]);
+          defaults = defaults.map((c) => {
+            if (c.name === "Identified")
+              return {
+                ...c,
+                count: identifiedRes.pagination?.totalCount ?? 0,
+                images: toSpecimenPreviewImages(
+                  identifiedRes.data as unknown as Parameters<
+                    typeof toSpecimenPreviewImages
+                  >[0]
+                ),
+              };
+            if (c.name === "Wishlist")
+              return {
+                ...c,
+                count: wishlistRes.pagination?.totalCount ?? 0,
+                images: toSpecimenPreviewImages(
+                  wishlistRes.data as unknown as Parameters<
+                    typeof toSpecimenPreviewImages
+                  >[0]
+                ),
+              };
+            if (c.name === NEAR_YOU_COLLECTION_NAME)
+              return {
+                ...c,
                 count: nearYouPreview.count,
                 images: nearYouPreview.images,
                 createdAt: strings.collection.collections.nearYouSubtitle,
-              }
-            : merged[2];
-      } catch (_) {}
-
-      // User-created collections only: pass both collectionId (query) and _collections (body)
-      let enrichedOthers = others;
-      if (others.length > 0) {
-        try {
-          enrichedOthers = await Promise.all(
-            others.map(async (c) => {
-              if (!c.collectionId) return c;
-              const res = await mushroomSpecimenService.fetchAllSpecimens(
-                { _collections: [c.collectionId] },
-                {
-                  pageNo: 0,
-                  pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE,
-                  collectionId: c.collectionId,
-                }
-              );
-              const specimenImages = toSpecimenPreviewImages(
-                res.data as unknown as Parameters<
-                  typeof toSpecimenPreviewImages
-                >[0]
-              );
-              return {
-                ...c,
-                count: res.pagination?.totalCount ?? c.count,
-                images: pickCollectionCardPreviewImages(
-                  specimenImages,
-                  resolveCollectionPreviewUrls(c.images as string[] | undefined)
-                ),
               };
-            })
-          );
+            return c;
+          });
         } catch (_) {}
+        if (isCurrent()) setCollections(defaults);
+      } finally {
+        if (isCurrent()) setIsLoading(false);
       }
-
-      setCollections([...merged, ...enrichedOthers]);
-      log.info(`${COL_LOG} loadCollections success`, {
-        totalCards: merged.length + enrichedOthers.length,
-        customWithMissingId: enrichedOthers.filter(
-          (o) => !o.collectionId?.trim()
-        ).length,
-      });
-    } catch (error) {
-      console.error("Error loading collections:", error);
-      useAppLogsStore.getState().error(`${COL_LOG} loadCollections error`, {
-        message: error instanceof Error ? error.message : String(error),
-      });
-      // Set default collections on error: Identified, Wishlist; then fetch counts from specimen API
-      let defaults = DEFAULT_COLLECTION_NAMES.map((name) =>
-        defaultCollectionPlaceholder(name)
-      );
-      try {
-        const [identifiedRes, wishlistRes, nearYouPreview] = await Promise.all([
-          mushroomSpecimenService.fetchAllSpecimens(
-            { isIdentified: [true] },
-            { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
-          ),
-          mushroomSpecimenService.fetchAllSpecimens(
-            { isWishlisted: [true] },
-            { pageNo: 0, pageSize: COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE }
-          ),
-          fetchNearYouCollectionPreview(),
-        ]);
-        defaults = defaults.map((c) => {
-          if (c.name === "Identified")
-            return {
-              ...c,
-              count: identifiedRes.pagination?.totalCount ?? 0,
-              images: toSpecimenPreviewImages(
-                identifiedRes.data as unknown as Parameters<
-                  typeof toSpecimenPreviewImages
-                >[0]
-              ),
-            };
-          if (c.name === "Wishlist")
-            return {
-              ...c,
-              count: wishlistRes.pagination?.totalCount ?? 0,
-              images: toSpecimenPreviewImages(
-                wishlistRes.data as unknown as Parameters<
-                  typeof toSpecimenPreviewImages
-                >[0]
-              ),
-            };
-          if (c.name === NEAR_YOU_COLLECTION_NAME)
-            return {
-              ...c,
-              count: nearYouPreview.count,
-              images: nearYouPreview.images,
-              createdAt: strings.collection.collections.nearYouSubtitle,
-            };
-          return c;
-        });
-      } catch (_) {}
-      setCollections(defaults);
-      // Retry after delay (reinstall/login: token or network may not be ready on first attempt)
-      if (user?.id) {
-        setTimeout(() => loadCollections(), 1500);
-        setTimeout(() => loadCollections(), 4000);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user?.id, hasHydrated, isPremium, strings.collection.collections.nearYouSubtitle]);
-
-  // Fetch collections from API on mount
-  useEffect(() => {
-    loadCollections();
-  }, [loadCollections]);
+    })().finally(() => {
+      if (collectionLoadRef.current?.promise === pending)
+        collectionLoadRef.current = null;
+    });
+    collectionLoadRef.current = { identity, promise: pending };
+    return pending;
+  }, [
+    user?.id,
+    hasHydrated,
+    isPremium,
+    strings.collection.collections.nearYouSubtitle,
+  ]);
 
   // Refetch collection counts (including wishlist) when screen gains focus so count updates after add/remove from other screens
   useFocusEffect(
@@ -411,13 +443,40 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
   );
 
   // Refetch when wishlist is added/removed from any screen so count updates immediately
+  const collectionIsFocused = useIsFocused();
   const wishlistInvalidationVersion = useWishlistInvalidationStore(
     (s) => s.version
   );
+  const observedWishlistVersion = useRef(wishlistInvalidationVersion);
   useEffect(() => {
-    if (hasHydrated && user?.id && wishlistInvalidationVersion > 0)
-      loadCollections();
-  }, [hasHydrated, user?.id, wishlistInvalidationVersion, loadCollections]);
+    const changed =
+      observedWishlistVersion.current !== wishlistInvalidationVersion;
+    observedWishlistVersion.current = wishlistInvalidationVersion;
+    const pending = collectionLoadRef.current?.promise;
+    const plan = planWishlistCollectionRefresh({
+      versionChanged: changed,
+      isFocused: collectionIsFocused,
+      hasHydrated,
+      userId: user?.id,
+      hasPendingLoad: Boolean(pending),
+    });
+    if (plan === "noop") return undefined;
+    let active = true;
+    void runWishlistCollectionRefresh(plan, {
+      pendingLoad: pending,
+      refresh: () => loadCollections(),
+      isActive: () => active,
+    });
+    return () => {
+      active = false;
+    };
+  }, [
+    collectionIsFocused,
+    hasHydrated,
+    user?.id,
+    wishlistInvalidationVersion,
+    loadCollections,
+  ]);
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {

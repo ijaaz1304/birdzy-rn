@@ -30,10 +30,16 @@ const getRequestKey = (config: InternalAxiosRequestConfig): string | null => {
     path === "/auth/guest-login" ||
     path.endsWith("/auth/social-login/google") ||
     path.endsWith("/auth/social-login/apple");
-  if (isAuth) return null;
-  return `${config.method?.toUpperCase()}_${config.url}_${JSON.stringify(
-    config.params
-  )}_${JSON.stringify(config.data)}`;
+  if (
+    isAuth ||
+    config.signal ||
+    (typeof FormData !== "undefined" && config.data instanceof FormData)
+  )
+    return null;
+  const requestSession = useAuthStore.getState().token ?? "";
+  return `${requestSession}_${config.method?.toUpperCase()}_${
+    config.url
+  }_${JSON.stringify(config.params)}_${JSON.stringify(config.data)}`;
 };
 
 /**

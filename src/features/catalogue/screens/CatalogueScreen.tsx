@@ -466,10 +466,20 @@ export const CatalogueScreen: React.FC = () => {
   );
 
   // Load more minerals when reaching end of list
+  const appendRequestRef = useRef(false);
   const handleLoadMore = useCallback(() => {
+    if (appendRequestRef.current) return;
     if (!loadingMore && !isLoading && mushrooms.length < totalCount) {
       const nextPage = currentPage + 1;
-      loadMinerals(nextPage, true);
+      appendRequestRef.current = true;
+      void loadMinerals(nextPage, true).then(
+        () => {
+          appendRequestRef.current = false;
+        },
+        () => {
+          appendRequestRef.current = false;
+        }
+      );
     }
   }, [
     loadingMore,

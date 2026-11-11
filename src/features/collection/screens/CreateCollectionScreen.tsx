@@ -2,7 +2,7 @@
  * Create Collection Screen
  */
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -32,12 +32,15 @@ export const CreateCollectionScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showLimitSheet, setShowLimitSheet] = useState(false);
 
+  const creatingRef = useRef(false);
   const handleCreate = async () => {
+    if (creatingRef.current) return;
     const name = collectionName.trim();
     if (!name) {
       showToast("Please enter a collection name", "error");
       return;
     }
+    creatingRef.current = true;
     setLoading(true);
     try {
       const newCollection = await collectionService.addCollection({
@@ -76,6 +79,7 @@ export const CreateCollectionScreen: React.FC = () => {
         "error"
       );
     } finally {
+      creatingRef.current = false;
       setLoading(false);
     }
   };

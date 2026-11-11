@@ -1,3 +1,4 @@
+import { coalesceInFlight } from "../../../utils/coalesceInFlight";
 /**
  * Authentication Service
  * Business logic layer for authentication
@@ -21,7 +22,7 @@ import {
 } from "../../../services/api/features/auth.api.types";
 import { ApiException, normalizeError } from "../../../services/api/errors";
 import { executeWithRetry } from "../../../utils/retry";
-import { User } from "../auth.store";
+import { User, useAuthStore } from "../auth.store";
 import { AUTH_STRINGS } from "../../../config/strings/auth.strings";
 import { useAppLogsStore } from "../../app-logs/app-logs.store";
 import type { SubscriptionResponse } from "../../../services/api/features/auth.api.types";
@@ -363,23 +364,30 @@ class AuthService {
     token?: string;
     discount?: { isApplicable: boolean; endsAt: number };
   }> {
-    try {
-      const response = await authApi.getProfile();
+    const profileToken = useAuthStore.getState().token;
+    const profileUserId = useAuthStore.getState().user?.id;
+    return coalesceInFlight(
+      `auth:profile:${profileUserId ?? ""}:${profileToken ?? ""}`,
+      async () => {
+        try {
+          const response = await authApi.getProfile();
 
-      if (response.error) {
-        throw new ApiException(
-          response.message || "Failed to get user profile"
-        );
+          if (response.error) {
+            throw new ApiException(
+              response.message || "Failed to get user profile"
+            );
+          }
+
+          return {
+            user: mapBackendUserToUser(response.user),
+            token: response.token,
+            discount: response.discount,
+          };
+        } catch (error) {
+          throw normalizeError(error);
+        }
       }
-
-      return {
-        user: mapBackendUserToUser(response.user),
-        token: response.token,
-        discount: response.discount,
-      };
-    } catch (error) {
-      throw normalizeError(error);
-    }
+    );
   }
 
   /**

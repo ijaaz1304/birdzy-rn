@@ -108,3 +108,10 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 ## Remote push acceptance — 2026-11-09
 
 - [ ] Owner unassigned. Verify Android foreground, background and Recents-exit delivery and taps, plus signed iOS Debug and TestFlight/APNs delivery and taps. See [the device QA notes](../../docs/handover/QA_AND_OPERATIONS.md#remote-push-in-background-and-after-app-exit). Builds and physical-device checks are open.
+
+
+## Duplicate-call lifecycle acceptance — 11 November 2026
+
+- [x] Implemented source guards and automated lifecycle regressions for the audited request/listener/mutation paths.
+- [ ] Owner unassigned. Complete the duplicate-call device/backend/sandbox checklist in QA_AND_OPERATIONS.md, attach build/device/network-trace evidence and profile list renders on both platforms.
+- [ ] Owner unassigned. Resolve the remaining project-wide test/compiler baseline issues recorded in CHANGELOG.md before release acceptance.

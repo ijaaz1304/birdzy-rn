@@ -62,70 +62,100 @@ const buildActionUrl = (data?: Record<string, any>): string | undefined => {
  * - data: { type: "like" | "comment" | "subscribe", postId?, commentId?, userId? }
  * So when User B likes/comments/subscribes, the server sends FCM to User A and this handler both shows a banner and adds to the in-app list.
  */
+let foregroundSetupPending = false;
+
+let foregroundOwnerCount = 0;
+let releaseForegroundConnection: (() => void) | null = null;
+
 export const setupForegroundNotificationListener = () => {
-  let unsubscribe: (() => void) | null = null;
-
-  getMessaging().then((messagingModule) => {
-    if (!messagingModule) {
-      return;
+  foregroundOwnerCount++;
+  if (foregroundOwnerCount === 1) {
+    releaseForegroundConnection = connectForegroundNotificationListener();
+  }
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    foregroundOwnerCount--;
+    if (foregroundOwnerCount === 0) {
+      releaseForegroundConnection?.();
+      releaseForegroundConnection = null;
     }
+  };
+};
 
-    unsubscribe = messagingModule().onMessage(async (remoteMessage: any) => {
-      console.log("Foreground notification received:", remoteMessage);
-      const data = remoteMessage.data || {};
-      const title = remoteMessage.notification?.title || data.title || "New Notification";
-      const body = remoteMessage.notification?.body || data.body || "";
+const connectForegroundNotificationListener = () => {
+  if (foregroundSetupPending) return () => undefined;
+  foregroundSetupPending = true;
+  let active = true;
+  let unsubscribe: (() => void) | null = null;
+  void getMessaging()
+    .then((messagingModule) => {
+      if (!active) return;
+      if (!messagingModule) {
+        foregroundSetupPending = false;
+        return;
+      }
+      unsubscribe = messagingModule().onMessage(async (remoteMessage: any) => {
+        console.log("Foreground notification received:", remoteMessage);
+        const data = remoteMessage.data || {};
+        const title =
+          remoteMessage.notification?.title || data.title || "New Notification";
+        const body = remoteMessage.notification?.body || data.body || "";
 
-      try {
-        analyticsService.logEvent(EVENTS.notification_received, {
-          source: "foreground",
-          has_data: !!remoteMessage?.data,
-          type: data.type,
-        });
-      } catch (_) {}
+        try {
+          analyticsService.logEvent(EVENTS.notification_received, {
+            source: "foreground",
+            has_data: !!remoteMessage?.data,
+            type: data.type,
+          });
+        } catch (_) {}
 
-      // Add to in-app Notification Center list (like, comment, subscribe, etc.) so User A sees it in the app
-      try {
-        const {
-          useNotificationsStore,
-        } = require("../../features/notifications/notifications.store");
-        const notifType = mapNotificationType(data.type);
-        const actionUrl = buildActionUrl(data);
-        useNotificationsStore.getState().addNotification({
+        // Add to in-app Notification Center list (like, comment, subscribe, etc.) so User A sees it in the app
+        try {
+          const {
+            useNotificationsStore,
+          } = require("../../features/notifications/notifications.store");
+          const notifType = mapNotificationType(data.type);
+          const actionUrl = buildActionUrl(data);
+          useNotificationsStore.getState().addNotification({
+            title,
+            body,
+            type: notifType,
+            ...(actionUrl && { actionUrl }),
+          });
+        } catch (e) {
+          console.warn("Failed to add notification to in-app list:", e);
+        }
+
+        // Display local notification (system banner) via notifee
+        await notifee.displayNotification({
           title,
           body,
-          type: notifType,
-          ...(actionUrl && { actionUrl }),
-        });
-      } catch (e) {
-        console.warn("Failed to add notification to in-app list:", e);
-      }
-
-      // Display local notification (system banner) via notifee
-      await notifee.displayNotification({
-        title,
-        body,
-        android: {
-          channelId: NOTIFICATION_CHANNEL_IDS.DEFAULT,
-          smallIcon: "ic_launcher",
-          importance: AndroidImportance.HIGH,
-          pressAction: {
-            id: "default",
+          android: {
+            channelId: NOTIFICATION_CHANNEL_IDS.DEFAULT,
+            smallIcon: "ic_launcher",
+            importance: AndroidImportance.HIGH,
+            pressAction: {
+              id: "default",
+            },
           },
-        },
-        ios: {
-          sound: "default",
-          critical: true,
-        },
-        data: data as Record<string, string>,
+          ios: {
+            sound: "default",
+            critical: true,
+          },
+          data: data as Record<string, string>,
+        });
       });
+    })
+    .catch((error) => {
+      if (active) foregroundSetupPending = false;
+      console.warn("[Notifications] Foreground setup failed", error);
     });
-  });
-
   return () => {
-    if (unsubscribe) {
-      unsubscribe();
-    }
+    active = false;
+    foregroundSetupPending = false;
+    unsubscribe?.();
   };
 };
 
@@ -183,7 +213,10 @@ export const setupBackgroundNotificationHandler = () => {
  * Setup initial notification handler
  * Handles notification that opened app from closed state
  */
+let initialNotificationHandled = false;
+
 export const setupInitialNotificationHandler = async () => {
+  if (initialNotificationHandled) return;
   try {
     const messagingModule = await getMessaging();
     if (!messagingModule) {
@@ -191,6 +224,8 @@ export const setupInitialNotificationHandler = async () => {
     }
 
     const remoteMessage = await messagingModule().getInitialNotification();
+    if (initialNotificationHandled) return;
+    if (remoteMessage) initialNotificationHandled = true;
 
     if (remoteMessage) {
       console.log("Initial notification:", remoteMessage);

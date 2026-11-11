@@ -1,3 +1,4 @@
+import { coalesceInFlight } from "../../../utils/coalesceInFlight";
 /**
  * Notification API endpoints
  * Device registration for push notifications
@@ -162,11 +163,17 @@ export const notificationApi = {
   registerDevice: async (
     data: DeviceRegistrationRequest
   ): Promise<DeviceRegistrationResponse> => {
-    const client = createNotificationClient();
-    const response = await client.post<DeviceRegistrationResponse>(
-      API_ENDPOINTS.NOTIFICATION.REGISTER_DEVICE,
-      data
+    const session = useAuthStore.getState().token ?? "";
+    return coalesceInFlight(
+      `device:register:${session}:${JSON.stringify(data)}`,
+      async () => {
+        const client = createNotificationClient();
+        const response = await client.post<DeviceRegistrationResponse>(
+          API_ENDPOINTS.NOTIFICATION.REGISTER_DEVICE,
+          data
+        );
+        return response.data;
+      }
     );
-    return response.data;
   },
 };
