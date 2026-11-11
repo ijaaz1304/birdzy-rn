@@ -125,10 +125,13 @@ export async function ensureIapInitialized(): Promise<boolean> {
   if (!iapInitPromise) {
     iapInitPromise = initIapConnectionOnce();
   }
+  const attempt = iapInitPromise;
   try {
-    return await iapInitPromise;
+    const connected = await attempt;
+    if (!connected && iapInitPromise === attempt) iapInitPromise = null;
+    return connected;
   } catch (e) {
-    iapInitPromise = null;
+    if (iapInitPromise === attempt) iapInitPromise = null;
     throw e;
   }
 }

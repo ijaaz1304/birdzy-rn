@@ -68,12 +68,29 @@ export function getCollectionPreviewImages(
   return [];
 }
 
+function uniqueImageList(values: unknown): string[] {
+  if (!Array.isArray(values)) return [];
+  const out: string[] = [];
+  for (const value of values) {
+    if (typeof value !== "string") continue;
+    const trimmed = value.trim();
+    if (!trimmed || out.includes(trimmed)) continue;
+    out.push(trimmed);
+  }
+  return out;
+}
+
 /** Raw image list from specimen list/detail payloads (imageUrls, images, snake_case). */
 export function getSpecimenRawImageUrls(
   specimen: Record<string, unknown>
 ): string[] {
+  const captured = uniqueImageList(specimen.userCapturedImages);
   const fromDirect = getArchetypeImageUrls(specimen);
-  if (fromDirect.length > 0) return fromDirect;
+  const merged = [...captured];
+  for (const url of fromDirect) {
+    if (!merged.includes(url)) merged.push(url);
+  }
+  if (merged.length > 0) return merged;
 
   const snake = specimen.image_urls;
   if (Array.isArray(snake)) {

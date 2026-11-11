@@ -1,3 +1,8 @@
+# eMudhra Firestore security backport; keep until the RNFirebase major migration.
+# https://firebase.google.com/support/guides/compromised-emudhra-intermediate-ca
+# Analytics is released as 12.19.0; Firestore's security patch is pinned below.
+$FirebaseSDKVersion = '12.19.0'
+
 require Pod::Executable.execute_command(
   'node',
   ['-p',
@@ -118,6 +123,9 @@ pre_install do |installer|
 end
 
 target 'Birdzy' do
+  # Exact Firestore backport prevents resolving a vulnerable 12.19.x patch.
+  pod 'FirebaseFirestore', '12.19.3'
+
   config = use_native_modules!
 
   use_react_native!(

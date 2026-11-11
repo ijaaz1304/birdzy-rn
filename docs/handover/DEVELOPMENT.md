@@ -89,3 +89,12 @@ Close the old app before opening the rebuilt installation. Verify Explore on tha
 ## App audit changes — 2026-11-04
 
 The Podfile normalizes outdated pod deployment targets to React Native's minimum. Reinstall pods after pulling it. The version store reads the installed version from react-native-device-info; a deployed latest/minimum-version contract is still absent, so this is not a working remote update-enforcement system. Notifications persist an ownerUserId and clear unscoped/other-account cached state on owner assignment. Keep account generation checks when changing refresh behavior.
+
+
+## Duplicate-call lifecycle audit — 11 November 2026
+
+Concurrent profile requests share one in-flight result per account and JWT. A finished request cannot restore a replaced account. The visible profile loader also settles when a concurrent silent refresh applies the shared JWT result first. Device POSTs share only overlapping identical account/token/payload requests; settled requests can be retried. Token-refresh subscriptions share one native connection across mounted owners, retain it through JWT rotation, and dispose connections that resolve after cleanup. These guards limit side effects, rather than suppressing normal React state updates.
+
+Collection loading has one pending load per screen/account, no separate mount+focus fetch, no recursive error timers, and no hidden-screen wishlist fetch followed by another focus fetch. A wishlist mutation during an older collection read schedules one refresh after that read finishes. Catalogue appends and collection creation acquire synchronous guards. Overlapping likes share one mutation/owner notification. Foreground FCM setup has reference-counted ownership and late-setup cancellation; cold-start routing is consumed once. General API dedup keys include the session and exclude independently cancellable and multipart requests. IAP connection failure can be retried without an old rejection clearing a newer attempt. Existing identify attempt controls and receipt processing guards were inspected and retained.
+
+The source review followed startup/authentication → Home/focus → catalogue and collections → identify/details → community mutations → subscription/purchase callbacks, including push and reminder listeners that outlive a screen. The changes add no endpoint or environment variable. Physical-device render profiling and production request traces remain unverified.

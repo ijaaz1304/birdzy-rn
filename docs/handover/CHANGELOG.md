@@ -60,3 +60,55 @@ The iOS build progressed beyond the old deployment-target error into native comp
 - Validation: organization fetch, push preview and actual pull/push passed before the change. Standard origin pull/push was rerun after separation; final result recorded below. Documentation checker and whitespace checks run. Explicit personal-mirror publication remains blocked by its historical push-protection finding and was not attempted.
 
 Final verification: `git pull --ff-only origin main` returned Already up to date; `git push origin main:main` returned Everything up-to-date after remote separation. The two documentation updates remain uncommitted; remote configuration is already effective locally.
+
+## 2026-11-04 — eMudhra Apple Firestore security patch
+
+- Previous local FirebaseFirestore: 12.8.0. Added a Firebase 12.19.0 base override and exact FirebaseFirestore 12.19.3 requirement, preserving current React Native Firebase JS APIs and the CocoaPods integration. This is a temporary native override needing native compatibility acceptance, not a tested wrapper major upgrade.
+- Initial global 12.19.3 attempt could not resolve the separately versioned Analytics pod; the final base-plus-Firestore-pin approach uses published component versions. Lockfile/dependency verification results are recorded below after resolution.
+- No Android App Distribution Gradle plugin references found in the app build configuration; no Android security dependency edit needed for this finding. No app logic, credentials, environment loading or JS package versions changed. Existing unrelated local work preserved.
+- Updated environment/release docs, added [app-specific security remediation instructions](../firebase-emudhra.md), and recorded open release ownership/acceptance. Builds, device tests, store uploads and rollout are not run; the user handles builds.
+
+Validation completed: CocoaPods update passed; FirebaseFirestore and FirebaseFirestoreInternal both resolve to 12.19.3; installed Manifest.lock matches the repository lock; Podfile SHA-1/checksum and Ruby syntax passed. Handover link/blank-example validation and whitespace checks passed. No builds/device tests/releases performed. Branch base: `main` at `1ca722a82760236f7b397ad74c33ee2f5bcfb15c` selected after fetching all remote heads and comparing their most recent commits; no default/dev-branch assumption.
+
+## 2026-11-06 — save the identification photo with Add to Collection
+
+- Identification Add to Collection now uploads the user photo to the already-allowed `posts/images` Storage path and stores the public `storage.googleapis.com` URL. Identified, Wishlist, and custom collections send that URL first on `POST /core/specimen/add`. Specimen update is not given image fields. An existing specimen is replaced by a new row so the photo can be stored. Display unwraps a catalogue path glued onto the photo URL.
+- Updated [FLOWS.md](FLOWS.md) and [API_AND_DATA.md](API_AND_DATA.md). No Storage rules deploy and no environment or credential change.
+- Validation: `npx jest __tests__/collection/userCollectionPhoto.test.ts __tests__/collection/birdSpecimenPayloads.test.ts --no-coverage` passed 2 suites / 12 tests. No device add, carousel, or live API check was run. Owner for that acceptance is unassigned.
+
+## 2026-11-04 — Developer Firebase upgrade handoff
+
+Created [a consolidated five-app upgrade plan](../NATURE_APPS_FIREBASE_UPGRADE_PLAN.md) explaining the iOS security patch, exact Podfile/lock changes, per-app source branches and security commits, conditional Android App Distribution plugin work, production archive routes, tooling caveats and open release/QA ownership. Rechecked current local wrappers, locks and package scripts and consulted the official Firebase advisory. No dependency/application changes or builds performed in this documentation change. Validation: handover checker passed (14 pages, 284 local links); new document links and all five referenced security commit lockfiles checked; git diff --check passed. Store binaries, device acceptance and rollout remain unverified.
+
+## 2026-11-04 — Cursor and Claude security handoff prompts
+
+Added separate copy-ready Cursor Agent and Claude/Claude Code prompts to [the five-app Firebase upgrade plan](../NATURE_APPS_FIREBASE_UPGRADE_PLAN.md). Prompts start with the existing security branches, avoid duplicate/broad upgrades, preserve local work and credentials, distinguish Android plugin use from SDK metadata, and keep user-run builds and release approval explicit. No application or dependency change. Validation: documentation checker, new document local-link checks and whitespace checks passed. Prompts were reviewed as text; they were not executed in Cursor or Claude.
+
+## 2026-11-04 — Generic product-level security brief
+
+Rewrote the upgrade document as a reusable product/release brief at the user's request. Removed app names, code locations, commands, branch/commit details and implementation instructions. Retained the issue, affected platform/service or tooling, patched component targets, validation/release actions and generic Cursor/Claude assessment prompts. Included other technologies to avoid applying native Android conclusions to every framework. Updated the handover index. No application or dependency changes. Validation: documentation checker, document structure/content checks and whitespace checks passed; prompts were not executed and no release status was newly certified.
+
+## 2026-11-04 — Word security brief
+
+Created [the Word version](../eMudhra_Security_Update_Brief.docx) of the generic product/release brief, including separate copy-ready Cursor and Claude prompts. Preserved generic platform scope and removed app-specific/code locations from the deliverable. Validation: final DOCX rendered to four pages and every page visually inspected; title styling, prompt lists, content presence, generic scope and document links checked. No app/dependency changes, builds or releases performed.
+
+## 2026-11-09 — Background and cold-start push notifications
+
+- Added Android data-only FCM display through the existing Notifee channel and aligned Debug and Release iOS APNs entitlements with their signing environments. The scene forwards cold-start notification responses to the installed notification-center delegate. Added data title/body fallback in the foreground and deduplicated the FCM tap listener.
+- Updated [QA_AND_OPERATIONS.md](../../docs/handover/QA_AND_OPERATIONS.md) with the payload, signing and device QA cases.
+- JS/TS syntax checks and the mocked Android background-handler smoke check passed. Xcode project and entitlement lint passed. SceneDelegate Swift syntax parsing passed.
+- The repository-wide TypeScript check and handover link checker passed.
+- Open with owner unassigned: signed builds and physical-device delivery and tap validation using the real server payloads. Direct APNs routing remains unverified.
+
+
+## 2026-11-11 — Duplicate-call lifecycle audit and fixes
+
+Concurrent profile requests share one in-flight result per account and JWT. A finished request cannot restore a replaced account. The visible profile loader also settles when a concurrent silent refresh applies the shared JWT result first. Device POSTs share only overlapping identical account/token/payload requests; settled requests can be retried. Token-refresh subscriptions share one native connection across mounted owners, retain it through JWT rotation, and dispose connections that resolve after cleanup. These guards limit side effects, rather than suppressing normal React state updates.
+
+Collection loading has one pending load per screen/account, no separate mount+focus fetch, no recursive error timers, and no hidden-screen wishlist fetch followed by another focus fetch. A wishlist mutation that arrives while an older collection read is still open refreshes once after that read finishes, instead of keeping the stale counts. Catalogue appends and collection creation acquire synchronous guards. Overlapping likes share one mutation/owner notification. Foreground FCM setup has reference-counted ownership and late-setup cancellation; cold-start routing is consumed once. General API dedup keys include the session and exclude independently cancellable and multipart requests. IAP connection failure can be retried without an old rejection clearing a newer attempt. Existing identify attempt controls and receipt processing guards were inspected and retained.
+
+Updated docs/handover/DEVELOPMENT.md, docs/handover/QA_AND_OPERATIONS.md, this changelog and HANDOVER_60_DAYS. Existing unrelated local Insecto Firestore/iOS work is preserved. No dependency, backend contract or environment change was introduced by this audit.
+
+Follow-up audit: a visible `getProfile` that was abandoned after an account change cleared without resetting `isLoading`, which could leave the loader stuck. Ownership is now per visible load; a superseded or abandoned call clears only its own loader. Added a lifecycle regression for that case.
+
+Validation: `npx jest __tests__/lifecycle --runInBand --no-coverage` passed (10 suites, 26 tests), including delayed wishlist refresh and the abandoned getProfile loader case. `python3 docs/handover/check_docs.py` reported OK (14 handover pages, 289 local links). Physical-device navigation, real push delivery, sandbox billing, release builds and render profiling were not run. QA/release owner remains unassigned; complete the documented acceptance checklist. Changes remain local.

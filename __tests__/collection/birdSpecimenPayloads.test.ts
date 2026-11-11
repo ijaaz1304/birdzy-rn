@@ -116,6 +116,34 @@ describe("bird specimen API payloads", () => {
 
     expect(payload.scientificName).toBe("Aburria aburri");
     expect(payload.imageUrls).toEqual(["https://example.com/bird.jpg"]);
+
+    const withUserPhoto = buildMushroomSpecimenAddPayload(
+      {
+        scientificName: "Aburria aburri",
+        imageUrls: ["https://example.com/bird.jpg"],
+      },
+      {
+        commonName: "Wattled Guan",
+        scientificName: "Aburria aburri",
+        images: [],
+      },
+      "6a61f6c55db631270434ae85",
+      {
+        collectionIds: ["6a69ed932ed077f191c80368"],
+        userPhotoUrl:
+          "https://storage.googleapis.com/birdzy-app.firebasestorage.app/posts/images/specimen-capture-1.jpg",
+      }
+    );
+    expect(withUserPhoto.imageUrls?.[0]).toBe(
+      "https://storage.googleapis.com/birdzy-app.firebasestorage.app/posts/images/specimen-capture-1.jpg"
+    );
+    expect(
+      (withUserPhoto as { userCapturedImages?: string[] })
+        .userCapturedImages?.[0]
+    ).toBe(
+      "https://storage.googleapis.com/birdzy-app.firebasestorage.app/posts/images/specimen-capture-1.jpg"
+    );
+    expect(withUserPhoto).not.toHaveProperty("localCaptureUri");
     expect(payload._collections).toEqual(["6a69ed932ed077f191c80368"]);
     expect(payload.flightPattern).toEqual(["Undulating"]);
     expect(payload).not.toHaveProperty("gbifId");

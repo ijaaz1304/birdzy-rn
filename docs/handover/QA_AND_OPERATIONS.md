@@ -75,3 +75,27 @@ Run `npx jest __tests__/explore --runInBand`. The geocoding regression covers mi
 The camera prompt tests now supply the real light-theme context, matching the app host, including the foreground-ready first-visit scenario. Notification regressions cover account isolation, same-account retention, actual service refresh and stale sign-out responses; specimen regressions cover clearing editable arrays. Version-store regression checks the installed native version. Run the full Jest suite plus TypeScript, app-wide ESLint and both image verification scripts.
 
 Device acceptance remains open: sign out/switch accounts while the notification list is loading; open View Plans from the legacy discount route; clear an editable specimen list and reload it; verify native Mapbox tiles, search, expansion and selection on both platforms. Provider/store/backend availability is not established by mocked tests.
+
+
+## Remote push in background and after app exit
+
+Android registers an FCM background handler at the entry point. For a data-only payload, send high Android priority and include a nonblank `data.title` or `data.body`, plus the existing routing fields. The handler creates the shared Notifee channel before posting the banner. If FCM supplies a notification payload, Android displays that alert itself. Test Android with the app backgrounded and after removing it from Recents. Android Settings → Force stop blocks delivery until the app is reopened.
+
+The iOS app target signs with the development APNs entitlement for Debug and production for Release, including the corresponding dev-bundle configurations where present. Verify the signed entitlement, provisioning profile, APNs topic and server environment together. The scene forwards cold-start notification responses to the installed notification-center delegate. The device API still receives an APNs token on iOS and an FCM token on Android. For a visible iOS banner after force-quit, send an APNs alert. Silent pushes do not provide reliable force-quit delivery.
+
+On physical devices, send both Android payload shapes and a real APNs alert in foreground, background and after app exit. Verify one banner, the intended destination on tap, and the Release/TestFlight build with its production APNs sender. Also check a denied-permission device and Android data-only taps when the app is already running in the background. For direct APNs alerts, verify the sender payload is recognized by the notification delegate and routes to the correct destination.
+
+
+## Duplicate-call regression acceptance — 11 November 2026
+
+Run `npx jest __tests__/lifecycle --runInBand` for account/session isolation, in-flight sharing, retry, listener ownership and app-specific regression coverage. Tests use mocked native/backend services.
+
+- [ ] Cold-start signed in/out; move Home → catalogue → details → collections and back. Record redacted endpoint/mutation counts per user action. Allow explicit refreshes, expired-cache fetches, paging and documented bounded recovery retries.
+- [ ] Switch accounts while requests are delayed; old responses must not restore old account data. Rotate the JWT while a screen is focused.
+- [ ] Go offline for an empty/list failure, wait beyond the old retry intervals, restore connectivity and explicitly refresh. There must be no growing timer/request loop.
+- [ ] Trigger repeated end-of-list events and rapid like/create/save taps before a render commits; verify one active operation and a working subsequent action/retry.
+- [ ] Enter/leave screens quickly, background/foreground, change permission and refresh the push token. Verify one native token/foreground callback, continued registration after JWT rotation and one cold-start destination.
+- [ ] Use sandbox purchases to verify failed initialization retry and repeated callbacks; navigate away during identification and update subscription state mid-scan.
+- [ ] Capture React Profiler/device performance evidence for the busiest lists. Normal renders are expected when state changes; no FPS or render-count improvement has been measured in this source audit.
+
+Device/backend/sandbox acceptance and QA owner assignment remain open. Automated results are recorded in the handover changelog.

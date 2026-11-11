@@ -102,3 +102,16 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 - [ ] 2026-11-04 audit: Assign mobile/backend/QA owners and verify account-isolated notifications, actual Firestore refresh, specimen list clearing, discount-to-plans navigation, and rebuilt native maps on both platforms. Mock/service checks are recorded in CHANGELOG; device/store acceptance remains open.
 
 - [ ] 2026-11-04: User will run native builds. Audit build was stopped at user request; record resulting build links, map/device checks and release acceptance here.
+
+- [ ] 2026-11-04: eMudhra patch acceptance — assign mobile/release and QA owners; verify patched iOS Firestore dependencies, production archive, Firebase device flows, TestFlight, published version and user update adoption. Builds are user-run; release/device acceptance remains open. See [remediation guide](../firebase-emudhra.md).
+
+## Remote push acceptance — 2026-11-09
+
+- [ ] Owner unassigned. Verify Android foreground, background and Recents-exit delivery and taps, plus signed iOS Debug and TestFlight/APNs delivery and taps. See [the device QA notes](../../docs/handover/QA_AND_OPERATIONS.md#remote-push-in-background-and-after-app-exit). Builds and physical-device checks are open.
+
+
+## Duplicate-call lifecycle acceptance — 11 November 2026
+
+- [x] Implemented source guards and automated lifecycle regressions for the audited request/listener/mutation paths.
+- [ ] Owner unassigned. Complete the duplicate-call device/backend/sandbox checklist in QA_AND_OPERATIONS.md, attach build/device/network-trace evidence and profile list renders on both platforms.
+- [ ] Owner unassigned. Resolve the remaining project-wide test/compiler baseline issues recorded in CHANGELOG.md before release acceptance.

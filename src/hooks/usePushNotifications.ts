@@ -1,3 +1,4 @@
+import { createSharedAsyncSubscription } from "../utils/sharedAsyncSubscription";
 /**
  * Push Notifications Hook
  * Handles device token (FCM on Android, APNS on iOS) and device registration.
@@ -109,15 +110,19 @@ const getFCMToken = async (): Promise<string | null> => {
  * Hook to manage push notifications
  * Automatically registers device on mount if user is authenticated
  */
+
+const sharedTokenRefresh = createSharedAsyncSubscription<unknown>(
+  async (onEvent) => {
+    const messagingModule = await getMessaging();
+    return messagingModule ? messagingModule().onTokenRefresh(onEvent) : null;
+  }
+);
 export const usePushNotifications = () => {
   const { manageDeviceData } = useDeviceManage();
   const { token, user } = useAuthStore();
   const tokenRefreshUnsubscribeRef = useRef<(() => void) | null>(null);
   const registrationInFlightRef = useRef(false);
   const lastRegistrationKeyRef = useRef<string | null>(null);
-  const initializedForUserRef = useRef<string | null>(null);
-  const lastRegisterAttemptAtRef = useRef(0);
-  const REGISTER_ATTEMPT_COOLDOWN_MS = 60 * 1000;
 
   /**
    * Platform value for /device API: "apple" (iOS) | "android" (Android)
@@ -135,11 +140,6 @@ export const usePushNotifications = () => {
     options: RegisterDeviceOptions = {}
   ): Promise<boolean> => {
     const { requestPermission: shouldRequestPermission = false } = options;
-    const now = Date.now();
-    if (now - lastRegisterAttemptAtRef.current < REGISTER_ATTEMPT_COOLDOWN_MS) {
-      return false;
-    }
-    lastRegisterAttemptAtRef.current = now;
     if (registrationInFlightRef.current) {
       return false;
     }
@@ -219,6 +219,7 @@ export const usePushNotifications = () => {
       });
 
       // 6. Send to backend (uses auth token from store via notification API client)
+      if (useAuthStore.getState().user?.id !== payload.userId) return false;
       const response = await manageDeviceData(payload);
 
       const didSucceed =
@@ -245,81 +246,69 @@ export const usePushNotifications = () => {
   /**
    * Setup token refresh listener (FCM on Android; on iOS re-fetch APNS and re-register)
    */
-  const setupTokenRefreshListener = async () => {
-    try {
-      const messagingModule = await getMessaging();
-      if (!messagingModule) {
-        return;
-      }
+  const setupTokenRefreshListener = async (isCurrent = () => true) => {
+    if (!isCurrent()) return;
+    const unsubscribe = sharedTokenRefresh.subscribe(async () => {
+      if (!isCurrent()) return;
+      console.log("Device token refresh triggered");
 
-      const unsubscribe = messagingModule().onTokenRefresh(async () => {
-        console.log("Device token refresh triggered");
-
-        try {
-          const deviceToken = await getDeviceTokenForApi();
-          if (!deviceToken) return;
-          if (Platform.OS === "ios" && deviceToken.includes(":APA91")) {
-            console.warn(
-              "iOS token refresh: got FCM-style token, skip re-register"
-            );
-            return;
-          }
-
-          await AsyncStorage.setItem("@fcm_token", deviceToken);
-          const deviceUuid = await getFirebaseId();
-          const payload: DeviceRegistrationRequest = {
-            userId: user?.id ?? null,
-            platform: getPlatformForApi(),
-            deviceId: deviceUuid,
-            deviceToken,
-          };
-          const registrationKey = `${payload.userId ?? "guest"}:${
-            payload.deviceId
-          }:${payload.deviceToken}`;
-          if (lastRegistrationKeyRef.current === registrationKey) {
-            return;
-          }
-          const storedRegistrationKey = await AsyncStorage.getItem(
-            "@device_registration_key"
+      try {
+        const deviceToken = await getDeviceTokenForApi();
+        if (!deviceToken) return;
+        if (Platform.OS === "ios" && deviceToken.includes(":APA91")) {
+          console.warn(
+            "iOS token refresh: got FCM-style token, skip re-register"
           );
-          if (storedRegistrationKey === registrationKey) {
-            lastRegistrationKeyRef.current = registrationKey;
-            return;
-          }
-          await manageDeviceData(payload);
-          await AsyncStorage.setItem(
-            "@device_registration_key",
-            registrationKey
-          );
-          lastRegistrationKeyRef.current = registrationKey;
-        } catch (error) {
-          console.error("Failed to update device token:", error);
+          return;
         }
-      });
 
-      tokenRefreshUnsubscribeRef.current = unsubscribe;
-      return unsubscribe;
-    } catch (error) {
-      console.error("Failed to setup token refresh listener:", error);
-      return null;
-    }
+        await AsyncStorage.setItem("@fcm_token", deviceToken);
+        const deviceUuid = await getFirebaseId();
+        const payload: DeviceRegistrationRequest = {
+          userId: user?.id ?? null,
+          platform: getPlatformForApi(),
+          deviceId: deviceUuid,
+          deviceToken,
+        };
+        const registrationKey = `${payload.userId ?? "guest"}:${
+          payload.deviceId
+        }:${payload.deviceToken}`;
+        if (lastRegistrationKeyRef.current === registrationKey) {
+          return;
+        }
+        const storedRegistrationKey = await AsyncStorage.getItem(
+          "@device_registration_key"
+        );
+        if (storedRegistrationKey === registrationKey) {
+          lastRegistrationKeyRef.current = registrationKey;
+          return;
+        }
+        if (!isCurrent() || useAuthStore.getState().user?.id !== payload.userId)
+          return;
+        await manageDeviceData(payload);
+        await AsyncStorage.setItem("@device_registration_key", registrationKey);
+        lastRegistrationKeyRef.current = registrationKey;
+      } catch (error) {
+        console.error("Failed to update device token:", error);
+      }
+    });
+    tokenRefreshUnsubscribeRef.current = unsubscribe;
+    return unsubscribe;
   };
 
   // Initialize on mount if authenticated
   useEffect(() => {
+    let active = true;
     if (!token || !user?.id) {
       return;
     }
 
-    if (initializedForUserRef.current === user.id) {
-      return;
-    }
-    initializedForUserRef.current = user.id;
     void registerDevice();
-    void setupTokenRefreshListener();
+    void setupTokenRefreshListener(() => active);
 
     // Cleanup
     return () => {
+      active = false;
       if (tokenRefreshUnsubscribeRef.current) {
         tokenRefreshUnsubscribeRef.current();
         tokenRefreshUnsubscribeRef.current = null;

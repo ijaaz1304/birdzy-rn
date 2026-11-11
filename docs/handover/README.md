@@ -35,3 +35,7 @@ Every feature, bug fix, environment, API or release change must update the affec
 ## Check documentation links and examples
 
 Run `python3 docs/handover/check_docs.py` from the repository root after updating this pack. It checks handover links and ensures example environment values remain blank; it does not validate app runtime behavior.
+
+## Firebase security handoff
+
+See [the reusable Firebase security and release brief](../NATURE_APPS_FIREBASE_UPGRADE_PLAN.md) for the issue, affected product areas, required upgrades, acceptance checks and Cursor/Claude prompts.

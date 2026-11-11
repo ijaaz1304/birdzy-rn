@@ -248,6 +248,8 @@ let postLoginRefreshTimeouts: ReturnType<typeof setTimeout>[] = [];
 /** Last time we called refreshProfileSilent (for last-activity). Used to throttle to once per hour from foreground/home. */
 let lastProfileRefreshAt = 0;
 const PROFILE_REFRESH_THROTTLE_MS = 60 * 60 * 1000; // 1 hour
+/** Visible getProfile ownership so a superseded call cannot leave isLoading stuck. */
+let visibleProfileLoadId = 0;
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -587,9 +589,28 @@ export const useAuthStore = create<AuthState>()(
 
       // Get Profile
       getProfile: async () => {
+        const profileToken = get().token;
+        const profileUserId = get().user?.id;
+        const loadId = ++visibleProfileLoadId;
         set({ isLoading: true, error: null });
         try {
           const result = await authService.getProfile();
+          if (loadId !== visibleProfileLoadId) return;
+          // A concurrent silent refresh may already have applied this shared result.
+          if (
+            get().user === result.user &&
+            get().token === (result.token || profileToken)
+          ) {
+            set({ isLoading: false, error: null });
+            return;
+          }
+          if (
+            get().token !== profileToken ||
+            get().user?.id !== profileUserId
+          ) {
+            set({ isLoading: false, error: null });
+            return;
+          }
           set({
             user: result.user,
             token: result.token || get().token, // Keep existing token if new one not provided
@@ -597,6 +618,14 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
         } catch (error: any) {
+          if (loadId !== visibleProfileLoadId) return;
+          if (
+            get().token !== profileToken ||
+            get().user?.id !== profileUserId
+          ) {
+            set({ isLoading: false, error: null });
+            return;
+          }
           set({
             isLoading: false,
             error: error.message || AUTH_STRINGS.errors.getProfileFailed,
@@ -607,15 +636,21 @@ export const useAuthStore = create<AuthState>()(
 
       // Refresh profile in background (no loading state). Updates last-activity on backend. Records timestamp for throttle.
       refreshProfileSilent: async () => {
+        const profileToken = get().token;
+        const profileUserId = get().user?.id;
         if (!get().isAuthenticated || !get().token) return;
         try {
           const result = await authService.getProfile();
+          if (get().token !== profileToken || get().user?.id !== profileUserId)
+            return;
           set({
             user: result.user,
             token: result.token || get().token,
           });
           lastProfileRefreshAt = Date.now();
         } catch (e) {
+          if (get().token !== profileToken || get().user?.id !== profileUserId)
+            return;
           if (__DEV__) {
             console.warn("[AUTH_STORE] refreshProfileSilent failed", e);
           }
@@ -981,7 +1016,9 @@ export const useAuthStore = create<AuthState>()(
 
       // Shared cleanup: clear session AsyncStorage, session, stores, cache (used by logout and deleteProfile).
       _clearAllSessionAndStorage: async () => {
-        const { useNotificationsStore } = require("../notifications/notifications.store");
+        const {
+          useNotificationsStore,
+        } = require("../notifications/notifications.store");
         useNotificationsStore.getState().setOwner(null);
         let themeMode: import("../../design-system/themes").ThemeMode = "system";
         try {

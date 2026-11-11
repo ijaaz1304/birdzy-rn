@@ -92,6 +92,10 @@ These are path declarations found in source, intended as navigation aids for a d
 5. Test stale response/account switching, pagination duplicates and rollback after failed optimism.
 6. Update this guide, the relevant specialist API doc and [CHANGELOG.md](CHANGELOG.md), including any required backend deployment coordination.
 
+## Identification photo on specimen add — 2026-11-06
+
+`POST /core/specimen/add` receives `imageUrls` with the user photo first, then catalogue URLs, plus `userCapturedImages` for that same photo. The stored URL is `https://storage.googleapis.com/{bucket}/posts/images/...`, not a token download URL. `PATCH /core/specimen/update` must not include `imageUrls`, `images`, `image_urls`, or `userCapturedImages`. No new Storage rule is required. `fetchAll` may prefix a catalogue folder onto the stored URL; the client displays the inner `https://` URL. Live backend acceptance of this payload is not yet recorded.
+
 ## Explore map method correction — 2026-11-04
 
 Explore uses `POST /core/archetypes/explore-map-geojson` with no request body; explicit `bbox` and scalar trait filters remain query parameters. This matches the Shroomzy client in `Shroom-Ai/src/services/api/features/explore.api.ts`. The previously implemented GET returned a user-reported 404 from the Bird API. The client still expects a raw GeoJSON FeatureCollection and preserves authentication, cancellation and independent map rate limiting. A successful authenticated POST against the deployed Bird backend remains to be verified; the method change is verified by mocked client tests, not a live response.
