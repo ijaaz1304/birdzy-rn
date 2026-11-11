@@ -17,7 +17,7 @@ import { Radius } from "../../design";
 
 import { spacing } from "../../design-system/spacing";
 import { getBottomSheetChromeStyle } from "../../design-system/modalTokens";
-import { APP_COLORS } from "../../config/colors";
+import { DARK_COLORS } from "../../design-system/colors";
 
 import {
   FilterModalProps,
@@ -48,8 +48,11 @@ const LEGACY_MINERAL_FILTER_LABELS: Record<string, string> = {
 const CATEGORY_PANEL_WIDTH = 127;
 const FILTER_SEARCH_HEIGHT = 48;
 const FILTER_CHECKBOX_SIZE = 24;
+/** Figma corner-radius/md (8) for the category rail and its rows */
+const RAIL_RADIUS = 8;
+/** Figma surface-brand-1-accent (light) */
+const SELECTED_CATEGORY_BG_LIGHT = "#F5EBEB";
 /** Figma brand-1 primary on filter sheet (light) */
-const FILTER_ACCENT_LIGHT = APP_COLORS.createButtonFg;
 /** Keep catalogue header visible above the sheet (Figma: sheet sits lower, not full-screen) */
 const FILTER_MODAL_MIN_TOP_OFFSET = 200;
 const FILTER_MODAL_TOP_OFFSET_RATIO = 0.26;
@@ -73,7 +76,16 @@ const FilterModal = ({
   const theme = useTheme();
   const colors = theme.colors;
   const isDark = useIsDark();
-  const filterAccent = isDark ? colors.primaryCTA : FILTER_ACCENT_LIGHT;
+  /** Figma text-icon-brand-1 / border-brand — same brand purple as "See results" */
+  const filterAccent = colors.primaryCTA;
+  /**
+   * Figma surface-brand-1-accent (#F5EBEB) — selected category row background.
+   * Light uses the Figma value directly (same as Home Bird Corner cards); the
+   * LIGHT_COLORS brand1Accent token still holds the old beige palette.
+   */
+  const selectedCategoryBg = isDark
+    ? DARK_COLORS.surface.brand1Accent.hex
+    : SELECTED_CATEGORY_BG_LIGHT;
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<FilterCategory>("birdType");
@@ -493,7 +505,7 @@ const FilterModal = ({
                   style={styles.headerLeft}
                   hitSlop={HIT_SLOP.CLOSE}
                 >
-                  <Text
+                  <Text allowFontScaling={false}
                     numberOfLines={1}
                     style={styles.headerClearAllText(filterAccent)}
                   >
@@ -501,7 +513,7 @@ const FilterModal = ({
                   </Text>
                 </TouchableOpacity>
                 <View style={styles.headerCenter}>
-                  <Text style={styles.headerTitle(colors)}>Filter</Text>
+                  <Text allowFontScaling={false} style={styles.headerTitle(colors)}>Filter</Text>
                 </View>
                 <TouchableOpacity
                   onPress={onClose}
@@ -547,14 +559,18 @@ const FilterModal = ({
                           key={category.id}
                           style={[
                             styles.categoryItem,
-                            selected && styles.selectedCategory(colors, filterAccent),
+                            selected &&
+                              styles.selectedCategory(
+                                selectedCategoryBg,
+                                filterAccent
+                              ),
                           ]}
                           onPress={() => {
                             setSelectedCategory(category.id as FilterCategory);
                             setSearchText("");
                           }}
                         >
-                          <Text
+                          <Text allowFontScaling={false}
                             style={[
                               selected
                                 ? styles.categoryTextSelected(colors)
@@ -581,6 +597,7 @@ const FilterModal = ({
                       color={colors.textTertiary}
                     />
                     <TextInput
+                      allowFontScaling={false}
                       style={styles.searchInput(colors)}
                       placeholderTextColor={colors.textTertiary}
                       cursorColor={filterAccent}
@@ -640,7 +657,7 @@ const FilterModal = ({
                                 disabled={isDefault}
                               />
                             </View>
-                            <Text style={styles.optionText(colors)}>
+                            <Text allowFontScaling={false} style={styles.optionText(colors)}>
                               {optionLabel}
                             </Text>
                           </View>
@@ -661,7 +678,7 @@ const FilterModal = ({
                     onApplyFilters(filters, getTotalSelectedCount() > 0)
                   }
                 >
-                  <Text style={styles.applyButtonText(colors)}>
+                  <Text allowFontScaling={false} style={styles.applyButtonText(colors)}>
                     See results
                     {getTotalSelectedCount() > 0 &&
                       ` (${getTotalSelectedCount()})`}
@@ -706,7 +723,8 @@ const styles = {
       justifyContent: "space-between" as const,
       paddingHorizontal: spacing[5],
       paddingTop: spacing[5],
-      paddingBottom: spacing[4],
+      /** Figma 8025:106420: 24pt gap between header row and the rail/options */
+      paddingBottom: spacing[6],
       gap: spacing[4],
     },
   }).header,
@@ -795,8 +813,8 @@ const styles = {
     backgroundColor: colors.surfacePrimary,
     borderRightWidth: 1,
     borderRightColor: colors.border0 || colors.border,
-    borderTopLeftRadius: Radius.md,
-    borderBottomLeftRadius: Radius.md,
+    borderTopLeftRadius: RAIL_RADIUS,
+    borderBottomLeftRadius: RAIL_RADIUS,
     overflow: "hidden" as const,
   }),
   categoriesList: StyleSheet.create({
@@ -811,12 +829,18 @@ const styles = {
       justifyContent: "flex-start" as const,
       paddingVertical: spacing[2],
       paddingHorizontal: spacing[2],
+      /** Figma List-atom: 8pt radius, 4pt gap between rows */
+      borderRadius: RAIL_RADIUS,
+      marginBottom: spacing[1],
     },
   }).categoryItem,
-  selectedCategory: (colors: any, accent: string) => ({
-    backgroundColor: colors.surfaceSecondary,
+  /** Figma selected List-atom: surface-brand-1-accent bg, 2pt brand right edge, square right corners */
+  selectedCategory: (background: string, accent: string) => ({
+    backgroundColor: background,
     borderRightWidth: 2,
     borderRightColor: accent,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
   }),
   categoryTextSelected: (colors: any) => ({
     fontSize: 14,
@@ -845,6 +869,8 @@ const styles = {
   optionItemContainer: StyleSheet.create({
     optionItemContainer: {
       width: "100%" as const,
+      /** Figma Check Box Detail rows are 8pt apart */
+      marginBottom: spacing[2],
     },
   }).optionItemContainer,
   optionItem: StyleSheet.create({
@@ -858,15 +884,18 @@ const styles = {
   }).optionItem,
   checkboxContainer: StyleSheet.create({
     checkboxContainer: {
-      marginRight: spacing[3],
+      /** Figma: 8pt between checkbox and label */
+      marginRight: spacing[2],
       alignItems: "center" as const,
       justifyContent: "center" as const,
     },
   }).checkboxContainer,
+  /** Figma Body/16px/Regular: 16/24, letter-spacing -0.16 */
   optionText: (colors: any) => ({
     flex: 1,
     fontSize: 16,
     lineHeight: 24,
+    letterSpacing: -0.16,
     color: colors.textPrimary || colors.text,
     fontFamily: FONTS.regular,
   }),

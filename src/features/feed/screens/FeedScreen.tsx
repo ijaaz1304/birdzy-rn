@@ -11,13 +11,14 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { View, FlatList, TouchableOpacity, StyleSheet, StatusBar, Dimensions } from "react-native";
+import { View, FlatList, TouchableOpacity, StyleSheet, StatusBar, Dimensions, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { useToast } from "../../../hooks/useToast";
 import { Text } from "../../../atoms";
+import { FONTS } from "../../../common/typography";
 import { FloatingActionButton } from "../../../atoms";
 import { Icon } from "../../../atoms";
 import { Tab } from "../../../molecules";
@@ -436,11 +437,22 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
   const feedHeaderImage = Images.commonBg;
 
   const emptyFeedImage = Images.emptyFeed;
+  /**
+   * Responsive empty state: Figma 173×152 illustration, never wider than 60% of the
+   * screen, placed ~14% of the screen height below the tabs (Figma: 113pt on 812pt).
+   */
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const emptyImageWidth = Math.min(EMPTY_IMAGE_WIDTH, Math.round(windowWidth * 0.6));
+  const emptyImageHeight = Math.round(
+    (emptyImageWidth * EMPTY_IMAGE_HEIGHT) / EMPTY_IMAGE_WIDTH
+  );
+  const emptyTopOffset = Math.round(windowHeight * EMPTY_TOP_RATIO);
 
+  /** Figma 8025:83763 — header art fades into surface-primary (white), no grey band */
   const feedBackgroundFill =
     theme.mode === "dark"
       ? FEED_COLORS.BACKGROUND_FILL_DARK
-      : FEED_COLORS.BACKGROUND_FILL_LIGHT;
+      : theme.colors.surfacePrimary;
 
   const feedHeaderBgHeight = insets.top + FEED_HEADER_BG_BODY_HEIGHT;
 
@@ -502,7 +514,9 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             {
               justifyContent: "space-between",
               borderBottomWidth: 0,
-              paddingTop: insets.top + 24,
+              paddingTop: insets.top + 12,
+              paddingBottom: 12,
+              paddingRight: 12,
             },
           ]}
         >
@@ -510,7 +524,13 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             variant="title"
             size="large"
             weight="bold"
-            style={commonFeedStyles.headerTitle}
+            allowFontScaling={false}
+            numberOfLines={1}
+            style={[
+              commonFeedStyles.headerTitle,
+              styles.headerTitle,
+              { color: isDark ? theme.colors.text : FEED_TITLE_COLOR_LIGHT },
+            ]}
           >
             {config.screenTitle}
           </Text>
@@ -582,7 +602,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
           contentContainerStyle={[
             commonFeedStyles.list,
             { paddingBottom: 52 },
-            listData.length === 0 && { flexGrow: 1, justifyContent: "center" },
+            listData.length === 0 && { flexGrow: 1 },
           ]}
           showsVerticalScrollIndicator={false}
           refreshing={refreshing && !!user?.id}
@@ -590,11 +610,37 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
           renderItem={renderItem}
           ListEmptyComponent={
             !loading ? (
-              <EmptyState
-                image={emptyFeedImage}
-                title={emptyState.title}
-                subtitle={emptyState.subtitle}
-              />
+              <View style={[styles.emptyWrap, { paddingTop: emptyTopOffset }]}>
+                <View style={styles.emptyBlock}>
+                  <AppImage
+                    source={emptyFeedImage}
+                    style={{ width: emptyImageWidth, height: emptyImageHeight }}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    allowFontScaling={false}
+                    numberOfLines={2}
+                    style={[
+                      styles.emptyTitle,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {emptyState.title}
+                  </Text>
+                  {/* "My posts" (Figma) is a single line; "All" keeps its call-to-action subtitle */}
+                  {activeTab !== "mine" && emptyState.subtitle ? (
+                    <Text
+                      allowFontScaling={false}
+                      style={[
+                        styles.emptySubtitle,
+                        { color: theme.colors.textTertiary },
+                      ]}
+                    >
+                      {emptyState.subtitle}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
             ) : null
           }
           initialNumToRender={FLATLIST_CONFIG.INITIAL_NUM_TO_RENDER}
@@ -615,7 +661,8 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
         variant="feed"
         size="medium"
         onPress={handleCreatePress}
-        bottomOffset={20}
+        /* Figma: 12pt above the bottom tab bar, 16pt from the right edge */
+        bottomOffset={12}
         rightOffset={16}
       />
 
@@ -696,7 +743,46 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
   );
 };
 
+/** Figma text-icon-primary (rendered) for the "Feed" title */
+const FEED_TITLE_COLOR_LIGHT = "#091B21";
+/** Figma 8025:83772 "no post" illustration */
+const EMPTY_IMAGE_WIDTH = 173;
+const EMPTY_IMAGE_HEIGHT = 152;
+/** Figma: empty block starts 113pt below the tabs on an 812pt screen */
+const EMPTY_TOP_RATIO = 113 / 812;
+
 const styles = StyleSheet.create({
+  /** Figma Title/18px/Bold (overrides title/large 28pt) */
+  headerTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    lineHeight: 24,
+    paddingVertical: 0,
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  /** Figma: illustration → text 16pt */
+  emptyBlock: {
+    width: "100%",
+    alignItems: "center",
+    gap: 16,
+  },
+  /** Figma Body/16px/Medium, text-secondary, centred */
+  emptyTitle: {
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    marginTop: -12,
+  },
   container: {
     flex: 1,
   },

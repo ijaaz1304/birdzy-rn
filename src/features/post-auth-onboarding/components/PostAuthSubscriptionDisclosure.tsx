@@ -30,7 +30,7 @@ export const PostAuthSubscriptionDisclosure: React.FC<Props> = ({
 
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.text, { color: textColor }]}>{disclosure}</Text>
+      <Text allowFontScaling={false} style={[styles.text, { color: textColor }]}>{disclosure}</Text>
     </View>
   );
 };

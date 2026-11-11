@@ -1,9 +1,12 @@
 /**
  * Inline camera permission state on the identify camera screen (not a modal).
- * Figma 8567:1849 — manage camera access / allow access recovery.
+ * Figma 8558:25313 (Allow access) / 8558:25342 → popup 8567:1849 (Go to settings).
+ *
+ * Layout mirrors the Figma "popup": max 335 wide, header (pt20 pb16 px20, gap 8)
+ * + footer (pt16 pb20 px20) with a full-width 24-radius CTA. Width shrinks on
+ * narrow screens; text does not font-scale so line breaks match the design.
  */
 
-import { AppImage } from "@/components/AppImage";
 import React from "react";
 import {
   ActivityIndicator,
@@ -11,18 +14,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTheme } from "../../../hooks/useTheme";
 import { Text } from "../../../atoms";
-import { Images } from "../../../assets";
+import { CameraTakePhotoIllustrationSvg } from "../../../assets";
+import { APP_COLORS } from "../../../config/colors";
 import { FONTS } from "../../../common/typography";
 import { getCameraPermissionUiCopy } from "../../../services/permissions/permissionUiCopy";
 
 export type CameraPermissionInlineVariant = "allowAccess" | "goToSettings";
 
-const PERMISSION_TITLE_COLOR = "#FFFFFF";
-const PERMISSION_DENIED_SUBTITLE_COLOR = "#D1D1D1";
-
-/** Figma Illustration/take photo — 64×64 including shadow */
+/** Figma popup width */
+const CONTENT_MAX_WIDTH = 335;
+/** Figma Illustration/take photo — 64×64 including padding */
 const TAKE_PHOTO_ILLUSTRATION_SIZE = 64;
 
 type CameraPermissionInlineStateProps = {
@@ -34,72 +36,66 @@ type CameraPermissionInlineStateProps = {
 export const CameraPermissionInlineState: React.FC<
   CameraPermissionInlineStateProps
 > = ({ variant, loading = false, onAction }) => {
-  const theme = useTheme();
   const copy = getCameraPermissionUiCopy();
   const isSettings = variant === "goToSettings";
+  const buttonLabel = isSettings
+    ? copy.openSettingsLabel
+    : copy.allowAccessLabel ?? copy.continueLabel;
 
   return (
-    <View style={styles.content}>
-      {isSettings ? (
-        <View style={styles.header}>
-          <View style={styles.iconWrap}>
-            <AppImage
-              source={Images.cameraTakePhotoIllustration}
-              style={styles.heroIcon}
-              resizeMode="contain"
-              preferRNImage
+    <View style={styles.popup}>
+      <View style={styles.header}>
+        {isSettings ? (
+          <>
+            <CameraTakePhotoIllustrationSvg
+              width={TAKE_PHOTO_ILLUSTRATION_SIZE}
+              height={TAKE_PHOTO_ILLUSTRATION_SIZE}
             />
-          </View>
+            <Text allowFontScaling={false} style={styles.title}>
+              {copy.deniedTitle ?? copy.title}
+            </Text>
+          </>
+        ) : null}
 
-          <Text style={styles.title}>
-            {copy.deniedTitle ?? copy.title}
-          </Text>
-
-          <Text style={styles.subtitle}>
-            {copy.deniedSubtitle ?? copy.subtitle}
-          </Text>
-        </View>
-      ) : (
-        <Text style={[styles.subtitle, styles.subtitleAllowAccess]}>
-          {copy.subtitle}
+        <Text allowFontScaling={false} style={styles.body}>
+          {isSettings ? copy.deniedSubtitle ?? copy.subtitle : copy.subtitle}
         </Text>
-      )}
+      </View>
 
-      <TouchableOpacity
-        onPress={onAction}
-        disabled={loading}
-        activeOpacity={0.85}
-        style={[
-          styles.button,
-          isSettings && styles.buttonSettings,
-          {
-            backgroundColor: isSettings
-              ? theme.colors.primaryCTA
-              : theme.colors.primary,
-            borderRadius: theme.radius.xl,
-          },
-        ]}
-      >
-        {loading ? (
-          <ActivityIndicator color={theme.colors.onPrimary} />
-        ) : (
-          <Text variant="body" size="medium" weight="medium" color="surface">
-            {isSettings
-              ? copy.openSettingsLabel
-              : copy.allowAccessLabel ?? copy.continueLabel}
-          </Text>
-        )}
-      </TouchableOpacity>
+      <View style={styles.footer}>
+        <TouchableOpacity
+          onPress={onAction}
+          disabled={loading}
+          activeOpacity={0.85}
+          style={styles.button}
+          accessibilityRole="button"
+          accessibilityLabel={buttonLabel}
+          accessibilityState={{ disabled: loading, busy: loading }}
+        >
+          {loading ? (
+            <ActivityIndicator color={APP_COLORS.surfaceWhite} />
+          ) : (
+            <Text
+              allowFontScaling={false}
+              numberOfLines={1}
+              style={styles.buttonLabel}
+            >
+              {buttonLabel}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  content: {
+  popup: {
     width: "100%",
-    maxWidth: 335,
+    maxWidth: CONTENT_MAX_WIDTH,
     alignSelf: "center",
-    alignItems: "stretch",
+    borderRadius: 16,
+    overflow: "hidden",
   },
   header: {
     alignItems: "center",
@@ -108,50 +104,50 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingHorizontal: 20,
   },
-  iconWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 8,
-  },
-  heroIcon: {
-    width: TAKE_PHOTO_ILLUSTRATION_SIZE,
-    height: TAKE_PHOTO_ILLUSTRATION_SIZE,
-  },
+  /** Title/20px/SemiBold (weight 700) */
   title: {
     fontFamily: FONTS.bold,
     fontSize: 20,
     lineHeight: 28,
-    color: PERMISSION_TITLE_COLOR,
+    letterSpacing: 0,
+    color: APP_COLORS.surfaceWhite,
     textAlign: "center",
-    width: "100%",
+    alignSelf: "stretch",
   },
-  subtitle: {
+  /** Body/16px/Regular */
+  body: {
     fontFamily: FONTS.regular,
     fontSize: 16,
     lineHeight: 24,
     letterSpacing: -0.16,
-    color: PERMISSION_DENIED_SUBTITLE_COLOR,
+    color: APP_COLORS.cameraPermissionTextSecondary,
     textAlign: "center",
-    width: "100%",
+    alignSelf: "stretch",
   },
-  subtitleAllowAccess: {
-    paddingTop: 20,
-    paddingBottom: 16,
+  footer: {
+    alignItems: "center",
+    paddingTop: 16,
+    paddingBottom: 20,
     paddingHorizontal: 20,
   },
   button: {
-    marginHorizontal: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    alignSelf: "stretch",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     minHeight: 44,
+    borderRadius: 24,
+    backgroundColor: APP_COLORS.cameraPermissionCta,
   },
-  buttonSettings: {
-    marginTop: 16,
-    marginBottom: 20,
-    marginHorizontal: 20,
-    width: undefined,
-    alignSelf: "stretch",
+  /** Button/16px */
+  buttonLabel: {
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0,
+    color: APP_COLORS.surfaceWhite,
   },
 });

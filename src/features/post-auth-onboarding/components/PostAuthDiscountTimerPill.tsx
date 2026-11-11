@@ -26,7 +26,7 @@ export const PostAuthDiscountTimerPill: React.FC = () => {
           style={styles.icon}
           resizeMode="contain"
         />
-        <Text style={styles.text}>
+        <Text style={styles.text} allowFontScaling={false} numberOfLines={1}>
           {discountOffer.isActive ? "Discount ends in" : "Discount in"}{" "}
           {formatCountdownSegment(discountOffer.hours)}:
           {formatCountdownSegment(discountOffer.minutes)}:
@@ -45,21 +45,29 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0,
   },
+  /** Figma tab-atom: padding 4/12, centered, no gap between icon and text (216×28) */
   content: {
     flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 4,
-    gap: 6,
   },
   icon: {
     width: 20,
     height: 20,
   },
+  /** Figma Body/14px/Medium, white, 172pt text box */
   text: {
+    minWidth: 172,
     fontFamily: FONTS.medium,
+    fontStyle: "normal",
+    fontWeight: "500",
     fontSize: 14,
     lineHeight: 20,
+    includeFontPadding: false,
+    /** Keep digit widths fixed so the pill doesn't jitter every second */
+    fontVariant: ["tabular-nums"],
     color: APP_COLORS.modalTextOnPrimary,
   },
 });

@@ -31,14 +31,14 @@ export const InfoRow = ({
           : undefined,
       ]}
     >
-      <Text
+      <Text allowFontScaling={false}
         color="textSecondary"
         style={[labelColor ? { color: labelColor } : undefined, labelStyle]}
       >
         {label}
       </Text>
       <View style={styles.valueWrap}>
-        <Text
+        <Text allowFontScaling={false}
           style={[
             valueColor ? { color: valueColor } : undefined,
             valueStyle,

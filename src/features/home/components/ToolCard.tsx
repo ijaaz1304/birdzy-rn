@@ -33,7 +33,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, iconSource, onPress }) => {
         <View style={styles.iconContainer}>
           <AppImage source={iconSource} style={styles.icon} resizeMode="contain" />
         </View>
-        <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
+        <Text allowFontScaling={false} style={[styles.title, { color: theme.colors.textPrimary }]}>
           {title}
         </Text>
       </View>

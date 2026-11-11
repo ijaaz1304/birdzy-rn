@@ -6,7 +6,7 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, ActivityIndicator } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { CATALOGUE_DETAIL, UI_COLORS } from "../../../constants/colorConstants";
 import { Images } from "../../../assets";
@@ -14,7 +14,10 @@ import { CachedRemoteImage } from "@/components/AppImage";
 
 import { Radius } from "../../../design";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+/** Figma 807:256509 — photo inset 20pt from each screen edge */
+const SIDE_MARGIN = 20;
+/** Figma slider — arrow buttons sit 12pt inside the photo edge */
+const ARROW_INSET = 12;
 
 export interface CatalogueDetailCarouselProps {
   images: Array<{ id: string; uri: string | number }>;
@@ -36,6 +39,8 @@ export const CatalogueDetailCarousel: React.FC<
   isIdentificationFlow = false,
   autoScrollInterval = 0,
 }) => {
+  /** Responsive: re-measures on rotation / split-screen / foldables */
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
   /** Per-slide: hide spinner after load or on error (avoid blank white while fetching). */
   const [loadedById, setLoadedById] = useState<Record<string, boolean>>({});
@@ -51,7 +56,7 @@ export const CatalogueDetailCarousel: React.FC<
     widthPercent >= 100
       ? isIdentificationFlow
         ? SCREEN_WIDTH
-        : SCREEN_WIDTH - 20
+        : SCREEN_WIDTH - SIDE_MARGIN * 2
       : Math.round((SCREEN_WIDTH * widthPercent) / 100);
 
   const arrowBg = isDark
@@ -246,6 +251,10 @@ export const CatalogueDetailCarousel: React.FC<
           style={[
             styles.arrowsRow,
             isIdentificationFlow && styles.arrowsRowLower,
+            {
+              paddingHorizontal:
+                Math.max(0, (SCREEN_WIDTH - slideWidth) / 2) + ARROW_INSET,
+            },
           ]}
           pointerEvents="box-none"
         >
@@ -256,7 +265,7 @@ export const CatalogueDetailCarousel: React.FC<
           >
             <MaterialIcons
               name="chevron-left"
-              size={24}
+              size={20}
               color={UI_COLORS.WHITE}
             />
           </TouchableOpacity>
@@ -267,7 +276,7 @@ export const CatalogueDetailCarousel: React.FC<
           >
             <MaterialIcons
               name="chevron-right"
-              size={24}
+              size={20}
               color={UI_COLORS.WHITE}
             />
           </TouchableOpacity>
@@ -337,7 +346,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 12,
   },
   arrowsRowLower: {
     top: 52,
@@ -349,16 +357,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 24,
   },
+  /** Figma pagin: 8pt from the photo bottom, 4pt between dots */
   dots: {
     position: "absolute",
-    bottom: 12,
+    bottom: 8,
     left: 0,
     right: 0,
     width: "100%",
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 6,
+    gap: 4,
   },
   dot: {
     borderRadius: 3,

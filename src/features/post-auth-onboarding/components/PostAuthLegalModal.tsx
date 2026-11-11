@@ -32,7 +32,7 @@ export const PostAuthLegalModal: React.FC<Props> = ({
           <TouchableOpacity onPress={onClose} style={styles.backButton}>
             <Icon name="close" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
-          <Text
+          <Text allowFontScaling={false}
             variant="title"
             size="small"
             weight="semibold"

@@ -335,9 +335,10 @@ export const FEED_COLORS = {
 
   // FAB (Floating Action Button) — Feed & Collection create button (Figma 8035:46238)
   FAB: {
+    /** Figma 8025:83777 Create chip (rendered): surface-brand-1-accent #EDE4EF, button/text-color/brand #785284 */
     LIGHT: {
-      BACKGROUND: APP_COLORS.createButtonBg,
-      TEXT: APP_COLORS.createButtonFg,
+      BACKGROUND: "#EDE4EF",
+      TEXT: "#785284",
     },
     DARK: {
       BACKGROUND: APP_COLORS.createButtonBg,
@@ -370,7 +371,8 @@ export const HOME_COLORS = {
     BG_LIGHT: "#F5F5F5",
     BG_DARK: "#1A1A1A",
     /** 50% OFF and body text – Figma 8598:66213 (dark text on purple gradient) */
-    HEADLINE_LIGHT: "#111111",
+    /** Figma text-icon-primary (light) */
+    HEADLINE_LIGHT: "#091B21",
     HEADLINE_DARK: "#FFFFFF",
     ENDS_LABEL_LIGHT: "#5D5D5D",
     /** Timer box background */

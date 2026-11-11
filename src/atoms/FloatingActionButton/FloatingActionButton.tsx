@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { TouchableOpacity, TouchableOpacityProps, StyleSheet, ViewStyle } from "react-native";
+import { TouchableOpacity, TouchableOpacityProps, StyleSheet, ViewStyle, View } from "react-native";
 import { CreatePlusIcon } from "../../assets";
 import { FONTS } from "../../common/typography";
 import { useTheme } from "../../hooks/useTheme";
@@ -40,6 +40,8 @@ const SIZE_MAP = {
 /** Figma 8035:46238 — Create chip */
 const FEED_CREATE = {
   icon: 24,
+  /** create_plus.svg native size — drawn 1:1 so the stroke stays 1.5pt */
+  plusGlyph: 17.5,
   fontSize: 16,
   lineHeight: 24,
   paddingHorizontal: 16,
@@ -232,11 +234,14 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       {...props}
     >
       {icon === "plus" && isFeedCreate ? (
-        <CreatePlusIcon
-          width={resolvedIconSize}
-          height={resolvedIconSize}
-          color={finalIconColor}
-        />
+        /* Figma plus-sign: 24pt box, 17.5pt glyph (inset 16.67%), 1.5 stroke */
+        <View style={styles.feedPlusBox}>
+          <CreatePlusIcon
+            width={FEED_CREATE.plusGlyph}
+            height={FEED_CREATE.plusGlyph}
+            color={finalIconColor}
+          />
+        </View>
       ) : icon ? (
         <Icon name={icon} size={resolvedIconSize} color={finalIconColor} />
       ) : null}
@@ -265,6 +270,12 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 };
 
 const styles = StyleSheet.create({
+  feedPlusBox: {
+    width: FEED_CREATE.icon,
+    height: FEED_CREATE.icon,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   fab: {
     flexDirection: "row",
     alignItems: "center",

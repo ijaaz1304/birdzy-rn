@@ -48,7 +48,7 @@ function renderTimerDigits(
   const timerText = `${formatCountdownSegment(timeLeftDisplay.hours)} : ${formatCountdownSegment(timeLeftDisplay.minutes)} : ${formatCountdownSegment(timeLeftDisplay.seconds)}`;
 
   return (
-    <Text
+    <Text allowFontScaling={false}
       style={[
         styles.timerBoxText,
         {
@@ -260,6 +260,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
               <View style={styles.headlineSub1}>
                 <View style={[styles.percentOffRow, !isDark && styles.percentOffRowLight]}>
                   <Text
+                    allowFontScaling={false}
                     style={[
                       styles.bigPercent,
                     !isDark && styles.bigPercentLight,
@@ -272,7 +273,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                   >
                     {discountPercent}%
                   </Text>
-                  <Text
+                  <Text allowFontScaling={false}
                     style={[
                       styles.offTextInline,
                       {
@@ -294,7 +295,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                   { marginTop: isDark ? scaleSize(4, scale) : 0 },
                 ]}
               >
-                <Text
+                <Text allowFontScaling={false}
                   style={[
                     styles.onSubscriptionLabel,
                     styles.onSubscriptionFirstLine,
@@ -308,7 +309,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                 >
                   {strings.discount.banner.on}
                 </Text>
-                <Text
+                <Text allowFontScaling={false}
                   style={[
                     styles.onSubscriptionLabel,
                     {
@@ -334,7 +335,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                   },
                 ]}
               >
-                <Text
+                <Text allowFontScaling={false}
                   style={[
                     styles.discountEndsLabel,
                     isDark ? styles.discountEndsLabelDark : styles.discountEndsLabelLight,
@@ -526,8 +527,15 @@ const styles = StyleSheet.create({
   bigPercent: {
     fontFamily: FONTS.bold,
   },
+  /**
+   * Figma Title/32px/Black — Satoshi Black (900), 32/40 (size scales with banner width).
+   * Weight comes from the Satoshi-Black face itself; adding fontWeight would make
+   * Android synthesize extra bold on top of it.
+   */
   bigPercentLight: {
     fontFamily: FONTS.black,
+    fontStyle: "normal",
+    includeFontPadding: false,
   },
   offTextInline: {
     fontFamily: FONTS.bold,

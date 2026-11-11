@@ -156,7 +156,7 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
               />
             </View>
           )}
-          <Text
+          <Text allowFontScaling={false}
             style={[styles.title, styles.cardForeground, { color: colors.textPrimary }]}
             numberOfLines={1}
           >
@@ -191,7 +191,7 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
               </View>
 
               {normalizedPriceSecondaryLine ? (
-                <Text
+                <Text allowFontScaling={false}
                   style={[
                     styles.billingNote,
                     styles.strikethrough,
@@ -204,7 +204,7 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
               ) : null}
 
               {billingNote ? (
-                <Text
+                <Text allowFontScaling={false}
                   style={[styles.billingNote, { color: colors.textTertiary }]}
                   numberOfLines={1}
                   adjustsFontSizeToFit
@@ -216,12 +216,12 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
             </View>
 
             {showTrial ? (
-              <Text
+              <Text allowFontScaling={false}
                 style={[styles.trialLine, { color: colors.textPrimary }]}
                 numberOfLines={1}
               >
-                <Text style={styles.trialBold}>{trialDays} days</Text>
-                <Text style={styles.trialRegular}> free trial</Text>
+                <Text allowFontScaling={false} style={styles.trialBold}>{trialDays} days</Text>
+                <Text allowFontScaling={false} style={styles.trialRegular}> free trial</Text>
               </Text>
             ) : null}
           </View>

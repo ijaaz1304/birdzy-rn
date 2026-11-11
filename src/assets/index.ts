@@ -34,6 +34,8 @@ export {
   IDENTIFICATION_TIP_LIGHT_IMAGE_LIST,
 } from "./identificationTipImages";
 export { default as IdentificationScannerOverlay } from "./identification/scanner.svg";
+/** Figma Illustration/take photo (8567:1851) — transparent, for dark camera permission screens */
+export { default as CameraTakePhotoIllustrationSvg } from "./camera/take_photo_illustration.svg";
 export { default as CatalogueVolumeIcon } from "./catalogue/icons/volume_high.svg";
 export { default as BirdSizeScaleGraphic } from "./collection/details/bird/size_scale.svg";
 export { default as HomeTabIcon } from "./common/bottomTab/home.svg";
@@ -116,6 +118,10 @@ export const Images = {
   onboardingBg3Dark: require("./onboarding/dark/background_3.webp"),
   onboardingBg4Dark: require("./onboarding/dark/background_4.webp"),
   onboardingBg5Dark: require("./onboarding/dark/background_5.webp"),
+  /** Auth onboarding slide (light) — Figma 8230:64231 top clouds, 375×293 @3x */
+  onboardingAuthTop: require("./onboarding/light/auth_top.png"),
+  /** Auth onboarding slide (light) — Figma 8251:5879 bird circle, 335×346 @3x, transparent */
+  onboardingAuthBirds: require("./onboarding/light/auth_birds.png"),
   /** Pre-onboarding / app splash — 1500×3248 */
   onboardingSplash: require("./onboarding/light/splash.webp"),
 

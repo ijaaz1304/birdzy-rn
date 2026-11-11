@@ -139,7 +139,7 @@ function RangeMonthBar({
   const active = new Set(months);
   return (
     <View style={styles.rangeRow}>
-      <Text
+      <Text allowFontScaling={false}
         style={[styles.rangeLabel, { color: textSecondary }]}
         numberOfLines={1}
       >
@@ -154,7 +154,7 @@ function RangeMonthBar({
               { backgroundColor: active.has(index) ? color : "transparent" },
             ]}
           >
-            <Text
+            <Text allowFontScaling={false}
               style={[
                 styles.monthCellLabel,
                 { color: active.has(index) ? "#FFFFFF" : textSecondary },
@@ -254,7 +254,7 @@ export function BirdRangeMapSection({
                     { backgroundColor: RANGE_COLORS[row.key] },
                   ]}
                 />
-                <Text style={[styles.legendText, { color: textSecondary }]}>
+                <Text allowFontScaling={false} style={[styles.legendText, { color: textSecondary }]}>
                   {row.label}
                 </Text>
               </View>
@@ -392,8 +392,8 @@ export function BirdLabeledBlock({
   if (!body?.trim()) return null;
   return (
     <View style={styles.labeledBlock}>
-      <Text style={[styles.blockTitle, { color: textPrimary }]}>{title}</Text>
-      <Text style={[styles.blockBody, { color: textSecondary }]}>{body}</Text>
+      <Text allowFontScaling={false} style={[styles.blockTitle, { color: textPrimary }]}>{title}</Text>
+      <Text allowFontScaling={false} style={[styles.blockBody, { color: textSecondary }]}>{body}</Text>
     </View>
   );
 }
@@ -419,11 +419,11 @@ export function BirdOverviewExtras({
       {/*
       {sizeScale ? (
         <View style={styles.overviewExtraBlock}>
-          <Text style={[styles.blockTitle, { color: textPrimary }]}>
+          <Text allowFontScaling={false} style={[styles.blockTitle, { color: textPrimary }]}>
             {strings.size}
           </Text>
           <View style={styles.sizeTag}>
-            <Text style={[styles.sizeTagLabel, { color: textPrimary }]}>
+            <Text allowFontScaling={false} style={[styles.sizeTagLabel, { color: textPrimary }]}>
               {sizeScale.label}
             </Text>
           </View>
@@ -431,7 +431,7 @@ export function BirdOverviewExtras({
       ) : null}
       {colors.length > 0 ? (
         <View style={styles.overviewExtraBlock}>
-          <Text style={[styles.blockTitle, { color: textPrimary }]}>
+          <Text allowFontScaling={false} style={[styles.blockTitle, { color: textPrimary }]}>
             {strings.colors}
           </Text>
           <View style={styles.colorChips}>
@@ -458,7 +458,7 @@ export function BirdOverviewExtras({
                     },
                   ]}
                 />
-                <Text style={[styles.colorChipLabel, { color: textPrimary }]}>
+                <Text allowFontScaling={false} style={[styles.colorChipLabel, { color: textPrimary }]}>
                   {chip.label}
                 </Text>
               </View>
@@ -491,10 +491,10 @@ function BirdSizeScale({
   const strings = COLLECTION_STRINGS.birdDetails.characteristics;
   return (
     <View style={styles.sizeScaleBlock}>
-      <Text style={[styles.blockTitle, { color: textPrimary }]}>
+      <Text allowFontScaling={false} style={[styles.blockTitle, { color: textPrimary }]}>
         {strings.size}
       </Text>
-      <Text style={[styles.sizeScaleLabel, { color: textSecondary }]}>
+      <Text allowFontScaling={false} style={[styles.sizeScaleLabel, { color: textSecondary }]}>
         {sizeScale.label}
       </Text>
       <View style={styles.sizeDotsRow}>
@@ -901,14 +901,14 @@ export function BirdGeographicRangeMap({
         ) : (
           <>
             <MaterialIcons name="map" size={40} color={textSecondary} />
-            <Text style={[styles.geoMapHint, { color: textSecondary }]}>
+            <Text allowFontScaling={false} style={[styles.geoMapHint, { color: textSecondary }]}>
               {rangeHint || strings.placeholder}
             </Text>
           </>
         )}
       </View>
       {rangeHint && showInteractiveMap ? (
-        <Text style={[styles.geoRangeSummary, { color: textSecondary }]}>
+        <Text allowFontScaling={false} style={[styles.geoRangeSummary, { color: textSecondary }]}>
           {rangeHint}
         </Text>
       ) : null}
@@ -916,7 +916,7 @@ export function BirdGeographicRangeMap({
         {legend.map((item) => (
           <View key={item.label} style={styles.legendItem}>
             <View style={[styles.legendSwatch, { backgroundColor: item.color }]} />
-            <Text style={[styles.legendText, { color: textSecondary }]}>
+            <Text allowFontScaling={false} style={[styles.legendText, { color: textSecondary }]}>
               {item.label}
             </Text>
           </View>
@@ -950,10 +950,10 @@ export function BirdRecordSoundCta({
         />
       </View>
       <View style={styles.recordCtaCopy}>
-        <Text style={[styles.recordCtaTitle, { color: textPrimary }]}>
+        <Text allowFontScaling={false} style={[styles.recordCtaTitle, { color: textPrimary }]}>
           {strings.recordCta}
         </Text>
-        <Text style={[styles.recordCtaHint, { color: textPrimary }]}>
+        <Text allowFontScaling={false} style={[styles.recordCtaHint, { color: textPrimary }]}>
           {strings.recordHint}
         </Text>
       </View>

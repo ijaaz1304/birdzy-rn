@@ -140,7 +140,12 @@ export const CardImageCarousel: React.FC<CardImageCarouselProps> = ({
     [borderRadius]
   );
 
-  useEffect(() => setErrorIndices(new Set()), [rawUrls]);
+  /** Stable key for the fallback image (the object is recreated each render upstream) */
+  const fallbackKey =
+    typeof fallbackImage === "number"
+      ? String(fallbackImage)
+      : (fallbackImage as { uri?: string } | undefined)?.uri ?? "";
+  useEffect(() => setErrorIndices(new Set()), [rawUrls, fallbackKey]);
 
   // Single image or fallback only
   if (displayUris.length === 0 && !showFallbackOnly) {
@@ -169,9 +174,22 @@ export const CardImageCarousel: React.FC<CardImageCarouselProps> = ({
     }
     const uri = (fallbackImage as { uri: string }).uri;
     if (uri.startsWith("http://") || uri.startsWith("https://")) {
+      /*
+        Single remote `image` (e.g. Wishlist cards): on load failure (404, dead bucket,
+        offline) show the card placeholder instead of leaving an empty white box.
+      */
+      const fallbackFailed = errorIndices.has(FALLBACK_IMAGE_INDEX);
       return (
         <View style={[styles.fill, style]} onLayout={handleLayout}>
-          {renderRemoteImage(uri, () => {})}
+          {fallbackFailed ? (
+            <AppImage
+              source={Images.card_image_placeholder}
+              style={[styles.image, { borderRadius }]}
+              resizeMode="cover"
+            />
+          ) : (
+            renderRemoteImage(uri, () => handleImageError(FALLBACK_IMAGE_INDEX))
+          )}
         </View>
       );
     }
@@ -249,6 +267,9 @@ export const CardImageCarousel: React.FC<CardImageCarouselProps> = ({
     </View>
   );
 };
+
+/** errorIndices key for the single `fallbackImage` (not part of imageUrls) */
+const FALLBACK_IMAGE_INDEX = -1;
 
 const styles = StyleSheet.create({
   fill: {

@@ -1,7 +1,13 @@
 import { AppImage, AppImageBackground } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Images } from "../../assets";
@@ -32,6 +38,13 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
   const isDark = useIsDark();
   const strings = useStrings();
   const styles = createStyles(theme);
+  /**
+   * Responsive: below ~360pt (iPhone SE / small Android) the label + three
+   * timer pills don't fit on one row at full size, so use a compact layout
+   * (12pt label on up to 2 lines, slimmer pills) instead of truncating.
+   */
+  const { width: windowWidth } = useWindowDimensions();
+  const isCompact = windowWidth < COMPACT_BREAKPOINT;
 
   const countdown = HOME_COLORS.COUNTDOWN_BANNER;
   const wrapperBg = isDark ? countdown.BG_DARK : countdown.BG_LIGHT;
@@ -58,6 +71,7 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
     <View
       style={[
         styles.timeBoxVertical,
+        isCompact && styles.timeBoxCompact,
         {
           borderColor:
             highlighted && isDark
@@ -103,7 +117,7 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
           ]}
         />
       )}
-      <Text style={styles.timeValue}>
+      <Text allowFontScaling={false} style={styles.timeValue}>
         {`${value}${unit}`}
       </Text>
     </View>
@@ -153,16 +167,24 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
             ) : null}
           </View>
 
-          <Text style={styles.label} numberOfLines={1}>
+          {/*
+            Narrow phones: wrap to 2 lines at full size instead of shrinking
+            (Android's adjustsFontSizeToFit ignores minimumFontScale and makes it tiny).
+          */}
+          <Text
+            allowFontScaling={false}
+            style={[styles.label, isCompact && styles.labelCompact]}
+            numberOfLines={2}
+          >
             {isDiscountActive
               ? strings.discount.countdownBanner.label.trim()
               : strings.discount.countdownBanner.nextDiscountLabel.trim()}
           </Text>
-          <View style={styles.timerRow}>
+          <View style={[styles.timerRow, isCompact && styles.timerRowCompact]}>
             {renderTimeBox(hours, "hr")}
-            <Text style={styles.colon}>:</Text>
+            <Text allowFontScaling={false} style={styles.colon}>:</Text>
             {renderTimeBox(minutes, "m")}
-            <Text style={styles.colon}>:</Text>
+            <Text allowFontScaling={false} style={styles.colon}>:</Text>
             {renderTimeBox(seconds, "s", true)}
           </View>
         </View>
@@ -239,6 +261,9 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
 };
 
 export default DiscountCountdownBanner;
+
+/** Window width (pt) below which the sticky toast switches to its compact layout */
+const COMPACT_BREAKPOINT = 360;
 
 const createStyles = (theme: any) =>
   StyleSheet.create({
@@ -382,6 +407,18 @@ const createStyles = (theme: any) =>
       gap: 4,
       marginLeft: "auto",
       flexShrink: 0,
+    },
+    /** Compact (< COMPACT_BREAKPOINT): 2 lines × 16 + padding stays within maxHeight 48 */
+    labelCompact: {
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    timerRowCompact: {
+      gap: 2,
+    },
+    timeBoxCompact: {
+      minWidth: 32,
+      paddingHorizontal: 4,
     },
     timeBoxVertical: {
       minWidth: 36,

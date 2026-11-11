@@ -268,7 +268,8 @@ type SheetConfig = {
 /** Sheet heights increased by 15% (e.g. 40% -> 46%), capped at 100%. */
 const SHEET_CONFIG: Record<AppSheetType, SheetConfig> = {
   communityRules: {
-    height: "100%",
+    /** Figma 8025:78373 — 684pt of an 812pt screen (sheet starts just below the Feed tabs) */
+    height: "84%",
     use50PercentBackground: false,
     enableBackdropDismiss: false,
     showDefaultHeader: false,
@@ -443,6 +444,7 @@ function usesPermissionSheetBackground(sheetType: AppSheetType): boolean {
 /** Pop-up sheets with full-bleed bg: safe-area bottom inset lives in content, not sheet chrome. */
 function usesPopupSheetSafeAreaInContent(sheetType: AppSheetType): boolean {
   return (
+    sheetType === "communityRules" ||
     sheetType === "limitReached" ||
     sheetType === "identificationMilestone" ||
     sheetType === "rateUs" ||
@@ -806,7 +808,8 @@ export const AppSheet: React.FC<AppSheetProps> = ({
       type === "report" ||
       type === "addToCollection" ||
       type === "addToAnotherCollection" ||
-      type === "moveToCollection"
+      type === "moveToCollection" ||
+      type === "communityRules"
     )
       return configBasedHeight;
     if (measuredContentHeight <= 0) return configBasedHeight;
@@ -961,18 +964,33 @@ export const AppSheet: React.FC<AppSheetProps> = ({
         <View
           style={[
             styles.communityRulesNavBar,
-            {
-              backgroundColor: theme.colors.surfaceSecondary,
-              paddingTop: Math.max(insets.top, 8),
-            },
+            { backgroundColor: theme.colors.surfacePrimary },
           ]}
         >
+          {/* Figma bottom sheet navigation bar: title centred, 24pt close button on the right */}
           <View style={styles.communityRulesNavRow}>
+            <View style={styles.communityRulesCloseSpacer} />
+            <Text
+              allowFontScaling={false}
+              numberOfLines={1}
+              variant="body"
+              size="medium"
+              weight="medium"
+              style={[
+                styles.communityRulesNavTitle,
+                { color: theme.colors.textPrimary },
+              ]}
+            >
+              {communityRulesConfig.communityRules.title}
+            </Text>
             <TouchableOpacity
               onPress={closeSheet}
               style={[
                 styles.communityRulesCloseBtn,
-                { backgroundColor: theme.colors.surfaceSecondary },
+                {
+                  backgroundColor: theme.colors.surfaceSecondary,
+                  borderColor: theme.colors.border0 ?? theme.colors.border,
+                },
               ]}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               accessibilityRole="button"
@@ -984,18 +1002,6 @@ export const AppSheet: React.FC<AppSheetProps> = ({
                 style={styles.communityRulesCloseIcon}
               />
             </TouchableOpacity>
-            <Text
-              variant="body"
-              size="medium"
-              weight="medium"
-              style={[
-                styles.communityRulesNavTitle,
-                { color: theme.colors.textPrimary },
-              ]}
-            >
-              {communityRulesConfig.communityRules.title}
-            </Text>
-            <View style={styles.communityRulesCloseSpacer} />
           </View>
         </View>
       ) : !hideStandaloneCloseRow && !effectiveConfig.showDefaultHeader ? (
@@ -2210,6 +2216,7 @@ function CommunityRulesContent({
           <View style={styles.updatedRow}>
             <Icon name="clock" size={20} color={theme.colors.textSecondary} />
             <Text
+              allowFontScaling={false}
               variant="body"
               size="small"
               color="textSecondary"
@@ -2219,16 +2226,17 @@ function CommunityRulesContent({
             </Text>
           </View>
           <Text
+            allowFontScaling={false}
             variant="body"
             size="small"
-            color="textSecondary"
-            style={styles.welcomeIntro}
+            style={[styles.welcomeIntro, { color: theme.colors.textPrimary }]}
           >
             {communityRules.intro}
           </Text>
           {communityRules.rules.map((rule, i) => (
             <View key={i} style={styles.communityRuleBlock}>
               <Text
+                allowFontScaling={false}
                 variant="body"
                 size="medium"
                 weight="medium"
@@ -2241,10 +2249,14 @@ function CommunityRulesContent({
                 {i + 1}. {rule.title}
               </Text>
               <Text
+                allowFontScaling={false}
                 variant="body"
                 size="small"
-                color="textSecondary"
-                style={[commonFeedStyles.ruleText, styles.communityRuleText]}
+                style={[
+                  commonFeedStyles.ruleText,
+                  styles.communityRuleText,
+                  { color: theme.colors.textPrimary },
+                ]}
               >
                 {rule.text}
               </Text>
@@ -2252,10 +2264,14 @@ function CommunityRulesContent({
           ))}
           {communityRules.footerNote ? (
             <Text
+              allowFontScaling={false}
               variant="body"
               size="small"
-              color="textSecondary"
-              style={[styles.welcomeIntro, styles.communityRulesFooterNote]}
+              style={[
+                styles.welcomeIntro,
+                styles.communityRulesFooterNote,
+                { color: theme.colors.textPrimary },
+              ]}
             >
               {communityRules.footerNote}
             </Text>
@@ -2277,6 +2293,7 @@ function CommunityRulesContent({
             onClose();
           }}
           fullWidth
+          allowFontScaling={false}
           style={[
             styles.communityRulesOkayButton,
             { backgroundColor: theme.colors.primaryCTA },
@@ -3809,7 +3826,9 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "stretch",
   },
+  /** Figma: 72pt bar — 8 top, 12 bottom, 20 sides */
   communityRulesNavBar: {
+    paddingTop: 8,
     paddingBottom: 12,
     paddingHorizontal: spacing[5],
   },
@@ -3818,21 +3837,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     minHeight: 44,
   },
+  /** Figma Button-Icon: 24pt circle, surface-secondary + 1pt border-0, 16pt icon */
   communityRulesCloseBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: -4,
-  },
-  communityRulesCloseIcon: {
     width: 24,
     height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
+  communityRulesCloseIcon: {
+    width: 16,
+    height: 16,
+  },
+  /** Balances the close button so the title stays centred */
   communityRulesCloseSpacer: {
-    width: 40,
-    height: 40,
+    width: 24,
+    height: 24,
   },
   communityRulesNavTitle: {
     flex: 1,
@@ -3853,9 +3874,10 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
     gap: 8,
   },
+  /** Content area already insets 20pt — no extra side padding, so "Okay" spans 20pt→20pt like Figma */
   communityRulesFooter: {
     paddingTop: 12,
-    paddingHorizontal: spacing[5],
+    paddingHorizontal: 0,
     borderTopWidth: 0,
   },
   communityRulesOkayButton: {
@@ -3864,7 +3886,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: spacing[4],
   },
+  /** Figma Button/16px: Medium 16/24 */
   communityRulesOkayButtonText: {
+    fontFamily: FONTS.medium,
     fontSize: 16,
     lineHeight: 24,
   },

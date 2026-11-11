@@ -241,7 +241,7 @@ export const birdsAppConfig: AppConfig = {
       {
         title: "Discover thousands of birds like never before",
         subtitle:
-          "Scan with AI, explore a vast bird database, and connect with a nature-loving community.",
+          "Scan with AI, explore a vast birdabase, and connect with a nature-loving community,",
         imageKey: "auth_scans",
       },
       {
@@ -255,23 +255,23 @@ export const birdsAppConfig: AppConfig = {
         subtitle:
           "Create personalized collections and organize your birds just the way you prefer.",
         imageKey: "auth_identity",
-        stats: {
-          label: "Number of species",
-          value: "10,000+",
-          subtitle: "species",
-        },
-        tabs: ["Popular", "Raptors", "Songbirds", "Waterfowl"],
+        // stats: {
+        //   label: "Number of species",
+        //   value: "10,000+",
+        //   subtitle: "species",
+        // },
+        // tabs: ["Popular", "Raptors", "Songbirds", "Waterfowl"],
       },
       {
-        title: "Identify birds by sound",
+        title: "Identify birds by sound.",
         subtitle:
           "Record or upload bird sounds to identify species by their songs and calls, even when they're hidden from view.",
         imageKey: "auth_scans",
       },
       {
-        title: "Keep track of your bird journey",
+        title: "Keep track of\nyour bird journey",
         subtitle:
-          "Sign up and log in to ensure your bird discoveries are never lost.",
+          "Sign up and log in to ensure your bird discoveries are never lost",
         imageKey: "auth_mins",
       },
     ],
