@@ -44,6 +44,14 @@ The Mapbox public token was configured locally. Device rendering, live backend c
 - Evidence/status: source or historical reference reviewed; current device/release status to confirm.
 - Next action: reproduce or reconcile the relevant source/contract, record a decision, and link the verification result.
 
+## 2026-11-12 — step-by-step static test body still active
+
+`archetypeService.stepByStep` forces a Malaysia test payload and ignores wizard/catalogue answers. Needed so API testing is not stuck on empty `lat/lng` 0 or GPS waits, but it is not production behavior. Owner must remove `STEP_BY_STEP_TEST_REQUEST` and restore `resolveBirdDiscoveryLocation` in `runStepByStepAnalysis.ts` once backend search with real answers is confirmed.
+
+- Owner: not yet assigned.
+- Evidence/status: restored from an earlier uncommitted chat change that had been lost from the working tree.
+- Next action: confirm live results with the test body, then remove the override and re-verify with real wizard location/date/size.
+
 ## Shared open decisions
 
 - Identify the primary and backup owner for product, mobile, backend, QA/release, billing, Firebase and design assets.

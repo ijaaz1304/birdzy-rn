@@ -712,7 +712,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
           <NavBackIcon color={colors.textPrimary} />
         </TouchableOpacity>
         {fromSound ? (
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerCenterFlex} />
         ) : (
           <Text
             variant="title"
@@ -1046,6 +1046,10 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 44,
+  },
+  /** Pushes sound-mode ⋯ menu to the top-right (fixed-width spacer left it next to back). */
+  headerCenterFlex: {
+    flex: 1,
   },
   headerTitle: {
     flex: 1,

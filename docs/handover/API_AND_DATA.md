@@ -49,7 +49,7 @@ These are path declarations found in source, intended as navigation aids for a d
 - `/core/archetypes/identified/add` — [src/constants/api.ts](../../src/constants/api.ts)
 - `/core/archetypes/specimens-of-the-day` — [src/constants/api.ts](../../src/constants/api.ts)
 - `/core/archetypes/stats` — [src/constants/api.ts](../../src/constants/api.ts)
-- `/core/archetypes/step-by-step` — [src/constants/api.ts](../../src/constants/api.ts)
+- `/core/archetypes/step-by-step` — [src/constants/api.ts](../../src/constants/api.ts). **Temporary (testing):** [src/services/archetype/archetype.service.ts](../../src/services/archetype/archetype.service.ts) currently ignores the caller body and always posts `STEP_BY_STEP_TEST_REQUEST` (`location` 3.7/101.7, `seenDate` `2026-06-26T10:00:00Z`, `birdSize` `["Small","Medium-Small"]`). Affects wizard DiagnosisLoading, Near You catalogue, and collection preview. Remove before shipping real wizard answers.
 - `/core/archetypes/wishlist/add` — [src/constants/api.ts](../../src/constants/api.ts)
 - `/core/archetypes/wishlist/remove` — [src/constants/api.ts](../../src/constants/api.ts)
 - `/core/chat` — [src/constants/api.ts](../../src/constants/api.ts)

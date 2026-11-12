@@ -1,5 +1,12 @@
 # Birdzy — handover change history
 
+## 2026-11-12 — Sound matches header + step-by-step test payload
+
+- Sound Possible Matches header: the ⋯ menu used a fixed-width middle spacer, so it sat next to back instead of the top-right. Middle slot is now `flex: 1` (`OtherPossibleMatchesScreen`).
+- Step-by-step kept loading when live wizard location/size produced empty or stalled searches. The temporary shared test body from an earlier uncommitted chat was missing from `archetype.service.ts`. Restored `STEP_BY_STEP_TEST_REQUEST` (`lat` 3.7 / `lng` 101.7, `seenDate` 2026-06-26, `birdSize` `["Small","Medium-Small"]`) for every `stepByStep` call. Wizard loading path skips GPS resolution while that override is active so DiagnosisLoading cannot hang on location.
+- Docs: API_AND_DATA + KNOWN_GAPS note the temporary override must be removed before release.
+- Validation: source review of prior chat + current call sites. No device re-run of step-by-step or sound matches in this change; Metro was already running on a connected Android device.
+
 ## 2026-11-02 — establish the handover documentation baseline
 
 - Added app-specific product, end-to-end flow, development, API/data, environment, QA/operations and release guides with source references.

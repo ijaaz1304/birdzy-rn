@@ -30,6 +30,19 @@ import { useAppLogsStore } from "../../features/app-logs/app-logs.store";
 import { API_ENDPOINTS } from "../../constants/api";
 import { BIRD_ARCHETYPE_FILTER_DEFAULTS } from "../../constants/birdFilterDefaults";
 
+/**
+ * Temporary testing payload for every step-by-step search (wizard, Near You,
+ * collection preview). Wizard answers are ignored until this is removed.
+ */
+const STEP_BY_STEP_TEST_REQUEST: BirdStepByStepRequest = {
+  location: {
+    lat: 3.7,
+    lng: 101.7,
+  },
+  seenDate: "2026-06-26T10:00:00Z",
+  birdSize: ["Small", "Medium-Small"],
+};
+
 const wishlistLog = (
   level: "info" | "warn" | "error",
   message: string,
@@ -386,7 +399,7 @@ class ArchetypeService {
    * Nearby birds by location and date (POST /core/archetypes/step-by-step).
    */
   async stepByStep(
-    body: BirdStepByStepRequest,
+    _body: BirdStepByStepRequest,
     pagination?: { pageNo?: number; pageSize?: number }
   ): Promise<{
     data: MushroomArchetypeListItem[];
@@ -397,7 +410,10 @@ class ArchetypeService {
     };
   }> {
     try {
-      const response = await coreApi.stepByStep(body, pagination);
+      const response = await coreApi.stepByStep(
+        STEP_BY_STEP_TEST_REQUEST,
+        pagination
+      );
       if (response.error) {
         throw new ApiException(
           response.reason || "Failed to fetch step-by-step birds"
