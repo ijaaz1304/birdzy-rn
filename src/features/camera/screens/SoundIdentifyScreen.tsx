@@ -6,6 +6,7 @@ import { AppImage } from "@/components/AppImage";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   Animated,
@@ -86,7 +87,9 @@ export const SoundIdentifyScreen: React.FC = () => {
         columnCount: spectrogramColumns.length,
         uri,
       });
-      useSoundRecordingSpectrogramStore.getState().setColumns(spectrogramColumns);
+      useSoundRecordingSpectrogramStore
+        .getState()
+        .setColumns(spectrogramColumns);
       setCropSession({
         audioUri: uri,
         durationSec: Math.max(1, Math.round(durationSec)),
@@ -237,7 +240,10 @@ export const SoundIdentifyScreen: React.FC = () => {
 
   const locationCard = !locationOn ? (
     <View
-      style={[styles.locationCard, { backgroundColor: colors.surfaceSecondary }]}
+      style={[
+        styles.locationCard,
+        { backgroundColor: colors.surfaceSecondary },
+      ]}
     >
       <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
         {copy.enableLocation}
@@ -251,7 +257,10 @@ export const SoundIdentifyScreen: React.FC = () => {
     </View>
   ) : (
     <TouchableOpacity
-      style={[styles.locationCard, { backgroundColor: colors.surfaceSecondary }]}
+      style={[
+        styles.locationCard,
+        { backgroundColor: colors.surfaceSecondary },
+      ]}
       onPress={() => openCustomLocationSheet()}
       activeOpacity={0.85}
     >
@@ -278,7 +287,11 @@ export const SoundIdentifyScreen: React.FC = () => {
             <View style={styles.headerBtn} />
           </View>
 
-          <View style={styles.entryBody}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.entryBody}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.entryMiddle}>
               <AppImage
                 source={Images.soundIdentifyHero}
@@ -286,11 +299,16 @@ export const SoundIdentifyScreen: React.FC = () => {
                 resizeMode="contain"
               />
               <View style={styles.entryCopy}>
-                <Text style={[styles.entryTitle, { color: colors.textPrimary }]}>
+                <Text
+                  style={[styles.entryTitle, { color: colors.textPrimary }]}
+                >
                   {copy.title}
                 </Text>
                 <Text
-                  style={[styles.entrySubtitle, { color: colors.textSecondary }]}
+                  style={[
+                    styles.entrySubtitle,
+                    { color: colors.textSecondary },
+                  ]}
                 >
                   {copy.subtitle}
                 </Text>
@@ -317,7 +335,7 @@ export const SoundIdentifyScreen: React.FC = () => {
                 />
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
         </SafeAreaView>
 
         <MicrophonePermissionPopup
@@ -362,7 +380,11 @@ export const SoundIdentifyScreen: React.FC = () => {
           <View style={styles.headerBtn} />
         </View>
 
-        <View style={styles.body}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.body}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.recordingTop}>
             <View style={styles.recordingHeader}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>
@@ -405,7 +427,7 @@ export const SoundIdentifyScreen: React.FC = () => {
             onPause={() => void recording.pauseRecording()}
             onResume={() => void recording.resumeRecording()}
           />
-        </View>
+        </ScrollView>
       </SafeAreaView>
 
       {recording.state === "processing" ? (
@@ -444,13 +466,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   entryBody: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     paddingHorizontal: 20,
     justifyContent: "space-between",
     paddingBottom: 12,
   },
   entryMiddle: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     justifyContent: "center",
     alignItems: "center",
     gap: 24,
@@ -500,7 +524,8 @@ const styles = StyleSheet.create({
     height: 72,
   },
   body: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     paddingHorizontal: 20,
     paddingTop: 16,
     justifyContent: "space-between",
@@ -546,6 +571,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.16,
   },
   metaRow: {
+    flexWrap: "wrap",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

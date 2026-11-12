@@ -2,9 +2,23 @@
  * Bird details scroll sections.
  */
 
-import { AppImage, AppImageBackground, CachedRemoteImage } from "@/components/AppImage";
+import {
+  AppImage,
+  AppImageBackground,
+  CachedRemoteImage,
+} from "@/components/AppImage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Linking, StyleProp, ViewStyle, AppState } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Linking,
+  StyleProp,
+  ViewStyle,
+  AppState,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -86,7 +100,7 @@ function SectionDividerHeading({
       <View
         style={[styles.sectionDividerLine, { backgroundColor: dividerColor }]}
       />
-      <Text allowFontScaling={false} style={styles.sectionDividerLabel}>{title}</Text>
+      <Text style={styles.sectionDividerLabel}>{title}</Text>
       <View
         style={[styles.sectionDividerLine, { backgroundColor: dividerColor }]}
       />
@@ -119,7 +133,7 @@ function SectionTopicHeading({
   }
 
   return (
-    <Text allowFontScaling={false} style={[styles.sectionTitlePlain, { color: textPrimary }, style]}>
+    <Text style={[styles.sectionTitlePlain, { color: textPrimary }, style]}>
       {title}
     </Text>
   );
@@ -189,7 +203,7 @@ function TaxonomyRows({
   const hasMore = rows.length > 3;
 
   const heading = (
-    <Text allowFontScaling={false}
+    <Text
       style={[
         styles.sectionTitlePlain,
         { color: textPrimary },
@@ -258,7 +272,7 @@ function LocationLockedPrompt({
               style={styles.locationLockedIcon}
               resizeMode="contain"
             />
-            <Text allowFontScaling={false}
+            <Text
               style={[styles.locationLockedMessage, { color: textPrimary }]}
             >
               Enable location to see findings
@@ -269,7 +283,7 @@ function LocationLockedPrompt({
             style={styles.locationLockedButton}
             activeOpacity={0.85}
           >
-            <Text allowFontScaling={false} style={styles.locationLockedButtonText}>Enable Location</Text>
+            <Text style={styles.locationLockedButtonText}>Enable Location</Text>
           </TouchableOpacity>
         </View>
       </AppImageBackground>
@@ -445,21 +459,24 @@ function useCustomLocationSectionFlow(
     setShowChangeLocationSheet(false);
   }, []);
 
-  const applyCustomLocation = useCallback((location: IdentificationLocation) => {
-    const lat = Number(location.latitude);
-    const lng = Number(location.longitude);
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      setLocalCoords({ lat, lng });
-    }
-    const address = location.address?.trim();
-    if (address) {
-      setAppliedCustomLocationAddress(address);
-    }
-    setHasCustomLocationOverride(true);
-    setShowChangeLocationSheet(false);
-    setShowLocationPopup(false);
-    setShowManagePopup(false);
-  }, []);
+  const applyCustomLocation = useCallback(
+    (location: IdentificationLocation) => {
+      const lat = Number(location.latitude);
+      const lng = Number(location.longitude);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        setLocalCoords({ lat, lng });
+      }
+      const address = location.address?.trim();
+      if (address) {
+        setAppliedCustomLocationAddress(address);
+      }
+      setHasCustomLocationOverride(true);
+      setShowChangeLocationSheet(false);
+      setShowLocationPopup(false);
+      setShowManagePopup(false);
+    },
+    []
+  );
 
   const handleAllowLocation = useCallback(async () => {
     if (locationLoading) return;
@@ -566,17 +583,17 @@ function CustomLocationSection({
   return (
     <View style={styles.locationBlock}>
       {!hasSpecimenGps && locationLabel ? (
-        <Text allowFontScaling={false} style={[styles.locationText, { color: textSecondary }]}>
+        <Text style={[styles.locationText, { color: textSecondary }]}>
           {locationLabel}
         </Text>
       ) : null}
-      <Text allowFontScaling={false} style={[styles.sectionTitlePlain, { color: textPrimary }]}>
+      <Text style={[styles.sectionTitlePlain, { color: textPrimary }]}>
         {sectionTitle}
       </Text>
       {countryMapLoading || showMapLoading ? (
         <View style={styles.mapLoading}>
           <MaterialIcons name="location-on" size={40} color={textSecondary} />
-          <Text allowFontScaling={false} style={{ color: textSecondary, marginTop: 8 }}>
+          <Text style={{ color: textSecondary, marginTop: 8 }}>
             Loading location…
           </Text>
         </View>
@@ -689,26 +706,22 @@ function SimilarSpeciesCards({
               activeOpacity={0.9}
             >
               <View style={styles.similarCardBody}>
-                <Text allowFontScaling={false}
-                  style={[styles.similarCardName, { color: textPrimary }]}
-                  numberOfLines={1}
-                >
+                <Text style={[styles.similarCardName, { color: textPrimary }]}>
                   {getDisplayName(item) || item.scientificName}
                 </Text>
                 {score ? (
-                  <Text allowFontScaling={false}
+                  <Text
                     style={[styles.similarCardScore, { color: textSecondary }]}
                   >
                     {score} Accuracy
                   </Text>
                 ) : null}
                 {item.scientificName ? (
-                  <Text allowFontScaling={false}
+                  <Text
                     style={[
                       styles.similarCardScientific,
                       { color: textSecondary },
                     ]}
-                    numberOfLines={1}
                   >
                     {item.scientificName}
                   </Text>
@@ -755,7 +768,10 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
   surfaceSecondary,
 }) => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<NativeStackNavigationProp<{ BirdSounds: BirdSoundsScreenParams }>>();
+  const navigation =
+    useNavigation<
+      NativeStackNavigationProp<{ BirdSounds: BirdSoundsScreenParams }>
+    >();
   const mushroom = useMemo(
     () =>
       normalizeMushroomDetail(
@@ -775,12 +791,12 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
     createdAt?: string;
     updatedAt?: string;
   };
-  const hasSounds = soundUrls.length > 0 || (userCapturedSounds?.length ?? 0) > 0;
-  const totalSoundCount =
-    buildBirdSoundListItems({
-      soundUrls,
-      userCapturedSounds,
-    }).length;
+  const hasSounds =
+    soundUrls.length > 0 || (userCapturedSounds?.length ?? 0) > 0;
+  const totalSoundCount = buildBirdSoundListItems({
+    soundUrls,
+    userCapturedSounds,
+  }).length;
 
   const openBirdSounds = useCallback(() => {
     navigation.navigate("BirdSounds", {
@@ -823,55 +839,55 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
   return (
     <View style={styles.root}>
       <View
-          {...registerLayout("sounds")}
-          style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-        >
-          <View style={styles.soundsHeader}>
-            <Text allowFontScaling={false}
-              style={[
-                styles.sectionTitlePlain,
-                styles.sectionTitlePlainCompact,
-                { color: textPrimary },
-              ]}
+        {...registerLayout("sounds")}
+        style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+      >
+        <View style={styles.soundsHeader}>
+          <Text
+            style={[
+              styles.sectionTitlePlain,
+              styles.sectionTitlePlainCompact,
+              { color: textPrimary },
+            ]}
+          >
+            {hasSounds
+              ? `${birdStrings.sections.sounds} (${totalSoundCount})`
+              : birdStrings.sections.sounds}
+          </Text>
+          {hasSounds && totalSoundCount > BIRD_SOUND_PREVIEW_COUNT ? (
+            <TouchableOpacity
+              onPress={openBirdSounds}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              {hasSounds
-                ? `${birdStrings.sections.sounds} (${totalSoundCount})`
-                : birdStrings.sections.sounds}
-            </Text>
-            {hasSounds && totalSoundCount > BIRD_SOUND_PREVIEW_COUNT ? (
-              <TouchableOpacity
-                onPress={openBirdSounds}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text allowFontScaling={false} style={[styles.soundsViewAll, { color: textPrimary }]}>
-                  {birdStrings.sounds.viewAll}
-                </Text>
-              </TouchableOpacity>
-            ) : null}
-          </View>
-          {hasSounds ? (
-            <BirdSoundsSection
-              soundUrls={soundUrls}
-              userCapturedSounds={userCapturedSounds}
-              customLocation={mushroomData.customLocation}
-              createdAt={specimenTimestamps.createdAt}
-              updatedAt={specimenTimestamps.updatedAt}
-              textPrimary={textPrimary}
-              textSecondary={textSecondary}
-              surfaceSecondary={surfaceSecondary}
-            />
+              <Text style={[styles.soundsViewAll, { color: textPrimary }]}>
+                {birdStrings.sounds.viewAll}
+              </Text>
+            </TouchableOpacity>
           ) : null}
-          <BirdRecordSoundCtaNav
+        </View>
+        {hasSounds ? (
+          <BirdSoundsSection
+            soundUrls={soundUrls}
+            userCapturedSounds={userCapturedSounds}
+            customLocation={mushroomData.customLocation}
+            createdAt={specimenTimestamps.createdAt}
+            updatedAt={specimenTimestamps.updatedAt}
             textPrimary={textPrimary}
+            textSecondary={textSecondary}
             surfaceSecondary={surfaceSecondary}
           />
-        </View>
+        ) : null}
+        <BirdRecordSoundCtaNav
+          textPrimary={textPrimary}
+          surfaceSecondary={surfaceSecondary}
+        />
+      </View>
 
       <View
         {...registerLayout("overview")}
         style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
       >
-        <Text allowFontScaling={false} style={[styles.sectionTitlePlain, { color: textPrimary }]}>
+        <Text style={[styles.sectionTitlePlain, { color: textPrimary }]}>
           Overview
         </Text>
         {/* Figma 8609:33835 — surface-brand-1-accent card, Body/14px/Regular in text-primary */}
@@ -887,7 +903,6 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
         >
           {detailedDescription ? (
             <Text
-              allowFontScaling={false}
               style={[
                 styles.descriptionText,
                 { color: isDark ? textSecondary : textPrimary },
@@ -898,7 +913,7 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
           ) : null}
           {wikipediaUrl ? (
             <TouchableOpacity onPress={() => Linking.openURL(wikipediaUrl)}>
-              <Text allowFontScaling={false} style={styles.wikipediaLink}>Wikipedia</Text>
+              <Text style={styles.wikipediaLink}>Wikipedia</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -928,7 +943,6 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
         />
       </View>
 
-
       {lookAlikes.length > 0 ? (
         <View
           {...registerLayout("similar")}
@@ -952,7 +966,7 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
                     activeOpacity={0.8}
                     style={styles.similarSeeAllWrap}
                   >
-                    <Text allowFontScaling={false} style={styles.similarSeeAll}>See all</Text>
+                    <Text style={styles.similarSeeAll}>See all</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
@@ -971,174 +985,173 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
       ) : null}
 
       <View
-            {...registerLayout("morphology")}
-            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-          >
-            <PremiumLockedSection
-              locked={locked}
-              onGetPremium={onNavigatePremium}
+        {...registerLayout("morphology")}
+        style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+      >
+        <PremiumLockedSection
+          locked={locked}
+          onGetPremium={onNavigatePremium}
+          isDark={isDark}
+          heading={
+            <SectionTopicHeading
+              title={birdStrings.sections.characteristics}
               isDark={isDark}
-              heading={
-                <SectionTopicHeading
-                  title={birdStrings.sections.characteristics}
-                  isDark={isDark}
-                  textPrimary={textPrimary}
-                  useDividerStyle={locked}
-                />
-              }
-            >
-              <BirdCharacteristicsSection
-                bird={mushroomData}
-                textPrimary={textPrimary}
-                textSecondary={textSecondary}
-              />
-            </PremiumLockedSection>
-          </View>
+              textPrimary={textPrimary}
+              useDividerStyle={locked}
+            />
+          }
+        >
+          <BirdCharacteristicsSection
+            bird={mushroomData}
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+          />
+        </PremiumLockedSection>
+      </View>
 
-          <View
-            {...registerLayout("behavior")}
-            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-          >
-            <PremiumLockedSection
-              locked={locked}
-              onGetPremium={onNavigatePremium}
+      <View
+        {...registerLayout("behavior")}
+        style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+      >
+        <PremiumLockedSection
+          locked={locked}
+          onGetPremium={onNavigatePremium}
+          isDark={isDark}
+          heading={
+            <SectionTopicHeading
+              title={birdStrings.sections.behavior}
               isDark={isDark}
-              heading={
-                <SectionTopicHeading
-                  title={birdStrings.sections.behavior}
-                  isDark={isDark}
-                  textPrimary={textPrimary}
-                  useDividerStyle={locked}
-                />
-              }
-            >
-              <BirdBehaviorSection
-                bird={mushroomData}
-                textPrimary={textPrimary}
-                textSecondary={textSecondary}
-              />
-            </PremiumLockedSection>
-          </View>
+              textPrimary={textPrimary}
+              useDividerStyle={locked}
+            />
+          }
+        >
+          <BirdBehaviorSection
+            bird={mushroomData}
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+          />
+        </PremiumLockedSection>
+      </View>
 
-          <View
-            {...registerLayout("habitat")}
-            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-          >
-            <PremiumLockedSection
-              locked={locked}
-              onGetPremium={onNavigatePremium}
+      <View
+        {...registerLayout("habitat")}
+        style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+      >
+        <PremiumLockedSection
+          locked={locked}
+          onGetPremium={onNavigatePremium}
+          isDark={isDark}
+          heading={
+            <SectionTopicHeading
+              title={birdStrings.sections.habitat}
               isDark={isDark}
-              heading={
-                <SectionTopicHeading
-                  title={birdStrings.sections.habitat}
-                  isDark={isDark}
-                  textPrimary={textPrimary}
-                  useDividerStyle={locked}
-                />
-              }
-            >
-              <BirdHabitatRows
-                bird={mushroomData}
-                textPrimary={textPrimary}
-                textSecondary={textSecondary}
-              />
-            </PremiumLockedSection>
-          </View>
+              textPrimary={textPrimary}
+              useDividerStyle={locked}
+            />
+          }
+        >
+          <BirdHabitatRows
+            bird={mushroomData}
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+          />
+        </PremiumLockedSection>
+      </View>
 
-          <View
-            {...registerLayout("feeding")}
-            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-          >
-            <PremiumLockedSection
-              locked={locked}
-              onGetPremium={onNavigatePremium}
+      <View
+        {...registerLayout("feeding")}
+        style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+      >
+        <PremiumLockedSection
+          locked={locked}
+          onGetPremium={onNavigatePremium}
+          isDark={isDark}
+          heading={
+            <SectionTopicHeading
+              title={birdStrings.sections.feeding}
               isDark={isDark}
-              heading={
-                <SectionTopicHeading
-                  title={birdStrings.sections.feeding}
-                  isDark={isDark}
-                  textPrimary={textPrimary}
-                  useDividerStyle={locked}
-                />
-              }
-            >
-              <BirdFeedingDietSection
-                bird={mushroomData}
-                textPrimary={textPrimary}
-                textSecondary={textSecondary}
-              />
-            </PremiumLockedSection>
-          </View>
+              textPrimary={textPrimary}
+              useDividerStyle={locked}
+            />
+          }
+        >
+          <BirdFeedingDietSection
+            bird={mushroomData}
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+          />
+        </PremiumLockedSection>
+      </View>
 
-          <View
-            {...registerLayout("breeding")}
-            style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
-          >
-            <PremiumLockedSection
-              locked={locked}
-              onGetPremium={onNavigatePremium}
+      <View
+        {...registerLayout("breeding")}
+        style={[styles.sectionCard, { backgroundColor: surfacePrimary }]}
+      >
+        <PremiumLockedSection
+          locked={locked}
+          onGetPremium={onNavigatePremium}
+          isDark={isDark}
+          heading={
+            <SectionTopicHeading
+              title={birdStrings.sections.breeding}
               isDark={isDark}
-              heading={
-                <SectionTopicHeading
-                  title={birdStrings.sections.breeding}
-                  isDark={isDark}
-                  textPrimary={textPrimary}
-                  useDividerStyle={locked}
-                />
-              }
-            >
-              <BirdBreedingSection
-                bird={mushroomData}
-                textPrimary={textPrimary}
-                textSecondary={textSecondary}
-              />
-            </PremiumLockedSection>
-          </View>
+              textPrimary={textPrimary}
+              useDividerStyle={locked}
+            />
+          }
+        >
+          <BirdBreedingSection
+            bird={mushroomData}
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+          />
+        </PremiumLockedSection>
+      </View>
 
-          <View
-            {...registerLayout("range")}
-            style={[
-              styles.sectionCard,
-              styles.sectionCardLast,
-              { backgroundColor: surfacePrimary, ...lastSectionPad },
-            ]}
-          >
-            <PremiumLockedSection
-              locked={locked}
-              onGetPremium={onNavigatePremium}
+      <View
+        {...registerLayout("range")}
+        style={[
+          styles.sectionCard,
+          styles.sectionCardLast,
+          { backgroundColor: surfacePrimary, ...lastSectionPad },
+        ]}
+      >
+        <PremiumLockedSection
+          locked={locked}
+          onGetPremium={onNavigatePremium}
+          isDark={isDark}
+          heading={
+            <SectionTopicHeading
+              title={birdStrings.sections.migration}
               isDark={isDark}
-              heading={
-                <SectionTopicHeading
-                  title={birdStrings.sections.migration}
-                  isDark={isDark}
-                  textPrimary={textPrimary}
-                  useDividerStyle={locked}
-                />
-              }
-            >
-              <BirdMigrationNotes
-                bird={mushroomData}
-                textPrimary={textPrimary}
-                textSecondary={textSecondary}
-              />
-              <BirdGeographicRangeMap
-                textPrimary={textPrimary}
-                textSecondary={textSecondary}
-                surfaceSecondary={surfaceSecondary}
-                locked={locked}
-                rangeDetails={mushroomData.rangeDetails}
-                customLocation={mushroomData.customLocation}
-              />
-              {hasRange ? (
-                <BirdRangeMapSection
-                  rangeDetails={mushroomData.rangeDetails}
-                  textPrimary={textPrimary}
-                  textSecondary={textSecondary}
-                />
-              ) : null}
-            </PremiumLockedSection>
-          </View>
-
+              textPrimary={textPrimary}
+              useDividerStyle={locked}
+            />
+          }
+        >
+          <BirdMigrationNotes
+            bird={mushroomData}
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+          />
+          <BirdGeographicRangeMap
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+            surfaceSecondary={surfaceSecondary}
+            locked={locked}
+            rangeDetails={mushroomData.rangeDetails}
+            customLocation={mushroomData.customLocation}
+          />
+          {hasRange ? (
+            <BirdRangeMapSection
+              rangeDetails={mushroomData.rangeDetails}
+              textPrimary={textPrimary}
+              textSecondary={textSecondary}
+            />
+          ) : null}
+        </PremiumLockedSection>
+      </View>
     </View>
   );
 };
@@ -1175,7 +1188,7 @@ const styles = StyleSheet.create({
     minWidth: 1,
   },
   sectionDividerLabel: {
-    flexShrink: 0,
+    flexShrink: 1,
     fontFamily: FONTS.bold,
     fontSize: 14,
     fontStyle: "normal",
@@ -1217,6 +1230,7 @@ const styles = StyleSheet.create({
   },
   taxonomyHeadingRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 12,
@@ -1331,6 +1345,7 @@ const styles = StyleSheet.create({
   },
   soundsHeader: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 12,
@@ -1346,7 +1361,8 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   similarCard: {
-    width: 268,
+    width: "100%",
+    maxWidth: 480,
     height: 100,
     borderRadius: Radius.md,
     borderWidth: 1,

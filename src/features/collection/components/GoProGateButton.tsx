@@ -53,9 +53,7 @@ export function GoProGateButton({ onPress, style }: Props) {
         angle={162.6}
         style={styles.pill}
       >
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.label}>
-          {GO_PRO_LABEL}
-        </Text>
+        <Text style={styles.label}>{GO_PRO_LABEL}</Text>
         <View style={styles.icon} pointerEvents="none">
           <GoProRosette width={19.29} height={20.16} style={styles.rosette} />
           <GoProRibbon width={17.02} height={20.49} style={styles.ribbon} />
@@ -83,6 +81,7 @@ const styles = StyleSheet.create({
   },
   /** Figma Button/16px: Satoshi Medium 16/24, text-icon-invert (white) */
   label: {
+    flexShrink: 1,
     fontFamily: FONTS.medium,
     fontSize: 16,
     lineHeight: 24,

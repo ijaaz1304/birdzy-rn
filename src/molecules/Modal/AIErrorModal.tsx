@@ -1,3 +1,4 @@
+import { ScrollView, useWindowDimensions } from "react-native";
 /**
  * AI Error Modal
  * AppPopup-style: white card, 24px radius, close X top-right.
@@ -7,16 +8,19 @@
 import { AppImage } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React from "react";
-import { View, StyleSheet, Modal, TouchableOpacity, Dimensions } from "react-native";
+import { View, StyleSheet, Modal, TouchableOpacity } from "react-native";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Text, Button } from "../../atoms";
 import { useStrings } from "../../hooks/useStrings";
 import { Images } from "../../assets";
 import { OVERLAY_COLORS } from "../../constants/colorConstants";
 import { Radius } from "../../design";
-import { getPopupChromeStyle, getPopupPrimaryCtaStyle, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import {
+  getPopupChromeStyle,
+  getPopupPrimaryCtaStyle,
+  getPopupSecondaryCtaStyle,
+  getPopupSecondaryCtaTextColor,
+} from "../../design-system/modalTokens";
 
 export interface AIErrorModalProps {
   visible: boolean;
@@ -44,6 +48,7 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
   retryLabel,
   primaryCtaColor,
 }) => {
+  const { height: windowHeight } = useWindowDimensions();
   const theme = useTheme();
   const colors = theme.colors;
   const spacing = theme.spacing;
@@ -70,6 +75,7 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
           onPress={(e) => e.stopPropagation()}
           style={[
             styles.popupContainer,
+            { maxHeight: Math.max(1, windowHeight - 64) },
             getPopupChromeStyle(theme),
           ]}
         >
@@ -93,7 +99,10 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
             <CloseIcon isDark={theme.mode === "dark"} />
           </TouchableOpacity>
 
-          <View style={[styles.content, { padding: spacing[5] }]}>
+          <ScrollView
+            style={{ flexShrink: 1 }}
+            contentContainerStyle={[styles.content, { padding: spacing[5] }]}
+          >
             {/* Center icon: ai_scan_error / ai_scan_error_dark */}
             <View
               style={[
@@ -158,7 +167,7 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
                 ]}
               />
             </View>
-          </View>
+          </ScrollView>
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
@@ -174,7 +183,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   popupContainer: {
-    width: Math.min(335, SCREEN_WIDTH - 40),
+    width: 335,
+    maxWidth: "100%",
     position: "relative",
     overflow: "hidden",
   },

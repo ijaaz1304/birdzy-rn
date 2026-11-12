@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Dimensions,
-  StatusBar,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { StatusBar, StyleSheet, View, useWindowDimensions } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AppImage } from "@/components/AppImage";
 import { RootStackParamList } from "../navigation/types";
@@ -25,9 +19,7 @@ export const SPLASH_SCREEN_BACKGROUND = "#FFFFFF";
  */
 export const SplashScreenContent: React.FC = () => {
   const window = useWindowDimensions();
-  const screen = Dimensions.get("screen");
-  const width = Math.max(window.width, screen.width);
-  const height = Math.max(window.height, screen.height);
+  const { width, height } = window;
 
   return (
     <View style={styles.wrapper}>

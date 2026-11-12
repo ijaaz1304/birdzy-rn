@@ -139,7 +139,6 @@ export const PostAuthLocationAccessSlide: React.FC<
         <Text
           variant="title"
           size="large"
-          allowFontScaling={false}
           style={[
             styles.title,
             { color: isDark ? textPrimary : TITLE_COLOR_LIGHT },
@@ -148,10 +147,7 @@ export const PostAuthLocationAccessSlide: React.FC<
           {heading}
         </Text>
 
-        <Text
-          allowFontScaling={false}
-          style={[styles.body, { color: textSecondary ?? textPrimary }]}
-        >
+        <Text style={[styles.body, { color: textSecondary ?? textPrimary }]}>
           {body}
         </Text>
 
@@ -159,7 +155,11 @@ export const PostAuthLocationAccessSlide: React.FC<
           style={[
             styles.heroWrap,
             pinned && styles.heroWrapPinned,
-            { marginTop: pinned ? PINNED_MIN_COPY_TO_HERO_GAP : layout.titleToHeroGap },
+            {
+              marginTop: pinned
+                ? PINNED_MIN_COPY_TO_HERO_GAP
+                : layout.titleToHeroGap,
+            },
           ]}
           onLayout={
             pinned
@@ -204,11 +204,7 @@ export const PostAuthLocationAccessSlide: React.FC<
           {continueLoading ? (
             <ActivityIndicator color={onPrimaryColor} size="small" />
           ) : (
-            <Text
-              allowFontScaling={false}
-              numberOfLines={1}
-              style={[styles.primaryLabel, { color: onPrimaryColor }]}
-            >
+            <Text style={[styles.primaryLabel, { color: onPrimaryColor }]}>
               {cta}
             </Text>
           )}
@@ -222,8 +218,6 @@ export const PostAuthLocationAccessSlide: React.FC<
             accessibilityRole="button"
           >
             <Text
-              allowFontScaling={false}
-              numberOfLines={1}
               style={[
                 styles.secondaryLabel,
                 { color: isDark ? textPrimary : TITLE_COLOR_LIGHT },
@@ -240,11 +234,13 @@ export const PostAuthLocationAccessSlide: React.FC<
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     minHeight: 0,
   },
   mainContent: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     minHeight: 0,
     paddingHorizontal: POST_AUTH_LAYOUT.horizontalPadding,
     alignItems: "center",
@@ -261,19 +257,20 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     width: POST_AUTH_LAYOUT.contentWidth,
     maxWidth: "100%",
-    flexShrink: 0,
+    flexShrink: 1,
   },
   heroWrap: {
-    flex: 1,
+    minHeight: 200,
+    flexGrow: 1,
+    flexShrink: 0,
     width: "100%",
-    minHeight: 0,
     alignItems: "center",
     justifyContent: "center",
   },
   heroImage: {
     width: POST_AUTH_LAYOUT.contentWidth,
     maxWidth: "100%",
-    height: "100%",
+    height: 220,
   },
   /** Pinned layout: hero sits at the bottom of the content area */
   heroWrapPinned: {
@@ -322,7 +319,7 @@ const styles = StyleSheet.create({
    */
   secondaryButton: {
     minWidth: 119,
-    height: 32,
+    minHeight: 48,
     paddingVertical: 6,
     paddingHorizontal: 12,
     flexDirection: "row",
@@ -345,7 +342,9 @@ const styles = StyleSheet.create({
   primaryButton: {
     width: POST_AUTH_LAYOUT.contentWidth,
     maxWidth: "100%",
-    height: POST_AUTH_LAYOUT.ctaHeight,
+    minHeight: POST_AUTH_LAYOUT.ctaHeight,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",

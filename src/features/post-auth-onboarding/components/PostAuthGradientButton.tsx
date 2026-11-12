@@ -1,5 +1,12 @@
 import React from "react";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+} from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { FONTS } from "../../../common/typography";
 import {
@@ -28,7 +35,7 @@ export const PostAuthGradientButton: React.FC<Props> = ({
   const content = loading ? (
     <ActivityIndicator color={colors.ctaTextDark} />
   ) : (
-    <Text allowFontScaling={false} style={[styles.label, { color: colors.ctaTextDark }]}>{title}</Text>
+    <Text style={[styles.label, { color: colors.ctaTextDark }]}>{title}</Text>
   );
 
   return (
@@ -73,13 +80,16 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   ctaInner: {
-    height: POST_AUTH_LAYOUT.ctaHeight,
+    minHeight: POST_AUTH_LAYOUT.ctaHeight,
+    paddingVertical: 12,
     borderRadius: POST_AUTH_LAYOUT.ctaBorderRadius,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 8,
   },
   label: {
+    flexShrink: 1,
+    maxWidth: "100%",
     fontFamily: FONTS.medium,
     fontSize: 16,
     lineHeight: 24,

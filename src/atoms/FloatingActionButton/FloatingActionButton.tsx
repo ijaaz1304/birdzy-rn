@@ -4,7 +4,13 @@
  */
 
 import React from "react";
-import { TouchableOpacity, TouchableOpacityProps, StyleSheet, ViewStyle, View } from "react-native";
+import {
+  TouchableOpacity,
+  TouchableOpacityProps,
+  StyleSheet,
+  ViewStyle,
+  View,
+} from "react-native";
 import { CreatePlusIcon } from "../../assets";
 import { FONTS } from "../../common/typography";
 import { useTheme } from "../../hooks/useTheme";
@@ -92,14 +98,10 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           borderWidth: 0,
           iconColor:
             iconColor ||
-            (isDark
-              ? FEED_COLORS.FAB.DARK.TEXT
-              : FEED_COLORS.FAB.LIGHT.TEXT),
+            (isDark ? FEED_COLORS.FAB.DARK.TEXT : FEED_COLORS.FAB.LIGHT.TEXT),
           labelColor:
             labelColor ||
-            (isDark
-              ? FEED_COLORS.FAB.DARK.TEXT
-              : FEED_COLORS.FAB.LIGHT.TEXT),
+            (isDark ? FEED_COLORS.FAB.DARK.TEXT : FEED_COLORS.FAB.LIGHT.TEXT),
         };
       }
       case "primary":
@@ -208,23 +210,18 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           paddingHorizontal: isFeedCreate
             ? FEED_CREATE.paddingHorizontal
             : label
-              ? 16
-              : padding,
+            ? 16
+            : padding,
           paddingVertical: isFeedCreate
             ? FEED_CREATE.paddingVertical
             : label
-              ? 0
-              : padding,
-          height: isFeedCreate
-            ? FEED_CREATE.height
-            : label
-              ? height
-              : undefined,
+            ? 0
+            : padding,
           minHeight: isFeedCreate
             ? FEED_CREATE.height
             : label
-              ? height
-              : undefined,
+            ? height
+            : undefined,
           borderRadius: feedBorderRadius,
           gap: isFeedCreate && icon && label ? FEED_CREATE.gap : 0,
           ...getPositionStyle(),
@@ -250,7 +247,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           variant="body"
           size="small"
           weight={isFeedCreate ? "medium" : "semibold"}
-          allowFontScaling={false}
           style={[
             styles.label,
             {
@@ -293,6 +289,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   label: {
+    flexShrink: 1,
     // Label styles are applied inline for dynamic fontSize
   },
 });

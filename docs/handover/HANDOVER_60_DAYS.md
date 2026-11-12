@@ -126,3 +126,20 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 
 - [x] [Birdzy audit](../audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md) is available in this app’s docs; source links checked.
 - [ ] Named Design/Development/QA owners and runtime acceptance remain unassigned/open. Report distribution does not verify fixes or device behavior.
+
+
+## Responsive implementation batch 1 — 12 November 2026
+
+- [x] Started fixes on the existing `feat/responsiveness` branch: shared action text, sound rows, camera permission scrolling, active carousel resize alignment and screen backgrounds.
+- [x] Automated focused regression: 8 suites / 25 tests passed; TypeScript passed; scoped lint has 0 errors / 20 warnings.
+- [ ] Owner unassigned: complete [batch-1 device acceptance](QA_AND_OPERATIONS.md#responsiveness-implementation-batch-1--12-november-2026), including native text growth, keyboard/chrome interaction and large-window resizing. No native build or device test run for this batch.
+- [ ] Design/Development/QA owners unassigned: remaining audit issues and full per-platform sign-off stay open. No Figma or provider-access status changed.
+
+
+## Full responsiveness pass — 12 November 2026
+
+- [x] Source implementation covers all nine prioritized Birdzy findings, including semantic text, purchase/legal, permissions, sound states, active/legacy carousels, adaptive grids, sheets/popups/backgrounds and intrinsic tab height.
+- [x] New automated responsive regressions and full Jest run completed; 822 tests passed, two unrelated API payload failures reproduced on clean HEAD. TypeScript passed; scoped lint has no errors.
+- [ ] Requester will perform [simulator/device acceptance](QA_AND_OPERATIONS.md#responsive-device-handoff--12-november-2026); agent checks skipped at explicit requester direction. Actual device/build/setting evidence and named QA owner remain unrecorded.
+- [ ] Design and release acceptance remain open. Source completion is not a claim of full visual/device verification.
+- [ ] Existing step-by-step API payload/test disagreement remains open outside this responsive change; API/release owner unassigned.

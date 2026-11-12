@@ -5,7 +5,7 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, TextInput, Dimensions } from "react-native";
+import { View, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { Images } from "../../assets";
 import { useTheme } from "../../hooks/useTheme";
@@ -50,6 +50,7 @@ export const CustomLocationInput: React.FC<CustomLocationInputProps> = ({
   editable = true,
   showMap = true,
 }) => {
+  const [mapWidth, setMapWidth] = React.useState(0);
   const theme = useTheme();
   const colors = theme.colors;
   const spacing = theme.spacing;
@@ -211,8 +212,8 @@ export const CustomLocationInput: React.FC<CustomLocationInputProps> = ({
               weight="semibold"
               style={{ color: colors.onPrimary }}
             >
-              {strings.collection?.legacyDetailSections?.location?.addLocation ||
-                "Add Location"}
+              {strings.collection?.legacyDetailSections?.location
+                ?.addLocation || "Add Location"}
             </Text>
           </TouchableOpacity>
         )}
@@ -308,39 +309,47 @@ export const CustomLocationInput: React.FC<CustomLocationInputProps> = ({
       )}
 
       {showMap && (
-        <View style={styles.mapContainer}>
-          <StaticMap
-            latitude={currentLocation?.latitude || location.latitude}
-            longitude={currentLocation?.longitude || location.longitude}
-            width={Dimensions.get("window").width - 64} // Full width minus padding
-            height={200}
-            zoom={15}
-            markers={[
-              // Location marker (red)
-              {
-                latitude: currentLocation?.latitude || location.latitude,
-                longitude: currentLocation?.longitude || location.longitude,
-                color: "red",
-                label: "M",
-              },
-              // User current location marker (blue) - if available and different
-              ...(userLocation &&
-              (userLocation.latitude !==
-                (currentLocation?.latitude || location.latitude) ||
-                userLocation.longitude !==
-                  (currentLocation?.longitude || location.longitude))
-                ? [
-                    {
-                      latitude: userLocation.latitude,
-                      longitude: userLocation.longitude,
-                      color: "blue",
-                      label: "U",
-                    } as StaticMapMarker,
-                  ]
-                : []),
-            ]}
-            style={styles.map}
-          />
+        <View
+          style={styles.mapContainer}
+          onLayout={(event) =>
+            setMapWidth(Math.max(1, event.nativeEvent.layout.width))
+          }
+        >
+          {mapWidth > 0 && (
+            <StaticMap
+              latitude={currentLocation?.latitude || location.latitude}
+              longitude={currentLocation?.longitude || location.longitude}
+              width={mapWidth}
+              height={200}
+              zoom={15}
+              markers={[
+                // Location marker (red)
+                {
+                  latitude: currentLocation?.latitude || location.latitude,
+                  longitude: currentLocation?.longitude || location.longitude,
+                  color: "red",
+                  label: "M",
+                },
+                // User current location marker (blue) - if available and different
+                ...(userLocation &&
+                (userLocation.latitude !==
+                  (currentLocation?.latitude || location.latitude) ||
+                  userLocation.longitude !==
+                    (currentLocation?.longitude || location.longitude))
+                  ? [
+                      {
+                        latitude: userLocation.latitude,
+                        longitude: userLocation.longitude,
+                        color: "blue",
+                        label: "U",
+                      } as StaticMapMarker,
+                    ]
+                  : []),
+              ]}
+              style={styles.map}
+            />
+          )}
+
           {/* Button in top right to use current location */}
           {editable && (
             <TouchableOpacity

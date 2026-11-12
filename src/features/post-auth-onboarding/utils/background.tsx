@@ -1,6 +1,6 @@
 import { AppImage } from "@/components/AppImage";
 import React from "react";
-import { Dimensions, StyleSheet, View, useWindowDimensions } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { Images } from "../../../assets";
 import { getPostAuthContentLayout } from "./postAuthContentLayout";
@@ -11,21 +11,19 @@ const COMMON_BG_ASPECT = 3248 / 1500;
 /** post_onboarding background.webp is 1500×2880 — anchor to bottom like onboarding art */
 const POST_AUTH_BG_ASPECT = COMMON_BG_ASPECT;
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SKY_HEIGHT = 320;
 
 export function getPostAuthBackgroundLayout(
   windowWidth: number,
   windowHeight: number
 ) {
-  const screenHeight = Dimensions.get("screen").height;
   const { isWideScreen, contentWidth } = getPostAuthContentLayout(
     windowWidth,
     windowHeight
   );
   const bgWidth = windowWidth;
   const bgLeft = 0;
-  const bgHeight = Math.max(screenHeight, bgWidth * COMMON_BG_ASPECT);
+  const bgHeight = Math.max(windowHeight, bgWidth * COMMON_BG_ASPECT);
 
   return { bgWidth, bgLeft, bgHeight, isWideScreen };
 }
@@ -51,7 +49,10 @@ export function PostAuthOnboardingBackground({
   isDark,
 }: PostAuthOnboardingBackgroundProps) {
   const { width, height } = useWindowDimensions();
-  const { bgWidth, bgLeft, bgHeight } = getPostAuthBackgroundLayout(width, height);
+  const { bgWidth, bgLeft, bgHeight } = getPostAuthBackgroundLayout(
+    width,
+    height
+  );
 
   return (
     <AppImage
@@ -125,7 +126,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-    width: SCREEN_WIDTH,
+    width: "100%",
     height: SKY_HEIGHT,
     opacity: 0.8,
   },
@@ -133,14 +134,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-    width: SCREEN_WIDTH,
+    width: "100%",
     height: SKY_HEIGHT,
   },
   bottomFade: {
     position: "absolute",
     top: 194,
     left: 0,
-    width: SCREEN_WIDTH,
+    width: "100%",
     height: 236,
   },
 });

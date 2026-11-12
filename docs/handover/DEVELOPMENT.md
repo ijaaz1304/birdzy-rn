@@ -98,3 +98,34 @@ Concurrent profile requests share one in-flight result per account and JWT. A fi
 Collection loading has one pending load per screen/account, no separate mount+focus fetch, no recursive error timers, and no hidden-screen wishlist fetch followed by another focus fetch. A wishlist mutation during an older collection read schedules one refresh after that read finishes. Catalogue appends and collection creation acquire synchronous guards. Overlapping likes share one mutation/owner notification. Foreground FCM setup has reference-counted ownership and late-setup cancellation; cold-start routing is consumed once. General API dedup keys include the session and exclude independently cancellable and multipart requests. IAP connection failure can be retried without an old rejection clearing a newer attempt. Existing identify attempt controls and receipt processing guards were inspected and retained.
 
 The source review followed startup/authentication → Home/focus → catalogue and collections → identify/details → community mutations → subscription/purchase callbacks, including push and reminder listeners that outlive a screen. The changes add no endpoint or environment variable. Physical-device render profiling and production request traces remain unverified.
+
+
+## Responsive implementation foundation — 12 November 2026
+
+Work started on `feat/responsiveness`, from HEAD `30dcbbf`. The original 11 November source audit remains a historical snapshot; this batch does not close its full device matrix.
+
+- Shared `atoms/Button` labels now wrap and keep requested font scaling instead of forcing one line and shrinking to fit. Existing explicit `allowFontScaling={false}` callers and fixed-height caller overrides still need individual migration.
+- `BirdSoundRow`, used in bird detail sections and BirdSoundsScreen, now lets title, recording badge, timer and metadata scale. Secondary content stacks below the title so it does not compete horizontally with playback controls. Playback behavior is unchanged.
+- `CameraPermissionInlineState` allows scalable multiline explanation and action text. Its CameraScreen host scrolls inside separate top/bottom chrome bounds from `getCameraPermissionGateContentInsets`; left/right safe-area insets are included. This replaces fixed centering with unreachable enlarged content.
+- Active detail `CatalogueDetailCarousel` measures its parent and retains/clamps its selected page after resize or image-list shrink. It ignores momentum callbacks reporting an old viewport width and realigns again after native content-size updates. Arrow targets are at least 48 logical units. List-card `CardImageCarousel` reconciles offsets using its measured width, retains manual-scroll pause behavior, and uses a ref for timer-owned page selection. Slides cannot flex-shrink below the measured page width.
+- `ScreenContainer` raster backgrounds fill the actual host bounds; custom SVG backgrounds receive measured host width/height. Safe-area ownership is unchanged.
+
+The legacy generic ImageCarousel and TopMatchesCarousel had no screen callers when traced for this batch. They were not substituted for the active detail/list components or marked repaired. All layout sizes remain logical units; no global 393-wide canvas or screen-ratio font scaling was introduced.
+
+Regression coverage: `__tests__/responsive/carouselResize.test.tsx` exercises 320/393/430 parent widths, late old-width momentum events and shrinking image lists. `scalableContent.test.tsx` checks label growth policy and action/busy behavior. Tests use the repository's installed React renderer; they do not execute native text measurement or prove visual fit.
+
+
+## Full responsive implementation — 12 November 2026
+
+The follow-up on `feat/responsiveness` addresses all nine prioritized source findings in [the dated audit status](../audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md#full-audit-implementation-pass--12-november-2026). This supersedes batch 1's remaining-source-work list, while keeping device acceptance separate.
+
+Shared rules now implemented:
+
+- `utils/responsiveLayout.ts`: one/two-column policy (one column below 360 logical width or above 1.2 font scale) and a clamped available-overlay-height helper. Screens re-key FlatList when changing column count; exact card dimensions remain based on their available screen/container width.
+- Semantic text follows OS scaling. Important detail/purchase copy wraps rather than ellipsizes or shrinks. Shared action buttons and migrated text-bearing controls use intrinsic height with a minimum. Card previews may still use intentional line limits where detail access is available.
+- Paywall/post-auth content scrolls in PostAuthPhoneLayout; plans use stacked cards. The historical HORIZONTAL_PLAN_ROW_STYLE export name is retained for caller compatibility but its layout is now a column. Full pricing/trial/disclosure/legal copy has intrinsic height; no store/purchase logic changed.
+- Sheets use live window bounds plus the measured KeyboardAvoidingView host. Explicit custom keyboardBottomInset is subtracted once; ordinary form sheets use their keyboard-avoiding host. Short windows are not forced to retain a 280-unit minimum. Closing handlers and entrance animation state remain valid after resize.
+- Legacy and active carousels reconcile page offsets; backgrounds use current host/window geometry. Reads of Dimensions inside keyboard-event handlers remain event-time coordinate queries, not module-level layout snapshots. Camera/bitmap output resolution constants are intentionally unchanged.
+- Sound recording/no-match/crop, permission and relevant popup bodies scroll when content exceeds the viewport. Home rows stack under the same compact/enlarged-text policy; nearby banner text has intrinsic flow instead of absolute height anchoring.
+
+New tests under `__tests__/responsive` exercise callbacks and geometry contracts using the repository's existing renderer. They do not run Yoga/native glyph measurement or establish device visual acceptance. Native generated headers were regenerated locally while attempting simulator validation; no native source, Podfile/lockfile or generated tracked artifact changed. Further simulator checks were stopped at requester direction.

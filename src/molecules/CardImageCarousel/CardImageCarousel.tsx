@@ -4,7 +4,15 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { View, StyleSheet, ScrollView, NativeSyntheticEvent, NativeScrollEvent, ViewStyle, LayoutChangeEvent } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  ViewStyle,
+  LayoutChangeEvent,
+} from "react-native";
 import { AppImage, CachedRemoteImage } from "@/components/AppImage";
 import { Images } from "../../assets";
 import { normalizeImageUrls } from "../../utils/mushroomCardUtils";
@@ -49,7 +57,7 @@ export const CardImageCarousel: React.FC<CardImageCarouselProps> = ({
   const displayUris = effectiveUris.length > 0 ? effectiveUris : [];
   const isMulti = displayUris.length > 1;
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const [errorIndices, setErrorIndices] = useState<Set<number>>(new Set());
   const scrollRef = useRef<ScrollView>(null);
@@ -71,7 +79,7 @@ export const CardImageCarousel: React.FC<CardImageCarouselProps> = ({
         x: clamped * containerWidth,
         animated,
       });
-      setActiveIndex(clamped);
+      activeIndexRef.current = clamped;
     },
     [containerWidth, displayUris.length]
   );
@@ -82,11 +90,8 @@ export const CardImageCarousel: React.FC<CardImageCarouselProps> = ({
     autoSlideTimerRef.current = setInterval(() => {
       const now = Date.now();
       if (now < pauseUntilRef.current) return;
-      setActiveIndex((prev) => {
-        const next = (prev + 1) % displayUris.length;
-        goToIndex(next, true);
-        return next;
-      });
+      const next = (activeIndexRef.current + 1) % displayUris.length;
+      goToIndex(next, true);
     }, autoSlideIntervalMs);
   }, [
     isMulti,
@@ -101,6 +106,10 @@ export const CardImageCarousel: React.FC<CardImageCarouselProps> = ({
     return clearAutoSlideTimer;
   }, [isMulti, autoSlideIntervalMs, startAutoSlide, clearAutoSlideTimer]);
 
+  useEffect(() => {
+    goToIndex(activeIndexRef.current, false);
+  }, [goToIndex]);
+
   const handleLayout = useCallback((e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
     if (w > 0) setContainerWidth(w);
@@ -109,14 +118,15 @@ export const CardImageCarousel: React.FC<CardImageCarouselProps> = ({
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (!isMulti || containerWidth <= 0) return;
+      const viewportWidth = e.nativeEvent.layoutMeasurement?.width;
+      if (viewportWidth && Math.abs(viewportWidth - containerWidth) > 1) return;
       const x = e.nativeEvent.contentOffset.x;
-      const index = Math.round(x / containerWidth);
-      if (index !== activeIndex) {
-        setActiveIndex(index);
-        pauseUntilRef.current = Date.now() + PAUSE_AFTER_MANUAL_SCROLL_MS;
-      }
+      activeIndexRef.current = Math.max(
+        0,
+        Math.min(displayUris.length - 1, Math.round(x / containerWidth))
+      );
     },
-    [isMulti, containerWidth, activeIndex]
+    [isMulti, containerWidth, displayUris.length]
   );
 
   const handleImageError = useCallback(
@@ -238,7 +248,11 @@ export const CardImageCarousel: React.FC<CardImageCarouselProps> = ({
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
+        onMomentumScrollEnd={handleScroll}
+        onContentSizeChange={() => goToIndex(activeIndexRef.current, false)}
+        onScrollBeginDrag={() => {
+          pauseUntilRef.current = Date.now() + PAUSE_AFTER_MANUAL_SCROLL_MS;
+        }}
         scrollEventThrottle={16}
         decelerationRate="fast"
         bounces={false}
@@ -282,7 +296,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   slide: {
-    flex: 1,
+    flexShrink: 0,
     height: "100%",
   },
   // Dots (page indicators) – kept for re-enable; currently not rendered on card carousels

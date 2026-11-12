@@ -12,7 +12,13 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { StyleSheet, Text as RNText, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import {
+  StyleSheet,
+  Text as RNText,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation } from "@react-navigation/native";
@@ -31,9 +37,7 @@ import { RootStackParamList } from "../../../navigation/types";
 import { requestNotificationPermission } from "../../../services/permissions/permission.service";
 import { markNotificationPermissionPrompted } from "../../../services/permissions/permissionPromptSkip";
 import { checkLocationPermission } from "../../../services/permissions";
-import {
-  requestNativeLocationPermission,
-} from "../../../services/permissions/locationPermissionFlow.service";
+import { requestNativeLocationPermission } from "../../../services/permissions/locationPermissionFlow.service";
 import { useIdentificationLocation } from "../../camera/useIdentificationLocation";
 import { usePushNotifications } from "../../../hooks/usePushNotifications";
 import { useAuthStore } from "../../auth/auth.store";
@@ -44,7 +48,10 @@ import { logBirdzyPackEvent } from "../../../services/analytics/packAnalytics";
 import { useSubscriptionPlansWithPrices } from "../../subscription/hooks/useSubscriptionPlansWithPrices";
 import type { PlanId } from "../../../config/subscriptionConfig";
 import { PostAuthGradientButton } from "../components/PostAuthGradientButton";
-import { PostAuthHorizontalPlanCard, HORIZONTAL_PLAN_ROW_STYLE } from "../components/PostAuthHorizontalPlanCard";
+import {
+  PostAuthHorizontalPlanCard,
+  HORIZONTAL_PLAN_ROW_STYLE,
+} from "../components/PostAuthHorizontalPlanCard";
 import { PostAuthLegalFooter } from "../components/PostAuthLegalFooter";
 import { PostAuthLegalModal } from "../components/PostAuthLegalModal";
 import { PostAuthSubscriptionFeatureCarousel } from "../components/PostAuthSubscriptionFeatureCarousel";
@@ -132,8 +139,12 @@ export const PostAuthOnboardingScreen: React.FC = () => {
     }),
     [isDark]
   );
-  const persistCurrentSlide = usePostAuthOnboardingStore((s) => s.setCurrentSlide);
-  const markPostAuthCompleted = usePostAuthOnboardingStore((s) => s.markCompleted);
+  const persistCurrentSlide = usePostAuthOnboardingStore(
+    (s) => s.setCurrentSlide
+  );
+  const markPostAuthCompleted = usePostAuthOnboardingStore(
+    (s) => s.markCompleted
+  );
   const persistedSlide = usePostAuthOnboardingStore((s) => s.currentSlide);
   const postAuthHydrated = usePostAuthOnboardingStore((s) => s._hasHydrated);
   const [currentSlide, setCurrentSlide] = useState<number>(
@@ -449,7 +460,9 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       style={styles.skipButton}
     >
-      <RNText allowFontScaling={false} style={[styles.skipText, { color: colors.textPrimary }]}>Skip</RNText>
+      <RNText style={[styles.skipText, { color: colors.textPrimary }]}>
+        Skip
+      </RNText>
     </TouchableOpacity>
   );
 
@@ -536,7 +549,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         onPress={() => void refetchPrices()}
         style={styles.retryBanner}
       >
-        <RNText allowFontScaling={false} style={[styles.retryText, { color: colors.textSecondary }]}>
+        <RNText style={[styles.retryText, { color: colors.textSecondary }]}>
           Couldn&apos;t load prices. Tap to retry.
         </RNText>
       </TouchableOpacity>
@@ -553,9 +566,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         colors={colors}
       />
       <PostAuthLegalFooter
-        onTerms={() =>
-          openLegal(getTermsOfServiceUrl(), "Terms of Service")
-        }
+        onTerms={() => openLegal(getTermsOfServiceUrl(), "Terms of Service")}
         onPrivacy={() => openLegal(getPrivacyPolicyUrl(), "Privacy Policy")}
         onRestore={handleRestore}
         isRestoring={isRestoring}
@@ -621,12 +632,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
           },
         ]}
       >
-        <View
-          style={[
-            styles.discountTimerOverlay,
-            { top: layout.postAuthDiscountTimerTop },
-          ]}
-        >
+        <View style={[styles.discountTimerOverlay, {}]}>
           <PostAuthDiscountTimerPill />
         </View>
         <View style={styles.subscriptionCenterBlock}>
@@ -660,15 +666,11 @@ export const PostAuthOnboardingScreen: React.FC = () => {
   const renderSurpriseSlide = () => (
     <View style={styles.stepFill}>
       <View
-        style={[
-          styles.surpriseBody,
-          { paddingTop: layout.contentTopPadding },
-        ]}
+        style={[styles.surpriseBody, { paddingTop: layout.contentTopPadding }]}
       >
         <Text
           variant="title"
           size="large"
-          allowFontScaling={false}
           style={[
             styles.surpriseTitle,
             { color: isDark ? colors.textPrimary : SURPRISE_TITLE_COLOR_LIGHT },
@@ -778,9 +780,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       <PostAuthOnboardingBackground isDark={isDark} />
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={[styles.slide, { width: windowWidth }]}>
-          <PostAuthPhoneLayout>
-            {renderSlide(currentSlide)}
-          </PostAuthPhoneLayout>
+          <PostAuthPhoneLayout>{renderSlide(currentSlide)}</PostAuthPhoneLayout>
         </View>
       </SafeAreaView>
 
@@ -811,7 +811,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepFill: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
   },
   headerRow: {
     width: "100%",
@@ -841,7 +842,8 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   subscriptionBody: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     paddingHorizontal: POST_AUTH_LAYOUT.horizontalPadding,
     justifyContent: "center",
     minHeight: 0,
@@ -854,11 +856,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   discountTimerOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
     alignItems: "center",
-    zIndex: 2,
+    marginBottom: 16,
   },
   subscriptionCenterBlock: {
     width: "100%",
@@ -875,17 +874,19 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     width: POST_AUTH_LAYOUT.contentWidth,
     maxWidth: "100%",
-    flexShrink: 0,
+    flexShrink: 1,
     marginBottom: 8,
   },
   surpriseBody: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     paddingHorizontal: POST_AUTH_LAYOUT.horizontalPadding,
     alignItems: "center",
     minHeight: 0,
   },
   surpriseImageWrap: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
@@ -930,7 +931,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     width: 343,
     maxWidth: "100%",
-    flexShrink: 0,
+    flexShrink: 1,
   },
   slideTitle: {
     textAlign: "center",
@@ -981,7 +982,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   secondaryButton: {
-    height: POST_AUTH_LAYOUT.ctaHeight,
+    minHeight: POST_AUTH_LAYOUT.ctaHeight,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 24,

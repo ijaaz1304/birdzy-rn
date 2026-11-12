@@ -1,5 +1,12 @@
+import { ScrollView } from "react-native";
 import React, { useMemo, useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
 import { useTheme } from "../../../hooks/useTheme";
 import { useDiscountOfferCountdown } from "../utils/discountOffer";
 import { useAppLogsStore } from "../../app-logs/app-logs.store";
@@ -18,7 +25,12 @@ import {
   resolveStorePriceDisplay,
 } from "../utils/storePlanPricing";
 import { localizePriceDisplayForDevice } from "../utils/iapPriceDisplay";
-import { compactPriceDecimals, getDefaultTrialDays, getRecurringPlanDescriptionLines, getSubscriptionCtaLabel } from "../../post-auth-onboarding/utils/planDisplay";
+import {
+  compactPriceDecimals,
+  getDefaultTrialDays,
+  getRecurringPlanDescriptionLines,
+  getSubscriptionCtaLabel,
+} from "../../post-auth-onboarding/utils/planDisplay";
 
 const SELECTED_BORDER = SUBSCRIPTION_COLORS.CARD_SELECTED_BORDER;
 const UNSELECTED_LIGHT = SUBSCRIPTION_COLORS.CARD_UNSELECTED_BORDER_LIGHT;
@@ -61,10 +73,7 @@ function getOriginalPriceDisplay(
   return compactPriceDecimals(`${prefix}${formatted}${suffix}`.trim());
 }
 
-const LIFETIME_PLAN_LINES = [
-  "One-time purchase",
-  "Unlimited access forever",
-];
+const LIFETIME_PLAN_LINES = ["One-time purchase", "Unlimited access forever"];
 
 interface PlanRowProps {
   title: string;
@@ -178,17 +187,11 @@ function SubscriptionPlanRow({
           {showStrike ? (
             <Text
               style={[planRowStyles.originalPrice, { color: textSecondary }]}
-              numberOfLines={1}
             >
               {originalPriceDisplay}
             </Text>
           ) : null}
-          <Text
-            style={[planRowStyles.price, { color: textColor }]}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.8}
-          >
+          <Text style={[planRowStyles.price, { color: textColor }]}>
             {price}
           </Text>
           {subtitle ? (
@@ -486,7 +489,9 @@ const SubscriptionSheetContent: React.FC<Props> = ({
   }, [selectedPlan, isPremium]);
 
   useEffect(() => {
-    const plansWithoutPrice = plans.filter((p) => !hasRealStorePrice(p.priceDisplay));
+    const plansWithoutPrice = plans.filter(
+      (p) => !hasRealStorePrice(p.priceDisplay)
+    );
     useAppLogsStore
       .getState()
       .info("[Subscription] flow: sheet content mounted", {
@@ -536,10 +541,12 @@ const SubscriptionSheetContent: React.FC<Props> = ({
   };
 
   return (
-    <View
-      style={[
+    <ScrollView
+      style={{ flex: 1 }}
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={[
         styles.container,
-        { backgroundColor: colors.background, flex: 1 },
+        { backgroundColor: colors.background, flexGrow: 1 },
       ]}
     >
       {/* Top 70%: title, timer, packs */}
@@ -553,7 +560,10 @@ const SubscriptionSheetContent: React.FC<Props> = ({
 
         {!isPremium && discountOffer.remainingMs > 0 ? (
           <View
-            style={[styles.discountPill, { backgroundColor: colors.discountBg }]}
+            style={[
+              styles.discountPill,
+              { backgroundColor: colors.discountBg },
+            ]}
           >
             <Text style={styles.discountText}>
               🕒 {discountOffer.isActive ? "Discount ends in" : "Discount in"}{" "}
@@ -818,7 +828,7 @@ const SubscriptionSheetContent: React.FC<Props> = ({
           </>
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -827,15 +837,16 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   topSection: {
-    flex: 8,
+    flexGrow: 1,
     minHeight: 0,
   },
   plansWrap: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     minHeight: 0,
   },
   bottomSection: {
-    flex: 2,
+    flexShrink: 0,
     minHeight: 0,
     justifyContent: "center",
     paddingTop: 8,
@@ -871,7 +882,8 @@ const styles = StyleSheet.create({
     color: APP_COLORS.modalTextOnPrimary,
   },
   cta: {
-    height: 48,
+    minHeight: 48,
+    paddingVertical: 12,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",

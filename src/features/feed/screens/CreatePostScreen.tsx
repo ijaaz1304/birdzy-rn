@@ -5,7 +5,20 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, TextInput, KeyboardAvoidingView, Keyboard, Platform, useWindowDimensions, InteractionManager, type KeyboardEvent } from "react-native";
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+  TextInput,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
+  useWindowDimensions,
+  InteractionManager,
+  type KeyboardEvent,
+} from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Icon from "react-native-vector-icons/Ionicons";
 import {
@@ -46,9 +59,7 @@ import {
 import { useToast } from "../../../hooks/useToast";
 import { navigateToSubscriptionMain } from "../../../utils/navigation";
 import { Images, UploadIconSvg } from "../../../assets";
-import {
-  checkStoragePermission,
-} from "../../../services/permissions";
+import { checkStoragePermission } from "../../../services/permissions";
 import { GalleryAccessPopup } from "../../../components/GalleryAccessPopup";
 import { isImageCropPickerCancelError } from "../../camera/cropImageAndReturnObject";
 import { openInteractiveCropper } from "../../camera/interactiveCrop";
@@ -62,7 +73,6 @@ import {
 import { FONTS } from "../../../common/typography";
 
 const CREATE_POST_LOG = "[CreatePost]";
-
 
 const IMAGE_PREVIEW_HEIGHT = 280;
 const POST_IMAGE_OVERLAY_BG = "#F5EBEB";
@@ -207,7 +217,8 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
 
     if (route.params?.title !== undefined) setTitle(route.params.title);
     if (route.params?.content !== undefined) setContent(route.params.content);
-    if (route.params?.itemName !== undefined) setItemName(route.params.itemName);
+    if (route.params?.itemName !== undefined)
+      setItemName(route.params.itemName);
 
     setSelectedImages((prev) => {
       if (prev.length >= MAX_IMAGES) return prev;
@@ -563,7 +574,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
         ]}
       >
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text allowFontScaling={false} variant="body" color="textSecondary" style={{ marginTop: 12 }}>
+        <Text variant="body" color="textSecondary" style={{ marginTop: 12 }}>
           Loading post...
         </Text>
       </View>
@@ -579,7 +590,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
       >
         {/* Header: Create post (left), X button (right) */}
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-          <Text allowFontScaling={false}
+          <Text
             variant="display"
             size="medium"
             weight="bold"
@@ -612,7 +623,6 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
         <View style={styles.userRow}>
           <Avatar name={displayName} size={AVATAR_SIZE} source={user?.avatar} />
           <Text
-            allowFontScaling={false}
             variant="body"
             size="medium"
             color="text"
@@ -631,7 +641,6 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
         >
           {/* Title (optional) */}
           <TextInput
-            allowFontScaling={false}
             style={[
               styles.titleInput,
               {
@@ -646,7 +655,6 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
           />
           {/* Description */}
           <TextInput
-            allowFontScaling={false}
             style={[
               styles.contentInput,
               {
@@ -695,7 +703,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
                       size={20}
                       color={POST_IMAGE_OVERLAY_FG}
                     />
-                    <Text allowFontScaling={false}
+                    <Text
                       variant="body"
                       size="small"
                       weight="medium"
@@ -733,7 +741,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
                   },
                 ]}
               />
-              <Text allowFontScaling={false}
+              <Text
                 variant="body"
                 size="small"
                 color="text"
@@ -804,8 +812,10 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
             onPress={handlePost}
             disabled={postDisabled}
             loading={uploading}
-            allowFontScaling={false}
-            style={[styles.postButton, postDisabled && styles.postButtonDisabled]}
+            style={[
+              styles.postButton,
+              postDisabled && styles.postButtonDisabled,
+            ]}
             textStyle={{
               ...styles.postButtonText,
               ...(postDisabled ? styles.postButtonTextDisabled : null),
@@ -977,7 +987,7 @@ const styles = StyleSheet.create({
   },
   /** Figma Button-Icon: 32pt tall, 6pt horizontal padding, 20pt icon */
   mediaButton: {
-    height: 32,
+    minHeight: 32,
     paddingHorizontal: 6,
     justifyContent: "center",
     alignItems: "center",
@@ -989,7 +999,7 @@ const styles = StyleSheet.create({
   /** Figma Button: 44pt, 16/10 padding, radius 24 */
   postButton: {
     minWidth: 64,
-    height: 44,
+    minHeight: 44,
     paddingHorizontal: 16,
     borderRadius: 24,
   },

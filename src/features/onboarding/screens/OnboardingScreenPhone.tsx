@@ -3,7 +3,19 @@
  */
 
 import React, { useRef, useState, useCallback, useEffect } from "react";
-import { View, StyleSheet, FlatList, Animated, Dimensions, ImageSourcePropType, NativeSyntheticEvent, NativeScrollEvent, TouchableOpacity, Text, StatusBar, useWindowDimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Animated,
+  ImageSourcePropType,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  TouchableOpacity,
+  Text,
+  StatusBar,
+  useWindowDimensions,
+} from "react-native";
 import {
   useNavigation,
   useRoute,
@@ -39,8 +51,6 @@ import { TOOLTIP_ELIGIBLE_FOR_SIGNUP_KEY } from "../../../components/AppLogsTool
 import { FONTS } from "../../../common/typography";
 
 import { spacing } from "../../../design-system/spacing";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("screen");
 
 const AnimatedOnboardingList = Animated.createAnimatedComponent(
   FlatList<OnboardingPageData>
@@ -112,11 +122,10 @@ export const OnboardingScreenPhone: React.FC = () => {
   const isDark = useIsDark();
   const insets = useSafeAreaInsets();
   const { showToast } = useToast();
-  const { setHasCompletedOnboarding } =
-    useOnboardingStore();
+  const { setHasCompletedOnboarding } = useOnboardingStore();
   const onboardingConfig = useFeatureConfig("onboarding");
 
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: SCREEN_HEIGHT } = useWindowDimensions();
   const pageWidth = windowWidth;
 
   // Convert config pages to OnboardingPageData format - Only 5 pages
@@ -547,11 +556,9 @@ const styles = StyleSheet.create({
   swipeableContainer: {
     flex: 1,
     width: "100%",
-    height: SCREEN_HEIGHT,
   },
   flatList: {
     flex: 1,
-    height: SCREEN_HEIGHT,
   },
   flatListContent: {
     alignItems: "stretch",

@@ -1,11 +1,10 @@
 import { AppImage } from "@/components/AppImage";
 import React from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { Images } from "../../../assets";
 import { APP_COLORS } from "../../../../theme/colors";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SKY_HEIGHT = 320;
 
 type Props = {
@@ -16,7 +15,10 @@ export function AskAIScreenBackground({ isDark = false }: Props) {
   if (isDark) {
     return (
       <View
-        style={[styles.backgroundHost, { backgroundColor: APP_COLORS.surfaceAuthDark }]}
+        style={[
+          styles.backgroundHost,
+          { backgroundColor: APP_COLORS.surfaceAuthDark },
+        ]}
         pointerEvents="none"
       >
         <AppImage
@@ -76,7 +78,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-    width: SCREEN_WIDTH,
+    width: "100%",
     height: SKY_HEIGHT,
     opacity: 0.8,
   },
@@ -84,14 +86,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-    width: SCREEN_WIDTH,
+    width: "100%",
     height: SKY_HEIGHT,
   },
   bottomFade: {
     position: "absolute",
     top: 194,
     left: 0,
-    width: SCREEN_WIDTH,
+    width: "100%",
     height: 236,
   },
   darkBackground: {

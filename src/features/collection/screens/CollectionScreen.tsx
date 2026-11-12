@@ -1,3 +1,5 @@
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
+import { useWindowDimensions } from "react-native";
 /**
  * Collection Main Screen
  */
@@ -9,7 +11,14 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl, StatusBar } from "react-native";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  StatusBar,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useNavigation,
@@ -36,9 +45,7 @@ import type { Collection as ApiCollection } from "../../../services/api/features
 import { collectionService } from "../../../services/collection/collection.service";
 import { mushroomSpecimenService } from "../../../services/specimen/mushroomSpecimen.service";
 import { useAuthStore } from "../../auth/auth.store";
-import {
-  COLLECTION_SCREEN_COLORS,
-} from "../../../constants/colorConstants";
+import { COLLECTION_SCREEN_COLORS } from "../../../constants/colorConstants";
 import { useIsDark } from "../../../hooks/useTheme";
 import { CardSkeleton } from "../../../components/skeleton";
 import {
@@ -83,7 +90,6 @@ import { Radius } from "../../../design";
 const COL_LOG = "[CollectionsScreen]";
 const COLLECTION_PREVIEW_SPECIMEN_PAGE_SIZE = 20;
 
-
 import { spacing } from "../../../design-system/spacing";
 
 type CollectionScreenNavigationProp = CompositeNavigationProp<
@@ -109,6 +115,8 @@ interface Collection {
 }
 
 export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const gridColumns = getResponsiveGridColumns(windowWidth, fontScale);
   const theme = useTheme();
   const colors = theme.colors;
   const Space = theme.spacing;
@@ -537,9 +545,15 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
       };
 
       // Identified, Wishlist, Owned: same card style (CollectionCard with grid)
-      return <CollectionCard item={item} onPress={handlePress} />;
+      return (
+        <CollectionCard
+          item={item}
+          onPress={handlePress}
+          style={gridColumns === 1 ? { width: "100%" } : undefined}
+        />
+      );
     },
-    [navigation]
+    [navigation, gridColumns]
   );
 
   const handleGoToSoundLibrary = useCallback(() => {
@@ -667,20 +681,23 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
     }
   };
 
-  const handleCollectionCreated = useCallback((newCollection: ApiCollection) => {
-    setCollections((prev) => [
-      ...prev,
-      {
-        collectionId: newCollection.collectionId,
-        name: newCollection.name,
-        count: newCollection.specimenCount ?? 0,
-        createdAt: new Date(newCollection.createdAt).toLocaleDateString(),
-        images: [],
-      },
-    ]);
-    setName("");
-    setError("");
-  }, []);
+  const handleCollectionCreated = useCallback(
+    (newCollection: ApiCollection) => {
+      setCollections((prev) => [
+        ...prev,
+        {
+          collectionId: newCollection.collectionId,
+          name: newCollection.name,
+          count: newCollection.specimenCount ?? 0,
+          createdAt: new Date(newCollection.createdAt).toLocaleDateString(),
+          images: [],
+        },
+      ]);
+      setName("");
+      setError("");
+    },
+    []
+  );
 
   const handleCreateLimitReached = useCallback(() => {
     if (!shouldShowCollectionLimitPaywall()) {
@@ -823,7 +840,13 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
             style={[styles.skeletonContainer, { paddingHorizontal: Space[6] }]}
           >
             {Array.from({ length: SKELETON_COUNTS.COLLECTION }).map((_, i) => (
-              <View key={i} style={styles.skeletonItem}>
+              <View
+                key={i}
+                style={[
+                  styles.skeletonItem,
+                  gridColumns === 1 && { width: "100%" },
+                ]}
+              >
                 <CardSkeleton height={180} borderRadius={12} />
               </View>
             ))}
@@ -831,13 +854,15 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
         ) : (
           <FlatList
             data={displayCollections}
-            numColumns={2}
+            numColumns={gridColumns}
+            key={`adaptive-grid-${gridColumns}`}
             keyExtractor={(item, i) => `${item.name ?? "collection"}-${i}`}
             renderItem={renderCollectionItem}
-            columnWrapperStyle={[
-              styles.columnWrapper,
-              { paddingHorizontal: Space[6] },
-            ]}
+            columnWrapperStyle={
+              gridColumns > 1
+                ? [styles.columnWrapper, { paddingHorizontal: Space[6] }]
+                : undefined
+            }
             contentContainerStyle={[styles.list, { paddingBottom: 120 }]}
             showsVerticalScrollIndicator={false}
             refreshing={refreshing}

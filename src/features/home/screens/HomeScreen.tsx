@@ -744,7 +744,6 @@ export const HomeScreen = () => {
               </TouchableOpacity>
               {/* Figma Body/16px/Medium — truncates so Go Pro + search never get pushed off-screen */}
               <AppText
-                allowFontScaling={false}
                 variant="body16"
                 numberOfLines={1}
                 style={styles.greeting}
@@ -874,7 +873,10 @@ export const HomeScreen = () => {
                     onPress={() => setShowInlineDiscountBanner(false)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <CloseIcon isDark={isDark} style={styles.fullSubsCloseIcon} />
+                    <CloseIcon
+                      isDark={isDark}
+                      style={styles.fullSubsCloseIcon}
+                    />
                   </TouchableOpacity>
                 </View>
               )}
@@ -911,7 +913,7 @@ export const HomeScreen = () => {
 
           <View style={styles.sectionBlock}>
             <View style={[layoutStyles.rowBetween, { marginBottom: Space[4] }]}>
-              <AppText allowFontScaling={false}
+              <AppText
                 variant="body16"
                 color={colors.textPrimary}
                 style={{ fontFamily: FONTS.bold }}
@@ -925,7 +927,7 @@ export const HomeScreen = () => {
                 }}
                 activeOpacity={0.7}
               >
-                <AppText allowFontScaling={false}
+                <AppText
                   variant="caption12"
                   color={colors.textPrimary}
                   style={{ fontFamily: FONTS.medium }}

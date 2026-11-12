@@ -1,4 +1,4 @@
-import { useFreeScanPromptSurface } from '../../hooks/useFreeScanPromptSurface';
+import { useFreeScanPromptSurface } from "../../hooks/useFreeScanPromptSurface";
 import {
   getFreeScanLimitPrompt,
   subscribeFreeScanLimitPrompt,
@@ -32,6 +32,7 @@ import {
   BackHandler,
   Platform,
   StatusBar,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -80,7 +81,7 @@ import { CameraIdentifyReview } from "./components/CameraIdentifyReview";
 import { CameraPermissionInlineState } from "./components/CameraPermissionInlineState";
 import {
   CameraPermissionGateChrome,
-  getCameraPermissionGateContentInset,
+  getCameraPermissionGateContentInsets,
 } from "./components/CameraPermissionGateChrome";
 import { CameraDailyScanBanner } from "./components/CameraDailyScanBanner";
 import { CameraScanCountBadge } from "./components/CameraScanCountBadge";
@@ -167,7 +168,8 @@ export const CameraScreen: React.FC = () => {
   const [captureControlsHeight, setCaptureControlsHeight] = useState(220);
   const [bottomControlsHeight, setBottomControlsHeight] = useState(120);
   const captureFrameLayout = useCaptureFrameLayout({
-    minimumTop: insets.top + LOCATION_BANNER_TOP_GAP + locationBannerHeight + 16,
+    minimumTop:
+      insets.top + LOCATION_BANNER_TOP_GAP + locationBannerHeight + 16,
     bottomInset:
       captureControlsHeight + bottomControlsHeight + CAPTURE_CONTENT_GAP + 12,
   });
@@ -1070,10 +1072,7 @@ export const CameraScreen: React.FC = () => {
             onLayout={(event) =>
               setLocationBannerHeight(event.nativeEvent.layout.height)
             }
-            style={[
-              styles.locationBannerWrap,
-              { top: locationBannerTop },
-            ]}
+            style={[styles.locationBannerWrap, { top: locationBannerTop }]}
           >
             <IdentificationLocationBanner
               variant="camera"
@@ -1228,8 +1227,8 @@ export const CameraScreen: React.FC = () => {
           backgroundColor: showUpgradeSheet
             ? theme.colors.background
             : isCameraPermissionGateActive
-              ? APP_COLORS.cameraPermissionSurface
-              : CAMERA_BG_FALLBACK,
+            ? APP_COLORS.cameraPermissionSurface
+            : CAMERA_BG_FALLBACK,
         },
       ]}
     >
@@ -1323,10 +1322,7 @@ export const CameraScreen: React.FC = () => {
               !isCameraPermissionGateActive && (
                 <View
                   pointerEvents="box-none"
-                  style={[
-                    styles.topCenterInfoHost,
-                    { top: insets.top + 12 },
-                  ]}
+                  style={[styles.topCenterInfoHost, { top: insets.top + 12 }]}
                 >
                   <TouchableOpacity
                     onPress={() => setShowTipsModal(true)}
@@ -1427,28 +1423,27 @@ export const CameraScreen: React.FC = () => {
             ) : null}
 
             {showCameraPermissionInline ? (
-              <View
+              <ScrollView
                 style={[
                   styles.cameraPermissionInlineHost,
-                  // Figma centers the permission content on the full screen;
-                  // symmetric inset keeps it clear of both bars on short screens.
                   {
-                    top: 0,
-                    bottom: 0,
-                    paddingVertical: getCameraPermissionGateContentInset(
+                    ...getCameraPermissionGateContentInsets(
                       insets.top,
                       insets.bottom
                     ),
+                    left: insets.left + 20,
+                    right: insets.right + 20,
                   },
                 ]}
-                pointerEvents="box-none"
+                contentContainerStyle={styles.cameraPermissionInlineContent}
+                keyboardShouldPersistTaps="handled"
               >
                 <CameraPermissionInlineState
                   variant={cameraPermissionInline!}
                   loading={cameraPermissionLoading}
                   onAction={() => void handleCameraPermissionAction()}
                 />
-              </View>
+              </ScrollView>
             ) : null}
 
             {showIdentifyReview ? (
@@ -1837,6 +1832,10 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 25,
     elevation: 25,
+  },
+  cameraPermissionInlineContent: {
+    paddingVertical: 12,
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
   },

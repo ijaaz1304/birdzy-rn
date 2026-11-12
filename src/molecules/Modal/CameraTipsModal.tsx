@@ -1,3 +1,4 @@
+import { ScrollView } from "react-native";
 import { AppImage } from "@/components/AppImage";
 /**
  * Camera Tips Modal
@@ -9,7 +10,6 @@ import { AppImage } from "@/components/AppImage";
 
 import React, { useMemo } from "react";
 import {
-  Dimensions,
   ImageSourcePropType,
   StyleSheet,
   TouchableOpacity,
@@ -55,7 +55,7 @@ export const CameraTipsModal: React.FC<CameraTipsModalProps> = ({
   const spacing = theme.spacing;
   const radius = theme.radius;
   const strings = useStrings();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   const tips: TipItem[] = [
     {
@@ -155,8 +155,13 @@ export const CameraTipsModal: React.FC<CameraTipsModalProps> = ({
   );
 
   const content = (
-    <View
-      style={[styles.card, getPopupChromeStyle(theme), { padding: spacing[6] }]}
+    <ScrollView
+      style={{ flexGrow: 0, maxHeight: Math.max(1, windowHeight - 96) }}
+      contentContainerStyle={[
+        styles.card,
+        getPopupChromeStyle(theme),
+        { padding: spacing[6] },
+      ]}
     >
       <TouchableOpacity
         onPress={onClose}
@@ -204,11 +209,11 @@ export const CameraTipsModal: React.FC<CameraTipsModalProps> = ({
           style={getPopupPrimaryCtaStyle(theme)}
         />
       </View>
-    </View>
+    </ScrollView>
   );
 
   if (overlay) {
-    const { width } = Dimensions.get("window");
+    const width = windowWidth;
     const horizontalPadding = 24;
     const cardWidth = width - horizontalPadding * 2;
     return (

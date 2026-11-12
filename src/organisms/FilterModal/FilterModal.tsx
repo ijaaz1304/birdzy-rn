@@ -1,3 +1,4 @@
+import { useWindowDimensions } from "react-native";
 import React, {
   useState,
   useEffect,
@@ -5,7 +6,18 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, TouchableWithoutFeedback, FlatList, Animated, PanResponder, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  Modal,
+  TouchableWithoutFeedback,
+  FlatList,
+  Animated,
+  PanResponder,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
@@ -98,7 +110,7 @@ const FilterModal = ({
   const backgroundOpacity = useRef(new Animated.Value(1)).current;
   const isDragging = useRef(false);
   const _dragStartY = useRef(0);
-  const screenHeight = Dimensions.get("window").height;
+  const screenHeight = useWindowDimensions().height;
   const modalTopOffset = getFilterModalTopOffset(screenHeight);
   const modalHeight = screenHeight - modalTopOffset;
   const DRAG_THRESHOLD = 100; // Minimum drag distance to close modal
@@ -505,15 +517,12 @@ const FilterModal = ({
                   style={styles.headerLeft}
                   hitSlop={HIT_SLOP.CLOSE}
                 >
-                  <Text allowFontScaling={false}
-                    numberOfLines={1}
-                    style={styles.headerClearAllText(filterAccent)}
-                  >
+                  <Text style={styles.headerClearAllText(filterAccent)}>
                     Clear all
                   </Text>
                 </TouchableOpacity>
                 <View style={styles.headerCenter}>
-                  <Text allowFontScaling={false} style={styles.headerTitle(colors)}>Filter</Text>
+                  <Text style={styles.headerTitle(colors)}>Filter</Text>
                 </View>
                 <TouchableOpacity
                   onPress={onClose}
@@ -537,9 +546,7 @@ const FilterModal = ({
                     style={styles.categoriesList}
                     data={filterCategories}
                     keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={
-                      filterCategories.length > 8
-                    }
+                    showsVerticalScrollIndicator={filterCategories.length > 8}
                     nestedScrollEnabled
                     scrollEnabled={!isDraggingModal}
                     onScrollToIndexFailed={({ index }) => {
@@ -570,7 +577,7 @@ const FilterModal = ({
                             setSearchText("");
                           }}
                         >
-                          <Text allowFontScaling={false}
+                          <Text
                             style={[
                               selected
                                 ? styles.categoryTextSelected(colors)
@@ -597,7 +604,6 @@ const FilterModal = ({
                       color={colors.textTertiary}
                     />
                     <TextInput
-                      allowFontScaling={false}
                       style={styles.searchInput(colors)}
                       placeholderTextColor={colors.textTertiary}
                       cursorColor={filterAccent}
@@ -612,7 +618,9 @@ const FilterModal = ({
                     data={filteredOptions}
                     keyExtractor={(item, index) =>
                       selectedCategory === "scientificClassification"
-                        ? `${(item as { level: string; value: string }).level}-${(item as { level: string; value: string }).value}`
+                        ? `${
+                            (item as { level: string; value: string }).level
+                          }-${(item as { level: string; value: string }).value}`
                         : `${String(item)}-${index}`
                     }
                     showsVerticalScrollIndicator={false}
@@ -657,7 +665,7 @@ const FilterModal = ({
                                 disabled={isDefault}
                               />
                             </View>
-                            <Text allowFontScaling={false} style={styles.optionText(colors)}>
+                            <Text style={styles.optionText(colors)}>
                               {optionLabel}
                             </Text>
                           </View>
@@ -678,7 +686,7 @@ const FilterModal = ({
                     onApplyFilters(filters, getTotalSelectedCount() > 0)
                   }
                 >
-                  <Text allowFontScaling={false} style={styles.applyButtonText(colors)}>
+                  <Text style={styles.applyButtonText(colors)}>
                     See results
                     {getTotalSelectedCount() > 0 &&
                       ` (${getTotalSelectedCount()})`}

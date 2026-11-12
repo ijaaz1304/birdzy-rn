@@ -1,3 +1,4 @@
+import { ScrollView } from "react-native";
 /**
  * Bottom Sheet Popup Component
  * Slides up from bottom + backdrop fade (not overlay). Image-only background.
@@ -7,13 +8,19 @@
 import { AppImageBackground } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, TouchableOpacity, Dimensions, StyleSheet, TouchableWithoutFeedback, Animated } from "react-native";
+import {
+  Modal,
+  TouchableOpacity,
+  useWindowDimensions,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  Animated,
+} from "react-native";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Platform } from "react-native";
 import { Images } from "../../assets";
 import { OVERLAY_COLORS } from "../../constants/colorConstants";
 
-const SCREEN_HEIGHT = Dimensions.get("window").height;
 const ANIM_DURATION = 280;
 
 export interface BottomSheetProps {
@@ -31,6 +38,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   children,
   enableBackdropDismiss = true,
 }) => {
+  const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const theme = useTheme();
   const isDark = useIsDark();
 
@@ -151,7 +159,13 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
                   <CloseIcon isDark={isDark} style={styles.closeIcon} />
                 </TouchableOpacity>
 
-                {children}
+                <ScrollView
+                  style={{ flex: 1 }}
+                  contentContainerStyle={{ flexGrow: 1 }}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  {children}
+                </ScrollView>
               </AppImageBackground>
             </Animated.View>
           </TouchableWithoutFeedback>

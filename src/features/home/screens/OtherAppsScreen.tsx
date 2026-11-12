@@ -1,3 +1,5 @@
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
+import { useWindowDimensions } from "react-native";
 /**
  * Other Apps Screen
  * Fetches cross-promo apps from PUBLISHED_APPS_URL (list.json).
@@ -5,7 +7,16 @@
  */
 
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, Linking, Platform, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  Linking,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -31,6 +42,8 @@ type OtherAppsScreenNavigationProp = NativeStackNavigationProp<
 const CARD_GAP = 12;
 
 export const OtherAppsScreen: React.FC = () => {
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const gridColumns = getResponsiveGridColumns(windowWidth, fontScale);
   const theme = useTheme();
   const colors = theme.colors;
   const Space = theme.spacing;
@@ -59,7 +72,12 @@ export const OtherAppsScreen: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: PublishedApp }) => (
-    <View style={styles.cardWrap}>
+    <View
+      style={[
+        styles.cardWrap,
+        gridColumns === 1 && { width: "100%", maxWidth: "100%" },
+      ]}
+    >
       <AppOtherAppCard
         title={item.title || "App"}
         subtitle={item.description || ""}
@@ -99,12 +117,17 @@ export const OtherAppsScreen: React.FC = () => {
       ) : (
         <FlatList
           data={displayApps}
-          numColumns={2}
+          numColumns={gridColumns}
+          key={`adaptive-grid-${gridColumns}`}
           keyExtractor={(item, index) =>
             item.id ?? item.title ?? `app-${index}`
           }
           renderItem={renderItem}
-          columnWrapperStyle={[styles.columnWrapper, { gap: CARD_GAP }]}
+          columnWrapperStyle={
+            gridColumns > 1
+              ? [styles.columnWrapper, { gap: CARD_GAP }]
+              : undefined
+          }
           contentContainerStyle={[styles.list, { paddingHorizontal: Space[6] }]}
           showsVerticalScrollIndicator={false}
         />

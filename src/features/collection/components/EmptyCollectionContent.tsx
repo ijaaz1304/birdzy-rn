@@ -5,7 +5,13 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useMemo } from "react";
-import { View, StyleSheet, TouchableOpacity, Text as RNText, Dimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text as RNText,
+  useWindowDimensions,
+} from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import { useTheme } from "../../../hooks/useTheme";
 import { Text } from "../../../atoms";
@@ -33,16 +39,17 @@ export const EmptyCollectionContent: React.FC<EmptyCollectionContentProps> = ({
   ctaLabel,
   onCtaPress,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
   const colors = theme.colors;
   const ctaTextColor = APP_COLORS.modalTextOnPrimary;
 
   const imageSize = useMemo(() => {
-    const availableWidth = Dimensions.get("window").width - spacing[6] * 2;
+    const availableWidth = windowWidth - spacing[6] * 2;
     const width = Math.min(availableWidth, EMPTY_IMAGE_WIDTH);
     const height = Math.round(width * (EMPTY_IMAGE_HEIGHT / EMPTY_IMAGE_WIDTH));
     return { width, height };
-  }, []);
+  }, [windowWidth]);
 
   /** Empty collection inside a collection — no_mushroom.webp */
   const emptyImage = Images.emptyCatalogue;

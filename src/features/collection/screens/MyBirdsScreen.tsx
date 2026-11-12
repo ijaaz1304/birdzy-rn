@@ -1,3 +1,5 @@
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
+import { useWindowDimensions } from "react-native";
 /**
  * My Mushrooms Screen
  */
@@ -30,6 +32,8 @@ type MyBirdsScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 export const MyBirdsScreen: React.FC = () => {
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const gridColumns = getResponsiveGridColumns(windowWidth, fontScale);
   const theme = useTheme();
   const navigation = useNavigation<MyBirdsScreenNavigationProp>();
   const collectionConfig = useFeatureConfig("collection");
@@ -95,11 +99,19 @@ export const MyBirdsScreen: React.FC = () => {
         <FlatList
           data={items}
           keyExtractor={(item, index) => item.id ?? `item-${index}`}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
+          numColumns={gridColumns}
+          key={`collection-grid-${gridColumns}`}
+          columnWrapperStyle={
+            gridColumns > 1 ? styles.columnWrapper : undefined
+          }
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <View style={styles.itemCardWrapper}>
+            <View
+              style={[
+                styles.itemCardWrapper,
+                gridColumns === 1 && { width: "100%" },
+              ]}
+            >
               <BirdCard
                 id={item.id}
                 name={item.name}

@@ -11,7 +11,14 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { View, FlatList, TouchableOpacity, StyleSheet, StatusBar, Dimensions, useWindowDimensions } from "react-native";
+import {
+  View,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+  useWindowDimensions,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -24,7 +31,10 @@ import { Icon } from "../../../atoms";
 import { Tab } from "../../../molecules";
 import { ScreenContainer } from "../../../molecules";
 import { EmptyState } from "../../../molecules";
-import { ReportModal, REPORT_MODAL_KEYBOARD_COOLDOWN_MS } from "../../../molecules/ReportModal";
+import {
+  ReportModal,
+  REPORT_MODAL_KEYBOARD_COOLDOWN_MS,
+} from "../../../molecules/ReportModal";
 import { MODAL_STRINGS } from "../../../config/strings/modals.strings";
 import { FeedStackParamList } from "../../../navigation/types";
 // Post type - should come from API types
@@ -41,7 +51,6 @@ import { FLATLIST_CONFIG } from "../../../constants/appConstants";
 import { FEED_COLORS } from "../../../constants/colorConstants";
 import { APP_COLORS } from "../../../config/colors";
 
-const SCREEN = Dimensions.get("window");
 /** Header + tabs + soft gradient fade below tabs (status bar added at runtime). */
 const FEED_HEADER_BG_BODY_HEIGHT = 148;
 import {
@@ -442,7 +451,10 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
    * screen, placed ~14% of the screen height below the tabs (Figma: 113pt on 812pt).
    */
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const emptyImageWidth = Math.min(EMPTY_IMAGE_WIDTH, Math.round(windowWidth * 0.6));
+  const emptyImageWidth = Math.min(
+    EMPTY_IMAGE_WIDTH,
+    Math.round(windowWidth * 0.6)
+  );
   const emptyImageHeight = Math.round(
     (emptyImageWidth * EMPTY_IMAGE_HEIGHT) / EMPTY_IMAGE_WIDTH
   );
@@ -524,7 +536,6 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             variant="title"
             size="large"
             weight="bold"
-            allowFontScaling={false}
             numberOfLines={1}
             style={[
               commonFeedStyles.headerTitle,
@@ -618,7 +629,6 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                     resizeMode="contain"
                   />
                   <Text
-                    allowFontScaling={false}
                     numberOfLines={2}
                     style={[
                       styles.emptyTitle,
@@ -630,7 +640,6 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                   {/* "My posts" (Figma) is a single line; "All" keeps its call-to-action subtitle */}
                   {activeTab !== "mine" && emptyState.subtitle ? (
                     <Text
-                      allowFontScaling={false}
                       style={[
                         styles.emptySubtitle,
                         { color: theme.colors.textTertiary },
@@ -795,8 +804,8 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   headerBgImage: {
-    width: SCREEN.width,
-    height: SCREEN.height,
+    width: "100%",
+    height: "100%",
   },
   content: {
     flex: 1,

@@ -4,6 +4,37 @@ Date: 2026-11-11 (Asia/Kolkata). Portfolio audit 5/5.
 
 Repository: `Birdzy`. Audited local HEAD: `ca25598d8df142465d0c84ee4585dfd7137816b8`. Working tree was clean when scanned. Evidence is local source at this snapshot; deployed builds and remote variants were not verified.
 
+## Full audit implementation pass — 12 November 2026
+
+Implemented locally on `feat/responsiveness`, continuing batch 1. The sections below this dated update preserve historical audit evidence and earlier intermediate status. **All nine prioritized findings have source changes; device/visual acceptance is delegated to the requester and is not marked passed.** A source fix is not proof that every possible device/content combination is correct.
+
+- **R01 — Core content scaling:** removed explicit font-scaling opt-outs across home, details, filters, search, feed and post-auth/purchase text. Detail facts and purchase disclosures no longer force line limits. Text-bearing cards and shared rows grow or wrap; home feature/discovery/corner rows stack with the shared narrow-window/large-text grid policy. Nearby-map banner copy now participates in normal flow; decorative map art is hidden when enlarged text needs the width.
+- **R02 — Sound rows:** scalable title, recording badge, metadata and timer use separate intrinsic rows; playback remains on the existing audio-service path.
+- **R03 — Buttons and input:** shared Button wraps instead of shrinking; permission/gradient/legacy text buttons use intrinsic minimum heights; labeled FABs can grow; SearchBar no longer forces a 48-unit outer height. Reusable accordion/list widths follow their parent.
+- **R04 — Purchase and legal:** plans stack vertically inside scrolling paywall/post-auth content. Complete amount, period, old-price, trial and billing-note copy can wrap; price typography is no longer reduced according to string length. Popular badges join normal flow; legal links wrap and retain their actions. SubscriptionSheetContent owns scrolling even when used inside a fixed custom sheet. Purchase/restore services and products are unchanged.
+- **R05 — Permissions:** camera explanation/action text scales inside its bounded scrolling host; location and notification post-auth slides grow in the shared scroll flow; microphone and camera-tip popups have bounded scrolling content. Denied/loading/settings handlers are preserved.
+- **R06 — Sound-state height:** entry, recording, no-match and crop/result content/actions have a vertical scrolling path. Fixed artwork remains bounded decoration; recording/crop service logic is unchanged.
+- **R07 — Sheets, modals and backgrounds:** AppSheet derives live dimensions and caps its panel to the measured modal/keyboard-avoiding host, safe top edge and explicit custom keyboard lift. Forms and art/permission/upgrade content can scroll while existing internally scrolling pickers retain their container. Resizing an already-open sheet does not replay its entrance animation. AppModal and standalone success/error/permission popups bound their scroll bodies; legacy sheet dimensions are live. Screen/auth/personality/feed/SVG backgrounds and photo previews no longer use captured physical-screen sizes.
+- **R08 — Paging and grids:** active and legacy carousels use live/parent dimensions and reconcile selected pages after resize/list changes. Catalogue/search/collection/wishlist/explore/cross-app grids share the one/two-column width/font policy and re-key when column count changes. Single-column cards fill their row. Map requests use measured parent width, and CustomLocationInput waits for measurement before requesting its map.
+- **R09 — Navigation:** custom tab labels scale and wrap with intrinsic bar height; side safe-area insets are respected. Identify chooser, tab navigation/reset, analytics and selected state remain on existing handlers.
+
+Validation: the full Jest run passed 822 tests in 91 suites; two API payload tests in one additional suite failed and reproduce against clean HEAD `30dcbbf`. TypeScript passed. Scoped ESLint had 0 errors and warnings remaining (see changelog). New responsive regressions cover paging/resize, long scalable content, purchase/restore actions, grid policy and short-window bounds. No simulator acceptance is claimed. The requester explicitly asked to skip further simulator checks and will perform them.
+
+See [current implementation contracts](../../handover/DEVELOPMENT.md#full-responsive-implementation--12-november-2026) and [requester test handoff](../../handover/QA_AND_OPERATIONS.md#responsive-device-handoff--12-november-2026). No dependency, environment, API, billing or audio-service changes were introduced. Changes remain uncommitted.
+
+## Implementation progress — 12 November 2026
+
+Work started on `feat/responsiveness` from `30dcbbf`. This section records later implementation; the original findings and source line references below retain their 11 November snapshot and may no longer match current line positions.
+
+- **BIRDZY-R02:** sound-row copy now scales, wraps and stacks. Source implemented; native font/display and playback acceptance pending.
+- **BIRDZY-R03:** shared Button no longer forces one line or shrink-to-fit. Source implemented; explicit opt-outs and caller-fixed heights still need screen-level migration/QA.
+- **BIRDZY-R05:** inline camera permission content now scales and its host scrolls between computed chrome bounds. Other microphone/photo/location permission surfaces remain open.
+- **BIRDZY-R07:** ScreenContainer backgrounds now follow host bounds. AppModal, AppSheet and other onboarding/background snapshots remain open.
+- **BIRDZY-R08:** caller tracing found active detail/list carousels differ from the legacy generic components cited in the original audit. CatalogueDetailCarousel and CardImageCarousel now reconcile parent-width changes, preserve/clamp the page and handle old-width momentum callbacks. Legacy ImageCarousel, TopMatchesCarousel and PhotoPickerRow remain unmodified.
+- **BIRDZY-R01/R04/R06/R09:** core detail/home text, purchase/legal, sound-state height and navigation scaling remain open.
+
+Validation: 8 focused Jest suites / 25 tests passed; TypeScript passed; scoped lint: 0 errors / 20 warnings. No native visual/device test, native build or full audit-matrix run. See [development contracts](../../handover/DEVELOPMENT.md#responsive-implementation-foundation--12-november-2026) and [batch acceptance](../../handover/QA_AND_OPERATIONS.md#responsiveness-implementation-batch-1--12-november-2026). Named owners and Design/Development/QA acceptance remain open.
+
 ## Executive assessment
 
 9 prioritized findings below combine confirmed source constraints with explicitly labeled runtime risks. P1 means a high-priority accessibility or potential task-completion problem; P2 means a layout/resize risk needing planned remediation; P3 means visual consistency. These are audit priorities, not measured production incident severities. No visual failure is marked device-reproduced.

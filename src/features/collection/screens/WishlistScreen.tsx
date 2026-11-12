@@ -1,9 +1,17 @@
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
+import { useWindowDimensions } from "react-native";
 /**
  * Wishlist Screen
  * Search and filter match CollectionDetailsScreen (Identified) for consistent UX.
  */
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import { View, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -40,7 +48,10 @@ import {
   getDisplayName,
   getMushroomDisplayScientificFromFields,
 } from "../../../utils/mushroomDisplayUtils";
-import { getSpecimenDisplayImageUrls, resolveArchetypeIdFromSpecimen } from "../collection.utils";
+import {
+  getSpecimenDisplayImageUrls,
+  resolveArchetypeIdFromSpecimen,
+} from "../collection.utils";
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
 import { useBackHandler } from "../../../utils/backHandler";
@@ -53,6 +64,8 @@ type WishlistScreenNavigationProp = CompositeNavigationProp<
 >;
 
 export const WishlistScreen: React.FC = () => {
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const gridColumns = getResponsiveGridColumns(windowWidth, fontScale);
   const theme = useTheme();
   const colors = theme.colors;
   const spacing = theme.spacing;
@@ -306,168 +319,188 @@ export const WishlistScreen: React.FC = () => {
 
   return (
     <>
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.surfaceSecondary }]}
-      edges={["top"]}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={handleBack}
-          activeOpacity={0.7}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <NavBackIcon color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text
-          variant="title"
-          size="medium"
-          weight="semibold"
-          style={{ color: colors.textPrimary }}
-        >
-          Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}
-        </Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      {/* Search and filter - hidden when wishlist is empty */}
-      {wishlistItems.length > 0 && (
-      <View
-        style={{
-          paddingHorizontal: spacing[6],
-          marginBottom: spacing[2],
-          flexDirection: "row",
-          gap: spacing[2],
-        }}
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.surfaceSecondary }]}
+        edges={["top"]}
       >
-        <View style={{ flex: 1 }}>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onClear={() => setSearchQuery("")}
-            placeholder="Find bird by name"
-            showFilterButton={false}
-          />
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={handleBack}
+            activeOpacity={0.7}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <NavBackIcon color={colors.textPrimary} />
+          </TouchableOpacity>
+          <Text
+            variant="title"
+            size="medium"
+            weight="semibold"
+            style={{ color: colors.textPrimary }}
+          >
+            Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}
+          </Text>
+          <View style={styles.placeholder} />
         </View>
-        <FilterActionButton
-          filterCount={totalFilterCount}
-          onPress={() => {
-            analyticsService.logEvent(EVENTS.filter_sub_collection, {
-              collection_name: "Wishlist",
-            });
-            setShowFilterModal(true);
-          }}
-        />
-      </View>
-      )}
 
-      <ActiveFilterChips
-        filters={filters}
-        onOpenFilters={() => setShowFilterModal(true)}
-        onRemoveFilterValue={removeFilterValue}
-        resultsHeading={strings.catalogue.screen.results}
-        contentPaddingHorizontal={spacing[6]}
-      />
-
-      <View style={styles.body}>
-      {isLoading ? (
-        <View
-          style={[styles.skeletonContainer, { paddingHorizontal: spacing[6] }]}
-        >
-          {[1, 2, 3, 4].map((i) => (
-            <View key={i} style={styles.skeletonItem}>
-              <CardSkeleton height={200} borderRadius={12} />
-            </View>
-          ))}
-        </View>
-      ) : filteredMushrooms.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          {wishlistItems.length === 0 ? (
-            <EmptyCollectionContent
-              title={strings.collection.emptyStates.noWishlist.title}
-              subtitle={strings.collection.emptyStates.noWishlist.subtitle}
-              ctaLabel={
-                strings.collection.emptyStates.emptyCollection.addBird
-              }
-              onCtaPress={handleEmptyCtaPress}
-            />
-          ) : (
-            <Text
-              variant="body"
-              size="medium"
-              color="textSecondary"
-              style={styles.emptyText}
-            >
-              {strings.collection.emptyStates.emptyCollection.noSearchResults}
-            </Text>
-          )}
-        </View>
-      ) : (
-        <FlatList
-          data={filteredMushrooms}
-          keyExtractor={(item, index) =>
-            item.specimenId ?? `${item.id}-${index}`
-          }
-          numColumns={2}
-          columnWrapperStyle={[
-            styles.columnWrapper,
-            { paddingHorizontal: spacing[6] },
-          ]}
-          contentContainerStyle={[
-            styles.list,
-            { paddingHorizontal: 0, paddingBottom: listBottomPadding },
-          ]}
-          renderItem={({ item }) => (
-            <View style={styles.mushroomCardWrapper}>
-              <AppCard
-                image={item.image}
-                title={item.name}
-                subtitle={item.scientificName}
-                starred={true}
-                onPress={() => {
-                  analyticsService.logEvent(EVENTS.sub_collection_item, {
-                    collection_name: "Wishlist",
-                  });
-                  const hasArchetypeId = !!item.archetypeId;
-                  navigation.navigate("BirdDetails", {
-                    mushroomId: hasArchetypeId
-                      ? item.archetypeId!
-                      : item.specimenId,
-                    source: "collection",
-                    collectionName: "Wishlist",
-                    ...(hasArchetypeId ? {} : { idType: "specimen" as const }),
-                    specimenId: item.specimenId,
-                  });
-                }}
-                onStarPress={() => handleRemovePress(item)}
-                style={styles.cardStyle}
+        {/* Search and filter - hidden when wishlist is empty */}
+        {wishlistItems.length > 0 && (
+          <View
+            style={{
+              paddingHorizontal: spacing[6],
+              marginBottom: spacing[2],
+              flexDirection: "row",
+              gap: spacing[2],
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <SearchBar
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onClear={() => setSearchQuery("")}
+                placeholder="Find bird by name"
+                showFilterButton={false}
               />
             </View>
-          )}
+            <FilterActionButton
+              filterCount={totalFilterCount}
+              onPress={() => {
+                analyticsService.logEvent(EVENTS.filter_sub_collection, {
+                  collection_name: "Wishlist",
+                });
+                setShowFilterModal(true);
+              }}
+            />
+          </View>
+        )}
+
+        <ActiveFilterChips
+          filters={filters}
+          onOpenFilters={() => setShowFilterModal(true)}
+          onRemoveFilterValue={removeFilterValue}
+          resultsHeading={strings.catalogue.screen.results}
+          contentPaddingHorizontal={spacing[6]}
         />
-      )}
-      </View>
 
-      <FilterModal
-        visible={showFilterModal}
-        onClose={() => setShowFilterModal(false)}
-        filterDataFromApi={filterApiData}
-        onApplyFilters={handleApplyFilters}
-        clearAllFilters={handleClearFilters}
-        defaultFilters={filters}
-        comingFrom="global_collection"
+        <View style={styles.body}>
+          {isLoading ? (
+            <View
+              style={[
+                styles.skeletonContainer,
+                { paddingHorizontal: spacing[6] },
+              ]}
+            >
+              {[1, 2, 3, 4].map((i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.skeletonItem,
+                    gridColumns === 1 && { width: "100%" },
+                  ]}
+                >
+                  <CardSkeleton height={200} borderRadius={12} />
+                </View>
+              ))}
+            </View>
+          ) : filteredMushrooms.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              {wishlistItems.length === 0 ? (
+                <EmptyCollectionContent
+                  title={strings.collection.emptyStates.noWishlist.title}
+                  subtitle={strings.collection.emptyStates.noWishlist.subtitle}
+                  ctaLabel={
+                    strings.collection.emptyStates.emptyCollection.addBird
+                  }
+                  onCtaPress={handleEmptyCtaPress}
+                />
+              ) : (
+                <Text
+                  variant="body"
+                  size="medium"
+                  color="textSecondary"
+                  style={styles.emptyText}
+                >
+                  {
+                    strings.collection.emptyStates.emptyCollection
+                      .noSearchResults
+                  }
+                </Text>
+              )}
+            </View>
+          ) : (
+            <FlatList
+              data={filteredMushrooms}
+              keyExtractor={(item, index) =>
+                item.specimenId ?? `${item.id}-${index}`
+              }
+              numColumns={gridColumns}
+              key={`adaptive-grid-${gridColumns}`}
+              columnWrapperStyle={
+                gridColumns > 1
+                  ? [styles.columnWrapper, { paddingHorizontal: spacing[6] }]
+                  : undefined
+              }
+              contentContainerStyle={[
+                styles.list,
+                { paddingHorizontal: 0, paddingBottom: listBottomPadding },
+              ]}
+              renderItem={({ item }) => (
+                <View
+                  style={[
+                    styles.mushroomCardWrapper,
+                    gridColumns === 1 && { width: "100%", maxWidth: "100%" },
+                  ]}
+                >
+                  <AppCard
+                    image={item.image}
+                    title={item.name}
+                    subtitle={item.scientificName}
+                    starred={true}
+                    onPress={() => {
+                      analyticsService.logEvent(EVENTS.sub_collection_item, {
+                        collection_name: "Wishlist",
+                      });
+                      const hasArchetypeId = !!item.archetypeId;
+                      navigation.navigate("BirdDetails", {
+                        mushroomId: hasArchetypeId
+                          ? item.archetypeId!
+                          : item.specimenId,
+                        source: "collection",
+                        collectionName: "Wishlist",
+                        ...(hasArchetypeId
+                          ? {}
+                          : { idType: "specimen" as const }),
+                        specimenId: item.specimenId,
+                      });
+                    }}
+                    onStarPress={() => handleRemovePress(item)}
+                    style={styles.cardStyle}
+                  />
+                </View>
+              )}
+            />
+          )}
+        </View>
+
+        <FilterModal
+          visible={showFilterModal}
+          onClose={() => setShowFilterModal(false)}
+          filterDataFromApi={filterApiData}
+          onApplyFilters={handleApplyFilters}
+          clearAllFilters={handleClearFilters}
+          defaultFilters={filters}
+          comingFrom="global_collection"
+        />
+      </SafeAreaView>
+
+      <RemoveFromWishlistConfirmation
+        visible={showRemoveModal}
+        onClose={() => {
+          setShowRemoveModal(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleConfirmRemove}
+        mushroomName={selectedItem?.name}
       />
-
-    </SafeAreaView>
-
-    <RemoveFromWishlistConfirmation
-      visible={showRemoveModal}
-      onClose={() => {
-        setShowRemoveModal(false);
-        setSelectedItem(null);
-      }}
-      onConfirm={handleConfirmRemove}
-      mushroomName={selectedItem?.name}
-    />
     </>
   );
 };

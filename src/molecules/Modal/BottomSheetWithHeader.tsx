@@ -6,7 +6,17 @@
 
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Modal, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated, Dimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+  useWindowDimensions,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import {
@@ -30,7 +40,6 @@ const CLOSE_HIT_SLOP = HIT_SLOP.CLOSE;
 const _CLOSE_BG_LIGHT = APP_COLORS.surfaceAuthLight; // Surface Secondary light
 const _CLOSE_BG_DARK = APP_COLORS.surfaceDarkAlt; // Surface Secondary dark
 const ANIM_DURATION = 280;
-const screenHeight = Dimensions.get("window").height;
 
 const DEFAULT_HEIGHT_PERCENT = 50;
 
@@ -72,6 +81,7 @@ export const BottomSheetWithHeader: React.FC<BottomSheetWithHeaderProps> = ({
   disableScroll = false,
   debugName,
 }) => {
+  const { height: screenHeight, fontScale } = useWindowDimensions();
   const theme = useTheme();
   const colors = theme.colors;
   const radius = theme.radius;
@@ -187,7 +197,7 @@ export const BottomSheetWithHeader: React.FC<BottomSheetWithHeaderProps> = ({
       >
         <CloseIcon isDark={isDark} size={CLOSE_ICON_SIZE} />
       </TouchableOpacity>
-      {disableScroll ? (
+      {disableScroll && fontScale <= 1.2 && screenHeight >= 700 ? (
         <View
           style={[
             styles.scroll,

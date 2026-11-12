@@ -4,18 +4,15 @@
  */
 
 import { AppImage } from "@/components/AppImage";
-import React from "react";
+import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import {
   SafeAreaView,
   SafeAreaViewProps,
 } from "react-native-safe-area-context";
-import { Dimensions } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { SvgBackground } from "../../utils/svgUtils";
 import { Images } from "../../assets";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export interface ScreenContainerProps extends SafeAreaViewProps {
   /**
@@ -46,31 +43,38 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
   ...safeAreaProps
 }) => {
   const theme = useTheme();
+  const [size, setSize] = useState({ width: 0, height: 0 });
   const bgColor = backgroundColor ?? theme.colors.background;
   const usePngBackground = !backgroundComponent;
   const splashBgSource =
     theme.mode === "dark" ? Images.splashBgDark : Images.splashBgLight;
 
   return (
-    <View style={[styles.wrapper, { backgroundColor: bgColor }]}>
+    <View
+      style={[styles.wrapper, { backgroundColor: bgColor }]}
+      onLayout={({ nativeEvent: { layout } }) =>
+        setSize((previous) =>
+          previous.width === layout.width && previous.height === layout.height
+            ? previous
+            : { width: layout.width, height: layout.height }
+        )
+      }
+    >
       {showBackground &&
         (usePngBackground ? (
           <AppImage
             source={splashBgSource}
-            style={[
-              styles.backgroundImage,
-              { width: SCREEN_WIDTH, height: SCREEN_HEIGHT },
-            ]}
+            style={styles.backgroundImage}
             resizeMode="cover"
           />
-        ) : (
+        ) : size.width > 0 && size.height > 0 ? (
           <SvgBackground
             SvgComponent={backgroundComponent!}
-            width={SCREEN_WIDTH}
-            height={SCREEN_HEIGHT}
+            width={size.width}
+            height={size.height}
             preserveAspectRatio="xMidYMid slice"
           />
-        ))}
+        ) : null)}
       <SafeAreaView
         style={[styles.container, style]}
         edges={["top", "bottom"]}
@@ -88,9 +92,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   backgroundImage: {
-    position: "absolute",
-    top: 0,
-    left: 0,
+    ...StyleSheet.absoluteFillObject,
     zIndex: 0,
   },
   container: {

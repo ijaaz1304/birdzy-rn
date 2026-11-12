@@ -1,3 +1,5 @@
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
+import { useWindowDimensions } from "react-native";
 /**
  * Collection Details Screen
  */
@@ -18,7 +20,11 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { useStrings } from "../../../hooks/useStrings";
 import { Text, NavBackIcon } from "../../../atoms";
-import { SearchBar, ActiveFilterChips, FilterActionButton } from "../../../molecules";
+import {
+  SearchBar,
+  ActiveFilterChips,
+  FilterActionButton,
+} from "../../../molecules";
 import FilterModal from "../../../organisms/FilterModal/FilterModal";
 import {
   CollectionStackParamList,
@@ -72,6 +78,8 @@ type CollectionDetailsScreenNavigationProp = CompositeNavigationProp<
 >;
 
 export const CollectionDetailsScreen: React.FC = () => {
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const gridColumns = getResponsiveGridColumns(windowWidth, fontScale);
   const theme = useTheme();
   const colors = theme.colors;
   const isDark = useIsDark();
@@ -123,8 +131,7 @@ export const CollectionDetailsScreen: React.FC = () => {
       specimenId,
       archetypeId,
       name: getDisplayName(specimen),
-      scientificName:
-        getMushroomDisplayScientificFromFields(specimen) ?? "",
+      scientificName: getMushroomDisplayScientificFromFields(specimen) ?? "",
       image: firstResolved ? { uri: firstResolved } : undefined,
       imageUrls: resolvedUris.length > 0 ? resolvedUris : undefined,
       isWishlisted: !!specimen.isWishlisted,
@@ -402,13 +409,24 @@ export const CollectionDetailsScreen: React.FC = () => {
   );
 
   const renderItem = useCallback(
-    ({ item, index: _index }: { item: (typeof allMinerals)[0]; index: number }) => {
+    ({
+      item,
+      index: _index,
+    }: {
+      item: (typeof allMinerals)[0];
+      index: number;
+    }) => {
       // Note: Reminders removed - not needed for rocks/minerals app
       // This is kept for backward compatibility with AppCard component
       const remindersCount = 0; // Always 0 for minerals
 
       return (
-        <View style={styles.itemCardWrapper}>
+        <View
+          style={[
+            styles.itemCardWrapper,
+            gridColumns === 1 && { width: "100%" },
+          ]}
+        >
           <AppCard
             image={
               item.image
@@ -429,7 +447,7 @@ export const CollectionDetailsScreen: React.FC = () => {
         </View>
       );
     },
-    [handleItemPress, allMinerals]
+    [gridColumns, handleItemPress, allMinerals]
   );
 
   const handleApplyFilters = (newFilters: FilterState, hasFilters: boolean) => {
@@ -682,61 +700,63 @@ export const CollectionDetailsScreen: React.FC = () => {
       )}
 
       <View style={styles.body}>
-      {/* Minerals Grid - Same layout as Catalogue */}
-      {isLoading ? (
-        <View
-          style={[styles.skeletonContainer, { paddingHorizontal: Space[6] }]}
-        >
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <View key={i} style={styles.skeletonItem}>
-              <CardSkeleton height={220} borderRadius={12} />
-            </View>
-          ))}
-        </View>
-      ) : minerals.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          {isCollectionEmpty ? (
-            <EmptyCollectionContent
-              subtitle={
-                isWishlistCollection
-                  ? strings.collection.emptyStates.noWishlist.subtitle
-                  : strings.collection.emptyStates.emptyCollection.message
-              }
-              ctaLabel={
-                strings.collection.emptyStates.emptyCollection.addBird
-              }
-              onCtaPress={handleEmptyCtaPress}
-            />
-          ) : (
-            <EmptyState
-              title={
-                strings.collection.emptyStates.emptyCollection.noSearchResults
-              }
-            />
-          )}
-        </View>
-      ) : (
-        <FlatList
-          data={minerals}
-          numColumns={2}
-          keyExtractor={(item, index) => item.id ?? `mineral-${index}`}
-          renderItem={renderItem}
-          columnWrapperStyle={[
-            styles.columnWrapper,
-            { paddingHorizontal: Space[6] },
-          ]}
-          contentContainerStyle={[
-            screenStyles.scrollContent,
-            { paddingTop: 8, paddingBottom: listBottomPadding },
-          ]}
-          showsVerticalScrollIndicator={false}
-          initialNumToRender={10}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          removeClippedSubviews={true}
-          updateCellsBatchingPeriod={50}
-        />
-      )}
+        {/* Minerals Grid - Same layout as Catalogue */}
+        {isLoading ? (
+          <View
+            style={[styles.skeletonContainer, { paddingHorizontal: Space[6] }]}
+          >
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <View key={i} style={styles.skeletonItem}>
+                <CardSkeleton height={220} borderRadius={12} />
+              </View>
+            ))}
+          </View>
+        ) : minerals.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            {isCollectionEmpty ? (
+              <EmptyCollectionContent
+                subtitle={
+                  isWishlistCollection
+                    ? strings.collection.emptyStates.noWishlist.subtitle
+                    : strings.collection.emptyStates.emptyCollection.message
+                }
+                ctaLabel={
+                  strings.collection.emptyStates.emptyCollection.addBird
+                }
+                onCtaPress={handleEmptyCtaPress}
+              />
+            ) : (
+              <EmptyState
+                title={
+                  strings.collection.emptyStates.emptyCollection.noSearchResults
+                }
+              />
+            )}
+          </View>
+        ) : (
+          <FlatList
+            data={minerals}
+            numColumns={gridColumns}
+            key={`collection-grid-${gridColumns}`}
+            keyExtractor={(item, index) => item.id ?? `mineral-${index}`}
+            renderItem={renderItem}
+            columnWrapperStyle={
+              gridColumns > 1
+                ? [styles.columnWrapper, { paddingHorizontal: Space[6] }]
+                : undefined
+            }
+            contentContainerStyle={[
+              screenStyles.scrollContent,
+              { paddingTop: 8, paddingBottom: listBottomPadding },
+            ]}
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
+            updateCellsBatchingPeriod={50}
+          />
+        )}
       </View>
 
       {/* Filter Modal */}

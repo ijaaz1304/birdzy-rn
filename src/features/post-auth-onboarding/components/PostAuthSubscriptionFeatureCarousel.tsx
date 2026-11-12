@@ -1,6 +1,19 @@
 import { AppImage } from "@/components/AppImage";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, Text, View } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { FONTS } from "../../../common/typography";
 import { APP_COLORS } from "../../../../theme/colors";
 import { PostAuthPaginationDots } from "./PostAuthPaginationDots";
@@ -89,7 +102,7 @@ export const PostAuthSubscriptionFeatureCarousel: React.FC<Props> = ({
   }, []);
 
   useEffect(() => {
-    goToIndex(0, false);
+    goToIndex(featureIndexRef.current, false);
   }, [goToIndex, isDark]);
 
   useEffect(() => {
@@ -108,10 +121,14 @@ export const PostAuthSubscriptionFeatureCarousel: React.FC<Props> = ({
 
   return (
     <View
-      style={[styles.wrapper, { marginTop: layout.subscriptionCarouselMarginTop }]}
+      style={[
+        styles.wrapper,
+        { marginTop: layout.subscriptionCarouselMarginTop },
+      ]}
       onLayout={handleLayout}
     >
       <FlatList
+        onContentSizeChange={() => goToIndex(featureIndexRef.current, false)}
         ref={listRef}
         data={features}
         extraData={`${isDark}-${featureCarouselWidth}-${featureCount}`}
@@ -149,10 +166,10 @@ export const PostAuthSubscriptionFeatureCarousel: React.FC<Props> = ({
               resizeMode="contain"
               preferRNImage={isDark}
             />
-            <Text allowFontScaling={false} style={[styles.title, { color: colors.textPrimary }]}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>
               {item.title}
             </Text>
-            <Text allowFontScaling={false} style={[styles.subtitle, { color: colors.textPrimary }]}>
+            <Text style={[styles.subtitle, { color: colors.textPrimary }]}>
               {item.subtitle}
             </Text>
           </View>
@@ -162,7 +179,9 @@ export const PostAuthSubscriptionFeatureCarousel: React.FC<Props> = ({
         total={featureCount}
         activeIndex={featureIndex}
         inactiveColor={
-          isDark ? "rgba(255, 255, 255, 0.25)" : APP_COLORS.paginationDotUnselectedLight
+          isDark
+            ? "rgba(255, 255, 255, 0.25)"
+            : APP_COLORS.paginationDotUnselectedLight
         }
       />
     </View>

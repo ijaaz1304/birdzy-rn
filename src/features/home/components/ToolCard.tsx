@@ -1,6 +1,12 @@
 import { AppImage } from "@/components/AppImage";
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ImageSourcePropType } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ImageSourcePropType,
+} from "react-native";
 import { useTheme } from "../../../hooks/useTheme";
 
 import { FONTS } from "../../../common/typography";
@@ -31,9 +37,13 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, iconSource, onPress }) => {
       {/* Foreground content */}
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <AppImage source={iconSource} style={styles.icon} resizeMode="contain" />
+          <AppImage
+            source={iconSource}
+            style={styles.icon}
+            resizeMode="contain"
+          />
         </View>
-        <Text allowFontScaling={false} style={[styles.title, { color: theme.colors.textPrimary }]}>
+        <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
           {title}
         </Text>
       </View>

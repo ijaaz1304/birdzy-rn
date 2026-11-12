@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, type ViewStyle } from "react-native";
+import { StyleSheet, View, ScrollView, type ViewStyle } from "react-native";
 import { usePostAuthContentLayout } from "../utils/postAuthContentLayout";
 
 type Props = {
@@ -17,14 +17,10 @@ export const PostAuthPhoneLayout: React.FC<Props> = ({
   const { isWideScreen, contentWidth } = usePostAuthContentLayout();
 
   return (
-    <View
-      style={[
-        styles.outer,
-        isWideScreen ? styles.outerWide : null,
-        style,
-      ]}
-    >
-      <View
+    <View style={[styles.outer, isWideScreen ? styles.outerWide : null, style]}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scrollContent}
         style={[
           styles.inner,
           { width: isWideScreen ? contentWidth : "100%" },
@@ -32,7 +28,7 @@ export const PostAuthPhoneLayout: React.FC<Props> = ({
         ]}
       >
         {children}
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -45,6 +41,7 @@ const styles = StyleSheet.create({
   outerWide: {
     alignItems: "center",
   },
+  scrollContent: { flexGrow: 1, paddingBottom: 16 },
   inner: {
     flex: 1,
     maxWidth: "100%",

@@ -1,3 +1,4 @@
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
 /**
  * Catalogue Screen - Global item listing
  */
@@ -137,10 +138,14 @@ export const CatalogueScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
   const Space = theme.spacing;
-  const { width: windowWidth } = useWindowDimensions();
-  const catalogueCardWidth = useMemo(
-    () => (windowWidth - CATALOGUE_GRID_H_PADDING * 2 - CATALOGUE_GRID_GAP) / 2,
-    [windowWidth]
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const gridColumns = getResponsiveGridColumns(windowWidth, fontScale);
+  const catalogueCardWidth = Math.max(
+    1,
+    (windowWidth -
+      CATALOGUE_GRID_H_PADDING * 2 -
+      CATALOGUE_GRID_GAP * (gridColumns - 1)) /
+      gridColumns
   );
   const navigation = useNavigation<CatalogueScreenNavigationProp>();
   const route = useRoute<CatalogueScreenRouteProp>();
@@ -1045,21 +1050,31 @@ export const CatalogueScreen: React.FC = () => {
           ) : (
             <FlatList
               ref={flatListRef}
-              key={hasActiveFilters ? "catalogue-filtered" : "catalogue-tabs"}
+              key={`${
+                hasActiveFilters ? "catalogue-filtered" : "catalogue-tabs"
+              }-${gridColumns}`}
               data={filteredItems}
               extraData={favorites}
-              numColumns={2}
+              numColumns={gridColumns}
               keyExtractor={(item, index) => item.id || index.toString()}
               renderItem={renderItem}
-              columnWrapperStyle={[
-                styles.columnWrapper,
-                {
-                  paddingHorizontal: CATALOGUE_GRID_H_PADDING,
-                  marginBottom: CATALOGUE_GRID_GAP,
-                  gap: CATALOGUE_GRID_GAP,
-                },
-              ]}
+              columnWrapperStyle={
+                gridColumns > 1
+                  ? [
+                      styles.columnWrapper,
+                      {
+                        paddingHorizontal: CATALOGUE_GRID_H_PADDING,
+                        marginBottom: CATALOGUE_GRID_GAP,
+                        gap: CATALOGUE_GRID_GAP,
+                      },
+                    ]
+                  : undefined
+              }
               contentContainerStyle={[
+                {
+                  paddingHorizontal:
+                    gridColumns === 1 ? CATALOGUE_GRID_H_PADDING : 0,
+                },
                 screenStyles.scrollContent,
                 { paddingTop: 8, paddingBottom: 88 },
               ]}

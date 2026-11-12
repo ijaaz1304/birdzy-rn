@@ -1,3 +1,5 @@
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
+import { useWindowDimensions } from "react-native";
 import { EXPLORE_COPY } from "../content/explore.strings";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -120,13 +122,18 @@ export const ExploreResultList: React.FC<Props> = ({
   hasMore,
   filtered = false,
 }) => {
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const gridColumns = getResponsiveGridColumns(windowWidth, fontScale);
   const theme = useTheme();
   return (
     <FlatList
       data={data}
       keyExtractor={(item) => item.archetypeId}
-      numColumns={2}
-      columnWrapperStyle={data.length ? styles.columnWrapper : undefined}
+      numColumns={gridColumns}
+      key={`adaptive-grid-${gridColumns}`}
+      columnWrapperStyle={
+        gridColumns > 1 && data.length ? styles.columnWrapper : undefined
+      }
       contentContainerStyle={[
         styles.content,
         !data.length && styles.emptyContent,

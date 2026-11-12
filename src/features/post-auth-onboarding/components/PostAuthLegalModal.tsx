@@ -1,5 +1,11 @@
 import React from "react";
-import { ActivityIndicator, Modal, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { WebView } from "react-native-webview";
@@ -32,12 +38,7 @@ export const PostAuthLegalModal: React.FC<Props> = ({
           <TouchableOpacity onPress={onClose} style={styles.backButton}>
             <Icon name="close" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
-          <Text allowFontScaling={false}
-            variant="title"
-            size="small"
-            weight="semibold"
-            numberOfLines={1}
-          >
+          <Text variant="title" size="small" weight="semibold">
             {title}
           </Text>
           <View style={styles.backButton} />
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     width: 44,
-    height: 44,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
   },

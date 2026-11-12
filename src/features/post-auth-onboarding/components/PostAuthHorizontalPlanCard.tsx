@@ -11,7 +11,6 @@ import {
 } from "../constants";
 import {
   compactPriceDecimals,
-  getHorizontalPlanPriceFontSize,
   getPlanCardPriceParts,
   normalizePriceAmount,
 } from "../utils/planDisplay";
@@ -42,7 +41,7 @@ const UNSELECTED_PACK_BLUR = 8;
 
 /** Shared row layout for subscription paywall + post-auth onboarding plan cards. */
 export const HORIZONTAL_PLAN_ROW_STYLE = {
-  flexDirection: "row" as const,
+  flexDirection: "column" as const,
   gap: POST_AUTH_LAYOUT.planGap,
   width: "100%" as const,
   alignItems: "stretch" as const,
@@ -72,20 +71,14 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
     () => getPlanCardPriceParts(priceAmount, priceSuffix, duration),
     [priceAmount, priceSuffix, duration]
   );
-  const priceAmountFontSize = getHorizontalPlanPriceFontSize(
-    `${priceParts.amount}${priceParts.suffix}`,
-    PRICE_AMOUNT_FONT_SIZE,
-    Platform.OS === "ios"
-      ? "ios"
-      : Platform.OS === "android"
-        ? "android"
-        : "default"
-  );
+  const priceAmountFontSize = PRICE_AMOUNT_FONT_SIZE;
   const showTrial =
     duration?.toLowerCase() !== "lifetime" &&
     trialDays != null &&
     trialDays > 0;
-  const priceSecondaryLine = originalPrice?.trim() ? originalPrice.trim() : null;
+  const priceSecondaryLine = originalPrice?.trim()
+    ? originalPrice.trim()
+    : null;
   const normalizedPriceSecondaryLine = useMemo(() => {
     return priceSecondaryLine
       ? compactPriceDecimals(normalizePriceAmount(priceSecondaryLine))
@@ -156,9 +149,12 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
               />
             </View>
           )}
-          <Text allowFontScaling={false}
-            style={[styles.title, styles.cardForeground, { color: colors.textPrimary }]}
-            numberOfLines={1}
+          <Text
+            style={[
+              styles.title,
+              styles.cardForeground,
+              { color: colors.textPrimary },
+            ]}
           >
             {title}
           </Text>
@@ -174,16 +170,12 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
                       fontSize: priceAmountFontSize,
                     },
                   ]}
-                  numberOfLines={1}
-                  allowFontScaling={false}
                 >
                   {priceParts.amount}
                 </Text>
                 {priceParts.suffix ? (
                   <Text
                     style={[styles.priceSuffix, { color: colors.textPrimary }]}
-                    numberOfLines={1}
-                    allowFontScaling={false}
                   >
                     {priceParts.suffix}
                   </Text>
@@ -191,24 +183,20 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
               </View>
 
               {normalizedPriceSecondaryLine ? (
-                <Text allowFontScaling={false}
+                <Text
                   style={[
                     styles.billingNote,
                     styles.strikethrough,
                     { color: colors.textTertiary },
                   ]}
-                  numberOfLines={1}
                 >
                   {normalizedPriceSecondaryLine}
                 </Text>
               ) : null}
 
               {billingNote ? (
-                <Text allowFontScaling={false}
+                <Text
                   style={[styles.billingNote, { color: colors.textTertiary }]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.8}
                 >
                   {billingNote}
                 </Text>
@@ -216,12 +204,9 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
             </View>
 
             {showTrial ? (
-              <Text allowFontScaling={false}
-                style={[styles.trialLine, { color: colors.textPrimary }]}
-                numberOfLines={1}
-              >
-                <Text allowFontScaling={false} style={styles.trialBold}>{trialDays} days</Text>
-                <Text allowFontScaling={false} style={styles.trialRegular}> free trial</Text>
+              <Text style={[styles.trialLine, { color: colors.textPrimary }]}>
+                <Text style={styles.trialBold}>{trialDays} days</Text>
+                <Text style={styles.trialRegular}> free trial</Text>
               </Text>
             ) : null}
           </View>
@@ -233,7 +218,7 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   cardOuter: {
-    flex: 1,
+    flexShrink: 0,
     alignSelf: "stretch",
     borderRadius: CARD_RADIUS,
     minWidth: 0,
@@ -274,10 +259,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   popularBadgeWrap: {
-    position: "absolute",
-    top: -10,
-    left: 0,
-    right: 0,
+    marginBottom: 8,
     alignItems: "center",
     zIndex: 10,
     elevation: 10,
@@ -302,7 +284,7 @@ const styles = StyleSheet.create({
   },
   priceRow: {
     flexDirection: "row",
-    flexWrap: "nowrap",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
@@ -312,7 +294,8 @@ const styles = StyleSheet.create({
     fontSize: PRICE_AMOUNT_FONT_SIZE,
     lineHeight: 24,
     textAlign: "center",
-    flexShrink: 0,
+    flexShrink: 1,
+    maxWidth: "100%",
     ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
   },
   priceSuffix: {
@@ -320,7 +303,8 @@ const styles = StyleSheet.create({
     fontSize: PRICE_SUFFIX_FONT_SIZE,
     lineHeight: 16,
     textAlign: "center",
-    flexShrink: 0,
+    flexShrink: 1,
+    maxWidth: "100%",
     ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
   },
   billingNote: {

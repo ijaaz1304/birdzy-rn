@@ -45,11 +45,7 @@ export const HomeWizardBanner: React.FC<Props> = ({ onPress }) => {
       />
       <View style={styles.copyRow}>
         {/* Figma Body/14px/SemiBold — Satoshi 700, 14/20, flex: 1 0 0 */}
-        <AppText
-          variant="body14"
-          allowFontScaling={false}
-          style={styles.title}
-        >
+        <AppText variant="body14" style={styles.title}>
           {title}
         </AppText>
         <MaterialIcons
@@ -93,7 +89,7 @@ const styles = StyleSheet.create({
   /** Body/14px/SemiBold: flex 1 0 0 so the text takes the remaining width */
   title: {
     flexGrow: 1,
-    flexShrink: 0,
+    flexShrink: 1,
     flexBasis: 0,
     fontFamily: FONTS.bold,
     fontStyle: "normal",

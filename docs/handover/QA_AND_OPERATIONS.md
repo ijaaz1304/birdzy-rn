@@ -111,3 +111,45 @@ Device/backend/sandbox acceptance and QA owner assignment remain open. Automated
 ## App-local responsive audit — 12 November 2026
 
 See [Birdzy responsive design audit](../audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md) for source findings, proposed fixes and the pending QA matrix. Original audit date: 11 November 2026. No application code changed.
+
+
+## Responsiveness implementation batch 1 — 12 November 2026
+
+Implemented on `feat/responsiveness`: scalable wrapping shared action labels, scalable stacked sound-row copy, scrollable camera permission content bounded above the bottom controls and below the top controls, measured-parent detail paging, list-card page reconciliation and host-sized screen backgrounds. See [implementation contracts](DEVELOPMENT.md#responsive-implementation-foundation--12-november-2026) and [audit progress](../audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md#implementation-progress--12-november-2026).
+
+Automated validation: 8 focused Jest suites / 25 tests passed; `tsc --noEmit --pretty false` passed; scoped ESLint completed with 0 errors / 20 warnings. Node 22.23.1 was used from the existing nvm installation. Renderer tests verify props, callbacks and paging offsets, not Yoga or native visual rendering. No native build, simulator/device, screen-reader or full font/display matrix was run.
+
+Device acceptance remains open, owner unassigned:
+
+- [ ] At 320×568, 360×800, 393×852 and 430×932, enlarge OS text to 200%/maximum and combine with display enlargement. Long shared-button labels must wrap without clipping; inspect parent fixed-height overrides, especially nested popups.
+- [ ] Deny camera permission, inspect allow-access and settings variants, scroll from explanation to CTA, trigger loading and return from Settings. Back/gallery must remain reachable and enlarged content must not hide under camera chrome; repeat in short/wide app windows.
+- [ ] Open bird sounds with a long title, My Recording badge, timer and long location metadata; confirm full text, play/pause, countdown and list scroll in both themes.
+- [ ] On bird details, select a nonfirst image and resize the active window or tablet column; confirm image, dots and next/previous actions agree. Repeat while loading and after fewer images are returned.
+- [ ] On a list card with multiple photos, swipe, resize and let auto-advance resume; confirm selection, page alignment and missing-image fallback.
+- [ ] Verify raster and custom-SVG ScreenContainer backgrounds cover actual screen/column bounds after resize without seams or unwanted safe-area padding.
+
+Remaining audit work includes core-detail/home semantic text scaling, purchase/legal layouts, custom tab labels, generic/legacy carousels, AppModal/AppSheet and sound-identification short-height states. These are not closed by shared-component changes.
+
+
+## Responsive device handoff — 12 November 2026
+
+The full responsive source pass is implemented on `feat/responsiveness`; [audit status](../audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md#full-audit-implementation-pass--12-november-2026) maps every finding to its changes. The requester will perform simulator/device checks and explicitly asked the agent to skip further simulator testing. All checkboxes below remain open until actual evidence is recorded.
+
+Automated results: full Jest run: 91 suites / 822 tests passed, with one API-services suite / two tests failing. The same two failures reproduce on an extracted clean HEAD `30dcbbf`: the branch's temporary step-by-step API payload differs from the expected location; these services were not changed. TypeScript passed. Scoped lint has no errors, with warnings remaining. Documentation/whitespace and final bundle checks are recorded in CHANGELOG.
+
+Requester checklist (both platforms and themes):
+
+- [ ] Default text at 320×568, 360×640, 360×800, 375×812, 393×852 and 430×932 logical windows; repeat key paths at 200%/maximum text and display enlargement. Keep width and height stress cases separate.
+- [ ] Home: full titles/descriptions, stacked identification/discovery/corner cards, nearby map panel and labeled FAB. Header and tab labels must grow without hiding Identify or the last list row.
+- [ ] Onboarding/post-auth: every slide, Skip/Continue/guest/auth actions, denied/loading/settings-return location/notification states and short-window copy fallback. Confirm no duplicated safe padding or artwork covering copy.
+- [ ] Purchase: monthly/yearly/lifetime, discount/original price, longest localized amount/currency, trial/no-trial, loading/retry, disabled/busy selection, subscribe/restore and every legal link. Stacked plans and complete disclosure must be scroll-reachable. Use the approved sandbox account for actual transaction tests.
+- [ ] Catalogue/search/wishlist/all collection variants/explore/other apps: normal and large-text column changes, long names, empty/error/loading, last items, filters and star actions. Confirm no half-width cards in one-column mode or FlatList column-change errors.
+- [ ] Bird details: long names/facts, overview tabs, range/map sections, sound library and recording labels. Swipe a nonfirst image, resize or change display settings, refresh to fewer images, then verify arrows/dots/current photo agree.
+- [ ] Camera/microphone/location/photo permissions: explanation and both actions at large text; keyboard where applicable; close/back/gallery stay reachable. Camera tip grid and standalone popup content must scroll on short windows.
+- [ ] Sound: idle/record/pause/resume/processing, crop/full recording, denied mic, no-match/retry/save-note and audio gallery. Check long location/metadata, play/pause/timer and cropped waveform gestures inside scrolling content.
+- [ ] Forms/sheets: feedback/report/create/rename/move/add collection/custom location with keyboard, multiline errors and long input. Verify focused field, final error, primary action and close stay reachable; custom keyboard lifts must not be doubled.
+- [ ] Device rotation/window resize where reachable, Android gesture/three-button bars, cutouts, tablet column and safe insets. Background art fills its current host; map/preview/crop geometry remains consistent.
+
+Record exact build, OS/device, logical viewport, font/display setting, locale, tier/variant and screenshot/video for each result. This handoff does not claim device success or release sign-off. The earlier simulator attempt stopped in CocoaPods framework copy/generated-header tasks before app visual verification; generated headers were regenerated afterward, and no new simulator attempt was made following the request to skip checks.
+
+Final code-only handoff checks: iOS and Android production JavaScript bundles compiled successfully. Installed Firebase export-resolution fallback warnings remain. Native build/device testing is delegated to the requester; no simulator was launched for these final bundle checks. The final TypeScript check and whitespace/documentation checks passed.

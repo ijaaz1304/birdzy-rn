@@ -1,12 +1,27 @@
 /**
  * Catalogue detail image carousel – free user spec.
  * Height 180px, radius 12px, pagination dots (selected 24×6 #FFF, unselected 6×6 white 0.2),
- * left/right arrow buttons (32h, radius 24, bg light rgba(255,255,255,0.2) / dark #6D6D6D).
+ * left/right arrow buttons (48pt touch target, radius 24, bg light rgba(255,255,255,0.2) / dark #6D6D6D).
  */
 
 import { AppImage } from "@/components/AppImage";
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, ActivityIndicator } from "react-native";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  useWindowDimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  ActivityIndicator,
+} from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { CATALOGUE_DETAIL, UI_COLORS } from "../../../constants/colorConstants";
 import { Images } from "../../../assets";
@@ -22,9 +37,9 @@ const ARROW_INSET = 12;
 export interface CatalogueDetailCarouselProps {
   images: Array<{ id: string; uri: string | number }>;
   isDark?: boolean;
-  /** Width as percent of screen (e.g. 90 for identification). Default 100. */
+  /** Width as percent of the measured parent (e.g. 90). Default 100. */
   widthPercent?: number;
-  /** When true and widthPercent >= 100, use full SCREEN_WIDTH (identification flow only). */
+  /** When true and widthPercent >= 100, use the full parent width. */
   isIdentificationFlow?: boolean;
   /** Auto-advance to next image every N ms. Omit or 0 to disable. */
   autoScrollInterval?: number;
@@ -41,6 +56,8 @@ export const CatalogueDetailCarousel: React.FC<
 }) => {
   /** Responsive: re-measures on rotation / split-screen / foldables */
   const { width: SCREEN_WIDTH } = useWindowDimensions();
+  const [containerWidth, setContainerWidth] = useState(0);
+  const availableWidth = containerWidth || SCREEN_WIDTH;
   const [activeIndex, setActiveIndex] = useState(0);
   /** Per-slide: hide spinner after load or on error (avoid blank white while fetching). */
   const [loadedById, setLoadedById] = useState<Record<string, boolean>>({});
@@ -55,17 +72,38 @@ export const CatalogueDetailCarousel: React.FC<
   const slideWidth =
     widthPercent >= 100
       ? isIdentificationFlow
-        ? SCREEN_WIDTH
-        : SCREEN_WIDTH - SIDE_MARGIN * 2
-      : Math.round((SCREEN_WIDTH * widthPercent) / 100);
+        ? availableWidth
+        : Math.max(1, availableWidth - SIDE_MARGIN * 2)
+      : Math.max(
+          1,
+          Math.round((availableWidth * Math.max(0, widthPercent)) / 100)
+        );
+
+  const alignCurrentSlide = useCallback(() => {
+    const index = Math.max(
+      0,
+      Math.min(activeIndexRef.current, images.length - 1)
+    );
+    activeIndexRef.current = index;
+    setActiveIndex(index);
+    scrollRef.current?.scrollTo({ x: index * slideWidth, animated: false });
+  }, [slideWidth, images.length]);
+
+  useEffect(alignCurrentSlide, [alignCurrentSlide]);
 
   const arrowBg = isDark
     ? CATALOGUE_DETAIL.ARROW_BG_DARK
     : CATALOGUE_DETAIL.ARROW_BG_LIGHT;
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const viewportWidth = e.nativeEvent.layoutMeasurement?.width;
+    if (viewportWidth && Math.abs(viewportWidth - slideWidth) > 1) return;
     const x = e.nativeEvent.contentOffset.x;
-    const index = Math.round(x / slideWidth);
+    const index = Math.max(
+      0,
+      Math.min(images.length - 1, Math.round(x / slideWidth))
+    );
+    activeIndexRef.current = index;
     setActiveIndex(index);
   };
 
@@ -75,6 +113,7 @@ export const CatalogueDetailCarousel: React.FC<
       x: next * slideWidth,
       animated: true,
     });
+    activeIndexRef.current = next;
     setActiveIndex(next);
   };
 
@@ -87,6 +126,7 @@ export const CatalogueDetailCarousel: React.FC<
       x: next * slideWidth,
       animated: true,
     });
+    activeIndexRef.current = next;
     setActiveIndex(next);
   };
 
@@ -102,8 +142,8 @@ export const CatalogueDetailCarousel: React.FC<
         x: next * slideWidth,
         animated: true,
       });
-      setActiveIndex(next);
       activeIndexRef.current = next;
+      setActiveIndex(next);
     }, autoScrollInterval);
     return () => clearInterval(id);
   }, [autoScrollInterval, images.length, slideWidth, loadedById, images]);
@@ -149,13 +189,17 @@ export const CatalogueDetailCarousel: React.FC<
   }
 
   return (
-    <View style={styles.wrapper}>
+    <View
+      style={styles.wrapper}
+      onLayout={(event) => setContainerWidth(event.nativeEvent.layout.width)}
+    >
       <ScrollView
         ref={scrollRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
+        onMomentumScrollEnd={handleScroll}
+        onContentSizeChange={alignCurrentSlide}
         scrollEventThrottle={16}
         style={[styles.scroll, { width: slideWidth, height: imageHeight }]}
       >
@@ -253,7 +297,7 @@ export const CatalogueDetailCarousel: React.FC<
             isIdentificationFlow && styles.arrowsRowLower,
             {
               paddingHorizontal:
-                Math.max(0, (SCREEN_WIDTH - slideWidth) / 2) + ARROW_INSET,
+                Math.max(0, (availableWidth - slideWidth) / 2) + ARROW_INSET,
             },
           ]}
           pointerEvents="box-none"
@@ -351,7 +395,8 @@ const styles = StyleSheet.create({
     top: 52,
   },
   arrowBtn: {
-    height: 32,
+    minHeight: 48,
+    minWidth: 48,
     paddingHorizontal: 6,
     justifyContent: "center",
     alignItems: "center",

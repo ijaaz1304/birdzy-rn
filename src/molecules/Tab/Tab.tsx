@@ -5,7 +5,12 @@
 
 import React from "react";
 import { FONTS } from "../../common/typography";
-import { TouchableOpacity, TouchableOpacityProps, StyleSheet, ViewStyle } from "react-native";
+import {
+  TouchableOpacity,
+  TouchableOpacityProps,
+  StyleSheet,
+  ViewStyle,
+} from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { Text } from "../../atoms";
 
@@ -85,7 +90,6 @@ const TabComponent: React.FC<TabProps> = ({
         size={textSize}
         color={active ? "primary" : "textSecondary"}
         weight="normal"
-        allowFontScaling={false}
         /* Figma tab-atom: active = Medium (brand), inactive = Regular (secondary) */
         style={[
           {

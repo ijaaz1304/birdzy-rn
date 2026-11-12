@@ -1,10 +1,20 @@
+import { useWindowDimensions } from "react-native";
 /**
  * Tooltip molecule — iOS-style floating bubble.
  * Arrow points to exact center of trigger; positioning uses measureInWindow.
  */
 
 import React, { useState, useRef, useEffect } from "react";
-import { View, TouchableOpacity, StyleSheet, ViewStyle, Modal, TouchableWithoutFeedback, LayoutChangeEvent, Dimensions, Animated } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  ViewStyle,
+  Modal,
+  TouchableWithoutFeedback,
+  LayoutChangeEvent,
+  Animated,
+} from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { Text } from "../../atoms";
 
@@ -108,8 +118,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     if (width > 0 && height > 0) setMeasuredTooltipLayout({ width, height });
   };
 
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
-    Dimensions.get("window");
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const tw = measuredTooltipLayout?.width ?? 0;
   const th = measuredTooltipLayout?.height ?? 0;
   const childCenterX = childLayout.x + childLayout.width / 2;

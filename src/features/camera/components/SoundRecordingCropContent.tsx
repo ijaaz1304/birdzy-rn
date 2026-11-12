@@ -1,5 +1,5 @@
-import { useIsFocused } from '@react-navigation/native';
-import { useFreeScanPromptSurface } from '../../../hooks/useFreeScanPromptSurface';
+import { useIsFocused } from "@react-navigation/native";
+import { useFreeScanPromptSurface } from "../../../hooks/useFreeScanPromptSurface";
 /**
  * Recorded-sound crop + identify UI (shared by SoundIdentify crop phase and SoundCrop route).
  */
@@ -9,6 +9,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  ScrollView,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Text, NavBackIcon, Toggle } from "../../../atoms";
@@ -150,7 +151,9 @@ export function SoundRecordingCropContent({
   //   [spectrogramColumns]
   // );
   const [previewing, setPreviewing] = useState(false);
-  const selectionKey = `${audioUri}:${clampedStart.toFixed(2)}:${windowSec.toFixed(2)}`;
+  const selectionKey = `${audioUri}:${clampedStart.toFixed(
+    2
+  )}:${windowSec.toFixed(2)}`;
   const selectionKeyRef = useRef(selectionKey);
 
   useEffect(() => {
@@ -216,134 +219,143 @@ export function SoundRecordingCropContent({
         <View style={styles.headerBtn} />
       </View>
 
-      <View style={styles.body}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>
-          {copy.recordedSound}
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          {copy.cropBody}
-        </Text>
-        <Text style={[styles.noPhotoNote, { color: colors.textTertiary }]}>
-          {copy.noPhotoRequired}
-        </Text>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.body}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
+            {copy.recordedSound}
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {copy.cropBody}
+          </Text>
+          <Text style={[styles.noPhotoNote, { color: colors.textTertiary }]}>
+            {copy.noPhotoRequired}
+          </Text>
 
-        <View style={styles.chips}>
-          {SOUND_CROP_DURATIONS.filter((item) =>
-            isSoundCropChipAvailable(item, durationSec)
-          ).map((item) => {
-            const selected = chip === item;
-            return (
-              <TouchableOpacity
-                key={item}
-                onPress={() => selectChip(item)}
-                disabled={isAnalyzing}
-                style={[
-                  styles.chip,
-                  {
-                    borderColor: selected ? colors.primaryCTA : colors.border0,
-                    backgroundColor: selected
-                      ? colors.primaryCTA
-                      : "transparent",
-                    opacity: isAnalyzing ? 0.4 : 1,
-                  },
-                ]}
-              >
-                <Text
+          <View style={styles.chips}>
+            {SOUND_CROP_DURATIONS.filter((item) =>
+              isSoundCropChipAvailable(item, durationSec)
+            ).map((item) => {
+              const selected = chip === item;
+              return (
+                <TouchableOpacity
+                  key={item}
+                  onPress={() => selectChip(item)}
+                  disabled={isAnalyzing}
                   style={[
-                    styles.chipLabel,
+                    styles.chip,
                     {
-                      color: selected ? colors.onPrimary : colors.textPrimary,
+                      borderColor: selected
+                        ? colors.primaryCTA
+                        : colors.border0,
+                      backgroundColor: selected
+                        ? colors.primaryCTA
+                        : "transparent",
+                      opacity: isAnalyzing ? 0.4 : 1,
                     },
                   ]}
                 >
-                  {item}s
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text
+                    style={[
+                      styles.chipLabel,
+                      {
+                        color: selected ? colors.onPrimary : colors.textPrimary,
+                      },
+                    ]}
+                  >
+                    {item}s
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <RecordedSoundPreview
+            columns={spectrogramColumns}
+            durationSec={durationSec}
+            windowSec={windowSec}
+            selectionStartSec={clampedStart}
+            isPlaying={previewing}
+            disabled={isAnalyzing}
+            onTogglePlay={togglePreview}
+            onSelectionStartChange={setStartSec}
+          />
+
+          <Text style={[styles.meta, { color: colors.textSecondary }]}>
+            {stamp} • {place}
+          </Text>
+
+          {!locationOn ? (
+            <View
+              style={[
+                styles.locationCard,
+                { backgroundColor: colors.surfaceSecondary },
+              ]}
+            >
+              <Text
+                style={[styles.locationCopy, { color: colors.textPrimary }]}
+              >
+                {copy.enableLocation}
+              </Text>
+              <Toggle
+                value={false}
+                onToggle={(on) => {
+                  if (on) handleToggleOn();
+                }}
+              />
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.locationCard,
+                { backgroundColor: colors.surfaceSecondary },
+              ]}
+              onPress={() => openCustomLocationSheet()}
+              activeOpacity={0.85}
+              disabled={isAnalyzing}
+            >
+              <Text
+                style={[styles.locationCopy, { color: colors.textPrimary }]}
+              >
+                {copy.locationSpottedPrefix}
+                <Text style={styles.locationLink}>{place}</Text>
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        <RecordedSoundPreview
-          columns={spectrogramColumns}
-          durationSec={durationSec}
-          windowSec={windowSec}
-          selectionStartSec={clampedStart}
-          isPlaying={previewing}
-          disabled={isAnalyzing}
-          onTogglePlay={togglePreview}
-          onSelectionStartChange={setStartSec}
-        />
-
-        <Text style={[styles.meta, { color: colors.textSecondary }]}>
-          {stamp} • {place}
-        </Text>
-
-        {!locationOn ? (
-          <View
-            style={[
-              styles.locationCard,
-              { backgroundColor: colors.surfaceSecondary },
-            ]}
-          >
-            <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
-              {copy.enableLocation}
-            </Text>
-            <Toggle
-              value={false}
-              onToggle={(on) => {
-                if (on) handleToggleOn();
-              }}
-            />
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[
-              styles.locationCard,
-              { backgroundColor: colors.surfaceSecondary },
-            ]}
-            onPress={() => openCustomLocationSheet()}
-            activeOpacity={0.85}
-            disabled={isAnalyzing}
-          >
-            <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
-              {copy.locationSpottedPrefix}
-              <Text style={styles.locationLink}>{place}</Text>
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={styles.footer}>
-        {isAnalyzing ? (
-          <View style={styles.analysingRow}>
-            <ActivityIndicator color={colors.primaryCTA} />
-            <Text style={[styles.analysingText, { color: colors.textPrimary }]}>
+        <View style={styles.footer}>
+          {isAnalyzing ? (
+            <View style={styles.analysingRow}>
+              <ActivityIndicator color={colors.primaryCTA} />
+              <Text
+                style={[styles.analysingText, { color: colors.textPrimary }]}
+              >
+                {actionLabel}
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.cta,
+                { backgroundColor: colors.primaryCTA },
+                !canIdentify && styles.ctaDisabled,
+              ]}
+              onPress={goIdentify}
+              disabled={!canIdentify}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.ctaLabel, { color: colors.onPrimary }]}>
+                {copy.identifyBird}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {!isAnalyzing ? (
+            <Text style={[styles.subCta, { color: colors.textSecondary }]}>
               {actionLabel}
             </Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[
-              styles.cta,
-              { backgroundColor: colors.primaryCTA },
-              !canIdentify && styles.ctaDisabled,
-            ]}
-            onPress={goIdentify}
-            disabled={!canIdentify}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.ctaLabel, { color: colors.onPrimary }]}>
-              {copy.identifyBird}
-            </Text>
-          </TouchableOpacity>
-        )}
-        {!isAnalyzing ? (
-          <Text style={[styles.subCta, { color: colors.textSecondary }]}>
-            {actionLabel}
-          </Text>
-        ) : null}
-      </View>
-
+          ) : null}
+        </View>
+      </ScrollView>
       <LimitReachedBottomSheet
         visible={showUpgradeSheet}
         onClose={closeUpgradeSheet}
@@ -379,7 +391,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   body: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     paddingHorizontal: 20,
     paddingTop: 16,
     gap: 16,
@@ -464,6 +477,8 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   ctaLabel: {
+    flexShrink: 1,
+    textAlign: "center",
     fontFamily: FONTS.medium,
     fontSize: 16,
     lineHeight: 24,

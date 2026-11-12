@@ -1852,7 +1852,7 @@ export const BirdDetailsScreen: React.FC = () => {
         edges={["top"]}
       >
         <View style={styles.loadingContainer}>
-          <Text allowFontScaling={false} variant="body" size="medium" style={{ marginBottom: 16 }}>
+          <Text variant="body" size="medium" style={{ marginBottom: 16 }}>
             No bird data available
           </Text>
           <TouchableOpacity
@@ -1864,7 +1864,7 @@ export const BirdDetailsScreen: React.FC = () => {
               borderRadius: Radius.sm,
             }}
           >
-            <Text allowFontScaling={false}
+            <Text
               variant="body"
               size="medium"
               style={{ color: colors.onPrimary }}
@@ -1965,7 +1965,7 @@ export const BirdDetailsScreen: React.FC = () => {
                   resizeMode="contain"
                 />
               </View>
-              <Text allowFontScaling={false}
+              <Text
                 variant="headline"
                 size="medium"
                 weight="bold"
@@ -1976,7 +1976,7 @@ export const BirdDetailsScreen: React.FC = () => {
             </View>
           ) : (
             <>
-              <Text allowFontScaling={false}
+              <Text
                 variant="headline"
                 size="medium"
                 weight="bold"
@@ -1984,7 +1984,7 @@ export const BirdDetailsScreen: React.FC = () => {
               >
                 {MODAL_STRINGS.identificationFeedback.title}
               </Text>
-              <Text allowFontScaling={false}
+              <Text
                 variant="body"
                 size="medium"
                 color="textSecondary"
@@ -2029,7 +2029,7 @@ export const BirdDetailsScreen: React.FC = () => {
                   );
                 })}
               </View>
-              <Text allowFontScaling={false}
+              <Text
                 variant="body"
                 size="small"
                 weight="medium"
@@ -2106,7 +2106,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     style={styles.rateMatchSpinner}
                   />
                 ) : null}
-                <Text allowFontScaling={false}
+                <Text
                   variant="label"
                   size="medium"
                   weight="medium"
@@ -2288,7 +2288,7 @@ export const BirdDetailsScreen: React.FC = () => {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <NavBackIcon color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text allowFontScaling={false}
+          <Text
             variant="title"
             size="medium"
             weight="semibold"
@@ -2365,7 +2365,7 @@ export const BirdDetailsScreen: React.FC = () => {
                       : DetailsMoreEditLight;
                     return <EditIcon width={20} height={20} />;
                   })()}
-                  <Text allowFontScaling={false}
+                  <Text
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2433,7 +2433,7 @@ export const BirdDetailsScreen: React.FC = () => {
                           : AddStarIcon;
                         return <StarIcon width={20} height={20} />;
                       })()}
-                      <Text allowFontScaling={false}
+                      <Text
                         variant="body"
                         size="medium"
                         style={{ marginLeft: spacing[2] }}
@@ -2465,7 +2465,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     size={20}
                     color={colors.textPrimary}
                   />
-                  <Text allowFontScaling={false}
+                  <Text
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2491,7 +2491,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     style={styles.menuItemIcon}
                     resizeMode="contain"
                   />
-                  <Text allowFontScaling={false}
+                  <Text
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2517,7 +2517,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     size={20}
                     color={colors.textPrimary}
                   />
-                  <Text allowFontScaling={false}
+                  <Text
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2548,7 +2548,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     : DetailsMoreShareLight;
                   return <ShareIcon width={20} height={20} />;
                 })()}
-                <Text allowFontScaling={false}
+                <Text
                   variant="body"
                   size="medium"
                   style={{ marginLeft: spacing[2] }}
@@ -2569,7 +2569,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     : DetailsMoreReportLight;
                   return <ReportIcon width={20} height={20} />;
                 })()}
-                <Text allowFontScaling={false}
+                <Text
                   variant="body"
                   size="medium"
                   style={{ marginLeft: spacing[2] }}
@@ -2590,7 +2590,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     size={20}
                     color={colors.textPrimary}
                   />
-                  <Text allowFontScaling={false}
+                  <Text
                     variant="body"
                     size="medium"
                     style={{ marginLeft: spacing[2] }}
@@ -2617,7 +2617,7 @@ export const BirdDetailsScreen: React.FC = () => {
                         : DetailsMoreRemoveLight;
                       return <RemoveIcon width={20} height={20} />;
                     })()}
-                    <Text allowFontScaling={false}
+                    <Text
                       variant="body"
                       size="medium"
                       style={{ marginLeft: spacing[2] }}
@@ -3416,7 +3416,6 @@ export const BirdDetailsScreen: React.FC = () => {
                     <View style={styles.birdNameRow}>
                       <View style={styles.birdNameCopy}>
                         <Text
-                          allowFontScaling={false}
                           style={{
                             ...NAME_HEADING,
                             fontSize: 24,
@@ -3429,7 +3428,6 @@ export const BirdDetailsScreen: React.FC = () => {
                           mushroomData
                         ) ? (
                           <Text
-                            allowFontScaling={false}
                             style={[
                               styles.aiSynonym,
                               {
@@ -3503,7 +3501,7 @@ export const BirdDetailsScreen: React.FC = () => {
                             { backgroundColor: nameOriginBg },
                           ]}
                         >
-                          <Text allowFontScaling={false} style={SUB_TEXT_SPEC}>{nameOrigin}</Text>
+                          <Text style={SUB_TEXT_SPEC}>{nameOrigin}</Text>
                           <AppImage
                             source={Images.detailPinned}
                             style={styles.aiNameOriginPinnedIcon}
@@ -3550,11 +3548,10 @@ export const BirdDetailsScreen: React.FC = () => {
                           },
                         ]}
                       >
-                        <Text allowFontScaling={false}
+                        <Text
                           variant="body"
                           size="medium"
                           weight={activeTab === tab.id ? "bold" : "normal"}
-                          numberOfLines={1}
                           style={[
                             styles.aiTabLabel,
                             /* Figma tab-atom: 16/24 — active Medium brand, inactive Regular secondary (-0.16) */
@@ -3646,7 +3643,7 @@ export const BirdDetailsScreen: React.FC = () => {
                       ]}
                       activeOpacity={0.8}
                     >
-                      <Text allowFontScaling={false}
+                      <Text
                         variant="label"
                         size="medium"
                         weight="normal"
@@ -3715,7 +3712,7 @@ export const BirdDetailsScreen: React.FC = () => {
                 style={{ width: 20, height: 20 }}
                 resizeMode="contain"
               />
-              <Text allowFontScaling={false}
+              <Text
                 variant="label"
                 size="medium"
                 weight="normal"
@@ -3782,7 +3779,7 @@ export const BirdDetailsScreen: React.FC = () => {
                 ]}
                 activeOpacity={0.8}
               >
-                <Text allowFontScaling={false}
+                <Text
                   variant="label"
                   size="medium"
                   weight="semibold"
@@ -3840,12 +3837,13 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
   },
   backButton: {
     width: 44,
-    height: 44,
+    minHeight: 44,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -3985,6 +3983,7 @@ const styles = StyleSheet.create({
   },
   altHeader: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     alignItems: "center",
   },
@@ -3995,7 +3994,8 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   altCard: {
-    width: 268,
+    width: "100%",
+    maxWidth: 480,
     height: 100,
     paddingRight: 12,
     justifyContent: "space-between",
@@ -4056,6 +4056,7 @@ const styles = StyleSheet.create({
   },
   rateMatchEmojiRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "center",
     alignItems: "center",
     gap: 16,
@@ -4063,7 +4064,7 @@ const styles = StyleSheet.create({
   },
   rateMatchEmojiBtn: {
     width: 40,
-    height: 40,
+    minHeight: 40,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -4147,6 +4148,7 @@ const styles = StyleSheet.create({
   },
   birdNameRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "flex-start",
     gap: 16,
     width: "100%",
@@ -4158,7 +4160,7 @@ const styles = StyleSheet.create({
   },
   birdNameSoundButton: {
     width: 48,
-    height: 48,
+    minHeight: 48,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: "#E7E7E7",
@@ -4236,7 +4238,7 @@ const styles = StyleSheet.create({
   },
   aiTabBadge: {
     width: 20,
-    height: 20,
+    minHeight: 20,
     marginLeft: 4,
   },
   aiTabGoProWrap: {

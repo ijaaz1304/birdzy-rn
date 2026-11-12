@@ -9,7 +9,15 @@ import React, {
   useImperativeHandle,
   useRef,
 } from "react";
-import { View, TextInput, TextInputProps, TouchableOpacity, StyleSheet, ViewStyle, TextStyle } from "react-native";
+import {
+  View,
+  TextInput,
+  TextInputProps,
+  TouchableOpacity,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Icon } from "../../atoms";
 import { Text } from "../../atoms";
@@ -68,7 +76,10 @@ const getBorderColor = (
   }
 };
 
-const getBackgroundColor = (state: SearchBarState, theme: ReturnType<typeof useTheme>): string => {
+const getBackgroundColor = (
+  state: SearchBarState,
+  theme: ReturnType<typeof useTheme>
+): string => {
   if (state === "disabled") {
     return theme.colors.surfaceSecondary;
   }
@@ -164,58 +175,56 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
         {/* Input — when not editable, optional onPressBar handles navigation */}
         {editable || !onPressBar ? (
           <View style={styles.inputWrap}>
-          {/*
+            {/*
             Figma 8025:101792 placeholder: one line, tail-ellipsised ("Find birds by name,…").
             Android's native placeholder can't ellipsise — it wraps and gets clipped — so it's
             drawn as an overlay Text while the field is empty (screen readers still get it
             via accessibilityLabel on the input).
           */}
-          {!hasValue ? (
-            <View style={styles.placeholderOverlay} pointerEvents="none">
-              <Text
-                allowFontScaling={false}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={[
-                  styles.input,
-                  styles.placeholderText,
-                  { color: theme.colors.textTertiary },
-                  inputStyle,
-                ]}
-              >
-                {placeholder}
-              </Text>
-            </View>
-          ) : null}
-          <TextInput
-            ref={inputRef}
-            accessibilityLabel={props.accessibilityLabel ?? placeholder}
-            allowFontScaling={false}
-            /* Figma: cursor uses the brand colour (text-icon-brand-1) */
-            cursorColor={theme.colors.borderBrand}
-            selectionColor={theme.colors.borderBrand}
-            style={[
-              styles.input,
-              {
-                color: textColor,
-              },
-              inputStyle,
-            ]}
-            placeholder=""
-            editable={editable && !disabled}
-            value={value}
-            onChangeText={onChangeText}
-            onFocus={(e) => {
-              setIsFocused(true);
-              onFocusProp?.(e);
-            }}
-            onBlur={(e) => {
-              setIsFocused(false);
-              onBlurProp?.(e);
-            }}
-            pointerEvents={editable && !disabled ? "auto" : "none"}
-            {...props}
-          />
+            {!hasValue ? (
+              <View style={styles.placeholderOverlay} pointerEvents="none">
+                <Text
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={[
+                    styles.input,
+                    styles.placeholderText,
+                    { color: theme.colors.textTertiary },
+                    inputStyle,
+                  ]}
+                >
+                  {placeholder}
+                </Text>
+              </View>
+            ) : null}
+            <TextInput
+              ref={inputRef}
+              accessibilityLabel={props.accessibilityLabel ?? placeholder}
+              /* Figma: cursor uses the brand colour (text-icon-brand-1) */
+              cursorColor={theme.colors.borderBrand}
+              selectionColor={theme.colors.borderBrand}
+              style={[
+                styles.input,
+                {
+                  color: textColor,
+                },
+                inputStyle,
+              ]}
+              placeholder=""
+              editable={editable && !disabled}
+              value={value}
+              onChangeText={onChangeText}
+              onFocus={(e) => {
+                setIsFocused(true);
+                onFocusProp?.(e);
+              }}
+              onBlur={(e) => {
+                setIsFocused(false);
+                onBlurProp?.(e);
+              }}
+              pointerEvents={editable && !disabled ? "auto" : "none"}
+              {...props}
+            />
           </View>
         ) : (
           <TouchableOpacity
@@ -228,7 +237,6 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
               variant="body"
               size="small"
               numberOfLines={1}
-              allowFontScaling={false}
               style={[
                 styles.input,
                 styles.inputLabel,
@@ -259,11 +267,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
             style={styles.rightButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Icon
-              name="filter"
-              size={16}
-              color={theme.colors.textPrimary}
-            />
+            <Icon name="filter" size={16} color={theme.colors.textPrimary} />
             {filterBadgeCount > 0 && (
               <View
                 style={[
@@ -302,7 +306,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     paddingHorizontal: spacing[4],
-    height: 48,
+    minHeight: 48,
+    paddingVertical: 8,
     width: "100%",
     overflow: "hidden",
   },
@@ -355,7 +360,7 @@ const styles = StyleSheet.create({
     top: -6,
     right: -6,
     minWidth: 16,
-    height: 16,
+    minHeight: 16,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",

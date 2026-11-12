@@ -31,7 +31,11 @@ export function BirdSoundRow({
 }: Props) {
   const theme = useTheme();
   const strings = COLLECTION_STRINGS.birdDetails.sounds;
-  const remainingSec = usePlayingCountdown(isPlaying, item.durationSec, item.url);
+  const remainingSec = usePlayingCountdown(
+    isPlaying,
+    item.durationSec,
+    item.url
+  );
   const durationText = isPlaying
     ? remainingSec != null
       ? formatBirdSoundDuration(Math.max(remainingSec, 0.001))
@@ -71,33 +75,27 @@ export function BirdSoundRow({
       <View style={styles.content}>
         <View style={styles.titleRow}>
           <View style={styles.titleGroup}>
-            <Text allowFontScaling={false}
-              style={[styles.title, { color: textPrimary }]}
-              numberOfLines={1}
-            >
+            <Text style={[styles.title, { color: textPrimary }]}>
               {item.title}
             </Text>
             {item.isUserRecording ? (
               <View style={styles.badge}>
-                <Text allowFontScaling={false} style={styles.badgeText}>{strings.myRecording}</Text>
+                <Text style={styles.badgeText}>{strings.myRecording}</Text>
               </View>
             ) : null}
           </View>
           {durationText ? (
-            <Text allowFontScaling={false} style={[styles.duration, { color: textSecondary }]}>
+            <Text style={[styles.duration, { color: textSecondary }]}>
               {durationText}
             </Text>
           ) : isPlaying ? (
-            <Text allowFontScaling={false} style={[styles.duration, { color: textSecondary }]}>
+            <Text style={[styles.duration, { color: textSecondary }]}>
               {strings.playing}
             </Text>
           ) : null}
         </View>
         {item.metaLine ? (
-          <Text allowFontScaling={false}
-            style={[styles.meta, { color: textSecondary }]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.meta, { color: textSecondary }]}>
             {item.metaLine}
           </Text>
         ) : null}
@@ -146,20 +144,15 @@ const styles = StyleSheet.create({
     gap: spacing[1],
   },
   titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing[2],
+    gap: spacing[1],
   },
   titleGroup: {
-    flex: 1,
     minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[2],
+    alignItems: "flex-start",
+    gap: spacing[1],
   },
   title: {
-    flexShrink: 1,
+    alignSelf: "stretch",
     fontFamily: FONTS.bold,
     fontSize: 16,
     lineHeight: 24,
@@ -169,7 +162,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],
-    flexShrink: 0,
+    maxWidth: "100%",
   },
   badgeText: {
     fontFamily: FONTS.medium,

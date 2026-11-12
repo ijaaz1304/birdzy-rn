@@ -107,7 +107,7 @@ export default AppAccordion;
 
 const styles = StyleSheet.create({
   wrapper: {
-    width: 335,
+    width: "100%",
     borderRadius: Radius.card,
   },
   header: {

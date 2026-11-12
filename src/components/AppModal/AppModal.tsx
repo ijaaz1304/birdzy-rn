@@ -1,3 +1,4 @@
+import { getAvailableOverlayHeight } from "@/utils/responsiveLayout";
 /**
  * AppModal – single dynamic component for all popups and full-screen modals.
  * One shared chrome per variant (popup = center card + X; fullscreen = BackgroundHeader + close).
@@ -7,15 +8,20 @@
 import { AppImage } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React, { useMemo, ReactNode } from "react";
-import { View, StyleSheet, Modal as RNModal, TouchableOpacity, Dimensions, ScrollView } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Modal as RNModal,
+  TouchableOpacity,
+  useWindowDimensions,
+  ScrollView,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Linking } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { Images } from "../../assets";
 import { Text, Button } from "../../atoms";
-import {
-  OVERLAY_COLORS,
-} from "../../constants/colorConstants";
+import { OVERLAY_COLORS } from "../../constants/colorConstants";
 import { BackgroundHeader } from "../../molecules/BackgroundHeader";
 import { useAuthStore } from "../../features/auth/auth.store";
 import { requestNotificationPermission } from "../../services/permissions";
@@ -28,9 +34,14 @@ import { SCREEN_COLORS } from "../../constants/colorConstants";
 
 import { Radius } from "../../design";
 
-import { getPopupChromeStyle, getPopupPrimaryCtaStyle, getPopupPrimaryCtaTextColor, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
+import {
+  getPopupChromeStyle,
+  getPopupPrimaryCtaStyle,
+  getPopupPrimaryCtaTextColor,
+  getPopupSecondaryCtaStyle,
+  getPopupSecondaryCtaTextColor,
+} from "../../design-system/modalTokens";
 import { getAppStoreUrl } from "../../constants/appStoreConstants";
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // ---- Type registry ----
 export type AppModalType =
@@ -117,6 +128,7 @@ export const AppModal: React.FC<AppModalProps> = ({
   type,
   payload,
 }) => {
+  const { height: windowHeight } = useWindowDimensions();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const config = MODAL_CONFIG[type];
@@ -157,13 +169,23 @@ export const AppModal: React.FC<AppModalProps> = ({
             onPress={(e) => e.stopPropagation()}
             style={[
               styles.popupCard,
+              {
+                maxHeight: getAvailableOverlayHeight(
+                  windowHeight,
+                  insets.top,
+                  insets.bottom + 40
+                ),
+              },
               getPopupChromeStyle(theme),
               theme.mode === "light" && {
                 borderWidth: 1,
                 borderColor: SCREEN_COLORS.LIGHT.border,
               },
               type === "stayUpdated" && {
-                minHeight: SCREEN_HEIGHT * 0.38,
+                minHeight: Math.min(
+                  windowHeight * 0.38,
+                  windowHeight - insets.top - insets.bottom - 40
+                ),
               },
             ]}
           >
@@ -180,20 +202,21 @@ export const AppModal: React.FC<AppModalProps> = ({
             >
               <CloseIcon isDark={theme.mode === "dark"} />
             </TouchableOpacity>
-            <View
-              style={[
+            <ScrollView
+              style={{ flexShrink: 1 }}
+              contentContainerStyle={[
                 styles.popupContent,
                 isDeleteConfirmPopup
                   ? {
-                      paddingTop: theme.spacing[4],
+                      paddingTop: 52,
                       paddingBottom: theme.spacing[5],
                       paddingHorizontal: theme.spacing[5],
                     }
-                  : { padding: theme.spacing[5] },
+                  : { padding: theme.spacing[5], paddingTop: 52 },
               ]}
             >
               {content}
-            </View>
+            </ScrollView>
           </TouchableOpacity>
         </TouchableOpacity>
       </RNModal>
@@ -399,11 +422,7 @@ function SubscriptionFailedContent({
           App account: {appAccountMasked}
         </Text>
       ) : null}
-      <ScrollView
-        style={{ maxHeight: SCREEN_HEIGHT * 0.32 }}
-        showsVerticalScrollIndicator
-        nestedScrollEnabled
-      >
+      <View>
         <Text
           variant="body"
           size="medium"
@@ -417,7 +436,7 @@ function SubscriptionFailedContent({
         >
           {bodyText}
         </Text>
-      </ScrollView>
+      </View>
       <Button
         title="Try again"
         variant="primary"
@@ -824,7 +843,7 @@ function DeletePostContent({
             popupStyles.deletePostButton,
             getPopupSecondaryCtaStyle(theme),
           ]}
-          >
+        >
           <Text
             variant="label"
             size="medium"
@@ -1037,7 +1056,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   popupCard: {
-    width: Math.min(335, SCREEN_WIDTH - 40),
+    width: 335,
+    maxWidth: "100%",
     position: "relative",
     overflow: "hidden",
   },
@@ -1119,7 +1139,7 @@ const popupStyles = StyleSheet.create({
     justifyContent: "center",
   },
   cancelButton: {
-    height: 44,
+    minHeight: 44,
     borderWidth: 1,
     borderRadius: Radius.sm,
     alignItems: "center",

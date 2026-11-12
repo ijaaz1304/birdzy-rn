@@ -4,7 +4,12 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NavBackIcon, Text } from "../../../atoms";
 import { FONTS } from "../../../common/typography";
@@ -110,10 +115,7 @@ export const BirdSoundsScreen: React.FC = () => {
           >
             <NavBackIcon color={textPrimary} size={24} />
           </TouchableOpacity>
-          <Text
-            style={[styles.headerTitle, { color: textPrimary }]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.headerTitle, { color: textPrimary }]}>
             {strings.screenTitle}
           </Text>
           <View style={styles.headerSpacer} />

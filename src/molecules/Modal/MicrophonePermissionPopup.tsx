@@ -1,3 +1,4 @@
+import { ScrollView, useWindowDimensions } from "react-native";
 /**
  * Microphone permission popup — shown after location access on Identify by Sound.
  * Allow triggers the native OS prompt. Not Now / close dismisses without recording.
@@ -43,6 +44,7 @@ export const MicrophonePermissionPopup: React.FC<
   loading = false,
   openSettings = false,
 }) => {
+  const { height: windowHeight } = useWindowDimensions();
   const theme = useTheme();
   const colors = theme.colors;
   const spacing = theme.spacing;
@@ -73,7 +75,15 @@ export const MicrophonePermissionPopup: React.FC<
           { backgroundColor: OVERLAY_COLORS.MODAL_BACKDROP },
         ]}
       >
-        <View style={[styles.card, getPopupChromeStyle(theme)]}>
+        <ScrollView
+          style={{
+            flexGrow: 0,
+            maxHeight: Math.max(1, windowHeight - 64),
+            width: 335,
+            maxWidth: "100%",
+          }}
+          contentContainerStyle={[styles.card, getPopupChromeStyle(theme)]}
+        >
           <TouchableOpacity
             onPress={onClose}
             style={[
@@ -171,7 +181,7 @@ export const MicrophonePermissionPopup: React.FC<
               {copy.notNowButton}
             </Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );

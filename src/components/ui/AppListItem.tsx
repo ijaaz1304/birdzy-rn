@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: Space.sm, // 8px
     paddingHorizontal: Space.md, // 12px
-    width: 335,
+    width: "100%",
     gap: Space.sm, // 8px between icon & text
   },
   circle: {

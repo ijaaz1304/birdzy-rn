@@ -4,8 +4,14 @@
  */
 
 import { AppImage, CachedRemoteImage } from "@/components/AppImage";
-import React, { useRef, useState } from "react";
-import { View, StyleSheet, FlatList, TouchableOpacity, Dimensions } from "react-native";
+import React, { useRef, useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { Text, Chip } from "../../atoms";
 import { Card } from "../Card";
@@ -14,8 +20,6 @@ import { Images } from "../../assets";
 
 import { spacing } from "../../design-system/spacing";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_WIDTH = SCREEN_WIDTH * 0.85;
 const CARD_SPACING = 16;
 
 export interface MushroomMatch {
@@ -36,6 +40,9 @@ export const TopMatchesCarousel: React.FC<TopMatchesCarouselProps> = ({
   matches,
   onMatchPress,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const [parentWidth, setParentWidth] = useState(0);
+  const CARD_WIDTH = Math.max(1, (parentWidth || windowWidth) - 32);
   const theme = useTheme();
   const colors = theme.colors;
   const _spacing = theme.spacing;
@@ -43,12 +50,27 @@ export const TopMatchesCarousel: React.FC<TopMatchesCarouselProps> = ({
   const strings = useStrings();
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const currentIndexRef = useRef(0);
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems.length > 0) {
-      setCurrentIndex(viewableItems[0].index || 0);
+      currentIndexRef.current = viewableItems[0].index || 0;
+      setCurrentIndex(currentIndexRef.current);
     }
   }).current;
+
+  useEffect(() => {
+    const index = Math.max(
+      0,
+      Math.min(currentIndexRef.current, Math.min(matches.length, 3) - 1)
+    );
+    currentIndexRef.current = index;
+    setCurrentIndex(index);
+    flatListRef.current?.scrollToOffset({
+      offset: index * (CARD_WIDTH + CARD_SPACING),
+      animated: false,
+    });
+  }, [CARD_WIDTH, matches.length]);
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 50,
@@ -138,7 +160,10 @@ export const TopMatchesCarousel: React.FC<TopMatchesCarouselProps> = ({
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      onLayout={(event) => setParentWidth(event.nativeEvent.layout.width)}
+    >
       <View style={styles.header}>
         <Text variant="title" size="medium" weight="semibold">
           {strings.collection?.legacyDetailSections?.topMatches?.title ||
@@ -156,7 +181,6 @@ export const TopMatchesCarousel: React.FC<TopMatchesCarouselProps> = ({
         renderItem={renderMatch}
         keyExtractor={(item) => item.id}
         horizontal
-        pagingEnabled
         snapToInterval={CARD_WIDTH + CARD_SPACING}
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
@@ -200,10 +224,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
   },
   matchCard: {
-    height: 280,
+    minHeight: 280,
   },
   card: {
-    height: "100%",
+    flexGrow: 1,
     justifyContent: "space-between",
   },
   matchHeader: {

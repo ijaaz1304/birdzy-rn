@@ -31,14 +31,14 @@ export const InfoRow = ({
           : undefined,
       ]}
     >
-      <Text allowFontScaling={false}
+      <Text
         color="textSecondary"
         style={[labelColor ? { color: labelColor } : undefined, labelStyle]}
       >
         {label}
       </Text>
       <View style={styles.valueWrap}>
-        <Text allowFontScaling={false}
+        <Text
           style={[
             valueColor ? { color: valueColor } : undefined,
             valueStyle,
@@ -55,6 +55,7 @@ export const InfoRow = ({
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     alignItems: "flex-start",
   },

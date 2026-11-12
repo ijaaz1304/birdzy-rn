@@ -1,3 +1,4 @@
+import { ScrollView, useWindowDimensions } from "react-native";
 /**
  * Shared App Popup Component
  * Popups do not use little_bg; only bottom sheets and modals do.
@@ -7,14 +8,18 @@
 import { AppImage } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React from "react";
-import { View, StyleSheet, Modal, TouchableOpacity, Dimensions } from "react-native";
+import { View, StyleSheet, Modal, TouchableOpacity } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { Text, Button } from "../../atoms";
 import { OVERLAY_COLORS } from "../../constants/colorConstants";
 import { Radius } from "../../design";
-import { getPopupChromeStyle, getPopupPrimaryCtaStyle, getPopupPrimaryCtaTextColor, getPopupSecondaryCtaStyle, getPopupSecondaryCtaTextColor } from "../../design-system/modalTokens";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import {
+  getPopupChromeStyle,
+  getPopupPrimaryCtaStyle,
+  getPopupPrimaryCtaTextColor,
+  getPopupSecondaryCtaStyle,
+  getPopupSecondaryCtaTextColor,
+} from "../../design-system/modalTokens";
 
 export interface AppPopupProps {
   visible: boolean;
@@ -42,6 +47,7 @@ export const AppPopup: React.FC<AppPopupProps> = ({
   secondaryButtonText,
   onSecondaryPress,
 }) => {
+  const { height: windowHeight } = useWindowDimensions();
   const theme = useTheme();
   const colors = theme.colors;
   const spacing = theme.spacing;
@@ -64,6 +70,7 @@ export const AppPopup: React.FC<AppPopupProps> = ({
           onPress={(e) => e.stopPropagation()}
           style={[
             styles.popupContainer,
+            { maxHeight: Math.max(1, windowHeight - 64) },
             getPopupChromeStyle(theme),
           ]}
         >
@@ -89,13 +96,23 @@ export const AppPopup: React.FC<AppPopupProps> = ({
           </TouchableOpacity>
 
           {/* Content */}
-          <View style={[styles.content, { padding: spacing[5], paddingTop: spacing[6] }]}>
+          <ScrollView
+            style={{ flexShrink: 1 }}
+            contentContainerStyle={[
+              styles.content,
+              { padding: spacing[5], paddingTop: spacing[6] },
+            ]}
+          >
             {/* Center Icon */}
             {icon && (
               <View
                 style={[styles.iconContainer, { marginBottom: spacing[4] }]}
               >
-                <AppImage source={icon} style={styles.icon} resizeMode="contain" />
+                <AppImage
+                  source={icon}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
               </View>
             )}
 
@@ -162,7 +179,7 @@ export const AppPopup: React.FC<AppPopupProps> = ({
                 }}
               />
             )}
-          </View>
+          </ScrollView>
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
@@ -178,7 +195,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   popupContainer: {
-    width: Math.min(335, SCREEN_WIDTH - 40),
+    width: 335,
+    maxWidth: "100%",
     position: "relative",
     overflow: "hidden",
   },

@@ -4,7 +4,7 @@
  *
  * Layout mirrors the Figma "popup": max 335 wide, header (pt20 pb16 px20, gap 8)
  * + footer (pt16 pb20 px20) with a full-width 24-radius CTA. Width shrinks on
- * narrow screens; text does not font-scale so line breaks match the design.
+ * narrow screens; text scales and wraps inside the scrollable permission host.
  */
 
 import React from "react";
@@ -51,13 +51,11 @@ export const CameraPermissionInlineState: React.FC<
               width={TAKE_PHOTO_ILLUSTRATION_SIZE}
               height={TAKE_PHOTO_ILLUSTRATION_SIZE}
             />
-            <Text allowFontScaling={false} style={styles.title}>
-              {copy.deniedTitle ?? copy.title}
-            </Text>
+            <Text style={styles.title}>{copy.deniedTitle ?? copy.title}</Text>
           </>
         ) : null}
 
-        <Text allowFontScaling={false} style={styles.body}>
+        <Text style={styles.body}>
           {isSettings ? copy.deniedSubtitle ?? copy.subtitle : copy.subtitle}
         </Text>
       </View>
@@ -75,13 +73,7 @@ export const CameraPermissionInlineState: React.FC<
           {loading ? (
             <ActivityIndicator color={APP_COLORS.surfaceWhite} />
           ) : (
-            <Text
-              allowFontScaling={false}
-              numberOfLines={1}
-              style={styles.buttonLabel}
-            >
-              {buttonLabel}
-            </Text>
+            <Text style={styles.buttonLabel}>{buttonLabel}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -144,6 +136,8 @@ const styles = StyleSheet.create({
   },
   /** Button/16px */
   buttonLabel: {
+    flexShrink: 1,
+    textAlign: "center",
     fontFamily: FONTS.medium,
     fontSize: 16,
     lineHeight: 24,

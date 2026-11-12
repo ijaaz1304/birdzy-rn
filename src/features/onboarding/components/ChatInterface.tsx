@@ -5,7 +5,7 @@
 
 import { AppImage } from "@/components/AppImage";
 import React from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useTheme } from "../../../hooks/useTheme";
 import { UI_COLORS } from "../../../constants/colorConstants";
 import { Text } from "../../../atoms";
@@ -15,8 +15,6 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { Radius } from "../../../design";
 
 import { spacing } from "../../../design-system/spacing";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface ChatMessage {
   id: string;
@@ -138,7 +136,7 @@ export const ChatInterface: React.FC = () => {
 const createStyles = (theme: any) =>
   StyleSheet.create({
     chatContainer: {
-      width: SCREEN_WIDTH - 40,
+      width: "100%",
       paddingHorizontal: spacing[4],
       paddingVertical: 20,
       gap: 12,

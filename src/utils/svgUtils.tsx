@@ -5,10 +5,8 @@
  */
 
 import React from "react";
-import { View, ViewStyle, Dimensions } from "react-native";
+import { View, ViewStyle, useWindowDimensions } from "react-native";
 import { SvgProps } from "react-native-svg";
-
-const { width: WINDOW_WIDTH, height: WINDOW_HEIGHT } = Dimensions.get("window");
 
 /**
  * SVG Background Component
@@ -35,6 +33,7 @@ export const SvgBackground: React.FC<SvgBackgroundProps> = ({
   fill,
   opacity = 1,
 }) => {
+  const { width: WINDOW_WIDTH, height: WINDOW_HEIGHT } = useWindowDimensions();
   const numericWidth =
     width === "100%" || width === undefined ? WINDOW_WIDTH : Number(width);
   const numericHeight =

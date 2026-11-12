@@ -1,3 +1,5 @@
+import { useWindowDimensions } from "react-native";
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -19,6 +21,8 @@ export const HomeBirdDiscoverySection: React.FC<Props> = ({
   onStepByStep,
   onAudioGallery,
 }) => {
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const stacked = getResponsiveGridColumns(windowWidth, fontScale) === 1;
   const theme = useTheme();
   const colors = theme.colors;
   const strings = HOME_STRINGS.discovery;
@@ -49,13 +53,13 @@ export const HomeBirdDiscoverySection: React.FC<Props> = ({
 
   return (
     <View style={styles.section}>
-      <AppText allowFontScaling={false}
+      <AppText
         variant="body16"
         style={{ fontFamily: FONTS.bold, color: colors.textPrimary }}
       >
         {strings.sectionTitle}
       </AppText>
-      <View style={styles.grid}>
+      <View style={[styles.grid, stacked && { flexDirection: "column" }]}>
         {cards.map((card) => (
           <TouchableOpacity
             key={card.key}
@@ -63,6 +67,7 @@ export const HomeBirdDiscoverySection: React.FC<Props> = ({
             onPress={card.onPress}
             style={[
               styles.card,
+              stacked && { width: "100%" },
               {
                 backgroundColor: colors.surfaceSecondary,
                 borderColor: colors.border,
@@ -70,14 +75,13 @@ export const HomeBirdDiscoverySection: React.FC<Props> = ({
             ]}
           >
             <MaterialIcons name={card.icon} size={22} color={colors.primary} />
-            <AppText allowFontScaling={false}
+            <AppText
               variant="body14"
               style={{ fontFamily: FONTS.bold, color: colors.textPrimary }}
-              numberOfLines={2}
             >
               {card.title}
             </AppText>
-            <AppText allowFontScaling={false} variant="caption12" color="textSecondary" numberOfLines={2}>
+            <AppText variant="caption12" color="textSecondary">
               {card.description}
             </AppText>
           </TouchableOpacity>

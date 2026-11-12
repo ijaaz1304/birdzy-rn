@@ -69,41 +69,34 @@ export const PostAuthDiscountPlanCard: React.FC<Props> = ({
       <View style={styles.row}>
         <View style={styles.leftCol}>
           <View style={styles.titleRow}>
-            <Text allowFontScaling={false}
-              style={[styles.title, { color: colors.textPrimary }]}
-              numberOfLines={1}
-            >
+            <Text style={[styles.title, { color: colors.textPrimary }]}>
               {title}
             </Text>
             {showPopular ? <PostAuthPopularBadge colors={colors} /> : null}
           </View>
           {trialLabel ? (
-            <Text allowFontScaling={false} style={[styles.trialLabel, { color: colors.textDisabled }]}>
+            <Text style={[styles.trialLabel, { color: colors.textDisabled }]}>
               {trialLabel}
             </Text>
           ) : null}
         </View>
         <View style={styles.priceCol}>
-          <Text allowFontScaling={false} style={[styles.discountLabel, { color: colors.discountRed }]}>
+          <Text style={[styles.discountLabel, { color: colors.discountRed }]}>
             {discountLabel}
           </Text>
           <View style={styles.priceRow}>
             {originalPrice ? (
-              <Text allowFontScaling={false}
+              <Text
                 style={[styles.originalPrice, { color: colors.textDisabled }]}
-                numberOfLines={1}
               >
                 {originalPrice}
               </Text>
             ) : null}
-            <Text allowFontScaling={false}
+            <Text
               style={[
                 styles.price,
                 { color: colors.textPrimary, fontSize: priceFontSize },
               ]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.85}
             >
               {price}
             </Text>
@@ -124,6 +117,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
   },
@@ -134,12 +128,12 @@ const styles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     gap: 6,
-    flexWrap: "nowrap",
   },
   title: {
-    flexShrink: 0,
+    flexShrink: 1,
     fontFamily: FONTS.bold,
     fontSize: 16,
     lineHeight: 24,
@@ -151,7 +145,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   priceCol: {
-    flexShrink: 0,
+    flexShrink: 1,
     alignItems: "flex-end",
     minWidth: 112,
     maxWidth: 132,
@@ -165,10 +159,10 @@ const styles = StyleSheet.create({
   },
   priceRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 6,
-    flexWrap: "nowrap",
   },
   originalPrice: {
     fontFamily: FONTS.regular,

@@ -1,3 +1,4 @@
+import { useWindowDimensions } from "react-native";
 /**
  * MapPreview Component
  *
@@ -16,7 +17,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, TouchableOpacity, Dimensions, AppState } from "react-native";
+import { View, StyleSheet, TouchableOpacity, AppState } from "react-native";
 import { MapPreviewProps } from "../../types/ui";
 import { Text } from "../../atoms/Text";
 import { useTheme } from "../../hooks/useTheme";
@@ -50,6 +51,7 @@ export const MapPreview: React.FC<MapPreviewProps> = ({
     singleMarkerOnly || (zoomProp != null && zoomProp >= 3 && zoomProp <= 5);
   const effectiveZoom = zoomProp ?? 15;
 
+  const [parentWidth, setParentWidth] = useState(0);
   const [hasLocationPermission, setHasLocationPermission] = useState(
     hasLocationPermissionProp
   );
@@ -138,11 +140,12 @@ export const MapPreview: React.FC<MapPreviewProps> = ({
     !isCountryMap && isUserPlant && !hasLocationPermission;
 
   // Calculate responsive width (full width minus padding); ensure minimum so map always has visible size
-  const screenWidth = Dimensions.get("window").width;
-  const mapWidth = Math.max(screenWidth - 40, 200);
+  const screenWidth = useWindowDimensions().width;
+  const mapWidth = Math.max(1, parentWidth || screenWidth - 40);
 
   return (
     <View
+      onLayout={(event) => setParentWidth(event.nativeEvent.layout.width)}
       style={[
         styles.container,
         {

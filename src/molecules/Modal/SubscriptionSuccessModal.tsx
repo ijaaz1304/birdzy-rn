@@ -1,17 +1,17 @@
+import { ScrollView, useWindowDimensions } from "react-native";
 /**
  * Subscription Success Modal — shown after a successful purchase or restore.
  * Figma overlay: rgba(0,0,0,0.8) backdrop + centered welcome card.
  */
 
 import React from "react";
-import { View, StyleSheet, Modal, TouchableOpacity, Dimensions } from "react-native";
+import { View, StyleSheet, Modal, TouchableOpacity } from "react-native";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Text, Button } from "../../atoms";
 import { SUBSCRIPTION_COLORS } from "../../constants/colorConstants";
 import { FONTS } from "../../common/typography";
 import { getPopupChromeStyle } from "../../design-system/modalTokens";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const WELCOME_BACKDROP = "rgba(0, 0, 0, 0.8)";
 
 export interface SubscriptionSuccessModalProps {
@@ -23,12 +23,8 @@ export interface SubscriptionSuccessModalProps {
 
 export const SubscriptionSuccessModal: React.FC<
   SubscriptionSuccessModalProps
-> = ({
-  visible,
-  onDismiss,
-  appName = "Birdzy",
-  ctaLabel = "Got it",
-}) => {
+> = ({ visible, onDismiss, appName = "Birdzy", ctaLabel = "Got it" }) => {
+  const { height: windowHeight } = useWindowDimensions();
   const theme = useTheme();
   const colors = theme.colors;
   const isDark = useIsDark();
@@ -50,8 +46,14 @@ export const SubscriptionSuccessModal: React.FC<
           onPress={onDismiss}
           style={StyleSheet.absoluteFillObject}
         />
-        <View
-          style={[
+        <ScrollView
+          style={{
+            flexGrow: 0,
+            maxHeight: Math.max(1, windowHeight - 64),
+            width: 335,
+            maxWidth: "100%",
+          }}
+          contentContainerStyle={[
             styles.modalContainer,
             { backgroundColor: popupBg },
             getPopupChromeStyle(theme),
@@ -71,8 +73,8 @@ export const SubscriptionSuccessModal: React.FC<
             size="medium"
             style={[styles.description, { color: colors.textSecondary }]}
           >
-            Unlock unlimited bird IDs, expert details, personal
-            collections, and AI answers — all in one place.
+            Unlock unlimited bird IDs, expert details, personal collections, and
+            AI answers — all in one place.
           </Text>
 
           <Button
@@ -88,7 +90,7 @@ export const SubscriptionSuccessModal: React.FC<
             onPress={onDismiss}
             fullWidth
           />
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );
@@ -103,7 +105,8 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalContainer: {
-    width: Math.min(335, SCREEN_WIDTH - 48),
+    width: 335,
+    maxWidth: "100%",
     borderRadius: 16,
     padding: 24,
     alignItems: "center",

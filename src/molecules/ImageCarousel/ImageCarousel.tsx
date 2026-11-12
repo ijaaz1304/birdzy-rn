@@ -1,6 +1,13 @@
 import { AppImage } from "@/components/AppImage";
 import React, { useState, useRef, useEffect } from "react";
-import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  useWindowDimensions,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { Text } from "../../atoms/Text";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -9,8 +16,6 @@ import { OVERLAY_COLORS } from "../../constants/colorConstants";
 
 import { APP_COLORS } from "../../config/colors";
 import { Images } from "../../assets";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const ARROW_BG_LIGHT = OVERLAY_COLORS.SURFACE_OVERLAY_WHITE_20;
 const ARROW_BG_DARK = APP_COLORS.iconBgDark;
@@ -33,11 +38,16 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
   borderRadius,
   showArrows = !!widthPercent,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const [parentWidth, setParentWidth] = useState(0);
+  const SCREEN_WIDTH = parentWidth || windowWidth;
   const theme = useTheme();
   const colors = theme.colors;
   const isDark = useIsDark();
   const scrollRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
+  activeIndexRef.current = activeIndex;
   const [loadedById, setLoadedById] = useState<Record<string, boolean>>({});
 
   const imagesKey = images.map((i) => i.id).join("|");
@@ -47,11 +57,24 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
 
   const carouselWidth =
     widthPercent != null ? (SCREEN_WIDTH * widthPercent) / 100 : SCREEN_WIDTH;
+  useEffect(() => {
+    const index = Math.max(
+      0,
+      Math.min(activeIndexRef.current, images.length - 1)
+    );
+    activeIndexRef.current = index;
+    setActiveIndex(index);
+    scrollRef.current?.scrollTo({ x: index * carouselWidth, animated: false });
+  }, [carouselWidth, images.length]);
+
   const arrowBg = isDark ? ARROW_BG_DARK : ARROW_BG_LIGHT;
 
   const handleScroll = (event: any) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / carouselWidth);
+    const index = Math.max(
+      0,
+      Math.min(images.length - 1, Math.round(scrollPosition / carouselWidth))
+    );
     setActiveIndex(index);
   };
 
@@ -93,17 +116,15 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
 
   return (
     <View
-      style={[
-        styles.wrapper,
-        widthPercent != null && { width: carouselWidth, alignSelf: "center" },
-      ]}
+      style={styles.wrapper}
+      onLayout={(event) => setParentWidth(event.nativeEvent.layout.width)}
     >
       <ScrollView
         ref={scrollRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
+        onMomentumScrollEnd={handleScroll}
         scrollEventThrottle={16}
         style={[
           styles.carousel,
@@ -227,6 +248,8 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
 const styles = StyleSheet.create({
   wrapper: {
     position: "relative",
+    width: "100%",
+    alignItems: "center",
   },
   carousel: {
     overflow: "hidden",
@@ -254,7 +277,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   arrowBtn: {
-    height: 32,
+    minHeight: 48,
+    minWidth: 48,
     paddingHorizontal: 6,
     justifyContent: "center",
     alignItems: "center",

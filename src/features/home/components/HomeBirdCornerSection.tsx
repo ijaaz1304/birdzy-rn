@@ -1,3 +1,5 @@
+import { useWindowDimensions } from "react-native";
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
 import { AppImageBackground } from "@/components/AppImage";
 import React from "react";
 import {
@@ -34,25 +36,30 @@ const CornerCard: React.FC<CornerCardProps> = ({
   textPrimary,
   textSecondary,
 }) => (
-  <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.cornerCardWrap}>
+  <TouchableOpacity
+    activeOpacity={0.85}
+    onPress={onPress}
+    style={styles.cornerCardWrap}
+  >
     <AppImageBackground
       source={background}
-      style={[styles.cornerCard, { borderColor: CARD_BORDER, backgroundColor: CARD_BG }]}
+      style={[
+        styles.cornerCard,
+        { borderColor: CARD_BORDER, backgroundColor: CARD_BG },
+      ]}
       imageStyle={styles.cornerCardImage}
       resizeMode="cover"
     >
       <View style={styles.cardCopy}>
-        <AppText allowFontScaling={false}
+        <AppText
           variant="body14"
           style={[styles.cardTitle, { color: textPrimary }]}
-          numberOfLines={2}
         >
           {title}
         </AppText>
-        <AppText allowFontScaling={false}
+        <AppText
           variant="caption12"
           style={{ color: textSecondary, lineHeight: 16 }}
-          numberOfLines={2}
         >
           {description}
         </AppText>
@@ -75,6 +82,8 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
   onBirdSoundLibrary,
 }) => {
   const strings = useStrings();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const stacked = getResponsiveGridColumns(windowWidth, fontScale) === 1;
   const theme = useTheme();
   const corner = strings.home.banners.yourBirdCorner;
   const textPrimary = theme.colors.textPrimary;
@@ -82,14 +91,17 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
 
   return (
     <View style={styles.section}>
-      <AppText allowFontScaling={false}
+      <AppText
         variant="body16"
-        style={[styles.sectionTitle, { fontFamily: FONTS.bold, color: textPrimary }]}
+        style={[
+          styles.sectionTitle,
+          { fontFamily: FONTS.bold, color: textPrimary },
+        ]}
       >
         {corner.title}
       </AppText>
 
-      <View style={styles.topRow}>
+      <View style={[styles.topRow, stacked && { flexDirection: "column" }]}>
         <CornerCard
           title={corner.birdOfTheDay}
           description={corner.birdOfTheDayDescription}
@@ -115,18 +127,24 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
       >
         <AppImageBackground
           source={Images.homeBirdSoundLibrary}
-          style={[styles.libraryRow, { borderColor: CARD_BORDER, backgroundColor: CARD_BG }]}
+          style={[
+            styles.libraryRow,
+            { borderColor: CARD_BORDER, backgroundColor: CARD_BG },
+          ]}
           imageStyle={styles.libraryRowImage}
           resizeMode="stretch"
         >
           <View style={styles.libraryCopy}>
-            <AppText allowFontScaling={false}
+            <AppText
               variant="body14"
               style={[styles.cardTitle, { color: textPrimary }]}
             >
               {corner.birdSoundLibrary.title}
             </AppText>
-            <AppText allowFontScaling={false} variant="caption12" style={{ color: textSecondary, lineHeight: 16 }}>
+            <AppText
+              variant="caption12"
+              style={{ color: textSecondary, lineHeight: 16 }}
+            >
               {corner.birdSoundLibrary.description}
             </AppText>
           </View>
@@ -148,7 +166,7 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: "row",
     gap: 12,
-    height: 136,
+    minHeight: 136,
   },
   cornerCardWrap: {
     flex: 1,

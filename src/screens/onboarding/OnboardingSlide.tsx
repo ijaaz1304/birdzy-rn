@@ -1,12 +1,10 @@
 import { AppImage } from "@/components/AppImage";
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { OnboardingSlide } from "./slidesData";
 import { useTheme } from "../../hooks/useTheme";
 
 import { FONTS } from "../../common/typography";
-
-const { width } = Dimensions.get("window");
 
 type Props = {
   slide: OnboardingSlide;
@@ -21,7 +19,11 @@ const OnboardingSlideComponent = ({ slide, onNext, isLast }: Props) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {slide.image && (
-        <AppImage source={slide.image} style={styles.image} resizeMode="contain" />
+        <AppImage
+          source={slide.image}
+          style={styles.image}
+          resizeMode="contain"
+        />
       )}
       <Text style={[styles.title, { color: colors.textPrimary }]}>
         {slide.title}
@@ -46,12 +48,12 @@ export default OnboardingSlideComponent;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width,
+    width: "100%",
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
   },
-  image: { width: width * 0.7, height: width * 0.7 },
+  image: { width: "70%", aspectRatio: 1, maxWidth: 300 },
   title: {
     fontSize: 24,
     fontFamily: FONTS.bold,

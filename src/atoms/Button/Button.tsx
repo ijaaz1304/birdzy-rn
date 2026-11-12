@@ -3,7 +3,15 @@
  */
 
 import React from "react";
-import { TouchableOpacity, TouchableOpacityProps, ActivityIndicator, StyleProp, StyleSheet, ViewStyle, TextStyle } from "react-native";
+import {
+  TouchableOpacity,
+  TouchableOpacityProps,
+  ActivityIndicator,
+  StyleProp,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { Text } from "../Text";
 
@@ -111,12 +119,8 @@ export const Button: React.FC<ButtonProps> = ({
           variant="body"
           size={size === "small" ? "medium" : "large"}
           weight="semibold"
-          numberOfLines={1}
           allowFontScaling={allowFontScaling}
-          /* Fixed-size labels (allowFontScaling=false) keep their design size; Android ignores minimumFontScale and over-shrinks */
-          adjustsFontSizeToFit={allowFontScaling}
-          minimumFontScale={0.85}
-          style={[{ color: getTextColor(), textAlign: "center" }, textStyle]}
+          style={[styles.label, { color: getTextColor() }, textStyle]}
         >
           {title}
         </Text>
@@ -124,3 +128,11 @@ export const Button: React.FC<ButtonProps> = ({
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  label: {
+    textAlign: "center",
+    flexShrink: 1,
+    minWidth: 0,
+  },
+});

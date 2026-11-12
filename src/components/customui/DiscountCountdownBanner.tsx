@@ -63,11 +63,7 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
     ? countdown.TIME_BOX_RADIUS_DARK
     : countdown.TIME_BOX_RADIUS_LIGHT;
 
-  const renderTimeBox = (
-    value: number,
-    unit: string,
-    highlighted = false
-  ) => (
+  const renderTimeBox = (value: number, unit: string, highlighted = false) => (
     <View
       style={[
         styles.timeBoxVertical,
@@ -117,9 +113,7 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
           ]}
         />
       )}
-      <Text allowFontScaling={false} style={styles.timeValue}>
-        {`${value}${unit}`}
-      </Text>
+      <Text style={styles.timeValue}>{`${value}${unit}`}</Text>
     </View>
   );
 
@@ -156,11 +150,7 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
                   { backgroundColor: countdown.BADGE_BG },
                 ]}
               >
-                <Text
-                  style={styles.percentBadgeText}
-                  numberOfLines={1}
-                  allowFontScaling={false}
-                >
+                <Text style={styles.percentBadgeText} numberOfLines={1}>
                   -{strings.discount.countdownBanner.badgePercent}
                 </Text>
               </View>
@@ -172,7 +162,6 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
             (Android's adjustsFontSizeToFit ignores minimumFontScale and makes it tiny).
           */}
           <Text
-            allowFontScaling={false}
             style={[styles.label, isCompact && styles.labelCompact]}
             numberOfLines={2}
           >
@@ -182,9 +171,9 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
           </Text>
           <View style={[styles.timerRow, isCompact && styles.timerRowCompact]}>
             {renderTimeBox(hours, "hr")}
-            <Text allowFontScaling={false} style={styles.colon}>:</Text>
+            <Text style={styles.colon}>:</Text>
             {renderTimeBox(minutes, "m")}
-            <Text allowFontScaling={false} style={styles.colon}>:</Text>
+            <Text style={styles.colon}>:</Text>
             {renderTimeBox(seconds, "s", true)}
           </View>
         </View>
@@ -232,30 +221,33 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
 
   return (
     <View style={styles.outer}>
-    <LinearGradient
-      colors={[countdown.BORDER_GRADIENT_START, countdown.BORDER_GRADIENT_END]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[
-        styles.gradientBorder,
-        {
-          borderRadius: wrapperRadius,
-          shadowColor: wrapperShadow,
-        },
-      ]}
-    >
-      <View
+      <LinearGradient
+        colors={[
+          countdown.BORDER_GRADIENT_START,
+          countdown.BORDER_GRADIENT_END,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={[
-          styles.wrapper,
+          styles.gradientBorder,
           {
-            backgroundColor: wrapperBg,
-            borderRadius: wrapperRadius - 1,
+            borderRadius: wrapperRadius,
+            shadowColor: wrapperShadow,
           },
         ]}
       >
-        {bannerBody}
-      </View>
-    </LinearGradient>
+        <View
+          style={[
+            styles.wrapper,
+            {
+              backgroundColor: wrapperBg,
+              borderRadius: wrapperRadius - 1,
+            },
+          ]}
+        >
+          {bannerBody}
+        </View>
+      </LinearGradient>
     </View>
   );
 };

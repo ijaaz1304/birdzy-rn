@@ -13,7 +13,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { View, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import BottomSheet, { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { Text, Button } from "../../atoms";
 import { Images } from "../../assets";
@@ -21,8 +21,6 @@ import { useTheme, useIsDark } from "../../hooks/useTheme";
 import { SUBSCRIPTION_COLORS } from "../../constants/colorConstants";
 
 import { spacing } from "../../design-system/spacing";
-
-const { height: _SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface Discount50BottomSheetProps {
   visible: boolean;
@@ -250,7 +248,9 @@ export const Discount50BottomSheet: React.FC<Discount50BottomSheetProps> = ({
                 <AppImage
                   source={
                     Images[
-                      (isDark ? feature.iconDark : feature.icon) as keyof typeof Images
+                      (isDark
+                        ? feature.iconDark
+                        : feature.icon) as keyof typeof Images
                     ]
                   }
                   style={styles.featureIcon}

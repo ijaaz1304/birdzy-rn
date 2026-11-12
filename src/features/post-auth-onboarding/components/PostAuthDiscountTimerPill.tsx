@@ -26,7 +26,7 @@ export const PostAuthDiscountTimerPill: React.FC = () => {
           style={styles.icon}
           resizeMode="contain"
         />
-        <Text style={styles.text} allowFontScaling={false} numberOfLines={1}>
+        <Text style={styles.text}>
           {discountOffer.isActive ? "Discount ends in" : "Discount in"}{" "}
           {formatCountdownSegment(discountOffer.hours)}:
           {formatCountdownSegment(discountOffer.minutes)}:

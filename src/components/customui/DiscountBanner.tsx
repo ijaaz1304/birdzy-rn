@@ -1,7 +1,13 @@
 import { AppImageBackground } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { View, StyleSheet, TouchableOpacity, Text, LayoutChangeEvent } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  LayoutChangeEvent,
+} from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useIsDark, useTheme } from "../../hooks/useTheme";
 import { DiscountBannerDarkSvg, Images } from "../../assets";
@@ -45,10 +51,14 @@ function renderTimerDigits(
   scale: number,
   timerType: { size: number; line: number }
 ) {
-  const timerText = `${formatCountdownSegment(timeLeftDisplay.hours)} : ${formatCountdownSegment(timeLeftDisplay.minutes)} : ${formatCountdownSegment(timeLeftDisplay.seconds)}`;
+  const timerText = `${formatCountdownSegment(
+    timeLeftDisplay.hours
+  )} : ${formatCountdownSegment(
+    timeLeftDisplay.minutes
+  )} : ${formatCountdownSegment(timeLeftDisplay.seconds)}`;
 
   return (
-    <Text allowFontScaling={false}
+    <Text
       style={[
         styles.timerBoxText,
         {
@@ -105,7 +115,9 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
   const timerColor = isDark ? db.TIMER_BOX_TEXT_DARK : db.TIMER_BOX_TEXT_LIGHT;
   const ctaBg = isDark ? db.CTA_BG_DARK : db.CTA_BG_LIGHT;
   const ctaTextColor = isDark ? db.CTA_TEXT_DARK : db.CTA_TEXT_LIGHT;
-  const bannerBorderColor = isDark ? theme.colors.surfaceBrand2Accent : "transparent";
+  const bannerBorderColor = isDark
+    ? theme.colors.surfaceBrand2Accent
+    : "transparent";
   const lightTimerBg = db.TIMER_BOX_BG_LIGHT;
   const useExternalCountdown =
     hoursProp !== undefined &&
@@ -166,7 +178,10 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
       0.82,
       1.2
     );
-    const contentPadding = scaleSize(HOME_LAYOUT.DISCOUNT_BANNER_PADDING, scale);
+    const contentPadding = scaleSize(
+      HOME_LAYOUT.DISCOUNT_BANNER_PADDING,
+      scale
+    );
 
     if (bannerHeight != null) {
       return { height: bannerHeight, scale, contentPadding };
@@ -218,7 +233,10 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
               source={DiscountBannerDarkSvg}
               resizeMode="cover"
               style={styles.bannerFill}
-              imageStyle={[styles.bannerFillImage, { borderRadius: bannerRadius }]}
+              imageStyle={[
+                styles.bannerFillImage,
+                { borderRadius: bannerRadius },
+              ]}
             >
               <LinearGradient
                 colors={[...db.GRADIENT_DARK]}
@@ -233,166 +251,190 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
               resizeMode="cover"
               preferRNImage
               style={styles.bannerFill}
-              imageStyle={[styles.bannerFillImage, { borderRadius: bannerRadius }]}
+              imageStyle={[
+                styles.bannerFillImage,
+                { borderRadius: bannerRadius },
+              ]}
             />
           )}
 
-        <View
-          style={[
-            styles.bannerContent,
-            {
-              padding: contentPadding,
-              paddingLeft: isDark ? "32%" : 20,
-              paddingRight: isDark ? contentPadding : 8,
-              alignItems: isDark ? "center" : "flex-start",
-            },
-          ]}
-        >
-          <View style={[styles.contentStack, !isDark && styles.contentStackLight]}>
+          <View
+            style={[
+              styles.bannerContent,
+              {
+                padding: contentPadding,
+                paddingLeft: isDark ? "32%" : 20,
+                paddingRight: isDark ? contentPadding : 8,
+                alignItems: isDark ? "center" : "flex-start",
+              },
+            ]}
+          >
             <View
-              style={[
-                styles.headlineRow,
-                isDark && styles.headlineRowDark,
-                !isDark && styles.headlineRowLight,
-                { marginBottom: scaleSize(4, scale), gap: isDark ? 0 : 3 },
-              ]}
+              style={[styles.contentStack, !isDark && styles.contentStackLight]}
             >
-              <View style={styles.headlineSub1}>
-                <View style={[styles.percentOffRow, !isDark && styles.percentOffRowLight]}>
-                  <Text
-                    allowFontScaling={false}
-                    style={[
-                      styles.bigPercent,
-                    !isDark && styles.bigPercentLight,
-                      {
-                        color: headlineColor,
-                        fontSize: scaleSize(type.bigPercent.size, scale),
-                        lineHeight: scaleSize(type.bigPercent.line, scale),
-                      },
-                    ]}
-                  >
-                    {discountPercent}%
-                  </Text>
-                  <Text allowFontScaling={false}
-                    style={[
-                      styles.offTextInline,
-                      {
-                        color: headlineColor,
-                        fontSize: scaleSize(type.off.size, scale),
-                        lineHeight: scaleSize(type.off.line, scale),
-                        marginBottom: scaleSize(type.off.marginBottom, scale),
-                        marginLeft: isDark ? 4 : 0,
-                      },
-                    ]}
-                  >
-                    {strings.discount.banner.off}
-                  </Text>
-                </View>
-              </View>
               <View
                 style={[
-                  styles.headlineSub2,
-                  { marginTop: isDark ? scaleSize(4, scale) : 0 },
+                  styles.headlineRow,
+                  isDark && styles.headlineRowDark,
+                  !isDark && styles.headlineRowLight,
+                  { marginBottom: scaleSize(4, scale), gap: isDark ? 0 : 3 },
                 ]}
               >
-                <Text allowFontScaling={false}
-                  style={[
-                    styles.onSubscriptionLabel,
-                    styles.onSubscriptionFirstLine,
-                    !isDark && styles.onSubscriptionFirstLineLight,
-                    {
-                      color: headlineColor,
-                      fontSize: scaleSize(type.subscription.size, scale),
-                      lineHeight: scaleSize(type.subscription.line, scale),
-                    },
-                  ]}
-                >
-                  {strings.discount.banner.on}
-                </Text>
-                <Text allowFontScaling={false}
-                  style={[
-                    styles.onSubscriptionLabel,
-                    {
-                      color: headlineColor,
-                      fontSize: scaleSize(type.subscription.size, scale),
-                      lineHeight: scaleSize(type.subscription.line, scale),
-                    },
-                  ]}
-                >
-                  {strings.discount.banner.subscription}
-                </Text>
-              </View>
-            </View>
-
-            {hasActiveCountdown ? (
-              <View
-                style={[
-                  styles.timerBlock,
-                  isDark ? styles.timerBlockDark : styles.timerBlockLight,
-                  {
-                    marginBottom: scaleSize(isDark ? 6 : 12, scale),
-                    gap: scaleSize(isDark ? 6 : 4, scale),
-                  },
-                ]}
-              >
-                <Text allowFontScaling={false}
-                  style={[
-                    styles.discountEndsLabel,
-                    isDark ? styles.discountEndsLabelDark : styles.discountEndsLabelLight,
-                    {
-                      color: endsLabelColor,
-                      fontSize: scaleSize(type.endsLabel.size, scale),
-                      lineHeight: scaleSize(type.endsLabel.line, scale),
-                    },
-                  ]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit={!isDark}
-                  minimumFontScale={isDark ? 1 : 0.85}
-                >
-                  {strings.discount.banner.discountEndsIn}
-                </Text>
-                {isDark ? (
+                <View style={styles.headlineSub1}>
                   <View
                     style={[
-                      styles.timerPillOuter,
-                      {
-                        borderRadius: scaleSize(db.TIMER_BOX_RADIUS_DARK, scale),
-                        borderColor: db.TIMER_BOX_BORDER_DARK,
-                        backgroundColor: db.TIMER_BOX_BASE_DARK,
-                      },
+                      styles.percentOffRow,
+                      !isDark && styles.percentOffRowLight,
                     ]}
                   >
-                    <View
+                    <Text
                       style={[
-                        styles.timerPillInner,
+                        styles.bigPercent,
+                        !isDark && styles.bigPercentLight,
                         {
-                          backgroundColor: db.TIMER_BOX_OVERLAY_DARK,
-                          paddingHorizontal: scaleSize(10, scale),
-                          paddingVertical: scaleSize(6, scale),
+                          color: headlineColor,
+                          fontSize: scaleSize(type.bigPercent.size, scale),
+                          lineHeight: scaleSize(type.bigPercent.line, scale),
                         },
                       ]}
                     >
-                      {renderTimerDigits(timeLeftDisplay, timerColor, scale, type.timer)}
-                    </View>
+                      {discountPercent}%
+                    </Text>
+                    <Text
+                      style={[
+                        styles.offTextInline,
+                        {
+                          color: headlineColor,
+                          fontSize: scaleSize(type.off.size, scale),
+                          lineHeight: scaleSize(type.off.line, scale),
+                          marginBottom: scaleSize(type.off.marginBottom, scale),
+                          marginLeft: isDark ? 4 : 0,
+                        },
+                      ]}
+                    >
+                      {strings.discount.banner.off}
+                    </Text>
                   </View>
-                ) : (
-                  <View
+                </View>
+                <View
+                  style={[
+                    styles.headlineSub2,
+                    { marginTop: isDark ? scaleSize(4, scale) : 0 },
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.timerSingleView,
+                      styles.onSubscriptionLabel,
+                      styles.onSubscriptionFirstLine,
+                      !isDark && styles.onSubscriptionFirstLineLight,
                       {
-                        backgroundColor: lightTimerBg,
-                        paddingHorizontal: scaleSize(4, scale),
-                        paddingVertical: 0,
-                        height: scaleSize(20, scale),
-                        borderRadius: scaleSize(4, scale),
+                        color: headlineColor,
+                        fontSize: scaleSize(type.subscription.size, scale),
+                        lineHeight: scaleSize(type.subscription.line, scale),
                       },
                     ]}
                   >
-                    {renderTimerDigits(timeLeftDisplay, timerColor, scale, type.timer)}
-                  </View>
-                )}
+                    {strings.discount.banner.on}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.onSubscriptionLabel,
+                      {
+                        color: headlineColor,
+                        fontSize: scaleSize(type.subscription.size, scale),
+                        lineHeight: scaleSize(type.subscription.line, scale),
+                      },
+                    ]}
+                  >
+                    {strings.discount.banner.subscription}
+                  </Text>
+                </View>
               </View>
-            ) : null}
+
+              {hasActiveCountdown ? (
+                <View
+                  style={[
+                    styles.timerBlock,
+                    isDark ? styles.timerBlockDark : styles.timerBlockLight,
+                    {
+                      marginBottom: scaleSize(isDark ? 6 : 12, scale),
+                      gap: scaleSize(isDark ? 6 : 4, scale),
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.discountEndsLabel,
+                      isDark
+                        ? styles.discountEndsLabelDark
+                        : styles.discountEndsLabelLight,
+                      {
+                        color: endsLabelColor,
+                        fontSize: scaleSize(type.endsLabel.size, scale),
+                        lineHeight: scaleSize(type.endsLabel.line, scale),
+                      },
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={!isDark}
+                    minimumFontScale={isDark ? 1 : 0.85}
+                  >
+                    {strings.discount.banner.discountEndsIn}
+                  </Text>
+                  {isDark ? (
+                    <View
+                      style={[
+                        styles.timerPillOuter,
+                        {
+                          borderRadius: scaleSize(
+                            db.TIMER_BOX_RADIUS_DARK,
+                            scale
+                          ),
+                          borderColor: db.TIMER_BOX_BORDER_DARK,
+                          backgroundColor: db.TIMER_BOX_BASE_DARK,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.timerPillInner,
+                          {
+                            backgroundColor: db.TIMER_BOX_OVERLAY_DARK,
+                            paddingHorizontal: scaleSize(10, scale),
+                            paddingVertical: scaleSize(6, scale),
+                          },
+                        ]}
+                      >
+                        {renderTimerDigits(
+                          timeLeftDisplay,
+                          timerColor,
+                          scale,
+                          type.timer
+                        )}
+                      </View>
+                    </View>
+                  ) : (
+                    <View
+                      style={[
+                        styles.timerSingleView,
+                        {
+                          backgroundColor: lightTimerBg,
+                          paddingHorizontal: scaleSize(4, scale),
+                          paddingVertical: 0,
+                          height: scaleSize(20, scale),
+                          borderRadius: scaleSize(4, scale),
+                        },
+                      ]}
+                    >
+                      {renderTimerDigits(
+                        timeLeftDisplay,
+                        timerColor,
+                        scale,
+                        type.timer
+                      )}
+                    </View>
+                  )}
+                </View>
+              ) : null}
 
               <View
                 style={[
@@ -409,24 +451,23 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                   },
                 ]}
               >
-              <Text
-                style={[
-                  styles.ctaText,
-                  !isDark && styles.ctaTextLight,
-                  {
-                    color: ctaTextColor,
-                    fontSize: scaleSize(type.cta.size, scale),
-                    lineHeight: scaleSize(type.cta.line, scale),
-                  },
-                ]}
-                numberOfLines={1}
-                allowFontScaling={false}
-              >
-                {strings.discount.banner.subscribeNow}
-              </Text>
+                <Text
+                  style={[
+                    styles.ctaText,
+                    !isDark && styles.ctaTextLight,
+                    {
+                      color: ctaTextColor,
+                      fontSize: scaleSize(type.cta.size, scale),
+                      lineHeight: scaleSize(type.cta.line, scale),
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {strings.discount.banner.subscribeNow}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
         </View>
       </TouchableOpacity>
 
@@ -569,12 +610,12 @@ const styles = StyleSheet.create({
   timerPillInner: {
     alignItems: "center",
     justifyContent: "center",
-    flexShrink: 0,
+    flexShrink: 1,
   },
   timerPillOuter: {
     borderWidth: 1,
     overflow: "hidden",
-    flexShrink: 0,
+    flexShrink: 1,
     alignSelf: "center",
   },
   discountEndsLabel: {
@@ -585,7 +626,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
   },
   discountEndsLabelDark: {
-    flexShrink: 0,
+    flexShrink: 1,
   },
   timerSingleView: {
     flexDirection: "row",
@@ -622,7 +663,7 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     elevation: 9999,
     width: 28,
-    height: 28,
+    minHeight: 28,
     borderRadius: 14,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,

@@ -209,10 +209,6 @@ export function CustomBottomTabBar({
             styles.tabLabel,
             { color: focused ? tabActiveColor : tabInactiveColor },
           ]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.8}
-          allowFontScaling={false}
         >
           {TAB_LABELS[name]}
         </Text>
@@ -228,7 +224,8 @@ export function CustomBottomTabBar({
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
           paddingBottom: tabBarBottomInset,
-          height: tabBarHeight,
+          paddingLeft: Math.max(insets.left, spacing[2]),
+          paddingRight: Math.max(insets.right, spacing[2]),
           minHeight: tabBarHeight,
         },
       ]}
@@ -281,7 +278,7 @@ function resetTabToRoot(
 const styles = StyleSheet.create({
   bar: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "stretch",
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing[2],
     paddingTop: 6,
@@ -326,8 +323,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   tabPressable: {
-    flex: 1,
     width: "100%",
+    minHeight: 48,
+    paddingVertical: 4,
     alignItems: "center",
     justifyContent: "center",
   },

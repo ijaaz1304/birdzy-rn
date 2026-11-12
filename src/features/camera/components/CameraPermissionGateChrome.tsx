@@ -28,24 +28,19 @@ const MIN_BOTTOM_PADDING = 8;
 const bottomBarPaddingBottom = (bottomInset: number) =>
   Math.max(MIN_BOTTOM_PADDING, bottomInset);
 
-/**
- * Equal top/bottom space the permission content must keep clear of the chrome.
- * Symmetric so the content stays centered on the full screen (Figma) while never
- * overlapping the top or bottom bars on short screens.
- */
-export const getCameraPermissionGateContentInset = (
+/** Bounds of the interactive chrome; use these as scrolling viewport insets. */
+export const getCameraPermissionGateContentInsets = (
   topInset: number,
   bottomInset: number
-) => {
-  const topBarBottom = topInset + TOP_BAR_OFFSET + TOP_BUTTON_SIZE;
-  const bottomBarHeight =
+) => ({
+  top: topInset + TOP_BAR_OFFSET + TOP_BUTTON_SIZE,
+  bottom:
     BOTTOM_BAR_PADDING_TOP +
     CONTROLS_PADDING_TOP +
     SHUTTER_SIZE +
     CONTROLS_PADDING_BOTTOM +
-    bottomBarPaddingBottom(bottomInset);
-  return Math.max(topBarBottom, bottomBarHeight);
-};
+    bottomBarPaddingBottom(bottomInset),
+});
 
 type CameraPermissionGateChromeProps = {
   topInset: number;

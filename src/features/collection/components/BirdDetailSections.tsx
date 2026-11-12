@@ -6,10 +6,7 @@ import { AppImage } from "@/components/AppImage";
 import React, { useCallback, useMemo, useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import {
-  BirdSizeScaleGraphic,
-  Images,
-} from "../../../assets";
+import { BirdSizeScaleGraphic, Images } from "../../../assets";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { InfoRow, Text } from "../../../atoms";
 import { StaticMap } from "../../../molecules/StaticMap/StaticMap";
@@ -88,9 +85,7 @@ function parseMonthIndices(value?: string): number[] | null {
   if (!value?.trim()) return null;
   const raw = value.trim().toLowerCase();
 
-  const rangeMatch = raw.match(
-    /([a-z]+|\d{1,2})\s*[-–—]\s*([a-z]+|\d{1,2})/i
-  );
+  const rangeMatch = raw.match(/([a-z]+|\d{1,2})\s*[-–—]\s*([a-z]+|\d{1,2})/i);
   if (rangeMatch) {
     const start = monthTokenToIndex(rangeMatch[1]);
     const end = monthTokenToIndex(rangeMatch[2]);
@@ -106,7 +101,10 @@ function parseMonthIndices(value?: string): number[] | null {
     }
   }
 
-  const parts = raw.split(/[,;/|]+/).map((p) => p.trim()).filter(Boolean);
+  const parts = raw
+    .split(/[,;/|]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (parts.length === 0) return null;
 
   const indices = parts
@@ -139,12 +137,7 @@ function RangeMonthBar({
   const active = new Set(months);
   return (
     <View style={styles.rangeRow}>
-      <Text allowFontScaling={false}
-        style={[styles.rangeLabel, { color: textSecondary }]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
+      <Text style={[styles.rangeLabel, { color: textSecondary }]}>{label}</Text>
       <View style={styles.monthBar}>
         {MONTH_LABELS.map((m, index) => (
           <View
@@ -154,7 +147,7 @@ function RangeMonthBar({
               { backgroundColor: active.has(index) ? color : "transparent" },
             ]}
           >
-            <Text allowFontScaling={false}
+            <Text
               style={[
                 styles.monthCellLabel,
                 { color: active.has(index) ? "#FFFFFF" : textSecondary },
@@ -206,9 +199,21 @@ export function BirdRangeMapSection({
     if (!rangeDetails) return [];
     return (
       [
-        { key: "yearRound" as RangeKey, label: strings.yearRound, value: rangeDetails.yearRound },
-        { key: "breeding" as RangeKey, label: strings.breeding, value: rangeDetails.breeding },
-        { key: "migration" as RangeKey, label: strings.migration, value: rangeDetails.migration },
+        {
+          key: "yearRound" as RangeKey,
+          label: strings.yearRound,
+          value: rangeDetails.yearRound,
+        },
+        {
+          key: "breeding" as RangeKey,
+          label: strings.breeding,
+          value: rangeDetails.breeding,
+        },
+        {
+          key: "migration" as RangeKey,
+          label: strings.migration,
+          value: rangeDetails.migration,
+        },
         {
           key: "nonBreeding" as RangeKey,
           label: strings.nonBreeding,
@@ -254,7 +259,7 @@ export function BirdRangeMapSection({
                     { backgroundColor: RANGE_COLORS[row.key] },
                   ]}
                 />
-                <Text allowFontScaling={false} style={[styles.legendText, { color: textSecondary }]}>
+                <Text style={[styles.legendText, { color: textSecondary }]}>
                   {row.label}
                 </Text>
               </View>
@@ -392,8 +397,8 @@ export function BirdLabeledBlock({
   if (!body?.trim()) return null;
   return (
     <View style={styles.labeledBlock}>
-      <Text allowFontScaling={false} style={[styles.blockTitle, { color: textPrimary }]}>{title}</Text>
-      <Text allowFontScaling={false} style={[styles.blockBody, { color: textSecondary }]}>{body}</Text>
+      <Text style={[styles.blockTitle, { color: textPrimary }]}>{title}</Text>
+      <Text style={[styles.blockBody, { color: textSecondary }]}>{body}</Text>
     </View>
   );
 }
@@ -419,11 +424,11 @@ export function BirdOverviewExtras({
       {/*
       {sizeScale ? (
         <View style={styles.overviewExtraBlock}>
-          <Text allowFontScaling={false} style={[styles.blockTitle, { color: textPrimary }]}>
+          <Text style={[styles.blockTitle, { color: textPrimary }]}>
             {strings.size}
           </Text>
           <View style={styles.sizeTag}>
-            <Text allowFontScaling={false} style={[styles.sizeTagLabel, { color: textPrimary }]}>
+            <Text style={[styles.sizeTagLabel, { color: textPrimary }]}>
               {sizeScale.label}
             </Text>
           </View>
@@ -431,7 +436,7 @@ export function BirdOverviewExtras({
       ) : null}
       {colors.length > 0 ? (
         <View style={styles.overviewExtraBlock}>
-          <Text allowFontScaling={false} style={[styles.blockTitle, { color: textPrimary }]}>
+          <Text style={[styles.blockTitle, { color: textPrimary }]}>
             {strings.colors}
           </Text>
           <View style={styles.colorChips}>
@@ -458,7 +463,7 @@ export function BirdOverviewExtras({
                     },
                   ]}
                 />
-                <Text allowFontScaling={false} style={[styles.colorChipLabel, { color: textPrimary }]}>
+                <Text style={[styles.colorChipLabel, { color: textPrimary }]}>
                   {chip.label}
                 </Text>
               </View>
@@ -491,10 +496,10 @@ function BirdSizeScale({
   const strings = COLLECTION_STRINGS.birdDetails.characteristics;
   return (
     <View style={styles.sizeScaleBlock}>
-      <Text allowFontScaling={false} style={[styles.blockTitle, { color: textPrimary }]}>
+      <Text style={[styles.blockTitle, { color: textPrimary }]}>
         {strings.size}
       </Text>
-      <Text allowFontScaling={false} style={[styles.sizeScaleLabel, { color: textSecondary }]}>
+      <Text style={[styles.sizeScaleLabel, { color: textSecondary }]}>
         {sizeScale.label}
       </Text>
       <View style={styles.sizeDotsRow}>
@@ -794,9 +799,7 @@ export function BirdPhysicalTraitsRows({
             valueColor={textPrimary}
             rowPaddingVertical={2}
           />
-          {index < rows.length - 1 ? (
-            <View style={styles.rowDivider} />
-          ) : null}
+          {index < rows.length - 1 ? <View style={styles.rowDivider} /> : null}
         </View>
       ))}
     </View>
@@ -886,7 +889,12 @@ export function BirdGeographicRangeMap({
 
   return (
     <View style={styles.geoBlock}>
-      <View style={[styles.geoMapPlaceholder, { backgroundColor: surfaceSecondary }]}>
+      <View
+        style={[
+          styles.geoMapPlaceholder,
+          { backgroundColor: surfaceSecondary },
+        ]}
+      >
         {showInteractiveMap ? (
           <StaticMap
             latitude={center.lat}
@@ -901,22 +909,24 @@ export function BirdGeographicRangeMap({
         ) : (
           <>
             <MaterialIcons name="map" size={40} color={textSecondary} />
-            <Text allowFontScaling={false} style={[styles.geoMapHint, { color: textSecondary }]}>
+            <Text style={[styles.geoMapHint, { color: textSecondary }]}>
               {rangeHint || strings.placeholder}
             </Text>
           </>
         )}
       </View>
       {rangeHint && showInteractiveMap ? (
-        <Text allowFontScaling={false} style={[styles.geoRangeSummary, { color: textSecondary }]}>
+        <Text style={[styles.geoRangeSummary, { color: textSecondary }]}>
           {rangeHint}
         </Text>
       ) : null}
       <View style={styles.legendRow}>
         {legend.map((item) => (
           <View key={item.label} style={styles.legendItem}>
-            <View style={[styles.legendSwatch, { backgroundColor: item.color }]} />
-            <Text allowFontScaling={false} style={[styles.legendText, { color: textSecondary }]}>
+            <View
+              style={[styles.legendSwatch, { backgroundColor: item.color }]}
+            />
+            <Text style={[styles.legendText, { color: textSecondary }]}>
               {item.label}
             </Text>
           </View>
@@ -950,10 +960,10 @@ export function BirdRecordSoundCta({
         />
       </View>
       <View style={styles.recordCtaCopy}>
-        <Text allowFontScaling={false} style={[styles.recordCtaTitle, { color: textPrimary }]}>
+        <Text style={[styles.recordCtaTitle, { color: textPrimary }]}>
           {strings.recordCta}
         </Text>
-        <Text allowFontScaling={false} style={[styles.recordCtaHint, { color: textPrimary }]}>
+        <Text style={[styles.recordCtaHint, { color: textPrimary }]}>
           {strings.recordHint}
         </Text>
       </View>
@@ -1072,6 +1082,7 @@ const styles = StyleSheet.create({
   },
   sizeDotsRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 8,

@@ -13,14 +13,8 @@ type Props = {
 export const PostAuthPopularBadge: React.FC<Props> = ({
   colors = POST_AUTH_ONBOARDING_COLORS_LIGHT,
 }) => (
-  <View
-    style={[styles.badgeShell, { backgroundColor: colors.popularBadgeBg }]}
-  >
-    <Text
-      style={[styles.label, { color: colors.popularBadgeText }]}
-      allowFontScaling={false}
-      numberOfLines={1}
-    >
+  <View style={[styles.badgeShell, { backgroundColor: colors.popularBadgeBg }]}>
+    <Text style={[styles.label, { color: colors.popularBadgeText }]}>
       Popular
     </Text>
   </View>
@@ -30,7 +24,7 @@ const styles = StyleSheet.create({
   badgeShell: {
     minWidth: 63,
     borderRadius: 16,
-    flexShrink: 0,
+    flexShrink: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 4,

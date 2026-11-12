@@ -11,7 +11,13 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { View, StyleSheet, TouchableOpacity, Text, useWindowDimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { usePopParentStackOnBack } from "../../../hooks/usePopParentStackOnBack";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -46,7 +52,10 @@ import { getOurAvailablePurchases } from "../services/iap.service";
 import { DISCOUNT_TIMER_PILL } from "../../../constants/subscriptionColors";
 import { PostAuthSubscriptionFeatureCarousel } from "../../post-auth-onboarding/components/PostAuthSubscriptionFeatureCarousel";
 import { PostAuthGradientButton } from "../../post-auth-onboarding/components/PostAuthGradientButton";
-import { PostAuthHorizontalPlanCard, HORIZONTAL_PLAN_ROW_STYLE } from "../../post-auth-onboarding/components/PostAuthHorizontalPlanCard";
+import {
+  PostAuthHorizontalPlanCard,
+  HORIZONTAL_PLAN_ROW_STYLE,
+} from "../../post-auth-onboarding/components/PostAuthHorizontalPlanCard";
 import { PostAuthLegalFooter } from "../../post-auth-onboarding/components/PostAuthLegalFooter";
 import { PostAuthSubscriptionDisclosure } from "../../post-auth-onboarding/components/PostAuthSubscriptionDisclosure";
 import { PostAuthPhoneLayout } from "../../post-auth-onboarding/components/PostAuthPhoneLayout";
@@ -279,9 +288,7 @@ export const SubscriptionPaywallScreen: React.FC = () => {
       const isLifetime = duration === "lifetime";
       const priceView = getPlanCardPriceView(plan.priceDisplay, duration);
       const originalPrice =
-        has50Discount &&
-        priceView.hasStorePrice &&
-        (isLifetime || isYearly)
+        has50Discount && priceView.hasStorePrice && (isLifetime || isYearly)
           ? localizeCompareAtPriceDisplay(
               getCompareAtPriceDisplay(plan.id, plan.priceDisplay, storePrices)
             )
@@ -307,10 +314,8 @@ export const SubscriptionPaywallScreen: React.FC = () => {
 
   const backgroundImage = getSubscriptionBackground(isDark);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const { bgWidth, bgLeft, bgHeight, isWideScreen } = getPostAuthBackgroundLayout(
-    windowWidth,
-    windowHeight
-  );
+  const { bgWidth, bgLeft, bgHeight, isWideScreen } =
+    getPostAuthBackgroundLayout(windowWidth, windowHeight);
 
   return (
     <AppImageBackground
@@ -339,7 +344,7 @@ export const SubscriptionPaywallScreen: React.FC = () => {
               >
                 <NavBackIcon color={paywallColors.textPrimary} />
               </TouchableOpacity>
-              <Text allowFontScaling={false}
+              <Text
                 style={[
                   styles.headerTitle,
                   { color: paywallColors.textPrimary },
@@ -359,12 +364,7 @@ export const SubscriptionPaywallScreen: React.FC = () => {
                 },
               ]}
             >
-              <View
-                style={[
-                  styles.discountTimerOverlay,
-                  { top: layout.subscriptionDiscountTimerTop },
-                ]}
-              >
+              <View style={[styles.discountTimerOverlay, {}]}>
                 {!isPremium && discountOffer.remainingMs > 0 ? (
                   <View
                     style={[
@@ -382,7 +382,7 @@ export const SubscriptionPaywallScreen: React.FC = () => {
                         style={styles.discountPillIcon}
                         resizeMode="contain"
                       />
-                      <Text allowFontScaling={false} style={styles.discountPillText}>
+                      <Text style={styles.discountPillText}>
                         {has50Discount ? "Discount ends in" : "Discount in"}{" "}
                         {formatCountdownSegment(discountCountdown.hours)}:
                         {formatCountdownSegment(discountCountdown.minutes)}:
@@ -403,7 +403,7 @@ export const SubscriptionPaywallScreen: React.FC = () => {
                     onPress={refetchPrices}
                     style={styles.retryBanner}
                   >
-                    <Text allowFontScaling={false}
+                    <Text
                       style={[
                         styles.retryText,
                         { color: paywallColors.textSecondary },
@@ -491,7 +491,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepFill: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
   },
   header: {
     flexDirection: "row",
@@ -501,7 +502,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     width: 44,
-    height: 44,
+    minHeight: 44,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -514,12 +515,13 @@ const styles = StyleSheet.create({
   },
   headerAction: {
     width: 44,
-    height: 44,
+    minHeight: 44,
     alignItems: "flex-end",
     justifyContent: "center",
   },
   subscriptionBody: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     paddingHorizontal: POST_AUTH_LAYOUT.horizontalPadding,
     justifyContent: "center",
     minHeight: 0,
@@ -528,11 +530,8 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   discountTimerOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
     alignItems: "center",
-    zIndex: 2,
+    marginBottom: 16,
   },
   subscriptionCenterBlock: {
     width: "100%",

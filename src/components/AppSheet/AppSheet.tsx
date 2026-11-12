@@ -1,3 +1,4 @@
+import { getAvailableOverlayHeight } from "@/utils/responsiveLayout";
 import {
   canSubmitFeedback,
   isValidFeedbackEmail,
@@ -31,10 +32,10 @@ import {
   Modal as RNModal,
   ScrollView,
   TextInput,
-  Keyboard,
   KeyboardAvoidingView,
   ActivityIndicator,
   ViewStyle,
+  useWindowDimensions,
 } from "react-native";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import Animated, {
@@ -128,9 +129,6 @@ import { getPostAuthOnboardingColors } from "../../features/post-auth-onboarding
 import { usePostAuthOnboardingIsDark } from "../../features/post-auth-onboarding/utils/theme";
 import { COMPARISON_TABLE_COLORS } from "../../constants/subscriptionColors";
 import { FREE_VS_PREMIUM_COMPARISON } from "../../data/subscription";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
-  require("react-native").Dimensions.get("window");
 
 const SPRING_CONFIG = { damping: 80, stiffness: 200 };
 
@@ -459,13 +457,14 @@ function usesPopupSheetSafeAreaInContent(sheetType: AppSheetType): boolean {
 function getBitmapSheetBackgroundStyle(
   sheetType: AppSheetType,
   source: ImageSourcePropType,
-  sheetHeight: number
+  sheetHeight: number,
+  screenWidth: number
 ): import("react-native").ImageStyle {
   const base = {
     position: "absolute" as const,
     top: 0,
     left: 0,
-    width: SCREEN_WIDTH,
+    width: screenWidth,
   };
   if (sheetType === "feedback") {
     const resolved = Image.resolveAssetSource(source as number);
@@ -473,7 +472,7 @@ function getBitmapSheetBackgroundStyle(
       resolved?.width && resolved?.height
         ? resolved.height / resolved.width
         : 0;
-    const naturalHeight = ratio > 0 ? SCREEN_WIDTH * ratio : sheetHeight;
+    const naturalHeight = ratio > 0 ? screenWidth * ratio : sheetHeight;
     return { ...base, height: Math.max(sheetHeight, naturalHeight) };
   }
   return { ...base, height: sheetHeight };
@@ -590,32 +589,17 @@ export const AppSheet: React.FC<AppSheetProps> = ({
   type,
   payload,
 }) => {
+  const {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+    fontScale,
+  } = useWindowDimensions();
+  const [modalHeight, setModalHeight] = useState<number | null>(null);
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const isDark = useIsDark();
   const config = SHEET_CONFIG[type];
   const { showToast } = useToast();
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    if (!visible || type !== "feedback") {
-      setKeyboardHeight(0);
-      return;
-    }
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-    const showSub = Keyboard.addListener(showEvent, (event) => {
-      setKeyboardHeight(event.endCoordinates?.height ?? 0);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, [visible, type]);
-
   const effectiveConfig = useMemo(() => {
     if (type === "limitReached" && payload && "limitType" in payload) {
       const p = payload as SheetPayload<"limitReached">;
@@ -649,14 +633,6 @@ export const AppSheet: React.FC<AppSheetProps> = ({
   const nonScrollableTypes: AppSheetType[] = [
     "rateUs",
     "feedback",
-    "notificationPermission",
-    "locationPermission",
-    "identificationMilestone",
-    "subscriptionDiscount",
-    "limitReached",
-    "report",
-    "createCollection",
-    "renameCollection",
     "addToCollection",
     "addToAnotherCollection",
     "moveToCollection",
@@ -773,13 +749,24 @@ export const AppSheet: React.FC<AppSheetProps> = ({
 
   const usesBitmapSheetArt = showSheetBackground && !!bgSource && !isSvg;
 
+  const availableSheetHeight = getAvailableOverlayHeight(
+    Math.min(SCREEN_HEIGHT, modalHeight ?? SCREEN_HEIGHT),
+    insets.top,
+    customKeyboardBottomInset
+  );
   const configBasedHeight = useMemo(() => {
     const h = effectiveConfig.height;
     if (typeof h === "number")
-      return Math.min(h, SCREEN_HEIGHT * MAX_SHEET_RATIO);
+      return Math.max(1, Math.min(h, availableSheetHeight));
     const pct = parseFloat(String(h)) / 100;
-    return SCREEN_HEIGHT * pct;
-  }, [effectiveConfig.height]);
+    return Math.max(
+      1,
+      Math.min(
+        availableSheetHeight,
+        SCREEN_HEIGHT * Math.min(1, Math.max(0, pct)) * Math.max(1, fontScale)
+      )
+    );
+  }, [effectiveConfig.height, SCREEN_HEIGHT, availableSheetHeight, fontScale]);
 
   const [measuredContentHeight, setMeasuredContentHeight] = useState(0);
   useEffect(() => {
@@ -829,16 +816,10 @@ export const AppSheet: React.FC<AppSheetProps> = ({
     configBasedHeight,
     chromeHeight,
     maxContentHeight,
+    SCREEN_HEIGHT,
   ]);
 
-  const resolvedSheetHeight = useMemo(() => {
-    if (type !== "feedback" || keyboardHeight <= 0) return sheetHeight;
-    const available = Math.max(
-      MIN_SHEET_HEIGHT,
-      SCREEN_HEIGHT - keyboardHeight
-    );
-    return Math.min(sheetHeight, available);
-  }, [type, sheetHeight, keyboardHeight]);
+  const resolvedSheetHeight = Math.min(sheetHeight, availableSheetHeight);
 
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const context = useSharedValue({ y: 0 });
@@ -847,7 +828,7 @@ export const AppSheet: React.FC<AppSheetProps> = ({
     translateY.value = withTiming(SCREEN_HEIGHT, { duration: 250 }, () =>
       runOnJS(onClose)()
     );
-  }, [onClose]);
+  }, [onClose, SCREEN_HEIGHT, translateY]);
 
   /** Forms with TextInputs: pan steals the first tap and can dismiss while typing. */
   const enablePanDismiss = useMemo(() => {
@@ -896,14 +877,18 @@ export const AppSheet: React.FC<AppSheetProps> = ({
     ),
   }));
 
+  const wasVisible = React.useRef(false);
   React.useLayoutEffect(() => {
     if (visible) {
-      translateY.value = SCREEN_HEIGHT;
-      translateY.value = withTiming(0, { duration: 280 });
+      if (!wasVisible.current) {
+        translateY.value = SCREEN_HEIGHT;
+        translateY.value = withTiming(0, { duration: 280 });
+      }
     } else {
       translateY.value = withTiming(SCREEN_HEIGHT, { duration: 220 });
     }
-  }, [visible, translateY]);
+    wasVisible.current = visible;
+  }, [visible, translateY, SCREEN_HEIGHT]);
 
   const handleBackdropPress = () => {
     if (effectiveConfig.enableBackdropDismiss) closeSheet();
@@ -971,7 +956,6 @@ export const AppSheet: React.FC<AppSheetProps> = ({
           <View style={styles.communityRulesNavRow}>
             <View style={styles.communityRulesCloseSpacer} />
             <Text
-              allowFontScaling={false}
               numberOfLines={1}
               variant="body"
               size="medium"
@@ -1236,6 +1220,7 @@ export const AppSheet: React.FC<AppSheetProps> = ({
 
   const modalContent = (
     <View
+      onLayout={(event) => setModalHeight(event.nativeEvent.layout.height)}
       style={[
         styles.modalWrapper,
         { backgroundColor: OVERLAY_COLORS.MODAL_BACKDROP },
@@ -1310,7 +1295,8 @@ export const AppSheet: React.FC<AppSheetProps> = ({
                         style={getBitmapSheetBackgroundStyle(
                           type,
                           bgSource,
-                          resolvedSheetHeight
+                          resolvedSheetHeight,
+                          SCREEN_WIDTH
                         )}
                         resizeMode="cover"
                         preferRNImage={type === "feedback"}
@@ -1354,9 +1340,7 @@ export const AppSheet: React.FC<AppSheetProps> = ({
       statusBarTranslucent
       presentationStyle="overFullScreen"
     >
-      {type === "createCollection" ||
-      type === "renameCollection" ||
-      type === "feedback" ? (
+      {customKeyboardBottomInset <= 0 ? (
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -2216,7 +2200,6 @@ function CommunityRulesContent({
           <View style={styles.updatedRow}>
             <Icon name="clock" size={20} color={theme.colors.textSecondary} />
             <Text
-              allowFontScaling={false}
               variant="body"
               size="small"
               color="textSecondary"
@@ -2226,7 +2209,6 @@ function CommunityRulesContent({
             </Text>
           </View>
           <Text
-            allowFontScaling={false}
             variant="body"
             size="small"
             style={[styles.welcomeIntro, { color: theme.colors.textPrimary }]}
@@ -2236,7 +2218,6 @@ function CommunityRulesContent({
           {communityRules.rules.map((rule, i) => (
             <View key={i} style={styles.communityRuleBlock}>
               <Text
-                allowFontScaling={false}
                 variant="body"
                 size="medium"
                 weight="medium"
@@ -2249,7 +2230,6 @@ function CommunityRulesContent({
                 {i + 1}. {rule.title}
               </Text>
               <Text
-                allowFontScaling={false}
                 variant="body"
                 size="small"
                 style={[
@@ -2264,7 +2244,6 @@ function CommunityRulesContent({
           ))}
           {communityRules.footerNote ? (
             <Text
-              allowFontScaling={false}
               variant="body"
               size="small"
               style={[
@@ -2293,7 +2272,6 @@ function CommunityRulesContent({
             onClose();
           }}
           fullWidth
-          allowFontScaling={false}
           style={[
             styles.communityRulesOkayButton,
             { backgroundColor: theme.colors.primaryCTA },
@@ -3675,7 +3653,7 @@ const styles = StyleSheet.create({
   handle: { width: 40, height: 4, borderRadius: 2 },
   sheetCloseButton: {
     width: 40,
-    height: 40,
+    minHeight: 40,
     marginLeft: -4,
     justifyContent: "center",
     alignItems: "center",
@@ -3716,7 +3694,7 @@ const styles = StyleSheet.create({
     left: spacing[4],
     top: 8,
     width: 40,
-    height: 40,
+    minHeight: 40,
     borderRadius: 20,
     marginLeft: 0,
     marginTop: 0,
@@ -3840,7 +3818,7 @@ const styles = StyleSheet.create({
   /** Figma Button-Icon: 24pt circle, surface-secondary + 1pt border-0, 16pt icon */
   communityRulesCloseBtn: {
     width: 24,
-    height: 24,
+    minHeight: 24,
     borderRadius: 12,
     borderWidth: 1,
     alignItems: "center",
@@ -3956,7 +3934,7 @@ const sheetStyles = StyleSheet.create({
   },
   /** Text + CTA pinned to sheet bottom via marginTop: 'auto' on parent flex column. */
   limitTextCtaSection: {
-    flexShrink: 0,
+    flexShrink: 1,
     width: "100%",
   },
   limitTitle: { textAlign: "center" },
@@ -4040,7 +4018,7 @@ const sheetStyles = StyleSheet.create({
     minWidth: 0,
     borderRadius: 24,
     borderWidth: 1,
-    height: 44,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -4069,7 +4047,7 @@ const sheetStyles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   milestoneTextCtaSection: {
-    flexShrink: 0,
+    flexShrink: 1,
     width: "100%",
   },
   milestoneTitle: {
@@ -4142,7 +4120,7 @@ const sheetStyles = StyleSheet.create({
   },
   rateStarHit: {
     width: 44,
-    height: 44,
+    minHeight: 44,
     flexShrink: 0,
     overflow: "hidden",
     alignItems: "center",
@@ -4150,12 +4128,12 @@ const sheetStyles = StyleSheet.create({
   },
   rateStar: {
     width: 44,
-    height: 44,
+    minHeight: 44,
   },
   rateStarFilled: {
     position: "absolute",
     width: 44,
-    height: 44,
+    minHeight: 44,
   },
   rateStarHidden: {
     opacity: 0,
@@ -4197,7 +4175,7 @@ const sheetStyles = StyleSheet.create({
   feedbackSubtitle: { marginBottom: 16, textAlign: "center", width: "100%" },
   feedbackInput: {
     borderWidth: 1,
-    height: 48,
+    minHeight: 48,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginBottom: 12,
@@ -4347,7 +4325,7 @@ const sheetStyles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderRadius: 30,
-    height: 50,
+    minHeight: 50,
   },
   addToDone: { width: "100%", alignItems: "center", justifyContent: "center" },
   addToDoneWrap: { width: "100%" },

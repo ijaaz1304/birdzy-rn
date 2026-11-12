@@ -1,3 +1,4 @@
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
 import { AppImage } from "@/components/AppImage";
 import React from "react";
 import {
@@ -42,11 +43,12 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
   const strings = HOME_STRINGS.discovery;
   const cardBg = isDark ? theme.colors.surfaceSecondary : "#EBE4EE";
   const titleColor = theme.colors.textPrimary;
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const stacked = getResponsiveGridColumns(windowWidth, fontScale) === 1;
   const isCompact = windowWidth < COMPACT_BREAKPOINT;
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, stacked && { flexDirection: "column" }]}>
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={onSoundPress}
@@ -55,9 +57,8 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
         accessibilityLabel={strings.soundIdentify.title}
       >
         <View style={styles.soundHeader}>
-          <AppText allowFontScaling={false}
+          <AppText
             variant="body14"
-            numberOfLines={1}
             style={[styles.soundTitle, isCompact && styles.titleCompact]}
           >
             {strings.soundIdentify.title}
@@ -82,9 +83,8 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
         style={[styles.card, { backgroundColor: cardBg }]}
       >
         <View style={styles.cardHeader}>
-          <AppText allowFontScaling={false}
+          <AppText
             variant="body14"
-            numberOfLines={1}
             style={[
               styles.cardTitle,
               isCompact && styles.titleCompact,
@@ -93,11 +93,7 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
           >
             {strings.identifyByPhoto.title}
           </AppText>
-          <MaterialIcons
-            name="chevron-right"
-            size={20}
-            color={titleColor}
-          />
+          <MaterialIcons name="chevron-right" size={20} color={titleColor} />
         </View>
         <View style={styles.photoIllustration}>
           <AppImage
@@ -145,7 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   soundPanel: {
-    height: 72,
+    minHeight: 72,
     width: "100%",
     borderRadius: 8,
     overflow: "hidden",

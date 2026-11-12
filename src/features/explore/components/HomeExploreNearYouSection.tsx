@@ -92,7 +92,7 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
   const theme = useTheme();
   const isDark = useIsDark();
   const strings = EXPLORE_HOME_STRINGS;
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
   const panelOnly = !showRows;
   const cardPadding = panelOnly ? 0 : CARD_PADDING;
   const [panelWidth, setPanelWidth] = useState(
@@ -164,7 +164,7 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
           styles.banner,
           panelOnly && { borderRadius: 0 },
           {
-            height: sc(EXPLORE_DESIGN.bannerHeight),
+            minHeight: sc(EXPLORE_DESIGN.bannerHeight),
             backgroundColor: isDark
               ? theme.colors.surfaceSecondary
               : EXPLORE_BANNER_BG,
@@ -175,6 +175,7 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
         <View
           style={[
             styles.mapArt,
+            fontScale > 1.2 && { opacity: 0 },
             {
               left: mapLeft,
               top: sc(EXPLORE_DESIGN.map.top),
@@ -247,13 +248,15 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
             {
               left: sc(EXPLORE_DESIGN.copy.left),
               /**
-               * Fonts don't scale, so the copy box must never shrink below
-               * Figma's 158pt or the title/button wrap on small phones.
+               * Keep default artwork proportions; enlarged text gets the full copy width.
                */
-              width: Math.max(
-                EXPLORE_DESIGN.copy.width,
-                sc(EXPLORE_DESIGN.copy.width)
-              ),
+              width:
+                fontScale > 1.2
+                  ? Math.max(1, bannerWidth - 32)
+                  : Math.max(
+                      EXPLORE_DESIGN.copy.width,
+                      sc(EXPLORE_DESIGN.copy.width)
+                    ),
             },
           ]}
           pointerEvents="none"
@@ -261,7 +264,6 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
           <View style={styles.bannerTextGroup}>
             <AppText
               variant="title18"
-              allowFontScaling={false}
               style={[
                 styles.bannerTitle,
                 {
@@ -276,7 +278,6 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
             <AppText
               variant="caption12"
               color="textSecondary"
-              allowFontScaling={false}
               style={styles.bannerDescription}
             >
               {strings.description}
@@ -293,12 +294,7 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
               },
             ]}
           >
-            <AppText
-              allowFontScaling={false}
-              variant="body14"
-              numberOfLines={1}
-              style={{ fontFamily: FONTS.medium }}
-            >
+            <AppText variant="body14" style={{ fontFamily: FONTS.medium }}>
               {buttonLabel}
             </AppText>
           </View>
@@ -340,7 +336,6 @@ function ExploreRow({
       activeOpacity={0.7}
     >
       <AppText
-        allowFontScaling={false}
         variant="body14"
         style={{ fontFamily: FONTS.bold, color: textColor }}
       >
@@ -385,9 +380,8 @@ const styles = StyleSheet.create({
   },
   /** Figma: copy block vertically centered; left/width set at render (15 / 158 × scale) */
   bannerCopy: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
+    position: "relative",
+    paddingVertical: 16,
     justifyContent: "center",
     gap: 16,
     zIndex: 1,

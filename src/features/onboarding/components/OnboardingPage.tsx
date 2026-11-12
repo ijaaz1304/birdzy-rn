@@ -7,7 +7,8 @@ import React from "react";
 import {
   View,
   StyleSheet,
-  Dimensions,
+  useWindowDimensions,
+  ScrollView,
   TouchableOpacity,
   Animated,
 } from "react-native";
@@ -17,7 +18,7 @@ import {
   SCREEN_COLORS,
   SUBSCRIPTION_COLORS,
 } from "../../../constants/colorConstants";
-import { Text, Chip } from "../../../atoms";
+import { Text, Chip, Button } from "../../../atoms";
 import { OnboardingPageData } from "../screens/OnboardingScreenPhone";
 import { Images } from "../../../assets";
 import { ChatInterface } from "./ChatInterface";
@@ -36,13 +37,12 @@ import {
 } from "../onboardingCta.constants";
 import { PaginationDots } from "./PaginationDots";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("screen");
-
 /** Onboarding background art is 1500×3252 — anchor to bottom so mushrooms align with design */
 const ONBOARDING_BG_ASPECT = 3252 / 1500;
 /** Figma frame: background art is 375×813pt */
 const ONBOARDING_BG_DESIGN_WIDTH = 375;
-const ONBOARDING_BG_DESIGN_HEIGHT = ONBOARDING_BG_DESIGN_WIDTH * ONBOARDING_BG_ASPECT;
+const ONBOARDING_BG_DESIGN_HEIGHT =
+  ONBOARDING_BG_DESIGN_WIDTH * ONBOARDING_BG_ASPECT;
 /** Figma: title starts at y=516 (~20pt below the illustration), in background coordinates */
 const ONBOARDING_DESIGN_TITLE_TOP = 516;
 /** Default copy block height (2-line title + 2-line subtitle + dots) before first layout */
@@ -93,6 +93,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     onLogIn,
     onContinueAsGuest,
   }) => {
+    const { height: SCREEN_HEIGHT, fontScale } = useWindowDimensions();
     const theme = useTheme();
     const isDark = useIsDark();
     const insets = useSafeAreaInsets();
@@ -104,7 +105,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     );
     const layoutWidth = width;
     const layoutLeft = 0;
-    const bgHeight = Math.max(SCREEN_HEIGHT, layoutWidth * ONBOARDING_BG_ASPECT);
+    const bgHeight = Math.max(
+      SCREEN_HEIGHT,
+      layoutWidth * ONBOARDING_BG_ASPECT
+    );
     /** How much the 375×813 design background is scaled on this screen */
     const bgScale = bgHeight / ONBOARDING_BG_DESIGN_HEIGHT;
     const contentMaxWidth = width - 40;
@@ -288,8 +292,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
         : 560;
 
     /** Fixed layout: no vertical scroll on any onboarding page so layout stays fixed */
-    const ContentWrapper = View;
+    const ContentWrapper = ScrollView;
     const contentWrapperProps = {
+      contentContainerStyle: { flexGrow: 1 },
+      keyboardShouldPersistTaps: "handled" as const,
       style: [
         styles.content,
         styles.contentNoScroll,
@@ -315,7 +321,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
           variant="title"
           size="medium"
           weight="bold"
-          allowFontScaling={false}
           style={[
             styles.title,
             styles.titleOnboarding,
@@ -330,7 +335,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
           variant="body"
           size="medium"
           color="textSecondary"
-          allowFontScaling={false}
           style={[
             styles.description,
             styles.descriptionOnboarding,
@@ -353,6 +357,55 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     );
 
     // Auth page: 3-section layout — text top, image below, CTA at bottom (no absolute positioning)
+    if (fontScale > 1.15 || SCREEN_HEIGHT < 700) {
+      return (
+        <ScrollView
+          style={{ width, height: SCREEN_HEIGHT }}
+          contentContainerStyle={{
+            paddingTop: insets.top + 56,
+            paddingHorizontal: 20,
+            paddingBottom: insets.bottom + (showAuthButtons ? 24 : 160),
+            gap: 20,
+            alignItems: "center",
+          }}
+        >
+          {data.illustrationImage ? (
+            <AppImage
+              source={data.illustrationImage}
+              style={{ width: "100%", maxWidth: 335, height: 180 }}
+              resizeMode="contain"
+            />
+          ) : null}
+          {data.stats ? (
+            <Text style={{ textAlign: "center" }}>
+              {data.stats.value} {data.stats.label}
+            </Text>
+          ) : null}
+          <Text variant="title" size="large" style={{ textAlign: "center" }}>
+            {data.title}
+          </Text>
+          <Text style={{ textAlign: "center" }}>{data.description}</Text>
+          {showAuthButtons ? (
+            <>
+              <Button title="Sign up" fullWidth onPress={onSignUp} />
+              <Button
+                title="Log in"
+                fullWidth
+                variant="outline"
+                onPress={onLogIn}
+              />
+              <Button
+                title="Continue as guest"
+                fullWidth
+                variant="ghost"
+                onPress={onContinueAsGuest}
+              />
+            </>
+          ) : null}
+        </ScrollView>
+      );
+    }
+
     if (showAuthButtons) {
       /** Figma: guest button ends 40pt above the screen bottom (home indicator area + 8) */
       const ctaPaddingBottom = getOnboardingCtaBottomPadding(insets.bottom);
@@ -417,7 +470,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                 variant="title"
                 size="large"
                 weight="bold"
-                allowFontScaling={false}
                 style={[
                   styles.titleAuthProgress,
                   {
@@ -431,7 +483,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
               <Text
                 variant="body"
                 size="medium"
-                allowFontScaling={false}
                 style={[
                   styles.descriptionAuthProgress,
                   {
@@ -504,7 +555,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
               <Text
                 variant="label"
                 size="medium"
-                allowFontScaling={false}
                 style={[
                   styles.authButtonLabel,
                   { color: theme.colors.onPrimary },
@@ -526,7 +576,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                     }
                   : {
                       backgroundColor: AUTH_CTA_LIGHT.secondaryBg,
-                      borderColor: SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
+                      borderColor:
+                        SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
                     },
               ]}
               activeOpacity={0.7}
@@ -534,7 +585,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
               <Text
                 variant="label"
                 size="medium"
-                allowFontScaling={false}
                 style={[
                   styles.authButtonLabel,
                   {
@@ -557,7 +607,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                 <Text
                   variant="label"
                   size="medium"
-                  allowFontScaling={false}
                   style={[
                     styles.authButtonLabel,
                     {
@@ -621,13 +670,19 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                     <View
                       style={[
                         styles.illustrationRowPage4,
-                        { height: illustrationHeight, maxWidth: contentMaxWidth },
+                        {
+                          height: illustrationHeight,
+                          maxWidth: contentMaxWidth,
+                        },
                       ]}
                     >
                       <View
                         style={[
                           styles.imageContainerPage4Main,
-                          { height: illustrationHeight, width: contentMaxWidth },
+                          {
+                            height: illustrationHeight,
+                            width: contentMaxWidth,
+                          },
                         ]}
                       >
                         <AppImage
@@ -666,7 +721,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                       <View
                         style={[
                           styles.imageContainer,
-                          { height: illustrationHeight, width: contentMaxWidth },
+                          {
+                            height: illustrationHeight,
+                            width: contentMaxWidth,
+                          },
                         ]}
                       >
                         <AppImage
@@ -682,7 +740,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                       <View
                         style={[
                           styles.imageContainer,
-                          { height: illustrationHeight, width: contentMaxWidth },
+                          {
+                            height: illustrationHeight,
+                            width: contentMaxWidth,
+                          },
                         ]}
                       >
                         <AppImage
@@ -792,7 +853,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
               </View>
             )}
           </ContentTopWrapper>
-
         </ContentWrapper>
 
         {/* Title + subtitle + dots — positioned relative to the scaled background art */}
@@ -1218,7 +1278,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   authButtonCta: {
-    height: 44,
+    minHeight: 44,
     paddingVertical: 10,
     paddingHorizontal: spacing[4],
     borderRadius: 23.789,

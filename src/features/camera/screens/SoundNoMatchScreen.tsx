@@ -10,6 +10,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  ScrollView,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -289,120 +290,129 @@ export const SoundNoMatchScreen: React.FC = () => {
             </View>
           ) : null}
 
-          <View style={styles.content}>
-            {audioUri ? (
-              <SoundSampleCard
-                durationSec={audioDurationSec}
-                stamp={soundStamp}
-                place={soundPlace}
-                birdCount={0}
-                audioUri={audioUri}
-                isPlaying={playingId === "user-recording"}
-                onTogglePlay={() => {
-                  void toggleSound("user-recording", [audioUri]);
-                }}
-              />
-            ) : null}
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            <View style={styles.content}>
+              {audioUri ? (
+                <SoundSampleCard
+                  durationSec={audioDurationSec}
+                  stamp={soundStamp}
+                  place={soundPlace}
+                  birdCount={0}
+                  audioUri={audioUri}
+                  isPlaying={playingId === "user-recording"}
+                  onTogglePlay={() => {
+                    void toggleSound("user-recording", [audioUri]);
+                  }}
+                />
+              ) : null}
 
-            {!showLocationAsGranted ? (
-              <IdentificationLocationBanner
-                variant="results"
-                permissionGranted={false}
-                locationLabel={locationLabel}
-                prompt={noMatchCopy.enableLocationPrompt}
-                onToggleLocation={(enabled) => {
-                  if (enabled) openCustomLocationSheet();
-                }}
-                onPressLocation={openCustomLocationSheet}
-              />
-            ) : locationLabel?.trim() ? (
-              <View
-                style={[
-                  styles.locationCard,
-                  { backgroundColor: colors.surfaceSecondary },
-                ]}
-              >
-                <Text
-                  style={[styles.locationText, { color: colors.textPrimary }]}
+              {!showLocationAsGranted ? (
+                <IdentificationLocationBanner
+                  variant="results"
+                  permissionGranted={false}
+                  locationLabel={locationLabel}
+                  prompt={noMatchCopy.enableLocationPrompt}
+                  onToggleLocation={(enabled) => {
+                    if (enabled) openCustomLocationSheet();
+                  }}
+                  onPressLocation={openCustomLocationSheet}
+                />
+              ) : locationLabel?.trim() ? (
+                <View
+                  style={[
+                    styles.locationCard,
+                    { backgroundColor: colors.surfaceSecondary },
+                  ]}
                 >
-                  {copy.locationSpottedPrefix}
                   <Text
-                    style={styles.locationLink}
-                    onPress={() => openCustomLocationSheet()}
+                    style={[styles.locationText, { color: colors.textPrimary }]}
                   >
-                    {locationLabel.trim()}
+                    {copy.locationSpottedPrefix}
+                    <Text
+                      style={styles.locationLink}
+                      onPress={() => openCustomLocationSheet()}
+                    >
+                      {locationLabel.trim()}
+                    </Text>
                   </Text>
+                </View>
+              ) : null}
+
+              <View style={styles.emptyWrap}>
+                <AppImage
+                  source={Images.soundLibraryEmptyBird}
+                  style={styles.emptyArt}
+                  resizeMode="contain"
+                />
+                <Text
+                  style={[styles.emptyTitle, { color: colors.textPrimary }]}
+                >
+                  {noMatchCopy.title}
+                </Text>
+                <Text
+                  style={[styles.emptyBody, { color: colors.textSecondary }]}
+                >
+                  {showLocationAsGranted
+                    ? noMatchCopy.bodyWithLocation
+                    : noMatchCopy.bodyNoLocation}
                 </Text>
               </View>
-            ) : null}
-
-            <View style={styles.emptyWrap}>
-              <AppImage
-                source={Images.soundLibraryEmptyBird}
-                style={styles.emptyArt}
-                resizeMode="contain"
-              />
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-                {noMatchCopy.title}
-              </Text>
-              <Text style={[styles.emptyBody, { color: colors.textSecondary }]}>
-                {showLocationAsGranted
-                  ? noMatchCopy.bodyWithLocation
-                  : noMatchCopy.bodyNoLocation}
-              </Text>
             </View>
-          </View>
 
-          <View style={styles.footer}>
-            <TouchableOpacity
-              onPress={handleTryAgain}
-              disabled={!showLocationAsGranted}
-              activeOpacity={0.85}
-              style={[
-                styles.primaryBtn,
-                {
-                  backgroundColor: showLocationAsGranted
-                    ? colors.primaryCTA
-                    : colors.borderSecondary,
-                },
-              ]}
-            >
-              <Text
+            <View style={styles.footer}>
+              <TouchableOpacity
+                onPress={handleTryAgain}
+                disabled={!showLocationAsGranted}
+                activeOpacity={0.85}
                 style={[
-                  styles.primaryBtnLabel,
+                  styles.primaryBtn,
                   {
-                    color: showLocationAsGranted
-                      ? "#FFFFFF"
-                      : colors.textTertiary,
+                    backgroundColor: showLocationAsGranted
+                      ? colors.primaryCTA
+                      : colors.borderSecondary,
                   },
                 ]}
               >
-                {noMatchCopy.tryAgain}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                void handleSaveRecording();
-              }}
-              activeOpacity={0.85}
-              style={[
-                styles.secondaryBtn,
-                {
-                  borderColor: colors.border0,
-                  backgroundColor: colors.surfacePrimary,
-                },
-              ]}
-            >
-              <Text
+                <Text
+                  style={[
+                    styles.primaryBtnLabel,
+                    {
+                      color: showLocationAsGranted
+                        ? "#FFFFFF"
+                        : colors.textTertiary,
+                    },
+                  ]}
+                >
+                  {noMatchCopy.tryAgain}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  void handleSaveRecording();
+                }}
+                activeOpacity={0.85}
                 style={[
-                  styles.secondaryBtnLabel,
-                  { color: colors.textPrimary },
+                  styles.secondaryBtn,
+                  {
+                    borderColor: colors.border0,
+                    backgroundColor: colors.surfacePrimary,
+                  },
                 ]}
               >
-                {noMatchCopy.saveRecording}
-              </Text>
-            </TouchableOpacity>
-          </View>
+                <Text
+                  style={[
+                    styles.secondaryBtnLabel,
+                    { color: colors.textPrimary },
+                  ]}
+                >
+                  {noMatchCopy.saveRecording}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </SafeAreaView>
       </View>
 
@@ -448,7 +458,8 @@ const styles = StyleSheet.create({
   },
   headerIcon: {
     width: 44,
-    height: 44,
+    minHeight: 48,
+    paddingVertical: 10,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -484,7 +495,8 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     paddingHorizontal: LIST_PADDING,
     paddingTop: 8,
     gap: 16,
@@ -532,7 +544,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryBtn: {
-    height: 44,
+    minHeight: 48,
+    paddingVertical: 10,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
@@ -543,7 +556,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   secondaryBtn: {
-    height: 44,
+    minHeight: 48,
+    paddingVertical: 10,
     borderRadius: 24,
     borderWidth: 1,
     alignItems: "center",

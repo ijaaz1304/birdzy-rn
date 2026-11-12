@@ -1,3 +1,4 @@
+import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
 /**
  * Search Screen - Dedicated search page for catalogue
  */
@@ -9,13 +10,29 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { View, StyleSheet, FlatList, TouchableOpacity, Platform, InteractionManager, KeyboardAvoidingView, ViewToken, useWindowDimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Platform,
+  InteractionManager,
+  KeyboardAvoidingView,
+  ViewToken,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { Text, NavBackIcon } from "../../../atoms";
-import { SearchBar, type SearchBarRef, EmptyState, FilterActionButton, ActiveFilterChips } from "../../../molecules";
+import {
+  SearchBar,
+  type SearchBarRef,
+  EmptyState,
+  FilterActionButton,
+  ActiveFilterChips,
+} from "../../../molecules";
 import FilterModal from "../../../organisms/FilterModal/FilterModal";
 import { CatalogueStackParamList } from "../../../navigation/types";
 import { useFeatureConfig } from "../../../config/context";
@@ -58,7 +75,9 @@ type SearchScreenNavigationProp = NativeStackNavigationProp<
 >;
 type SearchScreenRouteProp = RouteProp<CatalogueStackParamList, "SearchFilter">;
 
-function getActiveFilterPayload(filters: FilterState): Record<string, string[]> {
+function getActiveFilterPayload(
+  filters: FilterState
+): Record<string, string[]> {
   const payload: Record<string, string[]> = {};
   Object.entries(filters).forEach(([key, values]) => {
     if ((values?.length ?? 0) > 0) {
@@ -73,10 +92,18 @@ export const SearchScreen: React.FC = () => {
   const colors = theme.colors;
   const Space = theme.spacing;
   const isDark = useIsDark();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const searchCardWidth = useMemo(
-    () => (windowWidth - SEARCH_GRID_H_PADDING * 2 - SEARCH_GRID_GAP) / 2,
-    [windowWidth]
+  const {
+    width: windowWidth,
+    height: windowHeight,
+    fontScale,
+  } = useWindowDimensions();
+  const gridColumns = getResponsiveGridColumns(windowWidth, fontScale);
+  const searchCardWidth = Math.max(
+    1,
+    (windowWidth -
+      SEARCH_GRID_H_PADDING * 2 -
+      SEARCH_GRID_GAP * (gridColumns - 1)) /
+      gridColumns
   );
   const suggestionsMaxHeight = useMemo(
     () => Math.min(300, Math.round(windowHeight * 0.38)),
@@ -93,16 +120,21 @@ export const SearchScreen: React.FC = () => {
 
   const [query, setQuery] = useState(initialQueryFromParams ?? "");
   const [suggestionsVisible, setSuggestionsVisible] = useState(false);
-  const suggestionsHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const suggestionsHideTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
   const [filters, setFilters] = useState<FilterState>({});
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [filterApiData, setFilterApiData] = useState<
     Record<string, string[]> | undefined
   >(undefined);
-  const { mushrooms, searchMushrooms, filterMushrooms, favorites, toggleFavorite } =
-    useBirdsStore();
+  const {
+    mushrooms,
+    searchMushrooms,
+    filterMushrooms,
+    favorites,
+    toggleFavorite,
+  } = useBirdsStore();
   const [searchResults, setSearchResults] = useState<CatalogueCardItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   /** Show results after user commits search or applies filters */
@@ -131,7 +163,10 @@ export const SearchScreen: React.FC = () => {
     }, 200);
   }, [clearSuggestionsHideTimeout]);
 
-  useEffect(() => () => clearSuggestionsHideTimeout(), [clearSuggestionsHideTimeout]);
+  useEffect(
+    () => () => clearSuggestionsHideTimeout(),
+    [clearSuggestionsHideTimeout]
+  );
   useEffect(() => {
     if (Platform.OS !== "ios") return;
     const task = InteractionManager.runAfterInteractions(() => {
@@ -237,10 +272,7 @@ export const SearchScreen: React.FC = () => {
     }
   }, [showFilterModal, filterApiData]);
 
-  const handleApplyFilters = (
-    newFilters: FilterState,
-    hasFilters: boolean
-  ) => {
+  const handleApplyFilters = (newFilters: FilterState, hasFilters: boolean) => {
     const nextFilters = hasFilters ? newFilters : {};
     setFilters(nextFilters);
     setShowFilterModal(false);
@@ -332,8 +364,7 @@ export const SearchScreen: React.FC = () => {
 
   const hasResults = searchResults.length > 0;
   const hasQuery = query.trim().length > 0;
-  const showResultsArea =
-    resultsRequested && (hasQuery || hasActiveFilters);
+  const showResultsArea = resultsRequested && (hasQuery || hasActiveFilters);
   const emptyStateTitle = hasActiveFilters
     ? CATALOGUE_STRINGS.filterEmptyState.title
     : CATALOGUE_STRINGS.emptyState.title;
@@ -431,37 +462,37 @@ export const SearchScreen: React.FC = () => {
 
   return (
     <>
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.surfaceSecondary }]}
-    >
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoid}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={0}
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.surfaceSecondary }]}
       >
-        {/* Header: back + search bar; dropdown below when focused (high zIndex so dropdown isn't covered by content below) */}
-        <View
-          style={[
-            styles.headerWrapper,
-            { backgroundColor: colors.surfaceSecondary },
-          ]}
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={0}
         >
-          {/* Figma 8025:101790 — back (24) · search bar (flex 1) · filter (48), 8pt gaps, 20pt side margin */}
-          <View style={[styles.header, styles.headerWithSearch]}>
-            <TouchableOpacity
-              onPress={handleBackToCatalogue}
-              style={styles.backButton}
-              hitSlop={BACK_HIT_SLOP}
-              accessibilityRole="button"
-              accessibilityLabel="Back"
-            >
-              <NavBackIcon color={colors.textPrimary} size={24} />
-            </TouchableOpacity>
-            <View style={styles.searchBarInHeader}>
-              <SearchBar
-                ref={searchBarRef}
-                value={query}
-                onChangeText={handleQueryChange}
+          {/* Header: back + search bar; dropdown below when focused (high zIndex so dropdown isn't covered by content below) */}
+          <View
+            style={[
+              styles.headerWrapper,
+              { backgroundColor: colors.surfaceSecondary },
+            ]}
+          >
+            {/* Figma 8025:101790 — back (24) · search bar (flex 1) · filter (48), 8pt gaps, 20pt side margin */}
+            <View style={[styles.header, styles.headerWithSearch]}>
+              <TouchableOpacity
+                onPress={handleBackToCatalogue}
+                style={styles.backButton}
+                hitSlop={BACK_HIT_SLOP}
+                accessibilityRole="button"
+                accessibilityLabel="Back"
+              >
+                <NavBackIcon color={colors.textPrimary} size={24} />
+              </TouchableOpacity>
+              <View style={styles.searchBarInHeader}>
+                <SearchBar
+                  ref={searchBarRef}
+                  value={query}
+                  onChangeText={handleQueryChange}
                   onClear={() => {
                     setQuery("");
                     clearSuggestionsHideTimeout();
@@ -470,192 +501,199 @@ export const SearchScreen: React.FC = () => {
                       void runCatalogueQuery("", filters);
                     }
                   }}
-                placeholder={
-                  catalogueConfig.searchPlaceholder?.replace(/\?/g, "") ??
-                  "Find birds by name or traits..."
-                }
-                showFilterButton={false}
-                leftIcon="search"
-                autoFocus={Platform.OS !== "ios"}
-                onFocus={() => {
-                  clearSuggestionsHideTimeout();
-                  setSuggestionsVisible(true);
-                }}
-                onBlur={() => {
-                  scheduleHideSuggestions();
-                }}
-                onSubmitEditing={() => {
-                  const q = query.trim();
-                  if (q) {
+                  placeholder={
+                    catalogueConfig.searchPlaceholder?.replace(/\?/g, "") ??
+                    "Find birds by name or traits..."
+                  }
+                  showFilterButton={false}
+                  leftIcon="search"
+                  autoFocus={Platform.OS !== "ios"}
+                  onFocus={() => {
                     clearSuggestionsHideTimeout();
-                    setSuggestionsVisible(false);
-                    void runCatalogueQuery(q, filters);
-                  }
-                }}
-              />
-            </View>
-            <FilterActionButton
-              filterCount={totalFilterCount}
-              onPress={() => setShowFilterModal(true)}
-            />
-          </View>
-          {/* Inline dropdown below bar (no modal = input stays focusable); show when focused + 1+ char */}
-          {showDropdown && (
-            <View
-              style={[
-                styles.suggestionsWrap,
-                {
-                  top: SEARCH_HEADER_TOP + SEARCH_BAR_HEIGHT + 4,
-                  left: SEARCH_SIDE_MARGIN,
-                  right: SEARCH_SIDE_MARGIN,
-                },
-              ]}
-            >
-              <SearchSuggestions
-                query={query}
-                visible={true}
-                maxHeight={suggestionsMaxHeight}
-                onInteractionStart={clearSuggestionsHideTimeout}
-                onSelect={(item) => {
-                  const value = getSearchSuggestionQuery(item);
-                  clearSuggestionsHideTimeout();
-                  setSuggestionsVisible(false);
-                  setQuery(value);
-                  requestAnimationFrame(() => {
-                    void runCatalogueQuery(value, filters);
-                  });
-                }}
-              />
-            </View>
-          )}
-        </View>
-
-        {/* Main content below header (lower zIndex so dropdown stays on top) */}
-        <View
-          style={styles.contentBelowHeader}
-          pointerEvents={showDropdown ? "none" : "auto"}
-        >
-          {hasActiveFilters ? (
-            <ActiveFilterChips
-              filters={filters}
-              onOpenFilters={() => setShowFilterModal(true)}
-              onRemoveFilterValue={removeFilterValue}
-              resultsHeading={CATALOGUE_STRINGS.screen.results}
-              contentPaddingHorizontal={Space[4]}
-            />
-          ) : showResultsArea && !isSearching && hasResults ? (
-            <Text
-              variant="title"
-              size="small"
-              weight="bold"
-              style={[
-                styles.resultsHeading,
-                { color: colors.textPrimary },
-              ]}
-            >
-              {CATALOGUE_STRINGS.screen.results}
-            </Text>
-          ) : null}
-
-          {/* Results or Empty State */}
-          {showResultsArea ? (
-            isSearching ? (
-              <View
-                style={[
-                  styles.skeletonContainer,
-                  { paddingHorizontal: SEARCH_GRID_H_PADDING },
-                ]}
-              >
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <View key={i} style={styles.skeletonItem}>
-                    <CardSkeleton height={220} borderRadius={12} />
-                  </View>
-                ))}
-              </View>
-            ) : hasResults ? (
-              <FlatList
-                data={searchResults}
-                extraData={favorites}
-                numColumns={2}
-                key="search-results-grid"
-                keyExtractor={(item) => item.id}
-                renderItem={renderItem}
-                columnWrapperStyle={[
-                  styles.columnWrapper,
-                  {
-                    paddingHorizontal: SEARCH_GRID_H_PADDING,
-                    marginBottom: SEARCH_GRID_GAP,
-                    gap: SEARCH_GRID_GAP,
-                  },
-                ]}
-                contentContainerStyle={[styles.list, { paddingBottom: 120 }]}
-                showsVerticalScrollIndicator={false}
-                initialNumToRender={FLATLIST_CONFIG.INITIAL_NUM_TO_RENDER}
-                maxToRenderPerBatch={FLATLIST_CONFIG.MAX_TO_RENDER_PER_BATCH}
-                windowSize={FLATLIST_CONFIG.WINDOW_SIZE}
-                removeClippedSubviews={FLATLIST_CONFIG.REMOVE_CLIPPED_SUBVIEWS}
-                updateCellsBatchingPeriod={
-                  FLATLIST_CONFIG.UPDATE_CELLS_BATCHING_PERIOD
-                }
-                viewabilityConfig={searchViewabilityConfig}
-                onViewableItemsChanged={onSearchViewableItemsChanged}
-              />
-            ) : (
-              <View style={styles.emptyContainer}>
-                <EmptyState
-                  image={
-                    hasActiveFilters
-                      ? Images.emptyFilter
-                      : Images.emptyResult
-                  }
-                  title={emptyStateTitle}
-                  subtitle={emptyStateSubtitle}
+                    setSuggestionsVisible(true);
+                  }}
+                  onBlur={() => {
+                    scheduleHideSuggestions();
+                  }}
+                  onSubmitEditing={() => {
+                    const q = query.trim();
+                    if (q) {
+                      clearSuggestionsHideTimeout();
+                      setSuggestionsVisible(false);
+                      void runCatalogueQuery(q, filters);
+                    }
+                  }}
                 />
               </View>
-            )
-          ) : (
-            /* Figma 8025:101794 — single centred hint 24pt below the bar (Body/14px/Regular, text-secondary) */
-            <View style={styles.searchHintWrap}>
-              <Text
-                allowFontScaling={false}
-                style={[styles.searchHint, { color: colors.textSecondary }]}
-              >
-                Partial words will not be searched.
-              </Text>
+              <FilterActionButton
+                filterCount={totalFilterCount}
+                onPress={() => setShowFilterModal(true)}
+              />
             </View>
-          )}
-        </View>
-      </KeyboardAvoidingView>
+            {/* Inline dropdown below bar (no modal = input stays focusable); show when focused + 1+ char */}
+            {showDropdown && (
+              <View
+                style={[
+                  styles.suggestionsWrap,
+                  {
+                    top: SEARCH_HEADER_TOP + SEARCH_BAR_HEIGHT + 4,
+                    left: SEARCH_SIDE_MARGIN,
+                    right: SEARCH_SIDE_MARGIN,
+                  },
+                ]}
+              >
+                <SearchSuggestions
+                  query={query}
+                  visible={true}
+                  maxHeight={suggestionsMaxHeight}
+                  onInteractionStart={clearSuggestionsHideTimeout}
+                  onSelect={(item) => {
+                    const value = getSearchSuggestionQuery(item);
+                    clearSuggestionsHideTimeout();
+                    setSuggestionsVisible(false);
+                    setQuery(value);
+                    requestAnimationFrame(() => {
+                      void runCatalogueQuery(value, filters);
+                    });
+                  }}
+                />
+              </View>
+            )}
+          </View>
 
-      {/* Filter Modal */}
-      <FilterModal
-        visible={showFilterModal}
-        onClose={() => setShowFilterModal(false)}
-        filterDataFromApi={filterApiData}
-        onApplyFilters={handleApplyFilters}
-        clearAllFilters={handleClearFilters}
-        defaultFilters={filters}
-        comingFrom="global_collection"
-      />
-      <RemoveFromWishlistConfirmation
-        visible={showRemoveWishlistConfirm}
-        onClose={() => {
-          setShowRemoveWishlistConfirm(false);
-          setPendingWishlistRemove(null);
-        }}
-        onConfirm={async () => {
-          const pending = pendingWishlistRemove;
-          if (!pending) return;
-          const result = await toggleFavorite(pending.id);
-          if (result === "removed") {
-            showToast(strings.collection.favorite.removed, "success");
-          } else {
-            showToast(strings.collection.favorite.removeFailed, "error");
-          }
-        }}
-        mushroomName={pendingWishlistRemove?.name}
-      />
-    </SafeAreaView>
+          {/* Main content below header (lower zIndex so dropdown stays on top) */}
+          <View
+            style={styles.contentBelowHeader}
+            pointerEvents={showDropdown ? "none" : "auto"}
+          >
+            {hasActiveFilters ? (
+              <ActiveFilterChips
+                filters={filters}
+                onOpenFilters={() => setShowFilterModal(true)}
+                onRemoveFilterValue={removeFilterValue}
+                resultsHeading={CATALOGUE_STRINGS.screen.results}
+                contentPaddingHorizontal={Space[4]}
+              />
+            ) : showResultsArea && !isSearching && hasResults ? (
+              <Text
+                variant="title"
+                size="small"
+                weight="bold"
+                style={[styles.resultsHeading, { color: colors.textPrimary }]}
+              >
+                {CATALOGUE_STRINGS.screen.results}
+              </Text>
+            ) : null}
+
+            {/* Results or Empty State */}
+            {showResultsArea ? (
+              isSearching ? (
+                <View
+                  style={[
+                    styles.skeletonContainer,
+                    { paddingHorizontal: SEARCH_GRID_H_PADDING },
+                  ]}
+                >
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <View key={i} style={styles.skeletonItem}>
+                      <CardSkeleton height={220} borderRadius={12} />
+                    </View>
+                  ))}
+                </View>
+              ) : hasResults ? (
+                <FlatList
+                  data={searchResults}
+                  extraData={favorites}
+                  numColumns={gridColumns}
+                  key={`search-results-grid-${gridColumns}`}
+                  keyExtractor={(item) => item.id}
+                  renderItem={renderItem}
+                  columnWrapperStyle={
+                    gridColumns > 1
+                      ? [
+                          styles.columnWrapper,
+                          {
+                            paddingHorizontal: SEARCH_GRID_H_PADDING,
+                            marginBottom: SEARCH_GRID_GAP,
+                            gap: SEARCH_GRID_GAP,
+                          },
+                        ]
+                      : undefined
+                  }
+                  contentContainerStyle={[
+                    {
+                      paddingHorizontal:
+                        gridColumns === 1 ? SEARCH_GRID_H_PADDING : 0,
+                    },
+                    styles.list,
+                    { paddingBottom: 120 },
+                  ]}
+                  showsVerticalScrollIndicator={false}
+                  initialNumToRender={FLATLIST_CONFIG.INITIAL_NUM_TO_RENDER}
+                  maxToRenderPerBatch={FLATLIST_CONFIG.MAX_TO_RENDER_PER_BATCH}
+                  windowSize={FLATLIST_CONFIG.WINDOW_SIZE}
+                  removeClippedSubviews={
+                    FLATLIST_CONFIG.REMOVE_CLIPPED_SUBVIEWS
+                  }
+                  updateCellsBatchingPeriod={
+                    FLATLIST_CONFIG.UPDATE_CELLS_BATCHING_PERIOD
+                  }
+                  viewabilityConfig={searchViewabilityConfig}
+                  onViewableItemsChanged={onSearchViewableItemsChanged}
+                />
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <EmptyState
+                    image={
+                      hasActiveFilters ? Images.emptyFilter : Images.emptyResult
+                    }
+                    title={emptyStateTitle}
+                    subtitle={emptyStateSubtitle}
+                  />
+                </View>
+              )
+            ) : (
+              /* Figma 8025:101794 — single centred hint 24pt below the bar (Body/14px/Regular, text-secondary) */
+              <View style={styles.searchHintWrap}>
+                <Text
+                  style={[styles.searchHint, { color: colors.textSecondary }]}
+                >
+                  Partial words will not be searched.
+                </Text>
+              </View>
+            )}
+          </View>
+        </KeyboardAvoidingView>
+
+        {/* Filter Modal */}
+        <FilterModal
+          visible={showFilterModal}
+          onClose={() => setShowFilterModal(false)}
+          filterDataFromApi={filterApiData}
+          onApplyFilters={handleApplyFilters}
+          clearAllFilters={handleClearFilters}
+          defaultFilters={filters}
+          comingFrom="global_collection"
+        />
+        <RemoveFromWishlistConfirmation
+          visible={showRemoveWishlistConfirm}
+          onClose={() => {
+            setShowRemoveWishlistConfirm(false);
+            setPendingWishlistRemove(null);
+          }}
+          onConfirm={async () => {
+            const pending = pendingWishlistRemove;
+            if (!pending) return;
+            const result = await toggleFavorite(pending.id);
+            if (result === "removed") {
+              showToast(strings.collection.favorite.removed, "success");
+            } else {
+              showToast(strings.collection.favorite.removeFailed, "error");
+            }
+          }}
+          mushroomName={pendingWishlistRemove?.name}
+        />
+      </SafeAreaView>
     </>
   );
 };
@@ -715,7 +753,7 @@ const styles = StyleSheet.create({
   /** Figma: 24pt back icon (touch area extended with hitSlop) */
   backButton: {
     width: 24,
-    height: 24,
+    minHeight: 24,
     justifyContent: "center",
     alignItems: "center",
   },

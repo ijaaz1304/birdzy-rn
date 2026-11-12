@@ -4,11 +4,15 @@
 
 import { AppImage } from "@/components/AppImage";
 import React, { useState } from "react";
-import { View, TouchableOpacity, StyleSheet, ImageSourcePropType, Modal, Dimensions, ScrollView } from "react-native";
 import {
-  launchImageLibrary,
-  MediaType,
-} from "react-native-image-picker";
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  ImageSourcePropType,
+  Modal,
+  ScrollView,
+} from "react-native";
+import { launchImageLibrary, MediaType } from "react-native-image-picker";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { useTheme } from "../../hooks/useTheme";
 import { OVERLAY_COLORS, UI_COLORS } from "../../constants/colorConstants";
@@ -26,8 +30,6 @@ export interface PhotoPickerRowProps {
   imageSize?: number;
   onPhotoPress?: (photo: MushroomPhoto, index: number) => void;
 }
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const PhotoPickerRow: React.FC<PhotoPickerRowProps> = ({
   photos,
@@ -343,7 +345,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   fullScreenImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT * 0.7,
+    width: "100%",
+    height: "70%",
   },
 });

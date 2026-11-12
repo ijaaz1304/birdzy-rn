@@ -1,12 +1,16 @@
 import { AppImage } from "@/components/AppImage";
 import React, { useState } from "react";
-import { View, StyleSheet, ImageSourcePropType, TouchableOpacity, Text, Platform } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ImageSourcePropType,
+  TouchableOpacity,
+  Text,
+  Platform,
+} from "react-native";
 import AppText from "./AppText";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
-import {
-  ACCENT_COLORS,
-  HOME_COLORS,
-} from "../../constants/colorConstants";
+import { ACCENT_COLORS, HOME_COLORS } from "../../constants/colorConstants";
 import { typography } from "../../design-system/typography";
 import { Images } from "../../assets";
 
@@ -50,7 +54,9 @@ const AppOtherAppCard: React.FC<Props> = ({
   const borderColor = isDark ? colors.border : otherCard.BORDER_LIGHT;
   const iconWrapBg = isDark ? colors.surfaceVariant : otherCard.ICON_WRAP_LIGHT;
   const getButtonBg = isDark ? otherCard.BG_DARK : "#FFFFFF";
-  const getButtonTextColor = isDark ? otherCard.GET_TEXT_DARK : colors.textPrimary;
+  const getButtonTextColor = isDark
+    ? otherCard.GET_TEXT_DARK
+    : colors.textPrimary;
   const getAppButtonBg = colors.primaryCTA;
   const getAppButtonTextColor = otherCard.GET_APP_CTA_TEXT;
   const getAppButtonRadius = isDark ? otherCard.GET_APP_CTA_RADIUS : 20;
@@ -84,19 +90,14 @@ const AppOtherAppCard: React.FC<Props> = ({
           />
         </View>
         <View style={styles.horizontalTextBlock}>
-          <AppText allowFontScaling={false}
+          <AppText
             variant="title18"
             color={colors.textPrimary}
             style={styles.horizontalTitle}
-            numberOfLines={1}
           >
             {title}
           </AppText>
-          <AppText allowFontScaling={false}
-            variant="body14"
-            color={colors.textSecondary}
-            numberOfLines={2}
-          >
+          <AppText variant="body14" color={colors.textSecondary}>
             {subtitle}
           </AppText>
         </View>
@@ -108,13 +109,12 @@ const AppOtherAppCard: React.FC<Props> = ({
           onPress={onPress}
           activeOpacity={0.8}
         >
-          <Text allowFontScaling={false}
+          <Text
             style={[
               styles.horizontalButtonText,
               typography.button.medium,
               { color: getButtonTextColor },
             ]}
-            numberOfLines={1}
           >
             Get
           </Text>
@@ -130,7 +130,7 @@ const AppOtherAppCard: React.FC<Props> = ({
         {
           backgroundColor: cardBg,
           borderColor,
-          height: CARD_HEIGHT,
+          minHeight: CARD_HEIGHT,
           shadowColor: ACCENT_COLORS.SHADOW,
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity,
@@ -148,19 +148,17 @@ const AppOtherAppCard: React.FC<Props> = ({
             onError={() => setImageError(true)}
           />
         </View>
-        <AppText allowFontScaling={false}
+        <AppText
           variant="button14"
           color={colors.textPrimary}
           style={styles.title}
-          numberOfLines={2}
         >
           {title}
         </AppText>
-        <AppText allowFontScaling={false}
+        <AppText
           variant="caption12"
           color={colors.textSecondary}
           style={styles.subtitle}
-          numberOfLines={2}
         >
           {subtitle}
         </AppText>
@@ -176,14 +174,13 @@ const AppOtherAppCard: React.FC<Props> = ({
         onPress={onPress}
         activeOpacity={0.8}
       >
-        <Text allowFontScaling={false}
+        <Text
           style={[
             styles.buttonText,
             typography.button.medium,
             { fontStyle: "normal" as const },
             { color: getAppButtonTextColor },
           ]}
-          numberOfLines={1}
         >
           Get app
         </Text>
@@ -270,7 +267,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   horizontalButton: {
-    height: 32,
+    minHeight: 32,
     paddingHorizontal: 12,
     borderRadius: 24,
     borderWidth: 1,
