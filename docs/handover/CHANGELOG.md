@@ -147,3 +147,8 @@ Validation: `npx jest` on the seven new Explore/Home UI suites passed (7 suites 
 - Org `origin/main` and `personal-mirror/main` had diverged after separate merges (Explore/lifecycle/security on org; UI polish / camera permission on personal). Merged personal-mirror into local main, resolved Explore banner + Bird details title conflicts by keeping org entry/location behavior and identification photo flow while retaining personal responsive banner scaling and `allowFontScaling` polish.
 - Updated this changelog. No environment or credential changes.
 - Validation: `python3 docs/handover/check_docs.py` reported OK (14 handover pages, 297 local links). Push both remotes to the same tip after the merge commit. Device acceptance not re-run in this sync.
+
+
+## 2026-11-12 — App-local responsive audit documentation
+
+Added/linked the [Birdzy responsive audit](../audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md) in this app’s documentation, retaining the original 2026-11-11 evidence and pending runtime verification. Source-link paths were checked after distribution. No application code or configuration changed; no build/device tests run. Named owners and device acceptance remain open.

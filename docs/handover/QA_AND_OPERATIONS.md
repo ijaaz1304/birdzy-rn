@@ -106,3 +106,8 @@ Run `npx jest __tests__/lifecycle --runInBand` for account/session isolation, in
 - [ ] Capture React Profiler/device performance evidence for the busiest lists. Normal renders are expected when state changes; no FPS or render-count improvement has been measured in this source audit.
 
 Device/backend/sandbox acceptance and QA owner assignment remain open. Automated results are recorded in the handover changelog.
+
+
+## App-local responsive audit — 12 November 2026
+
+See [Birdzy responsive design audit](../audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md) for source findings, proposed fixes and the pending QA matrix. Original audit date: 11 November 2026. No application code changed.

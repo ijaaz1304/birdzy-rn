@@ -13,3 +13,8 @@ Start with [the developer and product handover pack](handover/README.md).
 5. [60-day transfer plan](handover/HANDOVER_60_DAYS.md), [maintenance rule](handover/MAINTENANCE.md) and [change history](handover/CHANGELOG.md).
 
 Existing detailed documentation remains in place and is indexed from [the feature catalogue](handover/FEATURE_CATALOGUE.md). Its historical statements/results keep their original date and should be reconciled with current source before release decisions.
+
+
+## App-local responsive audit — 12 November 2026
+
+See [Birdzy responsive design audit](audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md) for source findings, proposed fixes and the pending QA matrix. Original audit date: 11 November 2026. No application code changed.

@@ -120,3 +120,9 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 
 - [x] Source: shared `useExploreEntry`, Home/Catalogue banners, equal Spotted Now / Year-round tabs, empty-state wording/style, Android first-ask copy.
 - [ ] Owner unassigned. Complete the Explore entry and permission UI checklist in QA_AND_OPERATIONS.md on physical devices (Android + iOS).
+
+
+## Responsive audit distribution — 12 November 2026
+
+- [x] [Birdzy audit](../audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md) is available in this app’s docs; source links checked.
+- [ ] Named Design/Development/QA owners and runtime acceptance remain unassigned/open. Report distribution does not verify fixes or device behavior.
