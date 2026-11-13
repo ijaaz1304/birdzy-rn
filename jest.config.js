@@ -11,6 +11,7 @@ module.exports = {
     "<rootDir>/src/utils/staticMapApi.test.ts",
   ],
   moduleNameMapper: {
+    "\\.svg$": "<rootDir>/__tests__/setup/svgMock.ts",
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@features/(.*)$": "<rootDir>/src/features/$1",
     "^@services/(.*)$": "<rootDir>/src/services/$1",

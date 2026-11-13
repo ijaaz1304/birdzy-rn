@@ -1,3 +1,4 @@
+jest.mock("../../src/hooks/useTheme", () => ({ useTheme: () => require("../../src/design-system/themes").lightTheme }));
 import React from "react";
 import { act, create, ReactTestRenderer } from "react-test-renderer";
 import { ScrollView, StyleSheet, View } from "react-native";

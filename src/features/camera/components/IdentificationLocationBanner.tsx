@@ -10,7 +10,7 @@ const LINK_COLOR = "#007AFF";
 const CAMERA_PROMPT_LIGHT = "#E7E7E7";
 
 export interface IdentificationLocationBannerProps {
-  variant: "camera" | "gallery" | "results";
+  variant: "camera" | "gallery" | "results" | "top-matches";
   permissionGranted: boolean;
   locationLabel?: string;
   onToggleLocation?: (enabled: boolean) => void;
@@ -40,6 +40,7 @@ export const IdentificationLocationBanner: React.FC<
   const copy = strings.camera.location;
   const offPrompt = promptOverride ?? copy.turnOnPrompt;
   const isCamera = variant === "camera";
+  const isTopMatches = variant === "top-matches";
   const isResults = variant === "results";
   const textSize = isCamera ? "medium" : "small";
   const promptTextStyle = useMemo(() => {
@@ -49,10 +50,15 @@ export const IdentificationLocationBanner: React.FC<
     };
   }, [isCamera, isDark]);
   const containerStyle = useMemo(() => {
+    if (isTopMatches) return {
+      backgroundColor: theme.colors.surfaceSecondary,
+      borderColor: theme.colors.border0,
+      borderWidth: 1, borderRadius: 12, padding: 11, minHeight: 48,
+    };
     if (isCamera) return styles.cameraContainer;
     if (isResults) return styles.resultsContainer;
     return styles.galleryContainer;
-  }, [isCamera, isResults]);
+  }, [isCamera, isResults, isTopMatches, theme.colors.surfaceSecondary, theme.colors.border0]);
 
   if (!permissionGranted) {
     const prompt = (
@@ -121,7 +127,7 @@ export const IdentificationLocationBanner: React.FC<
             onToggle={onToggleLocation}
             size="medium"
             trackColor={{
-              inactive: isCamera ? "#B0B0B0" : undefined,
+              inactive: isCamera || isTopMatches ? "#B0B0B0" : undefined,
               active: undefined,
             }}
           />

@@ -2,6 +2,7 @@
  * App logs store using Zustand
  */
 
+import { useIdentificationDiagnosticsStore } from "../camera/identificationDiagnostics.store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import {
@@ -64,7 +65,7 @@ export function isCameraUploadLoggingEnabled(): boolean {
 
 function mergeLogsForExport(storeLogs: AppLog[]): AppLog[] {
   const identify = getIdentifyFlowLogs() as AppLog[];
-  return [...storeLogs, ...identify].sort(
+  return [...storeLogs, ...identify, ...useIdentificationDiagnosticsStore.getState().logs].sort(
     (a, b) => a.timestamp.localeCompare(b.timestamp)
   );
 }
@@ -128,6 +129,7 @@ export const useAppLogsStore = create<AppLogsState>((set, get) => ({
 
   clear: () => {
     clearIdentifyFlowLogs();
+    useIdentificationDiagnosticsStore.getState().clear();
     set({ logs: [] });
   },
 

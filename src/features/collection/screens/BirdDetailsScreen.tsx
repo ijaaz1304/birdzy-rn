@@ -136,6 +136,7 @@ import {
   SUBSCRIPTION_COLORS,
 } from "../../../constants/colorConstants";
 import { typography } from "../../../design-system/typography";
+import { buildBirdPhotoGallery } from "../birdPhotoGallery";
 import { CatalogueDetailCarousel } from "../components/CatalogueDetailCarousel";
 import {
   BirdDetailsScrollSections,
@@ -1905,10 +1906,11 @@ export const BirdDetailsScreen: React.FC = () => {
           id: `fb-${index}`,
           uri: url,
         }));
-  const images =
-    isFromIdentification && identificationImage?.uri
-      ? [{ id: "identification", uri: identificationImage.uri }, ...baseImages]
-      : baseImages;
+  const knownCaptures = [
+    ...(isFromIdentification && identificationImage?.uri ? [identificationImage.uri] : []),
+    ...(Array.isArray(mushroomDataAny.userCapturedImages) ? mushroomDataAny.userCapturedImages.filter((uri): uri is string => typeof uri === "string") : []),
+  ];
+  const images = buildBirdPhotoGallery(baseImages.map((image) => image.uri), knownCaptures);
 
   // Support both camelCase and snake_case from API so detailed description and name origin always show when present
   const detailedDescription =
@@ -3401,6 +3403,7 @@ export const BirdDetailsScreen: React.FC = () => {
                     <View style={styles.aiCarouselWrap}>
                       <CatalogueDetailCarousel
                         images={images}
+                        figmaDesign
                         isDark={isDark}
                         widthPercent={100}
                         autoScrollInterval={4000}

@@ -4,6 +4,10 @@
  * left/right arrow buttons (48pt touch target, radius 24, bg light rgba(255,255,255,0.2) / dark #6D6D6D).
  */
 
+import { Text } from "../../../atoms/Text";
+import { FONTS } from "../../../common/typography";
+import Previous from "../../../assets/identification/figma/previous.svg";
+import Next from "../../../assets/identification/figma/next.svg";
 import { AppImage } from "@/components/AppImage";
 import React, {
   useState,
@@ -35,8 +39,9 @@ const SIDE_MARGIN = 20;
 const ARROW_INSET = 12;
 
 export interface CatalogueDetailCarouselProps {
-  images: Array<{ id: string; uri: string | number }>;
+  images: Array<{ id: string; uri: string | number; isReference?: boolean }>;
   isDark?: boolean;
+  figmaDesign?: boolean;
   /** Width as percent of the measured parent (e.g. 90). Default 100. */
   widthPercent?: number;
   /** When true and widthPercent >= 100, use the full parent width. */
@@ -49,6 +54,7 @@ export const CatalogueDetailCarousel: React.FC<
   CatalogueDetailCarouselProps
 > = ({
   images,
+  figmaDesign = false,
   isDark = false,
   widthPercent = 100,
   isIdentificationFlow = false,
@@ -61,14 +67,21 @@ export const CatalogueDetailCarousel: React.FC<
   const [activeIndex, setActiveIndex] = useState(0);
   /** Per-slide: hide spinner after load or on error (avoid blank white while fetching). */
   const [loadedById, setLoadedById] = useState<Record<string, boolean>>({});
+  const [failedById, setFailedById] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<ScrollView>(null);
   const activeIndexRef = useRef(0);
   activeIndexRef.current = activeIndex;
 
-  const imagesKey = images.map((i) => i.id).join("|");
+  const imagesKey = images.map((i) => `${i.id}:${i.uri}`).join("|");
   useEffect(() => {
     setLoadedById({});
-  }, [imagesKey]);
+    setFailedById({});
+    if (figmaDesign) {
+      activeIndexRef.current = 0;
+      setActiveIndex(0);
+      scrollRef.current?.scrollTo({ x: 0, animated: false });
+    }
+  }, [imagesKey, figmaDesign]);
   const slideWidth =
     widthPercent >= 100
       ? isIdentificationFlow
@@ -91,7 +104,7 @@ export const CatalogueDetailCarousel: React.FC<
 
   useEffect(alignCurrentSlide, [alignCurrentSlide]);
 
-  const arrowBg = isDark
+  const arrowBg = figmaDesign ? "#FFFFFF33" : isDark
     ? CATALOGUE_DETAIL.ARROW_BG_DARK
     : CATALOGUE_DETAIL.ARROW_BG_LIGHT;
 
@@ -156,8 +169,8 @@ export const CatalogueDetailCarousel: React.FC<
     return set;
   }, [activeIndex, images.length]);
 
-  const imageRadius = isIdentificationFlow ? 0 : CATALOGUE_DETAIL.IMAGE_RADIUS;
-  const imageHeight = isIdentificationFlow
+  const imageRadius = isIdentificationFlow && !figmaDesign ? 0 : CATALOGUE_DETAIL.IMAGE_RADIUS;
+  const imageHeight = isIdentificationFlow && !figmaDesign
     ? 230
     : CATALOGUE_DETAIL.IMAGE_HEIGHT;
 
@@ -252,14 +265,18 @@ export const CatalogueDetailCarousel: React.FC<
                 },
               ]}
             >
-              {isRemote ? (
+              {figmaDesign && failedById[img.id] ? (
+                <View style={[imageStyle, { alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "#091421" : "#F6F6F6" }]}>
+                  <Text style={{ color: isDark ? "#D1D1D1" : "#5D5D5D" }}>No image</Text>
+                </View>
+              ) : isRemote ? (
                 <CachedRemoteImage
                   uri={uriStr}
                   style={imageStyle}
                   borderRadius={imageRadius}
                   priority={index === activeIndex ? "high" : "normal"}
                   onLoad={markDone}
-                  onError={markDone}
+                  onError={() => { markDone(); setFailedById((prev) => ({ ...prev, [img.id]: true })); }}
                 />
               ) : (
                 <AppImage
@@ -276,7 +293,7 @@ export const CatalogueDetailCarousel: React.FC<
                   style={imageStyle}
                   resizeMode="cover"
                   onLoadEnd={markDone}
-                  onError={markDone}
+                  onError={() => { markDone(); setFailedById((prev) => ({ ...prev, [img.id]: true })); }}
                 />
               )}
               {showSpinner ? (
@@ -289,12 +306,19 @@ export const CatalogueDetailCarousel: React.FC<
         })}
       </ScrollView>
 
+      {figmaDesign && images[activeIndex]?.isReference && (
+        <View style={[styles.referenceChip, {
+          right: Math.max(0, (availableWidth - slideWidth) / 2) + 8,
+          backgroundColor: isDark ? "#16B6B4" : "#01474F", borderColor: isDark ? "#333333" : "#E7E7E7",
+        }]}><Text style={[styles.referenceText, { color: isDark ? "#091B21" : "#FFFFFF" }]}>Reference</Text></View>
+      )}
+
       {/* Left / Right arrows — only when more than one image */}
       {images.length > 1 && (
         <View
           style={[
             styles.arrowsRow,
-            isIdentificationFlow && styles.arrowsRowLower,
+            isIdentificationFlow && !figmaDesign && styles.arrowsRowLower,
             {
               paddingHorizontal:
                 Math.max(0, (availableWidth - slideWidth) / 2) + ARROW_INSET,
@@ -303,26 +327,32 @@ export const CatalogueDetailCarousel: React.FC<
           pointerEvents="box-none"
         >
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Previous image"
             onPress={goPrev}
-            style={[styles.arrowBtn, { backgroundColor: arrowBg }]}
+            style={[styles.arrowBtn, figmaDesign && styles.figmaArrow, { backgroundColor: arrowBg }]}
             disabled={activeIndex === 0}
           >
+            {figmaDesign ? <View style={styles.figmaIcon}><Previous /></View> : (
             <MaterialIcons
               name="chevron-left"
               size={20}
               color={UI_COLORS.WHITE}
-            />
+            /> )}
           </TouchableOpacity>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Next image"
             onPress={goNext}
-            style={[styles.arrowBtn, { backgroundColor: arrowBg }]}
+            style={[styles.arrowBtn, figmaDesign && styles.figmaArrow, { backgroundColor: arrowBg }]}
             disabled={activeIndex === images.length - 1}
           >
+            {figmaDesign ? <View style={styles.figmaIcon}><Next /></View> : (
             <MaterialIcons
               name="chevron-right"
               size={20}
               color={UI_COLORS.WHITE}
-            />
+            /> )}
           </TouchableOpacity>
         </View>
       )}
@@ -357,6 +387,10 @@ export const CatalogueDetailCarousel: React.FC<
 };
 
 const styles = StyleSheet.create({
+  figmaArrow: { minWidth: 32, minHeight: 32, width: 32, height: 32, paddingHorizontal: 6 },
+  figmaIcon: { width: 20, height: 20, alignItems: "center", justifyContent: "center" },
+  referenceChip: { position: "absolute", top: 8, borderRadius: 100, borderWidth: 0.5, paddingHorizontal: 12, paddingVertical: 4, maxWidth: "80%" },
+  referenceText: { fontFamily: FONTS.medium, fontSize: 12, lineHeight: 16 },
   wrapper: {
     position: "relative",
     alignSelf: "stretch",

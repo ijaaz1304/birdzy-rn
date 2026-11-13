@@ -5,6 +5,7 @@
  * Copy: single log or all logs. Email: opens composer to APP_LOGS_SUPPORT_EMAIL (full JSON copied if body is truncated).
  */
 
+import { useIdentificationDiagnosticsStore } from "../../camera/identificationDiagnostics.store";
 import React, { useRef, useEffect, useCallback, useState } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform, Share } from "react-native";
 import { showAlert } from "../../../store/alert.store";
@@ -50,6 +51,7 @@ export const AppLogsScreen: React.FC = () => {
     setIdentifyRevision(getIdentifyFlowLogRevision());
   }), []);
 
+  useIdentificationDiagnosticsStore((state) => state.logs);
   const logs = getAllLogsForDisplay();
 
   const copyLog = useCallback((log: AppLog) => {

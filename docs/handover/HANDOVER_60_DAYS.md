@@ -143,3 +143,14 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 - [ ] Requester will perform [simulator/device acceptance](QA_AND_OPERATIONS.md#responsive-device-handoff--12-november-2026); agent checks skipped at explicit requester direction. Actual device/build/setting evidence and named QA owner remain unrecorded.
 - [ ] Design and release acceptance remain open. Source completion is not a claim of full visual/device verification.
 - [ ] Existing step-by-step API payload/test disagreement remains open outside this responsive change; API/release owner unassigned.
+
+
+## 2026-11-13 — Birdzy identification Figma implementation
+
+Implemented supplied light/dark photo Top 5 cards/location presentation and unbadged-capture/Reference detail-photo designs. Added View Details/new cards to sound and step-by-step Possible Matches while retaining their existing not-found/report/add-manually/edit-answer and audio playback/save/note flows and full result lists. Photo summaries persist locally (20 entries, bounded public names/counts) and integrate with existing App Logs exports/clear. Catalogue-return alternate cards, endpoints, dependencies, environment and quota policy are unchanged.
+
+See [implementation, design references and validation](../identification-figma-2026-11-13.md), [flows](FLOWS.md) and [QA](QA_AND_OPERATIONS.md). Work remains local on `codex/birdzy-identification-figma`, based on responsiveness commit `93f7f5a`. Simulator/device checks were intentionally skipped. QA/release owners, live-backend and signed-build acceptance remain unassigned/open. Actual automated results are appended on completion.
+
+Automated validation (2026-11-13): focused Jest passed 8 suites / 51 tests, including mounted sound/wizard screens and their preserved not-found sections; changed-file lint passed with 0 errors (81 warnings); native Babel/SVG transforms passed for 9 source modules / 8 assets. Handover checker passed 14 pages / 312 links and blank templates; whitespace checks passed.
+
+Final validation (2026-11-13): `tsc --noEmit --pretty false` passed on the final implementation; the unchanged responsiveness baseline also passed. Production iOS JavaScript bundle passed and copied 292 assets. This verifies JavaScript packaging, not a signed native build or device rendering.

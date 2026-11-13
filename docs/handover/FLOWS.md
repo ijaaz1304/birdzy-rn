@@ -96,3 +96,8 @@ Feed notifications now belong to a stored account owner. Switching accounts or s
 The legacy Discount Code route now offers “View Plans” and opens SubscriptionMain. It explicitly says a supplied code has not been applied; the store controls actual eligibility and final price. There is no implemented arbitrary coupon redemption contract.
 
 Specimen PATCH transport preserves explicit empty editable arrays (including collections, habitat and captured sounds); omitted values remain unchanged and immutable image fields remain excluded. A caller must intentionally supply an empty list to clear it.
+
+
+## 2026-11-13 — Identification match-card and photo design update
+
+Photo identification shows a five-result Top 5 screen with a location panel and photo-left View Details cards. Sound and step-by-step Possible Matches reuse the new cards while preserving their complete lists, existing not-found/report/add-manually/edit-answer and recording save/note/player actions. Catalogue-return alternatives keep their previous cards. Detail captures remain unbadged and catalogue photos show Reference. Bounded photo-result summaries persist locally in existing App Logs. See [design scope, implementation and validation](../identification-figma-2026-11-13.md); native/backend acceptance remains open.

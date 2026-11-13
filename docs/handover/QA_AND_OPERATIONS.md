@@ -153,3 +153,20 @@ Requester checklist (both platforms and themes):
 Record exact build, OS/device, logical viewport, font/display setting, locale, tier/variant and screenshot/video for each result. This handoff does not claim device success or release sign-off. The earlier simulator attempt stopped in CocoaPods framework copy/generated-header tasks before app visual verification; generated headers were regenerated afterward, and no new simulator attempt was made following the request to skip checks.
 
 Final code-only handoff checks: iOS and Android production JavaScript bundles compiled successfully. Installed Firebase export-resolution fallback warnings remain. Native build/device testing is delegated to the requester; no simulator was launched for these final bundle checks. The final TypeScript check and whitespace/documentation checks passed.
+
+
+## 2026-11-13 — Identification Figma acceptance
+
+See [implementation and six design targets](../identification-figma-2026-11-13.md). Simulator/device checks were skipped at the user's request. QA owner unassigned:
+
+- [ ] Compare light/dark photo Top 5 and detail reference/unbadged capture layouts at small/standard/large widths and large text/display scaling.
+- [ ] Check photo/View Details navigation preserves the capture, full candidates and existing Back behavior; exercise wishlist confirmation, success/failure/retry.
+- [ ] Confirm sound and step-by-step Possible Matches use the new cards and retain all results, playback, not-found/report, manual/edit-answer and recording save/note actions, including pinned short lists.
+- [ ] Verify location permissions/settings/custom location, carousel swipe/arrows/rotation, failed/replaced photos and collection save/reopen.
+- [ ] Restart and inspect/export/copy/clear saved summaries in App Logs. Email/share requires the user's existing UI action; no automated send is implemented.
+
+Live backend/provider, signed builds and release acceptance remain open.
+
+Automated validation (2026-11-13): focused Jest passed 8 suites / 51 tests, including mounted sound/wizard screens and their preserved not-found sections; changed-file lint passed with 0 errors (81 warnings); native Babel/SVG transforms passed for 9 source modules / 8 assets. Handover checker passed 14 pages / 312 links and blank templates; whitespace checks passed.
+
+Final validation (2026-11-13): `tsc --noEmit --pretty false` passed on the final implementation; the unchanged responsiveness baseline also passed. Production iOS JavaScript bundle passed and copied 292 assets. This verifies JavaScript packaging, not a signed native build or device rendering.

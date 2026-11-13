@@ -3,6 +3,10 @@
  * Figma: Mushroom App — Possible matches (8672:87227), location banner (8728:31542)
  */
 
+import { TopFiveMatchCard } from "../components/TopFiveMatchCard";
+import { useIdentificationDiagnosticsStore } from "../identificationDiagnostics.store";
+import BackLight from "../../../assets/identification/figma/back-light.svg";
+import BackDark from "../../../assets/identification/figma/back-dark.svg";
 import { AppImage } from "@/components/AppImage";
 import React, { useCallback, useRef, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
@@ -82,6 +86,24 @@ type OtherPossibleMatchesScreenNavigationProp = NativeStackNavigationProp<
   "OtherPossibleMatches"
 >;
 
+const getMatchDisplayName = (item: any): string => {
+    const nested = item?.match ?? {};
+    return (
+      getDisplayName({
+        commonNames: item?.commonNames ?? nested.commonNames,
+        genusCommonNames: item?.genusCommonNames ?? nested.genusCommonNames,
+        commonName: item?.commonName ?? nested.commonName,
+        name: item?.name ?? nested.name,
+        scientificName:
+          item?.scientificName ??
+          nested.scientificName ??
+          nested.verbatimScientificName,
+        canonicalName: item?.canonicalName ?? nested.canonicalName,
+        verbatimScientificName: nested.verbatimScientificName,
+      }) || "Unknown"
+    );
+  };
+
 export const OtherPossibleMatchesScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
@@ -126,6 +148,9 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
   const screenTitle =
     route.params?.title ?? strings.camera.results.possibleMatchesHeading;
   const returnTo = route.params?.returnTo;
+  const useNewMatchCards = returnTo?.tab !== "Catalogue";
+  const isPhotoTopFive = !fromSound && !fromStepByStep && returnTo?.tab !== "Catalogue";
+  const Back = isDark ? BackDark : BackLight;
   const identificationImage =
     route.params?.identificationImage ?? storedIdentificationImage;
   const {
@@ -201,23 +226,12 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
     }, [matches.length])
   );
 
-  const getMatchDisplayName = (item: any): string => {
-    const nested = item?.match ?? {};
-    return (
-      getDisplayName({
-        commonNames: item?.commonNames ?? nested.commonNames,
-        genusCommonNames: item?.genusCommonNames ?? nested.genusCommonNames,
-        commonName: item?.commonName ?? nested.commonName,
-        name: item?.name ?? nested.name,
-        scientificName:
-          item?.scientificName ??
-          nested.scientificName ??
-          nested.verbatimScientificName,
-        canonicalName: item?.canonicalName ?? nested.canonicalName,
-        verbatimScientificName: nested.verbatimScientificName,
-      }) || "Unknown"
-    );
-  };
+
+
+  const recordDiagnostics = useIdentificationDiagnosticsStore((state) => state.record);
+  useEffect(() => {
+    if (isPhotoTopFive) recordDiagnostics(matches.map(getMatchDisplayName), { totalCount: matches.length });
+  }, [isPhotoTopFive, matches, recordDiagnostics]);
 
   const exitToCameraMain = useCallback(() => {
     if (typeof navigation.popToTop === "function") {
@@ -524,6 +538,17 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
       item?.match?.soundUrls ?? item?.soundUrls;
     const isPlaying = playingId === itemKey;
 
+    if (useNewMatchCards) {
+      const archetypeId = getMatchArchetypeId(item);
+      return <TopFiveMatchCard name={displayName} scientificName={scientific} imageUri={imageUri}
+        wishlisted={archetypeId != null && favorites.includes(archetypeId)}
+        onPress={() => handleMatchPress(item, index)} onWishlistPress={() => { void handleWishlistPress(item); }}
+        accessory={<View style={styles.soundCardAccessory}>
+          <Text style={[styles.soundCardMetadata, { color: colors.textSecondary }]}>{soundStamp}  •  {soundPlace}</Text>
+          {soundUrls?.length ? <SoundPlayButton isPlaying={isPlaying} onPress={() => { void toggleSound(itemKey, soundUrls); }} /> : null}
+        </View>} />;
+    }
+
     return (
       <TouchableOpacity
         activeOpacity={0.85}
@@ -607,6 +632,17 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
     const thumbnailError = imageErrorKeys.has(String(itemKey));
     const cardBg = isDark ? colors.surfacePrimary : APP_COLORS.surfaceWhite;
     const cardBorder = isDark ? colors.border0 : APP_COLORS.borderLight;
+
+    if (useNewMatchCards) {
+      const nested = item?.match ?? {};
+      const scientificName = getMushroomDisplayScientificFromFields({
+        ...nested, ...item,
+        scientificName: item?.scientificName ?? nested.scientificName ?? nested.verbatimScientificName,
+      });
+      return <TopFiveMatchCard name={displayName} scientificName={scientificName} imageUri={imageUri}
+        wishlisted={isWishlisted} onPress={() => handleMatchPress(item, index)}
+        onWishlistPress={() => { void handleWishlistPress(item); }} />;
+    }
 
     return (
       <TouchableOpacity
@@ -695,21 +731,23 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
 
   return (
     <>
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: isPhotoTopFive ? colors.surfacePrimary : colors.background }]}>
       {fromSound ? <FindYourBirdBackground /> : null}
     <SafeAreaView
       style={styles.safe}
       edges={["top", "bottom"]}
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-      <View style={styles.header}>
+      <View style={[styles.header, isPhotoTopFive && styles.photoHeader]}>
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
           onPress={handleBack}
           style={styles.backButton}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <NavBackIcon color={colors.textPrimary} />
+          {isPhotoTopFive ? <Back /> : <NavBackIcon color={colors.textPrimary} />}
         </TouchableOpacity>
         {fromSound ? (
           <View style={styles.headerCenterFlex} />
@@ -720,7 +758,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
             weight="bold"
             style={[styles.headerTitle, { color: colors.textPrimary }]}
           >
-            {screenTitle}
+            {isPhotoTopFive ? "Top 5 Matches" : screenTitle}
           </Text>
         )}
         {fromSound ? (
@@ -802,7 +840,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
         </View>
       ) : null}
 
-      {showLocationBanner ? (
+      {showLocationBanner && !isPhotoTopFive ? (
         <View style={styles.locationBannerWrap}>
           <IdentificationLocationBanner
             variant="results"
@@ -815,11 +853,11 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
       ) : null}
 
       <FlatList
-        data={matches}
+        data={isPhotoTopFive ? matches.slice(0, 5) : matches}
         extraData={[favorites, wizardAnswerRows, playingId, recordingNote]}
         keyExtractor={(item, index) => item.id ?? item._id ?? `match-${index}`}
         renderItem={fromSound ? renderSoundMatchItem : renderMatchItem}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, isPhotoTopFive && styles.photoList]}
         style={styles.listFlex}
         showsVerticalScrollIndicator={false}
         initialNumToRender={8}
@@ -827,7 +865,14 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
         windowSize={8}
         removeClippedSubviews={false}
         ListHeaderComponent={
-          fromSound ? (
+          isPhotoTopFive ? (
+            <View style={styles.photoIntro}>
+              <IdentificationLocationBanner variant="top-matches" permissionGranted={showLocationAsGranted}
+                locationLabel={locationLabel} onToggleLocation={handleLocationToggle} onPressLocation={handlePressSetLocation} />
+              <Text style={[styles.photoIntroTitle, { color: colors.textPrimary }]}>Choose Your Bird Match</Text>
+              <Text style={[styles.photoIntroBody, { color: colors.textSecondary }]}>Select the closest match from the options below</Text>
+            </View>
+          ) : fromSound ? (
             <View style={styles.soundHeader}>
               {audioUri ? (
                 <SoundSampleCard
@@ -1024,6 +1069,13 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  soundCardAccessory: { flexDirection: "row", alignItems: "center", gap: 8 },
+  soundCardMetadata: { flex: 1, fontFamily: FONTS.regular, fontSize: 12, lineHeight: 16 },
+  photoHeader: { paddingVertical: 0, minHeight: 52 },
+  photoList: { paddingTop: 12 },
+  photoIntro: { paddingBottom: 16 },
+  photoIntroTitle: { fontFamily: FONTS.bold, fontSize: 16, lineHeight: 24, marginTop: 20, marginBottom: 8 },
+  photoIntroBody: { fontFamily: FONTS.regular, fontSize: 14, lineHeight: 20 },
   container: {
     flex: 1,
     overflow: "hidden",

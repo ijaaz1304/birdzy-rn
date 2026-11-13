@@ -1,0 +1,65 @@
+import React from "react";
+import {act,create,type ReactTestRenderer} from "react-test-renderer";
+import {FlatList} from "react-native";
+import {useNavigation,useRoute} from "@react-navigation/native";
+import {OtherPossibleMatchesScreen} from "../../src/features/camera/screens/OtherPossibleMatchesScreen";
+import {TopFiveMatchCard} from "../../src/features/camera/components/TopFiveMatchCard";
+import {useIdentificationResultsStore} from "../../src/features/camera/identificationResults.store";
+jest.mock("../../src/hooks/useTheme",()=>({useTheme:()=>require("../../src/design-system/themes").lightTheme,useIsDark:()=>false}));
+jest.mock("../../src/components/AppImage",()=>({AppImage:"AppImage",CachedRemoteImage:"CachedRemoteImage"}));
+jest.mock("../../src/atoms",()=>({Text:require("react-native").Text,NavBackIcon:()=>null}));
+jest.mock("../../src/assets",()=>({Images:{},SoundLibraryEditIcon:()=>null,DetailsMoreShareLight:()=>null,DetailsMoreShareDark:()=>null,DetailsMoreReportLight:()=>null,DetailsMoreReportDark:()=>null}));
+jest.mock("../../src/hooks/useToast",()=>({useToast:()=>({showToast:jest.fn()})}));
+jest.mock("../../src/hooks/useStrings",()=>({useStrings:()=>({camera:{results:{possibleMatchesHeading:"Possible Matches"}},collection:{favorite:{added:"Added",removed:"Removed"}}})}));
+jest.mock("../../src/utils/backHandler",()=>({useBackHandler:jest.fn()}));
+jest.mock("../../src/services/analytics/analytics.service",()=>({analyticsService:{logEvent:jest.fn()}}));
+jest.mock("../../src/utils/prefetchImages",()=>({prefetchRemoteImages:jest.fn()}));
+jest.mock("../../src/features/camera/useLocationToggleFlow",()=>({useLocationToggleFlow:()=>({location:null,locationLabel:"",permissionGranted:false,openCustomLocationSheet:jest.fn(),syncPermission:jest.fn()})}));
+jest.mock("../../src/features/camera/locationToggle.helpers",()=>({shouldShowLocationBannerAsGranted:()=>false}));
+jest.mock("../../src/features/catalogue/birds.store",()=>({useBirdsStore:(selector:any)=>selector({favorites:[],toggleFavorite:jest.fn().mockResolvedValue("added")})}));
+jest.mock("../../src/features/discovery/stepByStep.store",()=>({useStepByStepStore:Object.assign((selector:any)=>selector({answers:{}}),{getState:()=>({setEditQuestion:jest.fn()})})}));
+jest.mock("../../src/features/discovery/utils/stepByStepAnswers",()=>({buildWizardAnswerRows:()=>[]}));
+jest.mock("../../src/components/RemoveFromWishlistConfirmation",()=>({RemoveFromWishlistConfirmation:()=>null}));
+jest.mock("../../src/features/camera/components/IdentificationLocationBanner",()=>({IdentificationLocationBanner:()=>null}));
+jest.mock("../../src/features/camera/components/SoundSampleCard",()=>({SoundSampleCard:"SoundSampleCard"}));
+jest.mock("../../src/features/camera/components/SoundPlayButton",()=>({SoundPlayButton:"SoundPlayButton"}));
+jest.mock("../../src/features/camera/components/SoundMatchesFooter",()=>({SoundMatchesFooter:"SoundMatchesFooter",SoundCantFindSection:"SoundCantFindSection"}));
+jest.mock("../../src/features/discovery/components/WizardAnswersFooter",()=>({WizardAnswersFooter:"WizardAnswersFooter",WizardCantFindSection:"WizardCantFindSection",WizardSectionDivider:"WizardSectionDivider"}));
+jest.mock("../../src/molecules/ReportModal",()=>({ReportModal:()=>null}));
+jest.mock("../../src/molecules/Modal",()=>({AddSoundNotePopup:()=>null}));
+jest.mock("../../src/features/bird-personality/components/FindYourBirdBackground",()=>({FindYourBirdBackground:()=>null}));
+const mockToggleSound=jest.fn();
+jest.mock("../../src/features/catalogue/hooks/useCatalogueCardSound",()=>({useCatalogueCardSound:()=>({playingId:null,toggleSound:mockToggleSound})}));
+jest.mock("../../src/services/session/audioGalleryLimit.service",()=>({canAddAudioGalleryClip:jest.fn().mockResolvedValue(true)}));
+jest.mock("../../src/utils/navigation",()=>({navigateToSubscriptionMain:jest.fn()}));
+jest.mock("../../src/features/camera/utils/saveSoundRecording",()=>({saveUnknownSoundRecording:jest.fn()}));
+jest.mock("../../src/utils/shareUtils",()=>({shareMushroom:jest.fn()}));
+jest.mock("react-native-vector-icons/MaterialIcons",()=>"MaterialIcons");
+let tree:ReactTestRenderer;
+const navigate=jest.fn();
+const matches=Array.from({length:7},(_,index)=>({id:`bird-${index}`,commonName:`Bird ${index}`,scientificName:`Scientific ${index}`,imageUrls:[`https://example.com/${index}.jpg`],soundUrls:[`https://example.com/${index}.mp3`]}));
+async function mount(params:object){jest.mocked(useRoute).mockReturnValue({params} as never);jest.mocked(useNavigation).mockReturnValue({getParent:()=>({navigate}),navigate,popToTop:jest.fn()} as never);useIdentificationResultsStore.getState().setResults(matches as never,{uri:"file:///capture.jpg"});await act(async()=>{tree=create(<OtherPossibleMatchesScreen/>);});}
+afterEach(async()=>{await act(async()=>tree?.unmount());useIdentificationResultsStore.getState().clear();jest.clearAllMocks();});
+it("photo Top 5 shows five new cards and preserves capture/all matches in navigation",async()=>{
+ await mount({});expect(tree.root.findByType(FlatList).props.data).toHaveLength(5);
+ const card=tree.root.findAllByType(TopFiveMatchCard)[0];await act(async()=>card.props.onPress());
+ expect(navigate).toHaveBeenCalledWith("MainTabs",expect.objectContaining({params:expect.objectContaining({screen:"BirdDetails",params:expect.objectContaining({identificationImage:{uri:"file:///capture.jpg"},otherMatches:matches})})}));
+ expect(tree.root.findAllByType("SoundMatchesFooter" as never)).toHaveLength(0);
+ expect(tree.root.findAllByType("WizardAnswersFooter" as never)).toHaveLength(0);
+});
+it("wizard Possible Matches uses new cards without truncating results or removing its not-found actions",async()=>{
+ await mount({fromStepByStep:true});expect(tree.root.findByType(FlatList).props.data).toHaveLength(7);
+ expect(tree.root.findAllByType(TopFiveMatchCard).length).toBeGreaterThan(0);
+ const footer=tree.root.findByType("WizardAnswersFooter" as never);
+ expect(footer.props.onReport).toEqual(expect.any(Function));expect(footer.props.onAddManually).toEqual(expect.any(Function));
+});
+it("sound Possible Matches keeps playback/save/report actions alongside the new cards",async()=>{
+ await mount({fromSound:true,audioUri:"file:///recording.m4a"});expect(tree.root.findByType(FlatList).props.data).toHaveLength(7);
+ expect(tree.root.findAllByType(TopFiveMatchCard).length).toBeGreaterThan(0);
+ const footer=tree.root.findByType("SoundMatchesFooter" as never);expect(footer.props.onSave).toEqual(expect.any(Function));expect(footer.props.onReport).toEqual(expect.any(Function));
+ const play=tree.root.findAllByType("SoundPlayButton" as never)[0];await act(async()=>play.props.onPress());expect(mockToggleSound).toHaveBeenCalledWith("bird-0",["https://example.com/0.mp3"]);
+});
+it.each([{fromStepByStep:true}, {fromSound:true}])("retains the existing pinned not-found section for short results %j",async params=>{
+ await mount(params);await act(async()=>useIdentificationResultsStore.getState().setResults(matches.slice(0,2) as never));
+ expect(tree.root.findAllByType((params.fromSound?"SoundCantFindSection":"WizardCantFindSection") as never)).toHaveLength(1);
+});
