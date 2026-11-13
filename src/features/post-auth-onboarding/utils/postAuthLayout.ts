@@ -81,9 +81,15 @@ export type PostAuthLayoutMetrics = {
 };
 
 export function usePostAuthLayoutMetrics(): PostAuthLayoutMetrics {
-  const { width, height } = useWindowDimensions();
+  const { width, height, fontScale } = useWindowDimensions();
 
   return useMemo(() => {
+    /**
+     * Larger text needs the vertical room: illustrations drop to the smallest
+     * size of their range so content and the primary CTA stay reachable
+     * ("prioritize content over illustrations").
+     */
+    const largeText = fontScale > 1.15;
     const isCompact = height < 740;
     const isVeryCompact = height < 680;
     const { isWideScreen, contentWidth } = getPostAuthContentLayout(width, height);
@@ -196,7 +202,7 @@ export function usePostAuthLayoutMetrics(): PostAuthLayoutMetrics {
           ? 12
           : 24
         : 4,
-      subscriptionCarouselIconSize: isVeryCompact
+      subscriptionCarouselIconSize: isVeryCompact || largeText
         ? 64
         : spaciousSubscription
         ? isCompact
@@ -242,5 +248,28 @@ export function usePostAuthLayoutMetrics(): PostAuthLayoutMetrics {
       discountTitleLineHeight: isVeryCompact ? 28 : isCompact ? 30 : 34,
       discountImageMarginTop: isVeryCompact ? 12 : isCompact ? 16 : 24,
     };
-  }, [height, width]);
+  }, [fontScale, height, width]);
+}
+
+/**
+ * Smallest readable plan card in a row (title, price + suffix, billing note,
+ * trial line at default text size).
+ */
+export const POST_AUTH_PLAN_CARD_MIN_WIDTH = 96;
+
+/**
+ * Plan cards follow Figma (one row of 3) when every card keeps a readable width
+ * at the current text size; otherwise they stack (Small screens, largest display
+ * size, or text larger than 1.15×). Cards wrap their text and grow in height.
+ */
+export function getPostAuthPlanLayout(
+  contentWidth: number,
+  fontScale: number,
+  planCount: number
+): "row" | "column" {
+  if (planCount < 2) return "column";
+  const needed =
+    planCount * POST_AUTH_PLAN_CARD_MIN_WIDTH +
+    (planCount - 1) * POST_AUTH_LAYOUT.planGap;
+  return fontScale <= 1.15 && contentWidth >= needed ? "row" : "column";
 }

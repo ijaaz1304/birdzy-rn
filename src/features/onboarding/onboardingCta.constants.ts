@@ -6,11 +6,16 @@ export const ONBOARDING_CTA_DARK = {
   borderRadius: 23.789,
 } as const;
 
-export const ONBOARDING_CTA_LIGHT_RADIUS = 24;
+/** Figma 8041:11928 — Next button radius (same as dark). */
+export const ONBOARDING_CTA_LIGHT_RADIUS = 23.789;
 
-/** Phone onboarding CTA height (Button size="large" minHeight) */
-export const ONBOARDING_CTA_HEIGHT = 48;
+/** Figma 8041:11928 — phone onboarding Next button height (a minimum; grows with text) */
+export const ONBOARDING_CTA_HEIGHT = 44;
 
-/** Space below the phone onboarding CTA (bottom safe area, min 24, + 8) */
+/**
+ * Space below the phone onboarding CTA. Safe-area rule: the CTA sits a constant
+ * 12pt (Figma 8041:11927 gap) above the system inset — home indicator, gesture
+ * area or 3-button bar — with a 24pt floor when the window reports no inset.
+ */
 export const getOnboardingCtaBottomPadding = (insetBottom: number) =>
-  Math.max(insetBottom, 24) + 8;
+  Math.max(insetBottom + 12, 24);

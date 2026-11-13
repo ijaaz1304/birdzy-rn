@@ -51,6 +51,7 @@ import { PostAuthGradientButton } from "../components/PostAuthGradientButton";
 import {
   PostAuthHorizontalPlanCard,
   HORIZONTAL_PLAN_ROW_STYLE,
+  POST_AUTH_PLAN_ROW_STYLE,
 } from "../components/PostAuthHorizontalPlanCard";
 import { PostAuthLegalFooter } from "../components/PostAuthLegalFooter";
 import { PostAuthLegalModal } from "../components/PostAuthLegalModal";
@@ -75,7 +76,12 @@ import {
 } from "../utils/planDisplay";
 import { getCompareAtPriceDisplay } from "../../subscription/utils/storePlanPricing";
 import { PostAuthPhoneLayout } from "../components/PostAuthPhoneLayout";
-import { usePostAuthLayoutMetrics } from "../utils/postAuthLayout";
+import {
+  getPostAuthPlanLayout,
+  usePostAuthLayoutMetrics,
+} from "../utils/postAuthLayout";
+import { usePostAuthContentLayout } from "../utils/postAuthContentLayout";
+import { useDrawnTextHeight } from "../../../hooks/useDrawnTextHeight";
 import { usePostAuthOnboardingIsDark } from "../utils/theme";
 import { usePostAuthOnboardingStore } from "../post-auth-onboarding.store";
 import { TOOLTIP_ELIGIBLE_FOR_SIGNUP_KEY } from "../../../components/AppLogsTooltip/AppLogsTooltip";
@@ -108,8 +114,13 @@ const NOTIFICATION_HERO_DESIGN_SIZE = { width: 295, height: 239 } as const;
  * The map inside it renders at 226.8×209.9 at full size, as in Figma.
  */
 const LOCATION_HERO_DESIGN_SIZE = { width: 335, height: 313 } as const;
-/** Figma text-icon-primary (light) for the surprise slide title */
-const SURPRISE_TITLE_COLOR_LIGHT = "#091B21";
+/**
+ * Figma 8015:131703 gift illustration (273×280). It fills the space between the
+ * title and the CTA up to this size and never shrinks below the minimum; larger
+ * text / display sizes take space from the gift first, then the page scrolls.
+ */
+const SURPRISE_GIFT_MAX = { width: 273, height: 280 } as const;
+const SURPRISE_GIFT_MIN_HEIGHT = 120;
 
 export const PostAuthOnboardingScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -124,8 +135,10 @@ export const PostAuthOnboardingScreen: React.FC = () => {
   const purchasedThisSessionRef = useRef(false);
   const { registerDevice } = usePushNotifications();
   const isDark = usePostAuthOnboardingIsDark();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
   const layout = usePostAuthLayoutMetrics();
+  const { contentWidth } = usePostAuthContentLayout();
+  const drawnSurpriseTitle = useDrawnTextHeight();
   const colors = useMemo(() => getPostAuthOnboardingColors(isDark), [isDark]);
   const onboardingImages = useMemo(
     () => ({
@@ -176,6 +189,14 @@ export const PostAuthOnboardingScreen: React.FC = () => {
   refetchPricesRef.current = refetchPrices;
 
   const visiblePlans = plans;
+  /** Figma row of 3 when readable; stacked on narrow windows / larger text. */
+  const planLayout = getPostAuthPlanLayout(
+    contentWidth,
+    fontScale,
+    visiblePlans.length
+  );
+  const planRowStyle =
+    planLayout === "row" ? POST_AUTH_PLAN_ROW_STYLE : HORIZONTAL_PLAN_ROW_STYLE;
 
   const effectiveSelectedPlanId =
     selectedPlanId ?? pickDefaultYearlyPlanId(visiblePlans);
@@ -502,6 +523,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
           selected={effectiveSelectedPlanId === plan.id}
           onPress={() => setSelectedPlanId(plan.id as PlanId)}
           colors={colors}
+          layout={planLayout}
         />
       );
     });
@@ -539,6 +561,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
           selected={effectiveSelectedPlanId === plan.id}
           onPress={() => setSelectedPlanId(plan.id as PlanId)}
           colors={colors}
+          layout={planLayout}
         />
       );
     });
@@ -555,7 +578,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       </TouchableOpacity>
     ) : null;
 
-  const renderPaywallFooter = () => (
+  const renderPaywallFooter = (onLater?: () => void) => (
     <View style={styles.paywallFooter}>
       <PostAuthSubscriptionDisclosure plan={selectedPlan} colors={colors} />
       <PostAuthGradientButton
@@ -565,6 +588,19 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         disabled={isLoadingPrices || !effectiveSelectedPlanId}
         colors={colors}
       />
+      {onLater ? (
+        // Figma 8015:131526 — "Later" text link under the CTA (same as Skip)
+        <TouchableOpacity
+          onPress={onLater}
+          style={styles.laterButton}
+          accessibilityRole="button"
+          hitSlop={{ top: 4, bottom: 4, left: 12, right: 12 }}
+        >
+          <RNText style={[styles.maybeLater, { color: colors.textPrimary }]}>
+            Later
+          </RNText>
+        </TouchableOpacity>
+      ) : null}
       <PostAuthLegalFooter
         onTerms={() => openLegal(getTermsOfServiceUrl(), "Terms of Service")}
         onPrivacy={() => openLegal(getPrivacyPolicyUrl(), "Privacy Policy")}
@@ -647,7 +683,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         <>
           <View
             style={[
-              HORIZONTAL_PLAN_ROW_STYLE,
+              planRowStyle,
               styles.horizontalPlanRow,
               {
                 marginTop: layout.subscriptionPlanRowMarginTop,
@@ -657,7 +693,9 @@ export const PostAuthOnboardingScreen: React.FC = () => {
           >
             {renderHorizontalPlanCards(visiblePlans)}
           </View>
-          {renderPaywallFooter()}
+          {renderPaywallFooter(() =>
+            goToSlide(POST_AUTH_ONBOARDING_STEPS.SURPRISE)
+          )}
         </>
       )}
     </View>
@@ -671,20 +709,20 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         <Text
           variant="title"
           size="large"
+          // Figma 8015:131702 — text-&-icon-primary (#111); wraps naturally
           style={[
             styles.surpriseTitle,
-            { color: isDark ? colors.textPrimary : SURPRISE_TITLE_COLOR_LIGHT },
+            { color: colors.textPrimary },
+            drawnSurpriseTitle.style,
           ]}
+          onTextLayout={drawnSurpriseTitle.onTextLayout}
         >
-          We got a little surprise{"\n"}for you!
+          We got a little surprise for you!
         </Text>
         <View style={styles.surpriseImageWrap}>
           <AppImage
             source={onboardingImages.gift}
-            style={{
-              width: layout.surpriseImageWidth,
-              height: layout.surpriseImageHeight,
-            }}
+            style={styles.surpriseImage}
             resizeMode="contain"
           />
         </View>
@@ -742,7 +780,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         <>
           <View
             style={[
-              HORIZONTAL_PLAN_ROW_STYLE,
+              planRowStyle,
               styles.horizontalPlanRow,
               {
                 marginTop: layout.subscriptionPlanRowMarginTop,
@@ -780,7 +818,14 @@ export const PostAuthOnboardingScreen: React.FC = () => {
       <PostAuthOnboardingBackground isDark={isDark} />
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={[styles.slide, { width: windowWidth }]}>
-          <PostAuthPhoneLayout>{renderSlide(currentSlide)}</PostAuthPhoneLayout>
+          {/*
+            Keyed by slide: each slide starts scrolled to the top. Otherwise a
+            scroll on one slide (needed at large text sizes) carried over, e.g.
+            the paywall opened scrolled down with Skip and the timer hidden.
+          */}
+          <PostAuthPhoneLayout key={currentSlide}>
+            {renderSlide(currentSlide)}
+          </PostAuthPhoneLayout>
         </View>
       </SafeAreaView>
 
@@ -863,12 +908,11 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
-  /** Figma Title/28px/Bold — 28px, 700, 36px line-height, center, 335 wide */
+  /** Figma Title/28px/Bold — 28/36, center, 335 wide (weight from the font file; no fontWeight → no Android Roboto fallback) */
   surpriseTitle: {
     textAlign: "center",
     fontFamily: FONTS.bold,
     fontStyle: "normal",
-    fontWeight: "700",
     fontSize: 28,
     lineHeight: 36,
     includeFontPadding: false,
@@ -885,12 +929,18 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   surpriseImageWrap: {
-    flexGrow: 1,
-    flexShrink: 0,
+    flex: 1,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 0,
+    minHeight: SURPRISE_GIFT_MIN_HEIGHT,
+  },
+  /** Scales with the free space, keeps aspect (contain), capped at the Figma size */
+  surpriseImage: {
+    width: "100%",
+    height: "100%",
+    maxWidth: SURPRISE_GIFT_MAX.width,
+    maxHeight: SURPRISE_GIFT_MAX.height,
   },
   surpriseCtaWrap: {
     width: "100%",
@@ -994,6 +1044,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: "center",
     textDecorationLine: "underline",
+  },
+  /** Figma 8015:131526 — 32pt text button; 44pt touch target */
+  laterButton: {
+    alignSelf: "center",
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 12,
   },
   paywallFooter: {
     width: "100%",

@@ -79,9 +79,10 @@ const styles = StyleSheet.create({
     borderRadius: POST_AUTH_LAYOUT.ctaBorderRadius,
     overflow: "hidden",
   },
+  /** Figma Button: 44pt (minimum — grows with larger text), padding 10 */
   ctaInner: {
     minHeight: POST_AUTH_LAYOUT.ctaHeight,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: POST_AUTH_LAYOUT.ctaBorderRadius,
     alignItems: "center",
     justifyContent: "center",

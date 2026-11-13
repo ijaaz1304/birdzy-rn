@@ -56,17 +56,25 @@ const AnimatedOnboardingList = Animated.createAnimatedComponent(
   FlatList<OnboardingPageData>
 );
 
+/** Figma 8041:11928 — Next: 44pt (min), 10/16 padding, radius 23.789 */
 const ONBOARDING_CTA = {
   minHeight: ONBOARDING_CTA_HEIGHT,
-  paddingVertical: 12,
+  paddingVertical: 10,
   paddingHorizontal: spacing[4],
   borderRadius: ONBOARDING_CTA_LIGHT_RADIUS,
 };
-/* Min height 40 so 20px line-height skip text is not clipped */
+/** Figma Button/16px — Satoshi Medium 16 / 24 */
+const ONBOARDING_CTA_LABEL = {
+  fontFamily: FONTS.medium,
+  fontSize: 16,
+  lineHeight: 24,
+};
+/** Figma I8041:11938;7616:635 — Skip: 32pt (min), 6/12 padding (20pt line), radius 24 */
 const ONBOARDING_SKIP = {
-  minHeight: 40,
-  paddingVertical: 10,
-  paddingHorizontal: 12,
+  minHeight: 32,
+  paddingVertical: 6,
+  paddingHorizontal: spacing[3],
+  borderRadius: 24,
 };
 const _HORIZONTAL_PADDING = 12;
 
@@ -183,10 +191,15 @@ export const OnboardingScreenPhone: React.FC = () => {
   const flatListRef = useRef<FlatList<OnboardingPageData>>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentPage, setCurrentPage] = useState(0);
+  /** Measured chrome so slide copy stays between Skip and the (growable) CTA. */
+  const [topReserve, setTopReserve] = useState<number | undefined>();
+  const [bottomReserve, setBottomReserve] = useState<number | undefined>();
 
   // Initial page from route params (e.g. from SignUp X "go to last page of onboarding")
   const totalPages = ONBOARDING_PAGES.length;
   const getStartedPageIndex = totalPages - 2;
+  /** Skip on all intro slides (1–4); the last slide is sign-up / log in. */
+  const showSkip = currentPage <= getStartedPageIndex;
   const paginatedPageCount = totalPages - 1;
   const initialPageParam = route.params?.initialPage as number | undefined;
 
@@ -391,6 +404,8 @@ export const OnboardingScreenPhone: React.FC = () => {
         onSignUp={handleSignUp}
         onLogIn={handleLogIn}
         onContinueAsGuest={handleContinueAsGuest}
+        topReserve={topReserve}
+        bottomReserve={bottomReserve}
       />
     </View>
   );
@@ -410,31 +425,48 @@ export const OnboardingScreenPhone: React.FC = () => {
       <View
         style={[
           styles.topBar,
-          { backgroundColor: "transparent", paddingTop: insets.top + 20 },
+          { backgroundColor: "transparent", paddingTop: insets.top + spacing[3] },
         ]}
+        onLayout={(e) => {
+          const h = Math.round(e.nativeEvent.layout.height);
+          if (h > 0 && h !== topReserve) setTopReserve(h);
+        }}
       >
         <View style={styles.topBarContent}>
           <View style={styles.spacer} />
-          {/* Skip — top right; hidden on Get started and final auth pages */}
-          {currentPage < getStartedPageIndex && (
-            <TouchableOpacity
-              onPress={handleSkip}
-              style={[styles.skipButton, ONBOARDING_SKIP]}
-              activeOpacity={0.8}
-              hitSlop={HIT_SLOP.CLOSE}
+          {/*
+            Skip — top right on every intro slide (Figma 8041:11938 … 8230:62884,
+            incl. slide 4). On the sign-up slide it is hidden but stays mounted
+            so the measured top bar (topReserve) keeps the same height and the
+            slides' copy never shifts while swiping.
+          */}
+          <TouchableOpacity
+            onPress={handleSkip}
+            disabled={!showSkip}
+            accessibilityRole="button"
+            accessibilityLabel={onboardingConfig.skipText}
+            accessibilityElementsHidden={!showSkip}
+            importantForAccessibility={showSkip ? "auto" : "no-hide-descendants"}
+            style={[
+              styles.skipButton,
+              ONBOARDING_SKIP,
+              !showSkip && styles.skipButtonHidden,
+            ]}
+            activeOpacity={0.8}
+            hitSlop={HIT_SLOP.CLOSE}
+            testID="onboarding-skip"
+          >
+            <Text
+              style={[
+                styles.skipText,
+                {
+                  color: isDark ? SCREEN_COLORS.DARK.text : theme.colors.text,
+                },
+              ]}
             >
-              <Text
-                style={[
-                  styles.skipText,
-                  {
-                    color: isDark ? SCREEN_COLORS.DARK.text : theme.colors.text,
-                  },
-                ]}
-              >
-                {onboardingConfig.skipText}
-              </Text>
-            </TouchableOpacity>
-          )}
+              {onboardingConfig.skipText}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -493,6 +525,13 @@ export const OnboardingScreenPhone: React.FC = () => {
                 : "auto",
           },
         ]}
+        onLayout={(e) => {
+          const h = Math.round(e.nativeEvent.layout.height);
+          // Ignore the collapsed (auth page) state so other slides keep their reserve.
+          if (h > 0 && currentPage <= getStartedPageIndex && h !== bottomReserve) {
+            setBottomReserve(h);
+          }
+        }}
       >
         {currentPage < getStartedPageIndex + 1 && (
           <View style={styles.buttonContainer}>
@@ -506,6 +545,7 @@ export const OnboardingScreenPhone: React.FC = () => {
               size="large"
               fullWidth
               onPress={handleNext}
+              textStyle={ONBOARDING_CTA_LABEL}
               style={[
                 ONBOARDING_CTA,
                 isDark
@@ -524,9 +564,10 @@ export const OnboardingScreenPhone: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  /** Figma 8041:11938 — Top Navigation Bar: 12pt padding below the status bar */
   topBar: {
-    paddingHorizontal: spacing[4],
-    paddingBottom: 12,
+    paddingHorizontal: spacing[3],
+    paddingBottom: spacing[3],
     zIndex: 10,
     position: "absolute",
     top: 0,
@@ -541,8 +582,10 @@ const styles = StyleSheet.create({
   spacer: {
     flex: 1,
   },
+  skipButtonHidden: {
+    opacity: 0,
+  },
   skipButton: {
-    minWidth: 60,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "transparent",
@@ -568,7 +611,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing[3],
     paddingBottom: 32,
     gap: 0,
     zIndex: 10,

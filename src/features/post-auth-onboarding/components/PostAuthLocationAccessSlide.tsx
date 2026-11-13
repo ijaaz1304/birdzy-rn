@@ -21,9 +21,24 @@ import { Text } from "../../../atoms";
 import { POST_AUTH_LAYOUT } from "../constants";
 import { usePostAuthLayoutMetrics } from "../utils/postAuthLayout";
 import { usePostAuthOnboardingIsDark } from "../utils/theme";
+import { useDrawnTextHeight } from "../../../hooks/useDrawnTextHeight";
 
-/** Figma text-icon-primary (light) for permission slide titles */
-const TITLE_COLOR_LIGHT = "#091B21";
+/** Figma 8598:40157 — "Maybe later" link colour (#091B21) in light mode */
+const SECONDARY_LINK_COLOR_LIGHT = "#091B21";
+/**
+ * Illustration size range: fills the space between the copy and the buttons
+ * (up to its Figma size) and never shrinks below this. Larger text / display
+ * sizes take space from the illustration first, then the page scrolls, so the
+ * primary CTA stays reachable as long as possible.
+ */
+const HERO_MIN_HEIGHT = 120;
+/**
+ * When the illustration is already at its minimum (large text / small window),
+ * the Figma spacing above the copy and below the illustration tightens to these
+ * values so the buttons stay on screen ("spacing adapts to screen height").
+ */
+const TIGHT_CONTENT_TOP = 24;
+const TIGHT_HERO_BOTTOM_GAP = 16;
 
 /**
  * Figma notifications slide (375×812): content card starts under the 52pt nav
@@ -85,6 +100,8 @@ export const PostAuthLocationAccessSlide: React.FC<
   );
   const layout = usePostAuthLayoutMetrics();
   const isDark = usePostAuthOnboardingIsDark();
+  const drawnTitle = useDrawnTextHeight();
+  const drawnBody = useDrawnTextHeight();
   const copy = strings.camera.galleryLocationAccess;
   const heading = title ?? copy.title;
   const body = subtitle ?? copy.subtitle;
@@ -104,11 +121,20 @@ export const PostAuthLocationAccessSlide: React.FC<
       ? 60
       : PINNED_CONTENT_TOP
     : layout.contentTopPadding;
-  const heroBottomGap = pinned
+  const [tight, setTight] = React.useState(false);
+  const regularHeroBottomGap = pinned
     ? layout.isCompact
       ? PINNED_HERO_BOTTOM_GAP_COMPACT
       : PINNED_HERO_BOTTOM_GAP
     : 0;
+  const regularContentTop = contentTopPadding;
+  /** Room the tight spacing frees up — used as hysteresis so it doesn't flip back and forth. */
+  const tightSavings =
+    regularContentTop - TIGHT_CONTENT_TOP + (regularHeroBottomGap - TIGHT_HERO_BOTTOM_GAP);
+  const effectiveContentTop =
+    pinned && tight ? TIGHT_CONTENT_TOP : regularContentTop;
+  const heroBottomGap =
+    pinned && tight ? TIGHT_HERO_BOTTOM_GAP : regularHeroBottomGap;
   /**
    * Explicit hero size from the measured free space: Figma frame size scaled
    * by screen width (295/375), shrunk to fit the available height, aspect kept.
@@ -133,21 +159,27 @@ export const PostAuthLocationAccessSlide: React.FC<
       <View
         style={[
           styles.mainContent,
-          { paddingTop: contentTopPadding, paddingBottom: heroBottomGap },
+          { paddingTop: effectiveContentTop, paddingBottom: heroBottomGap },
         ]}
       >
         <Text
           variant="title"
           size="large"
-          style={[
-            styles.title,
-            { color: isDark ? textPrimary : TITLE_COLOR_LIGHT },
-          ]}
+          // Figma 8598:40163 — text-&-icon-primary (#111)
+          style={[styles.title, { color: textPrimary }, drawnTitle.style]}
+          onTextLayout={drawnTitle.onTextLayout}
         >
           {heading}
         </Text>
 
-        <Text style={[styles.body, { color: textSecondary ?? textPrimary }]}>
+        <Text
+          style={[
+            styles.body,
+            { color: textSecondary ?? textPrimary },
+            drawnBody.style,
+          ]}
+          onTextLayout={drawnBody.onTextLayout}
+        >
           {body}
         </Text>
 
@@ -165,6 +197,9 @@ export const PostAuthLocationAccessSlide: React.FC<
             pinned
               ? (e) => {
                   const { width: w, height: h } = e.nativeEvent.layout;
+                  if (!tight && h <= HERO_MIN_HEIGHT + 2) setTight(true);
+                  else if (tight && h > HERO_MIN_HEIGHT + tightSavings + 2)
+                    setTight(false);
                   setHeroBox((prev) =>
                     prev &&
                     Math.round(prev.w) === Math.round(w) &&
@@ -178,11 +213,16 @@ export const PostAuthLocationAccessSlide: React.FC<
         >
           {pinned ? (
             pinnedHeroSize ? (
-              <AppImage
-                source={hero}
-                style={pinnedHeroSize}
-                resizeMode="contain"
-              />
+              // Out of the layout flow: the box's size comes only from the free
+              // space (flex) and HERO_MIN_HEIGHT, never from the image itself, so
+              // the illustration can shrink when text grows.
+              <View style={styles.heroPinnedLayer} pointerEvents="none">
+                <AppImage
+                  source={hero}
+                  style={pinnedHeroSize}
+                  resizeMode="contain"
+                />
+              </View>
             ) : null
           ) : (
             <AppImage
@@ -220,7 +260,7 @@ export const PostAuthLocationAccessSlide: React.FC<
             <Text
               style={[
                 styles.secondaryLabel,
-                { color: isDark ? textPrimary : TITLE_COLOR_LIGHT },
+                { color: isDark ? textPrimary : SECONDARY_LINK_COLOR_LIGHT },
               ]}
             >
               {secondaryLabel}
@@ -246,12 +286,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start",
   },
-  /** Figma Title/28px/Bold — 28px, 700, 36px line-height, center, 335 wide */
+  /** Figma Title/28px/Bold — 28/36, center, 335 wide. Weight comes from the font file (no fontWeight: Android would fall back to Roboto). */
   title: {
     textAlign: "center",
     fontFamily: FONTS.bold,
     fontStyle: "normal",
-    fontWeight: "700",
     fontSize: 28,
     lineHeight: 36,
     includeFontPadding: false,
@@ -259,10 +298,14 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
     flexShrink: 1,
   },
+  /**
+   * Takes only the space left between the copy and the buttons (flex basis 0),
+   * never less than HERO_MIN_HEIGHT. The image is sized from this measured box,
+   * so larger text shrinks the illustration before the page has to scroll.
+   */
   heroWrap: {
-    minHeight: 200,
-    flexGrow: 1,
-    flexShrink: 0,
+    minHeight: HERO_MIN_HEIGHT,
+    flex: 1,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
@@ -276,11 +319,15 @@ const styles = StyleSheet.create({
   heroWrapPinned: {
     justifyContent: "flex-end",
   },
+  heroPinnedLayer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
   /** Figma Button/16px: Satoshi Medium 16/24 */
   primaryLabel: {
     fontFamily: FONTS.medium,
     fontStyle: "normal",
-    fontWeight: "500",
     fontSize: 16,
     lineHeight: 24,
     includeFontPadding: false,
@@ -292,7 +339,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: FONTS.regular,
     fontStyle: "normal",
-    fontWeight: "400",
     fontSize: 16,
     lineHeight: 24,
     letterSpacing: -0.16,
@@ -332,18 +378,18 @@ const styles = StyleSheet.create({
   secondaryLabel: {
     fontFamily: FONTS.medium,
     fontStyle: "normal",
-    fontWeight: "500",
     fontSize: 14,
     lineHeight: 20,
     includeFontPadding: false,
     textAlign: "center",
     textDecorationLine: "underline",
   },
+  /** Figma Button: 44pt (minimum — grows with larger text), padding 10/16 */
   primaryButton: {
     width: POST_AUTH_LAYOUT.contentWidth,
     maxWidth: "100%",
     minHeight: POST_AUTH_LAYOUT.ctaHeight,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 24,
     alignItems: "center",

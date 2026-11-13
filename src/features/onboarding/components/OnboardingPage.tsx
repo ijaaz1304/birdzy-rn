@@ -18,7 +18,7 @@ import {
   SCREEN_COLORS,
   SUBSCRIPTION_COLORS,
 } from "../../../constants/colorConstants";
-import { Text, Chip, Button } from "../../../atoms";
+import { Text, Chip } from "../../../atoms";
 import { OnboardingPageData } from "../screens/OnboardingScreenPhone";
 import { Images } from "../../../assets";
 import { ChatInterface } from "./ChatInterface";
@@ -36,6 +36,7 @@ import {
   getOnboardingCtaBottomPadding,
 } from "../onboardingCta.constants";
 import { PaginationDots } from "./PaginationDots";
+import { useDrawnTextHeight } from "../../../hooks/useDrawnTextHeight";
 
 /** Onboarding background art is 1500×3252 — anchor to bottom so mushrooms align with design */
 const ONBOARDING_BG_ASPECT = 3252 / 1500;
@@ -43,12 +44,33 @@ const ONBOARDING_BG_ASPECT = 3252 / 1500;
 const ONBOARDING_BG_DESIGN_WIDTH = 375;
 const ONBOARDING_BG_DESIGN_HEIGHT =
   ONBOARDING_BG_DESIGN_WIDTH * ONBOARDING_BG_ASPECT;
-/** Figma: title starts at y=516 (~20pt below the illustration), in background coordinates */
-const ONBOARDING_DESIGN_TITLE_TOP = 516;
-/** Default copy block height (2-line title + 2-line subtitle + dots) before first layout */
-const ONBOARDING_TEXT_DEFAULT_HEIGHT = 144;
-/** Never let the copy block get closer than this to the Next button */
-const ONBOARDING_TEXT_MIN_CTA_GAP = 24;
+/** Figma 8041:11930 → 8041:11927: fixed 64pt gap between the copy and Next */
+const ONBOARDING_COPY_CTA_GAP = spacing[16];
+/**
+ * Onboarding copy column: fills the width minus the 20pt gutters (Figma 335 on
+ * 375), capped at the 393 × 852 base frame's column so 430pt phones don't
+ * stretch line length.
+ */
+const ONBOARDING_COPY_MAX_WIDTH = 393 - 40;
+/** Minimum gap between the Skip bar / illustration and the copy when text is enlarged */
+const ONBOARDING_COPY_MIN_TOP_GAP = spacing[4];
+/**
+ * Bottom edge of each slide's illustration inside the 375×813 background art
+ * (Figma 8041:11916 — bird frame + tail on slide 1). The copy never rises above
+ * it: content over illustration means the column scrolls instead of overlapping.
+ */
+const ONBOARDING_ART_ILLUSTRATION_BOTTOM: Partial<Record<number, number>> = {
+  /** Slide 1 — Figma 8041:11916: bird frame + tail */
+  0: 432,
+  /** Slide 2 — Figma 8042:44369: European robin card (top 281.87 + ~213 content) */
+  1: 495,
+  /** Slide 3 — Figma 8041:12044 / 8041:12089: "10+ more" card and Rare chip */
+  2: 465,
+  /** Slide 4 — Figma 8230:63047: audio player bar (top 397.21 + 40) */
+  3: 438,
+};
+/** Skip bar height before the screen measures it (Figma: 12 + 32 + 12 below the status bar) */
+const ONBOARDING_SKIP_BAR_FALLBACK_HEIGHT = 56;
 /** Auth slide ("Keep track of your bird journey") — title/subtitle inset below safe area */
 /** Figma: title at y=106, 124pt copy block (72 title + 12 gap + 40 subtitle) → ends at y=230 */
 const AUTH_PROGRESS_DESIGN_SUBTITLE_BOTTOM = 230;
@@ -59,6 +81,12 @@ const AUTH_PROGRESS_SUBTITLE_WIDTH_RATIO = 318.517 / 335;
 const AUTH_TOP_ART_ASPECT = 1125 / 879;
 /** Figma 8251:5879 bird circle 335×346 */
 const AUTH_BIRDS_ASPECT = 335 / 346;
+/**
+ * Bird circle size range: it fills the space between the copy and the buttons
+ * (max = 335×346 scaled to the column) and never shrinks below this. Larger
+ * text first takes space from the circle, then the page scrolls.
+ */
+const AUTH_BIRDS_MIN_HEIGHT = 120;
 /** Figma: title at y=106 = 44pt status bar + 62 */
 const AUTH_SPLIT_TITLE_TOP_BELOW_STATUS_BAR = 62;
 /** Figma light-mode secondary buttons (Log in / Continue as guest) */
@@ -81,6 +109,10 @@ export interface OnboardingPageProps {
   onSignUp?: () => void;
   onLogIn?: () => void;
   onContinueAsGuest?: () => void;
+  /** Measured bottom of the screen's top bar (Skip). Copy never rises above it. */
+  topReserve?: number;
+  /** Measured height of the screen's bottom CTA section. Copy never goes below it. */
+  bottomReserve?: number;
 }
 
 export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
@@ -92,14 +124,16 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     onSignUp,
     onLogIn,
     onContinueAsGuest,
+    topReserve,
+    bottomReserve,
   }) => {
-    const { height: SCREEN_HEIGHT, fontScale } = useWindowDimensions();
+    const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const theme = useTheme();
     const isDark = useIsDark();
     const insets = useSafeAreaInsets();
-    const [textHeight, setTextHeight] = React.useState(
-      ONBOARDING_TEXT_DEFAULT_HEIGHT
-    );
+    /** Size title/body to the lines Android draws (no blank line when a line only just fits). */
+    const drawnTitle = useDrawnTextHeight();
+    const drawnDesc = useDrawnTextHeight();
     const [authHeaderHeight, setAuthHeaderHeight] = React.useState(
       AUTH_PROGRESS_DEFAULT_HEADER_HEIGHT
     );
@@ -116,9 +150,11 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     const hasBackgroundImage = !!data.backgroundImage;
     /** Dark page 2 art includes stats/tabs — hide duplicate overlay at top */
     const hideTopStatsInDark = isDark && pageIndex === 1;
-    const onboardingTextMaxWidth = contentMaxWidth;
     /** Auth header uses a single 20px inset (authTextSection); avoid double-padding textSection */
-    const authProgressTextMaxWidth = contentMaxWidth;
+    const authProgressTextMaxWidth = Math.min(
+      contentMaxWidth,
+      ONBOARDING_COPY_MAX_WIDTH
+    );
     /** Figma: subtitle is 318.5pt inside the 335pt title column */
     const authProgressSubtextMaxWidth =
       authProgressTextMaxWidth * AUTH_PROGRESS_SUBTITLE_WIDTH_RATIO;
@@ -262,22 +298,34 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
         />
       );
     };
-    /** Space reserved at the bottom for the Next button (rendered by the screen) */
-    const contentPaddingBottom =
-      getOnboardingCtaBottomPadding(insets.bottom) +
-      ONBOARDING_CTA_HEIGHT +
-      ONBOARDING_TEXT_MIN_CTA_GAP;
     /**
-     * Responsive copy position: the background is bottom-anchored and scaled by
-     * bgHeight / design height, so map the Figma title y into the same space.
-     * The image→title gap then scales with the art on every screen size;
-     * clamp so the copy never runs into the Next button on short screens.
+     * Intro slides are a flex column between the screen's overlay chrome:
+     * measured Skip bar (top, includes the top safe area) and measured Next
+     * section (bottom, includes the bottom safe area). Nothing is positioned by
+     * absolute y-coordinates; a flexible spacer absorbs height differences.
      */
-    const anchoredTextTop =
-      SCREEN_HEIGHT -
-      (ONBOARDING_BG_DESIGN_HEIGHT - ONBOARDING_DESIGN_TITLE_TOP) * bgScale;
-    const maxTextTop = SCREEN_HEIGHT - contentPaddingBottom - textHeight;
-    const textTop = Math.min(anchoredTextTop, maxTextTop);
+    const artIllustrationBottom = hasBackgroundImage
+      ? ONBOARDING_ART_ILLUSTRATION_BOTTOM[pageIndex]
+      : undefined;
+    /** Illustration bottom on this screen: the art is bottom-anchored and scaled by bgScale */
+    const illustrationBottomOnScreen =
+      artIllustrationBottom != null
+        ? SCREEN_HEIGHT -
+          (ONBOARDING_BG_DESIGN_HEIGHT - artIllustrationBottom) * bgScale
+        : 0;
+    const copyTopInset =
+      Math.max(
+        topReserve ?? insets.top + ONBOARDING_SKIP_BAR_FALLBACK_HEIGHT,
+        illustrationBottomOnScreen
+      ) + ONBOARDING_COPY_MIN_TOP_GAP;
+    /**
+     * The scroll area ends at the top of the Next section, so copy that
+     * overflows at large text/display sizes is clipped above the button and
+     * scrolls into view — it never draws underneath Next.
+     */
+    const ctaSectionHeight =
+      bottomReserve ??
+      getOnboardingCtaBottomPadding(insets.bottom) + ONBOARDING_CTA_HEIGHT;
     const illustrationHeight =
       pageIndex === 0
         ? 560
@@ -291,30 +339,12 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
         ? 260
         : 560;
 
-    /** Fixed layout: no vertical scroll on any onboarding page so layout stays fixed */
-    const ContentWrapper = ScrollView;
-    const contentWrapperProps = {
-      contentContainerStyle: { flexGrow: 1 },
-      keyboardShouldPersistTaps: "handled" as const,
-      style: [
-        styles.content,
-        styles.contentNoScroll,
-        { paddingBottom: contentPaddingBottom },
-      ],
-    };
-
-    const ContentTopWrapper = View;
-    const contentTopProps = {
-      style: showAuthButtons ? styles.contentTopAuth : styles.contentTop,
-    };
-
     const renderOnboardingText = () => (
       <View
         style={[
           styles.textSection,
           styles.textSectionOnboardingInset,
           styles.onboardingCopyStack,
-          { width: onboardingTextMaxWidth },
         ]}
       >
         <Text
@@ -326,8 +356,11 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
             styles.titleOnboarding,
             styles.titleLeftAlign,
             styles.onboardingCopyLine,
-            !isDark && { color: "#091B21" },
+            // Figma 8041:11931 — text-&-icon-primary (#111)
+            !isDark && { color: theme.colors.textPrimary },
+            drawnTitle.style,
           ]}
+          onTextLayout={drawnTitle.onTextLayout}
         >
           {data.title}
         </Text>
@@ -341,7 +374,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
             styles.descriptionLeftAlign,
             styles.onboardingCopyLine,
             !isDark && { color: "#5D5D5D" },
+            drawnDesc.style,
           ]}
+          onTextLayout={drawnDesc.onTextLayout}
         >
           {data.description}
         </Text>
@@ -355,56 +390,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
         )}
       </View>
     );
-
-    // Auth page: 3-section layout — text top, image below, CTA at bottom (no absolute positioning)
-    if (fontScale > 1.15 || SCREEN_HEIGHT < 700) {
-      return (
-        <ScrollView
-          style={{ width, height: SCREEN_HEIGHT }}
-          contentContainerStyle={{
-            paddingTop: insets.top + 56,
-            paddingHorizontal: 20,
-            paddingBottom: insets.bottom + (showAuthButtons ? 24 : 160),
-            gap: 20,
-            alignItems: "center",
-          }}
-        >
-          {data.illustrationImage ? (
-            <AppImage
-              source={data.illustrationImage}
-              style={{ width: "100%", maxWidth: 335, height: 180 }}
-              resizeMode="contain"
-            />
-          ) : null}
-          {data.stats ? (
-            <Text style={{ textAlign: "center" }}>
-              {data.stats.value} {data.stats.label}
-            </Text>
-          ) : null}
-          <Text variant="title" size="large" style={{ textAlign: "center" }}>
-            {data.title}
-          </Text>
-          <Text style={{ textAlign: "center" }}>{data.description}</Text>
-          {showAuthButtons ? (
-            <>
-              <Button title="Sign up" fullWidth onPress={onSignUp} />
-              <Button
-                title="Log in"
-                fullWidth
-                variant="outline"
-                onPress={onLogIn}
-              />
-              <Button
-                title="Continue as guest"
-                fullWidth
-                variant="ghost"
-                onPress={onContinueAsGuest}
-              />
-            </>
-          ) : null}
-        </ScrollView>
-      );
-    }
 
     if (showAuthButtons) {
       /** Figma: guest button ends 40pt above the screen bottom (home indicator area + 8) */
@@ -449,159 +434,149 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
               />
             )
           )}
-          <View
-            style={[
-              styles.authTextSection,
-              {
-                paddingTop: useSplitAuthLayout
-                  ? insets.top + AUTH_SPLIT_TITLE_TOP_BELOW_STATUS_BAR
-                  : authHeaderTopPadding,
-              },
-            ]}
+          {/* Flex column that scrolls only when large text no longer fits */}
+          <ScrollView
+            style={styles.authScroll}
+            contentContainerStyle={styles.authScrollContent}
+            bounces={false}
+            overScrollMode="never"
+            showsVerticalScrollIndicator={false}
+            testID="onboarding-auth-scroll"
           >
             <View
-              style={[styles.textSectionAuth, styles.textSectionCenter]}
-              onLayout={(e) => {
-                const h = Math.round(e.nativeEvent.layout.height);
-                if (h > 0 && h !== authHeaderHeight) setAuthHeaderHeight(h);
-              }}
-            >
-              <Text
-                variant="title"
-                size="large"
-                weight="bold"
-                style={[
-                  styles.titleAuthProgress,
-                  {
-                    maxWidth: authProgressTextMaxWidth,
-                    color: isDark ? theme.colors.text : "#091B21",
-                  },
-                ]}
-              >
-                {data.title}
-              </Text>
-              <Text
-                variant="body"
-                size="medium"
-                style={[
-                  styles.descriptionAuthProgress,
-                  {
-                    maxWidth: authProgressSubtextMaxWidth,
-                    color: isDark ? theme.colors.textSecondary : "#5D5D5D",
-                  },
-                ]}
-              >
-                {data.description}
-              </Text>
-            </View>
-          </View>
-          {/* 2. Bird circle — fills the space left between copy and buttons, keeps aspect */}
-          {useSplitAuthLayout && (
-            <View style={styles.authBirdsSection}>
-              <AppImage
-                source={Images.onboardingAuthBirds}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  maxWidth: authBirdsMaxWidth,
-                  maxHeight: authBirdsMaxWidth / AUTH_BIRDS_ASPECT,
-                }}
-                resizeMode="contain"
-                preferRNImage
-                fadeDuration={0}
-              />
-            </View>
-          )}
-          {/* Image section - below text (only when there is no background art) */}
-          {!useSplitAuthLayout && !hasBackgroundImage && (
-            <View style={styles.authImageSection}>
-              <View style={styles.authImageWrapper}>
-                <AppImage
-                  source={authImageSource}
-                  style={styles.authIllustrationImage}
-                  resizeMode="contain"
-                  fadeDuration={0}
-                  defaultSource={Images.homeFindSpecies}
-                />
-              </View>
-            </View>
-          )}
-          {/* 3. Spacer - flex 1 pushes CTA to bottom (split layout: bird section flexes instead) */}
-          {!useSplitAuthLayout && <View style={styles.authSpacer} />}
-          {/* 4. CTA section - bottom, safe area */}
-          <View
-            style={[
-              styles.authCtaSection,
-              useSplitAuthLayout && styles.authCtaSectionSplit,
-              {
-                paddingBottom: ctaPaddingBottom,
-              },
-            ]}
-          >
-            {/* Figma: Sign up — brand fill, no border, 44pt, Button/16px Medium white */}
-            <TouchableOpacity
-              onPress={onSignUp}
               style={[
-                styles.authButtonCta,
-                { backgroundColor: theme.colors.primaryCTA },
-                isDark && {
-                  borderRadius: ONBOARDING_CTA_DARK.borderRadius,
-                  borderWidth: 1,
-                  borderColor: theme.colors.border0,
+                styles.authTextSection,
+                {
+                  paddingTop: useSplitAuthLayout
+                    ? insets.top + AUTH_SPLIT_TITLE_TOP_BELOW_STATUS_BAR
+                    : authHeaderTopPadding,
                 },
               ]}
-              activeOpacity={0.7}
             >
-              <Text
-                variant="label"
-                size="medium"
-                style={[
-                  styles.authButtonLabel,
-                  { color: theme.colors.onPrimary },
-                ]}
+              <View
+                style={[styles.textSectionAuth, styles.textSectionCenter]}
+                onLayout={(e) => {
+                  const h = Math.round(e.nativeEvent.layout.height);
+                  if (h > 0 && h !== authHeaderHeight) setAuthHeaderHeight(h);
+                }}
               >
-                Sign up
-              </Text>
-            </TouchableOpacity>
-            {/* Figma: Log in — white fill, 1px #E7E7E7 border, radius 24, #111 text */}
-            <TouchableOpacity
-              onPress={onLogIn}
-              style={[
-                styles.authButtonCta,
-                styles.authButtonOutline,
-                isDark
-                  ? {
-                      backgroundColor: theme.colors.surfacePrimary,
-                      borderColor: theme.colors.border0,
-                    }
-                  : {
-                      backgroundColor: AUTH_CTA_LIGHT.secondaryBg,
-                      borderColor:
-                        SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
+                <Text
+                  variant="title"
+                  size="large"
+                  weight="bold"
+                  style={[
+                    styles.titleAuthProgress,
+                    {
+                      maxWidth: authProgressTextMaxWidth,
+                      // Figma 8230:63570 — text-&-icon-primary (#111)
+                      color: isDark
+                        ? theme.colors.text
+                        : theme.colors.textPrimary,
                     },
+                  ]}
+                >
+                  {data.title}
+                </Text>
+                <Text
+                  variant="body"
+                  size="medium"
+                  style={[
+                    styles.descriptionAuthProgress,
+                    {
+                      maxWidth: authProgressSubtextMaxWidth,
+                      color: isDark ? theme.colors.textSecondary : "#5D5D5D",
+                    },
+                  ]}
+                >
+                  {data.description}
+                </Text>
+              </View>
+            </View>
+            {/* 2. Bird circle — fills the space left between copy and buttons, keeps aspect */}
+            {useSplitAuthLayout && (
+              <View style={styles.authBirdsSection}>
+                <AppImage
+                  source={Images.onboardingAuthBirds}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    maxWidth: authBirdsMaxWidth,
+                    maxHeight: authBirdsMaxWidth / AUTH_BIRDS_ASPECT,
+                  }}
+                  resizeMode="contain"
+                  preferRNImage
+                  fadeDuration={0}
+                />
+              </View>
+            )}
+            {/* Image section - below text (only when there is no background art) */}
+            {!useSplitAuthLayout && !hasBackgroundImage && (
+              <View style={styles.authImageSection}>
+                <View style={styles.authImageWrapper}>
+                  <AppImage
+                    source={authImageSource}
+                    style={styles.authIllustrationImage}
+                    resizeMode="contain"
+                    fadeDuration={0}
+                    defaultSource={Images.homeFindSpecies}
+                  />
+                </View>
+              </View>
+            )}
+            {/* 3. Spacer - flex 1 pushes CTA to bottom (split layout: bird section flexes instead) */}
+            {!useSplitAuthLayout && <View style={styles.authSpacer} />}
+            {/* 4. CTA section - bottom, safe area */}
+            <View
+              style={[
+                styles.authCtaSection,
+                useSplitAuthLayout && styles.authCtaSectionSplit,
+                {
+                  paddingBottom: ctaPaddingBottom,
+                },
               ]}
-              activeOpacity={0.7}
             >
-              <Text
-                variant="label"
-                size="medium"
+              {/* Figma: Sign up — brand fill, no border, 44pt, Button/16px Medium white */}
+              <TouchableOpacity
+                onPress={onSignUp}
                 style={[
-                  styles.authButtonLabel,
-                  {
-                    color: isDark
-                      ? SCREEN_COLORS.DARK.text
-                      : AUTH_CTA_LIGHT.secondaryText,
+                  styles.authButtonCta,
+                  { backgroundColor: theme.colors.primaryCTA },
+                  isDark && {
+                    borderRadius: ONBOARDING_CTA_DARK.borderRadius,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border0,
                   },
                 ]}
+                activeOpacity={0.7}
               >
-                Log in
-              </Text>
-            </TouchableOpacity>
-            {/* Figma: Continue as guest — text button, 44pt tall, #111 */}
-            {onContinueAsGuest && (
+                <Text
+                  variant="label"
+                  size="medium"
+                  style={[
+                    styles.authButtonLabel,
+                    { color: theme.colors.onPrimary },
+                  ]}
+                >
+                  Sign up
+                </Text>
+              </TouchableOpacity>
+              {/* Figma: Log in — white fill, 1px #E7E7E7 border, radius 24, #111 text */}
               <TouchableOpacity
-                onPress={onContinueAsGuest}
-                style={styles.authButtonCta}
+                onPress={onLogIn}
+                style={[
+                  styles.authButtonCta,
+                  styles.authButtonOutline,
+                  isDark
+                    ? {
+                        backgroundColor: theme.colors.surfacePrimary,
+                        borderColor: theme.colors.border0,
+                      }
+                    : {
+                        backgroundColor: AUTH_CTA_LIGHT.secondaryBg,
+                        borderColor:
+                          SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
+                      },
+                ]}
                 activeOpacity={0.7}
               >
                 <Text
@@ -611,94 +586,110 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                     styles.authButtonLabel,
                     {
                       color: isDark
-                        ? theme.colors.textPrimary
+                        ? SCREEN_COLORS.DARK.text
                         : AUTH_CTA_LIGHT.secondaryText,
                     },
                   ]}
                 >
-                  Continue as guest
+                  Log in
                 </Text>
               </TouchableOpacity>
-            )}
-          </View>
+              {/* Figma: Continue as guest — text button, 44pt tall, #111 */}
+              {onContinueAsGuest && (
+                <TouchableOpacity
+                  onPress={onContinueAsGuest}
+                  style={styles.authButtonCta}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    variant="label"
+                    size="medium"
+                    style={[
+                      styles.authButtonLabel,
+                      {
+                        color: isDark
+                          ? theme.colors.textPrimary
+                          : AUTH_CTA_LIGHT.secondaryText,
+                      },
+                    ]}
+                  >
+                    Continue as guest
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </ScrollView>
         </View>
       );
     }
 
     return (
-      <View
-        style={[
-          styles.container,
-          { width, height: SCREEN_HEIGHT, backgroundColor: "transparent" },
-        ]}
-      >
+      <View style={[styles.container, { width }]}>
         {renderPageBackground()}
         {showStatsOverlay && renderStatsHeader()}
-        {/* Content: image first, then title+sub below; no scroll when titleBelowImageNoScroll */}
-        <ContentWrapper {...contentWrapperProps}>
-          <ContentTopWrapper {...contentTopProps}>
-            {!showStatsOverlay && renderStatsHeader()}
-
-            {/* Illustration: page 4 (index 3) = bigger image for both dark and light */}
-            {!hasBackgroundImage && (
-              <View
-                style={[
-                  styles.illustrationSection,
-                  { height: illustrationHeight },
-                  pageIndex === 1 && styles.illustrationSectionPage2MoveUp,
-                  pageIndex === 3 && styles.illustrationSectionPage3,
-                  showAuthButtons && { marginBottom: 40 },
-                ]}
-              >
-                {data.illustrationSvg ? (
-                  // SVG Illustration (e.g., auth_identify in light mode)
+        {/* Flex column: spacer grows, copy hugs its content above Next.
+            Larger text grows the copy upward; the column scrolls only if needed. */}
+        <ScrollView
+          testID="onboarding-copy"
+          // Scroll band = below the illustration/Skip bar → above Next, so
+          // scrolled copy never slides over the art or under the button.
+          style={[
+            styles.introScroll,
+            { top: copyTopInset, bottom: ctaSectionHeight },
+          ]}
+          contentContainerStyle={[
+            styles.introColumn,
+            { paddingBottom: ONBOARDING_COPY_CTA_GAP },
+          ]}
+          bounces={false}
+          overScrollMode="never"
+          showsVerticalScrollIndicator={false}
+        >
+          {!showStatsOverlay && renderStatsHeader()}
+          {/* Illustration: page 4 (index 3) = bigger image for both dark and light */}
+          {!hasBackgroundImage && (
+            <View
+              style={[
+                styles.illustrationSection,
+                { height: illustrationHeight },
+                pageIndex === 1 && styles.illustrationSectionPage2MoveUp,
+                pageIndex === 3 && styles.illustrationSectionPage3,
+                showAuthButtons && { marginBottom: 40 },
+              ]}
+            >
+              {data.illustrationSvg ? (
+                // SVG Illustration (e.g., auth_identify in light mode)
+                <View
+                  style={[
+                    styles.svgContainer,
+                    { height: illustrationHeight, width: contentMaxWidth },
+                  ]}
+                >
+                  <data.illustrationSvg
+                    width="100%"
+                    height="100%"
+                    preserveAspectRatio="xMidYMid meet"
+                  />
+                </View>
+              ) : data.illustrationImage ? (
+                // Image Illustration for onboarding pages; page 4 (index 3) = main image + avatar_set on right
+                pageIndex === 3 ? (
                   <View
                     style={[
-                      styles.svgContainer,
-                      { height: illustrationHeight, width: contentMaxWidth },
+                      styles.illustrationRowPage4,
+                      {
+                        height: illustrationHeight,
+                        maxWidth: contentMaxWidth,
+                      },
                     ]}
                   >
-                    <data.illustrationSvg
-                      width="100%"
-                      height="100%"
-                      preserveAspectRatio="xMidYMid meet"
-                    />
-                  </View>
-                ) : data.illustrationImage ? (
-                  // Image Illustration for onboarding pages; page 4 (index 3) = main image + avatar_set on right
-                  pageIndex === 3 ? (
                     <View
                       style={[
-                        styles.illustrationRowPage4,
+                        styles.imageContainerPage4Main,
                         {
                           height: illustrationHeight,
-                          maxWidth: contentMaxWidth,
+                          width: contentMaxWidth,
                         },
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.imageContainerPage4Main,
-                          {
-                            height: illustrationHeight,
-                            width: contentMaxWidth,
-                          },
-                        ]}
-                      >
-                        <AppImage
-                          source={data.illustrationImage}
-                          style={styles.illustrationImage}
-                          resizeMode="contain"
-                          fadeDuration={0}
-                          defaultSource={Images.homeFindSpecies}
-                        />
-                      </View>
-                    </View>
-                  ) : (
-                    <View
-                      style={[
-                        styles.imageContainer,
-                        { height: illustrationHeight, width: contentMaxWidth },
                       ]}
                     >
                       <AppImage
@@ -709,110 +700,75 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                         defaultSource={Images.homeFindSpecies}
                       />
                     </View>
-                  )
-                ) : data.chatInterface ? (
-                  // Chat Interface for "Use our AI chat" page
-                  <ChatInterface />
-                ) : data.mineralCards && data.mineralCards.length > 0 ? (
-                  <>
-                    {/* Mineral Cards Illustration - Use SVG in light mode, dark PNG in dark mode */}
-                    {/* Note: SVG/Image names kept as PlantCards* for asset compatibility */}
-                    {theme.mode === "dark" ? (
-                      <View
-                        style={[
-                          styles.imageContainer,
-                          {
-                            height: illustrationHeight,
-                            width: contentMaxWidth,
-                          },
-                        ]}
-                      >
-                        <AppImage
-                          source={
-                            Images.homeFindSpeciesDark || Images.homeFindSpecies
-                          }
-                          style={styles.illustrationImage}
-                          resizeMode="contain"
-                          fadeDuration={0}
-                        />
-                      </View>
-                    ) : (
-                      <View
-                        style={[
-                          styles.imageContainer,
-                          {
-                            height: illustrationHeight,
-                            width: contentMaxWidth,
-                          },
-                        ]}
-                      >
-                        <AppImage
-                          source={
-                            Images.mineralCardsLight ||
-                            Images.mineralCardsDark ||
-                            Images.homeFindSpecies
-                          }
-                          style={styles.illustrationImage}
-                          resizeMode="contain"
-                          fadeDuration={0}
-                        />
-                      </View>
-                    )}
-                  </>
-                ) : data.stats ? (
-                  // Species Illustration - Use SVG in light mode, dark PNG in dark mode
-                  theme.mode === "dark" ? (
+                  </View>
+                ) : (
+                  <View
+                    style={[
+                      styles.imageContainer,
+                      { height: illustrationHeight, width: contentMaxWidth },
+                    ]}
+                  >
+                    <AppImage
+                      source={data.illustrationImage}
+                      style={styles.illustrationImage}
+                      resizeMode="contain"
+                      fadeDuration={0}
+                      defaultSource={Images.homeFindSpecies}
+                    />
+                  </View>
+                )
+              ) : data.chatInterface ? (
+                // Chat Interface for "Use our AI chat" page
+                <ChatInterface />
+              ) : data.mineralCards && data.mineralCards.length > 0 ? (
+                <>
+                  {/* Mineral Cards Illustration - Use SVG in light mode, dark PNG in dark mode */}
+                  {/* Note: SVG/Image names kept as PlantCards* for asset compatibility */}
+                  {theme.mode === "dark" ? (
                     <View
                       style={[
                         styles.imageContainer,
-                        { height: illustrationHeight, width: contentMaxWidth },
+                        {
+                          height: illustrationHeight,
+                          width: contentMaxWidth,
+                        },
                       ]}
                     >
                       <AppImage
-                        source={Images.mineralsDark || Images.speciesDark}
+                        source={
+                          Images.homeFindSpeciesDark || Images.homeFindSpecies
+                        }
                         style={styles.illustrationImage}
                         resizeMode="contain"
+                        fadeDuration={0}
                       />
                     </View>
                   ) : (
                     <View
                       style={[
                         styles.imageContainer,
-                        { height: illustrationHeight, width: contentMaxWidth },
+                        {
+                          height: illustrationHeight,
+                          width: contentMaxWidth,
+                        },
                       ]}
                     >
                       <AppImage
                         source={
-                          Images.mineralsLight ||
-                          Images.mineralsDark ||
-                          Images.speciesDark
+                          Images.mineralCardsLight ||
+                          Images.mineralCardsDark ||
+                          Images.homeFindSpecies
                         }
                         style={styles.illustrationImage}
                         resizeMode="contain"
+                        fadeDuration={0}
                       />
                     </View>
-                  )
-                ) : data.illustration === "authProgress" ? (
-                  // Auth Progress Image for "Keep track of your progress" page
-                  <View
-                    style={[
-                      styles.imageContainer,
-                      {
-                        height: illustrationHeight,
-                        maxHeight: 600,
-                        width: contentMaxWidth,
-                      },
-                    ]}
-                  >
-                    <AppImage
-                      source={Images.diagnoseAi}
-                      style={[styles.illustrationImage, { maxHeight: 580 }]}
-                      resizeMode="contain"
-                      fadeDuration={0}
-                    />
-                  </View>
-                ) : data.illustration === "plantDiagnose" ? (
-                  // Identify illustration (PNG used to avoid large SVG; same as auth_identity)
+                  )}
+                </>
+              ) : data.stats ? (
+                // Species Illustration - Use SVG in light mode, dark PNG in dark mode
+                theme.mode === "dark" ? (
                   <View
                     style={[
                       styles.imageContainer,
@@ -820,51 +776,92 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                     ]}
                   >
                     <AppImage
-                      source={Images.diagnoseAi}
+                      source={Images.mineralsDark || Images.speciesDark}
                       style={styles.illustrationImage}
                       resizeMode="contain"
                     />
                   </View>
-                ) : data.illustration === "plantScan" ? (
-                  // Scan SVG Illustration for onboarding page
-                  <View
-                    style={[
-                      styles.svgContainer,
-                      { height: illustrationHeight, width: contentMaxWidth },
-                    ]}
-                  >
-                    <AppImage
-                      source={Images.diagnoseAi}
-                      style={styles.illustrationImage}
-                      resizeMode="contain"
-                    />
-                  </View>
-                ) : data.illustration ? (
-                  typeof data.illustration === "string" ? null : (
-                    data.illustration
-                  )
                 ) : (
-                  <View style={[styles.illustrationPlaceholder]}>
-                    <Text variant="body" size="medium" color="textTertiary">
-                      Illustration
-                    </Text>
+                  <View
+                    style={[
+                      styles.imageContainer,
+                      { height: illustrationHeight, width: contentMaxWidth },
+                    ]}
+                  >
+                    <AppImage
+                      source={
+                        Images.mineralsLight ||
+                        Images.mineralsDark ||
+                        Images.speciesDark
+                      }
+                      style={styles.illustrationImage}
+                      resizeMode="contain"
+                    />
                   </View>
-                )}
-              </View>
-            )}
-          </ContentTopWrapper>
-        </ContentWrapper>
-
-        {/* Title + subtitle + dots — positioned relative to the scaled background art */}
-        <View
-          style={[styles.onboardingTextAnchor, { top: textTop }]}
-          onLayout={(e) => {
-            const h = Math.round(e.nativeEvent.layout.height);
-            if (h > 0 && h !== textHeight) setTextHeight(h);
-          }}
-        >
+                )
+              ) : data.illustration === "authProgress" ? (
+                // Auth Progress Image for "Keep track of your progress" page
+                <View
+                  style={[
+                    styles.imageContainer,
+                    {
+                      height: illustrationHeight,
+                      maxHeight: 600,
+                      width: contentMaxWidth,
+                    },
+                  ]}
+                >
+                  <AppImage
+                    source={Images.diagnoseAi}
+                    style={[styles.illustrationImage, { maxHeight: 580 }]}
+                    resizeMode="contain"
+                    fadeDuration={0}
+                  />
+                </View>
+              ) : data.illustration === "plantDiagnose" ? (
+                // Identify illustration (PNG used to avoid large SVG; same as auth_identity)
+                <View
+                  style={[
+                    styles.imageContainer,
+                    { height: illustrationHeight, width: contentMaxWidth },
+                  ]}
+                >
+                  <AppImage
+                    source={Images.diagnoseAi}
+                    style={styles.illustrationImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              ) : data.illustration === "plantScan" ? (
+                // Scan SVG Illustration for onboarding page
+                <View
+                  style={[
+                    styles.svgContainer,
+                    { height: illustrationHeight, width: contentMaxWidth },
+                  ]}
+                >
+                  <AppImage
+                    source={Images.diagnoseAi}
+                    style={styles.illustrationImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              ) : data.illustration ? (
+                typeof data.illustration === "string" ? null : (
+                  data.illustration
+                )
+              ) : (
+                <View style={[styles.illustrationPlaceholder]}>
+                  <Text variant="body" size="medium" color="textTertiary">
+                    Illustration
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+          <View style={styles.introSpacer} />
           {renderOnboardingText()}
-        </View>
+        </ScrollView>
       </View>
     );
   }
@@ -877,12 +874,20 @@ const styles = StyleSheet.create({
     flex: 1,
     position: "relative",
   },
-  onboardingTextAnchor: {
+  /** Intro slide column: fills the page; 20pt side gutters (Figma 335 on 375) */
+  introScroll: {
     position: "absolute",
     left: 0,
     right: 0,
+  },
+  introColumn: {
+    flexGrow: 1,
     alignItems: "center",
-    zIndex: 1,
+    paddingHorizontal: spacing[5],
+  },
+  /** Absorbs the height left over between the chrome and the copy */
+  introSpacer: {
+    flexGrow: 1,
   },
   /** Auth page: 3-section column so CTA stays at bottom without overlap */
   containerAuth: {
@@ -899,12 +904,19 @@ const styles = StyleSheet.create({
   /** Figma: 20pt below subtitle, 28pt above Sign up; flexes to the space left */
   authBirdsSection: {
     flex: 1,
-    minHeight: 0,
+    minHeight: AUTH_BIRDS_MIN_HEIGHT,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,
     marginBottom: 28,
+  },
+  authScroll: {
+    flex: 1,
+    width: "100%",
+  },
+  authScrollContent: {
+    flexGrow: 1,
   },
   authCtaSectionSplit: {
     paddingTop: 0,
@@ -1175,6 +1187,9 @@ const styles = StyleSheet.create({
   },
   /** Figma content stack: 335px column, centered children, 16px gap */
   onboardingCopyStack: {
+    /** Fill the column, capped at the 393 × 852 base frame's 353pt column */
+    width: "100%",
+    maxWidth: ONBOARDING_COPY_MAX_WIDTH,
     alignSelf: "center",
     flexDirection: "column",
     alignItems: "center",
@@ -1210,12 +1225,14 @@ const styles = StyleSheet.create({
     textAlign: "left",
     alignSelf: "flex-start",
   },
-  /** Light mode onboarding spec: Title/24px/Semibold — 24px, 700, 32px line-height, Satoshi, #091B21 */
+  /**
+   * Figma Title/24px/Semibold — Satoshi 700, 24 / 32. The weight lives in the
+   * font file name: adding fontWeight "700" makes Android fall back to Roboto.
+   */
   titleOnboarding: {
     fontSize: 24,
     fontFamily: FONTS.bold,
     fontStyle: "normal",
-    fontWeight: "700",
     lineHeight: 32,
     includeFontPadding: false,
   },
@@ -1233,11 +1250,11 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   /** Last onboarding screen: Figma Title/28px/Bold — 28px, 700, 36px line-height, center */
+  /** fontWeight omitted: the weight is in the font file name (Android falls back to Roboto otherwise) */
   titleAuthProgress: {
     fontSize: 28,
     fontFamily: FONTS.bold,
     fontStyle: "normal",
-    fontWeight: "700",
     lineHeight: 36,
     includeFontPadding: false,
     textAlign: "center",

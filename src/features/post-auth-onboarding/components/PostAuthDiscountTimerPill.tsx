@@ -40,6 +40,8 @@ export const PostAuthDiscountTimerPill: React.FC = () => {
 const styles = StyleSheet.create({
   pill: {
     alignSelf: "center",
+    /** Never wider than the screen column; text wraps at large text sizes */
+    maxWidth: "100%",
     borderRadius: 16,
     overflow: "hidden",
     marginTop: 0,
@@ -60,9 +62,9 @@ const styles = StyleSheet.create({
   /** Figma Body/14px/Medium, white, 172pt text box */
   text: {
     minWidth: 172,
+    flexShrink: 1,
     fontFamily: FONTS.medium,
     fontStyle: "normal",
-    fontWeight: "500",
     fontSize: 14,
     lineHeight: 20,
     includeFontPadding: false,

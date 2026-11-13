@@ -29,6 +29,12 @@ type Props = {
   onPress: () => void;
   originalPrice?: string | null;
   colors?: PostAuthOnboardingColors;
+  /**
+   * "row": card shares a horizontal row (Figma post-auth paywall) — fills its
+   * share of the width and the Popular badge overlaps the top border.
+   * "column" (default): full-width stacked card, badge above it.
+   */
+  layout?: "row" | "column";
 };
 
 /** Match SubscriptionPlanRow in SubscriptionSheetContent — bold 16px amount. */
@@ -38,6 +44,17 @@ const PRICE_SUFFIX_FONT_SIZE = 12;
 /** Unselected pack — Figma glass card */
 const UNSELECTED_PACK_SHADOW = "rgba(114, 84, 129, 0.16)";
 const UNSELECTED_PACK_BLUR = 8;
+
+/** Row layout for post-auth plan cards (Figma 8046:5841): 3 equal cards, 8pt gap, room for the badge. */
+export const POST_AUTH_PLAN_ROW_STYLE = {
+  flexDirection: "row" as const,
+  gap: POST_AUTH_LAYOUT.planGap,
+  width: "100%" as const,
+  alignItems: "stretch" as const,
+  overflow: "visible" as const,
+  paddingTop: 8,
+  marginBottom: 4,
+};
 
 /** Shared row layout for subscription paywall + post-auth onboarding plan cards. */
 export const HORIZONTAL_PLAN_ROW_STYLE = {
@@ -66,7 +83,9 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
   onPress,
   originalPrice,
   colors = POST_AUTH_ONBOARDING_COLORS_LIGHT,
+  layout = "column",
 }) => {
+  const inRow = layout === "row";
   const priceParts = useMemo(
     () => getPlanCardPriceParts(priceAmount, priceSuffix, duration),
     [priceAmount, priceSuffix, duration]
@@ -92,6 +111,7 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
       onPress={onPress}
       style={({ pressed }) => [
         styles.cardOuter,
+        inRow && styles.cardOuterRow,
         {
           opacity: pressed ? 0.85 : 1,
           zIndex: showPopular ? 3 : 1,
@@ -102,7 +122,12 @@ export const PostAuthHorizontalPlanCard: React.FC<Props> = ({
       ]}
     >
       {showPopular ? (
-        <View style={styles.popularBadgeWrap}>
+        <View
+          style={[
+            styles.popularBadgeWrap,
+            inRow && styles.popularBadgeWrapRow,
+          ]}
+        >
           <PostAuthPopularBadge colors={colors} />
         </View>
       ) : null}
@@ -229,6 +254,11 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 4,
   },
+  /** Row: equal share of the width; content-driven height (cards stretch to the tallest). */
+  cardOuterRow: {
+    flex: 1,
+    flexBasis: 0,
+  },
   gradientBorder: {
     flexGrow: 1,
     alignSelf: "stretch",
@@ -264,6 +294,14 @@ const styles = StyleSheet.create({
     zIndex: 10,
     elevation: 10,
     pointerEvents: "none",
+  },
+  /** Figma: Popular tab-atom overlaps the yearly card's top border by 8pt. */
+  popularBadgeWrapRow: {
+    position: "absolute",
+    top: -8,
+    left: 0,
+    right: 0,
+    marginBottom: 0,
   },
   title: {
     fontFamily: FONTS.bold,
