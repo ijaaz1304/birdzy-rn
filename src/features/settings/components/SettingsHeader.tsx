@@ -25,13 +25,6 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
 
   return (
     <View style={styles.bar}>
-      <Text
-        numberOfLines={1}
-        style={[styles.title, { color: foreground }]}
-        accessibilityRole="header"
-      >
-        {title}
-      </Text>
       <TouchableOpacity
         onPress={onBackPress ?? (() => navigation.goBack())}
         style={styles.back}
@@ -41,13 +34,24 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
       >
         <SettingsIcon name="back" color={foreground} />
       </TouchableOpacity>
+      {/* Page title: centered between the back button and an equal spacer; max 2 lines */}
+      <Text
+        numberOfLines={2}
+        ellipsizeMode="tail"
+        style={[styles.title, { color: foreground }]}
+        accessibilityRole="header"
+      >
+        {title}
+      </Text>
+      <View style={styles.back} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  /** App bar: 52pt (minimum — grows with larger text), back · title · spacer */
   bar: {
-    height: 52,
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
@@ -59,13 +63,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 8,
   },
+  /** Title/18px/Bold (weight from the font file — no fontWeight, which makes Android fall back to Roboto) */
   title: {
-    position: "absolute",
-    left: 60,
-    right: 60,
+    flex: 1,
+    marginHorizontal: 8,
     textAlign: "center",
     fontFamily: FONTS.bold,
-    fontWeight: "700",
     fontSize: 18,
     lineHeight: 24,
   },

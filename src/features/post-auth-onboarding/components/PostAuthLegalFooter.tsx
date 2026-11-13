@@ -48,25 +48,33 @@ export const PostAuthLegalFooter: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
+  /**
+   * Figma 8327:72650: three links share one row (gap 4). They grow to equal
+   * shares when they fit and wrap onto further rows at larger text sizes.
+   */
   wrap: {
     marginTop: 8,
     minHeight: 44,
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 4,
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     width: "100%",
   },
+  /** 48pt touch target around Figma's 24pt (4/12 padding) text button */
   linkButton: {
+    flexGrow: 1,
     minHeight: 48,
+    alignItems: "center",
     justifyContent: "center",
     maxWidth: "100%",
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
   },
+  /** Figma Caption/12px/SemiBold — Satoshi Bold 12/16, underlined */
   link: {
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.bold,
     fontSize: 12,
     lineHeight: 16,
     textAlign: "center",

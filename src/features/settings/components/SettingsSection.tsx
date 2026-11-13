@@ -24,7 +24,14 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
 
   return (
     <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: c.text }]}>{title}</Text>
+      <Text
+        numberOfLines={2}
+        ellipsizeMode="tail"
+        accessibilityRole="header"
+        style={[styles.sectionTitle, { color: c.text }]}
+      >
+        {title}
+      </Text>
       <View
         style={[
           styles.cardShadow,
@@ -52,7 +59,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     fontSize: 16,
     fontFamily: FONTS.bold,
-    fontWeight: "700",
     lineHeight: 24,
   },
   cardShadow: {

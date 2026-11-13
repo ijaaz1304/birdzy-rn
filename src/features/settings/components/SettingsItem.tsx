@@ -63,15 +63,20 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
       {leftComponent}
       {icon && <SettingsIcon name={icon} color={labelColor} />}
       <View style={styles.textContent}>
+        {/* List item title: wraps, max 2 lines; description: max 4 lines */}
         <Text
-          numberOfLines={1}
+          numberOfLines={2}
           ellipsizeMode="tail"
           style={[styles.title, { color: labelColor }]}
         >
           {title}
         </Text>
         {subtitle ? (
-          <Text numberOfLines={2} style={[styles.subtitle, { color: c.text }]}>
+          <Text
+            numberOfLines={4}
+            ellipsizeMode="tail"
+            style={[styles.subtitle, { color: c.text }]}
+          >
             {subtitle}
           </Text>
         ) : null}
@@ -83,6 +88,8 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
           activeOpacity={0.8}
           disabled={disabled}
           onPress={() => onSwitchChange(!switchValue)}
+          // Fixed 56×32 switch; 48pt touch height
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           accessibilityRole="switch"
           accessibilityState={{ checked: switchValue, disabled }}
           accessibilityLabel={title}
@@ -100,7 +107,13 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
       {(value || showArrow) && (
         <View style={styles.trailing}>
           {value ? (
-            <Text style={[styles.value, { color: c.text }]}>{value}</Text>
+            <Text
+              numberOfLines={2}
+              ellipsizeMode="tail"
+              style={[styles.value, { color: c.text }]}
+            >
+              {value}
+            </Text>
           ) : null}
           {showArrow && <SettingsIcon name="chevronRight" color={c.text} />}
         </View>
@@ -148,12 +161,17 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     lineHeight: 20,
   },
+  /** Trailing value + chevron: may shrink so the title keeps its space */
   trailing: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    flexShrink: 1,
+    maxWidth: "45%",
   },
   value: {
+    flexShrink: 1,
+    textAlign: "right",
     fontSize: 14,
     fontFamily: FONTS.regular,
     lineHeight: 20,

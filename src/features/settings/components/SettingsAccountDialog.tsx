@@ -3,6 +3,7 @@ import {
   Image,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
   type ImageSourcePropType,
@@ -72,74 +73,81 @@ export function SettingsAccountDialog({
             { backgroundColor: theme.colors.surfacePrimary },
           ]}
         >
-          <View style={styles.header}>
-            {kind === "delete" && icon ? (
-              <Image source={icon} style={styles.icon} resizeMode="contain" />
-            ) : null}
-            <Text
-              weight="bold"
-              accessibilityRole="header"
-              style={[styles.title, { color: theme.colors.textPrimary }]}
-            >
-              {kind === "delete"
-                ? SETTINGS_STRINGS.deleteAccount.title.replace(
-                    " this account?",
-                    "\nthis account?"
-                  )
-                : SETTINGS_STRINGS.account.logOutConfirmTitle}
-            </Text>
-            <Pressable
-              style={styles.close}
-              onPress={close}
-              disabled={busy}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-            >
-              <CloseGlyph />
-            </Pressable>
-          </View>
-          <View style={styles.actions}>
-            {failed ? (
-              <Text accessibilityLiveRegion="polite" color="error">
+          {/* Content-sized; scrolls only if it can't fit (large text / display size) */}
+          <ScrollView
+            bounces={false}
+            overScrollMode="never"
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={styles.header}>
+              {kind === "delete" && icon ? (
+                <Image source={icon} style={styles.icon} resizeMode="contain" />
+              ) : null}
+              <Text
+                weight="bold"
+                accessibilityRole="header"
+                style={[styles.title, { color: theme.colors.textPrimary }]}
+              >
                 {kind === "delete"
-                  ? "Could not delete your account. Please try again."
-                  : "Could not log out. Please try again."}
+                  ? SETTINGS_STRINGS.deleteAccount.title.replace(
+                      " this account?",
+                      "\nthis account?"
+                    )
+                  : SETTINGS_STRINGS.account.logOutConfirmTitle}
               </Text>
-            ) : null}
-            <Button
-              title={
-                kind === "delete"
-                  ? SETTINGS_STRINGS.deleteAccount.yes
-                  : SETTINGS_STRINGS.account.logOutConfirmYes
-              }
-              variant="primary"
-              fullWidth
-              loading={busy}
-              disabled={busy}
-              onPress={confirm}
-              style={styles.primary}
-              textStyle={styles.buttonText}
-            />
-            <Button
-              title={SETTINGS_STRINGS.account.logOutConfirmNoThanks}
-              variant="ghost"
-              fullWidth
-              disabled={busy}
-              onPress={close}
-              style={[
-                styles.secondary,
-                {
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surfacePrimary,
-                },
-              ]}
-              textStyle={{
-                ...styles.buttonText,
-                color: theme.colors.textPrimary,
-              }}
-            />
-          </View>
+              <Pressable
+                style={styles.close}
+                onPress={close}
+                disabled={busy}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+              >
+                <CloseGlyph />
+              </Pressable>
+            </View>
+            <View style={styles.actions}>
+              {failed ? (
+                <Text accessibilityLiveRegion="polite" color="error">
+                  {kind === "delete"
+                    ? "Could not delete your account. Please try again."
+                    : "Could not log out. Please try again."}
+                </Text>
+              ) : null}
+              <Button
+                title={
+                  kind === "delete"
+                    ? SETTINGS_STRINGS.deleteAccount.yes
+                    : SETTINGS_STRINGS.account.logOutConfirmYes
+                }
+                variant="primary"
+                fullWidth
+                loading={busy}
+                disabled={busy}
+                onPress={confirm}
+                style={styles.primary}
+                textStyle={styles.buttonText}
+              />
+              <Button
+                title={SETTINGS_STRINGS.account.logOutConfirmNoThanks}
+                variant="ghost"
+                fullWidth
+                disabled={busy}
+                onPress={close}
+                style={[
+                  styles.secondary,
+                  {
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.surfacePrimary,
+                  },
+                ]}
+                textStyle={{
+                  ...styles.buttonText,
+                  color: theme.colors.textPrimary,
+                }}
+              />
+            </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -153,18 +161,26 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "rgba(0,0,0,0.5)",
   },
-  card: { width: 335, maxWidth: "100%", borderRadius: 16, overflow: "hidden" },
+  /** Dialog: 335 wide (fills narrower windows), content height, capped at the window */
+  card: {
+    width: 335,
+    maxWidth: "100%",
+    maxHeight: "100%",
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  scrollContent: { flexGrow: 0 },
+  /** 44pt side inset keeps the wrapping title clear of the ✕ (16pt + 24pt) */
   header: {
     paddingTop: 20,
     paddingBottom: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 44,
     alignItems: "center",
     gap: 8,
   },
   icon: { width: 64, height: 64 },
   title: {
     fontFamily: FONTS.bold,
-    fontWeight: "700",
     fontSize: 20,
     lineHeight: 28,
     textAlign: "center",
@@ -188,7 +204,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: FONTS.medium,
-    fontWeight: "500",
     fontSize: 16,
     lineHeight: 24,
   },

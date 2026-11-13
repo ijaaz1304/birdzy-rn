@@ -172,3 +172,28 @@ test("each slide starts scrolled to the top (scroll position does not carry over
   // New slide → new scroll container (fresh offset 0), not the paywall's scrolled one.
   expect(after).not.toBe(before);
 });
+
+describe("discount slide (Figma 8327:72643)", () => {
+  test("Figma content: header, Skip, plans in a row, no Later link; Bold 12/16 legal links", async () => {
+    await renderAt(4);
+    expect(texts()).toEqual(expect.arrayContaining(["Especially for you!", "Skip", "Terms of Service", "Privacy Policy"]));
+    expect(texts()).not.toContain("Later");
+    expect(StyleSheet.flatten(planRow().props.style).flexDirection).toBe("row");
+    const terms = tree.root.findAllByType(Text).find((n) => n.props.children === "Terms of Service")!;
+    const st = StyleSheet.flatten(terms.props.style);
+    expect(st.fontSize).toBe(12);
+    expect(st.lineHeight).toBe(16);
+    expect(st.fontFamily).toBe("Satoshi-Bold");
+  });
+
+  test("larger text: plans stack and header copy is sized to its drawn lines", async () => {
+    await renderAt(4, { width: 393, height: 852, fontScale: 1.3 });
+    expect(StyleSheet.flatten(planRow().props.style).flexDirection).toBe("column");
+    const title = tree.root.findAllByType(Text).find((n) => n.props.children === "Especially for you!")!;
+    await act(async () =>
+      title.props.onTextLayout({ nativeEvent: { lines: [{ text: "Especially for you!", height: 47, width: 300 }] } })
+    );
+    const updated = tree.root.findAllByType(Text).find((n) => n.props.children === "Especially for you!")!;
+    expect(StyleSheet.flatten(updated.props.style).height).toBe(47);
+  });
+});
