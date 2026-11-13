@@ -1,4 +1,5 @@
-import { useFreeScanPromptSurface } from '../../hooks/useFreeScanPromptSurface';
+import { isFreeScanExempt } from "../../services/session/scanQuota";
+import { useFreeScanPromptSurface } from "../../hooks/useFreeScanPromptSurface";
 import {
   getFreeScanLimitPrompt,
   subscribeFreeScanLimitPrompt,
@@ -167,7 +168,8 @@ export const CameraScreen: React.FC = () => {
   const [captureControlsHeight, setCaptureControlsHeight] = useState(220);
   const [bottomControlsHeight, setBottomControlsHeight] = useState(120);
   const captureFrameLayout = useCaptureFrameLayout({
-    minimumTop: insets.top + LOCATION_BANNER_TOP_GAP + locationBannerHeight + 16,
+    minimumTop:
+      insets.top + LOCATION_BANNER_TOP_GAP + locationBannerHeight + 16,
     bottomInset:
       captureControlsHeight + bottomControlsHeight + CAPTURE_CONTENT_GAP + 12,
   });
@@ -1070,10 +1072,7 @@ export const CameraScreen: React.FC = () => {
             onLayout={(event) =>
               setLocationBannerHeight(event.nativeEvent.layout.height)
             }
-            style={[
-              styles.locationBannerWrap,
-              { top: locationBannerTop },
-            ]}
+            style={[styles.locationBannerWrap, { top: locationBannerTop }]}
           >
             <IdentificationLocationBanner
               variant="camera"
@@ -1228,8 +1227,8 @@ export const CameraScreen: React.FC = () => {
           backgroundColor: showUpgradeSheet
             ? theme.colors.background
             : isCameraPermissionGateActive
-              ? APP_COLORS.cameraPermissionSurface
-              : CAMERA_BG_FALLBACK,
+            ? APP_COLORS.cameraPermissionSurface
+            : CAMERA_BG_FALLBACK,
         },
       ]}
     >
@@ -1323,10 +1322,7 @@ export const CameraScreen: React.FC = () => {
               !isCameraPermissionGateActive && (
                 <View
                   pointerEvents="box-none"
-                  style={[
-                    styles.topCenterInfoHost,
-                    { top: insets.top + 12 },
-                  ]}
+                  style={[styles.topCenterInfoHost, { top: insets.top + 12 }]}
                 >
                   <TouchableOpacity
                     onPress={() => setShowTipsModal(true)}
@@ -1533,7 +1529,7 @@ export const CameraScreen: React.FC = () => {
                   </Text>
                 ) : null}
 
-                {!isPremium && (
+                {!isFreeScanExempt() && photoLimit.known && (
                   <CameraDailyScanBanner
                     remaining={photoLimit.remaining}
                     dailyLimit={photoLimit.dailyLimit}

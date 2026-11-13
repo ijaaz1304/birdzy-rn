@@ -4,7 +4,7 @@ import {
   scanQuota,
 } from "../services/session/scanQuota";
 
-/** The visible failure popup defines an unsuccessful scan, irrespective of API error type. */
+/** A failure popup may refresh displayed backend usage; it never charges a scan. */
 export function useUnsuccessfulScanPopup(
   visible: boolean,
   attemptId: string,
@@ -16,14 +16,15 @@ export function useUnsuccessfulScanPopup(
   }
   const identity = owner.current.identity;
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || identity !== scanQuota.currentScope()) return;
     let active = true;
     recordUnsuccessfulScan(attemptId, identity)
       .then((allowance) => {
-        if (active) onRemaining?.(allowance.remaining);
+        if (active && allowance.known && identity === scanQuota.currentScope())
+          onRemaining?.(allowance.remaining);
       })
       .catch((error) => {
-        console.warn("[ScanQuota] Failed to persist unsuccessful scan", error);
+        console.warn("[ScanQuota] Could not refresh backend scan usage", error);
       });
     return () => {
       active = false;

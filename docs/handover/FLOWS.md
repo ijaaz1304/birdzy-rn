@@ -96,3 +96,8 @@ Feed notifications now belong to a stored account owner. Switching accounts or s
 The legacy Discount Code route now offers “View Plans” and opens SubscriptionMain. It explicitly says a supplied code has not been applied; the store controls actual eligibility and final price. There is no implemented arbitrary coupon redemption contract.
 
 Specimen PATCH transport preserves explicit empty editable arrays (including collections, habitat and captured sounds); omitted values remain unchanged and immutable image fields remain excluded. A caller must intentionally supply an empty list to clear it.
+
+
+## 2026-11-12 — backend-managed identification scans
+
+Identification reads the backend allowance, allows an unknown allowance to reach the server and sends `E004` to scan-limit UI. Success, no-match and failure popups do not charge scans locally. See [backend-managed free scans](BACKEND_FREE_SCANS.md).

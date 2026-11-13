@@ -21,19 +21,19 @@ export const FAQ_STRINGS_TEMPLATE = {
       id: "2",
       question: "Why can't I identify more birds?",
       answer:
-        "Free users get 30 scans in total, shared across photo and sound identification. This allowance does not reset. The first five no-match attempts are free; each no-match attempt from the sixth uses one scan. Upgrade to Premium for unlimited photo and sound ID.",
+        "Free users get a shared free allowance for photo and sound identification. Check your remaining allowance in the camera. Upgrade to Premium for unlimited photo and sound ID.",
     },
     {
       id: "3",
       question: "How does bird identification work?",
       answer:
-        "{appName} offers three ways to identify birds: photo ID, sound ID, and step-by-step wizard. Take or upload a photo, record a call, or answer a few field questions — our AI returns possible matches with confidence scores. Tap any match to open the species page with photos, calls, range, habitat, and similar species. Free users have 30 total photo and sound scans; Premium users enjoy unlimited identifications.",
+        "{appName} offers three ways to identify birds: photo ID, sound ID, and step-by-step wizard. Take or upload a photo, record a call, or answer a few field questions — our AI returns possible matches with confidence scores. Tap any match to open the species page with photos, calls, range, habitat, and similar species. Free users have a shared allowance for photo and sound scans; Premium users enjoy unlimited identifications.",
     },
     {
       id: "3a",
       question: "How do I identify a bird by sound?",
       answer:
-        "From Home or Identify, choose Identify by Sound. Record a bird call for a few seconds in a quiet spot, then review and crop the clip if needed. We analyse the audio and suggest species matches with confidence scores. You can save the recording to your Bird Sound Library, add notes, or open a match for full species details. Photo and sound identification share 30 free scans in total; Premium is unlimited.",
+        "From Home or Identify, choose Identify by Sound. Record a bird call for a few seconds in a quiet spot, then review and crop the clip if needed. We analyse the audio and suggest species matches with confidence scores. You can save the recording to your Bird Sound Library, add notes, or open a match for full species details. Photo and sound identification share your free scan allowance; Premium is unlimited.",
     },
     {
       id: "3b",
@@ -63,7 +63,7 @@ export const FAQ_STRINGS_TEMPLATE = {
       id: "6",
       question: "What's the difference between free and premium?",
       answer:
-        "Free includes 30 total photo/sound scans, up to 100 sightings, 2 custom collections, 20 saved recordings, 5 AI chat messages per day, and 1 community post per day. Premium removes these limits and unlocks full detail sections on species pages.",
+        "Free includes a limited photo/sound scan allowance, up to 100 sightings, 2 custom collections, 20 saved recordings, 5 AI chat messages per day, and 1 community post per day. Premium removes these limits and unlocks full detail sections on species pages.",
     },
     {
       id: "7",

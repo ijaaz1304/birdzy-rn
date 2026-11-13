@@ -1,3 +1,4 @@
+import { isAiLifetimeLimitError } from "../../../services/session/backendAiUsage";
 import { useUnsuccessfulScanPopup } from "../../../hooks/useUnsuccessfulScanPopup";
 import { newScanAttemptId } from "../../../services/session/scanAllowance";
 import {
@@ -232,10 +233,7 @@ export function useSoundIdentificationFlow(
               result: "fail",
             });
             await stopIdentificationTrace("failure");
-            await completeFreeScanAttempt(
-              start.attempt,
-              "failure"
-            );
+            await completeFreeScanAttempt(start.attempt, "failure");
             if (isStale()) return;
             setIsAnalyzing(false);
             navigateToSoundNoMatch(input, {
@@ -298,6 +296,14 @@ export function useSoundIdentificationFlow(
             }
           })();
         } catch (error) {
+          if (isAiLifetimeLimitError(error)) {
+            await stopIdentificationTrace("limit");
+            if (!isStale()) {
+              setIsAnalyzing(false);
+              requestFreeScanLimitPrompt();
+            }
+            return;
+          }
           console.error("Sound identification error:", error);
           analyticsService.logEvent(EVENTS.identify_result_fail);
           analyticsService.logEvent(EVENTS.identification_done_failure);
@@ -309,6 +315,13 @@ export function useSoundIdentificationFlow(
           }
         }
       } catch (error) {
+        if (isAiLifetimeLimitError(error)) {
+          if (!isStale()) {
+            setIsAnalyzing(false);
+            requestFreeScanLimitPrompt();
+          }
+          return;
+        }
         if (!isStale()) {
           setIsAnalyzing(false);
           setSoundError(classifySoundIdentifyError(error));

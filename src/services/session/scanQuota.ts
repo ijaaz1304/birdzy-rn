@@ -1,85 +1,118 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuthStore } from "../../features/auth/auth.store";
 import {
   selectIsPremium,
   useSubscriptionStore,
 } from "../../features/subscription/subscription.store";
+import { getBackendAiUsage, subscribeBackendAiUsage } from "./backendAiUsage";
 import {
-  createScanAllowance,
   newScanAttemptId,
   type ScanAttempt,
   type ScanOutcome,
 } from "./scanAllowance";
 
-export const scanQuota = createScanAllowance({
-  getIdentity: () => {
-    const state = useAuthStore.getState();
-    const user = state.user as {
-      id?: string;
-      _id?: string;
-      isGuest?: boolean;
-    } | null;
-    return {
-      accountId: user?.id || user?._id,
-      // Guest sessions may receive a new server ID after signing out. Keep one local guest allowance.
-      guestId:
-        state.guestId ||
-        user?.isGuest ||
-        (state as { isGuest?: boolean }).isGuest
-          ? "device"
-          : null,
-      isGuest:
-        !!state.guestId ||
-        !!user?.isGuest ||
-        !!(state as { isGuest?: boolean }).isGuest ||
-        !state.isAuthenticated,
-    };
-  },
-  readLegacyUsage: async () => {
-    const [legacy, photo, sound] = await Promise.all([
-      AsyncStorage.getItem("identificationUsageCount"),
-      AsyncStorage.getItem("photoIdentificationUsageCount"),
-      AsyncStorage.getItem("soundIdentificationUsageCount"),
-    ]);
-    const count = (value: string | null) => Math.max(0, Number(value) || 0);
-    // Legacy count mirrors photo usage; never charge it twice.
-    return Math.max(count(legacy), count(photo)) + count(sound);
-  },
-  chargeSuccessfulScans: true,
-});
-export const beginFreeScanAttempt = (id = newScanAttemptId()) =>
-  scanQuota.begin(id, () => selectIsPremium(useSubscriptionStore.getState()));
-export const completeFreeScanAttempt = async (
-  attempt: ScanAttempt,
-  outcome: ScanOutcome
-) => {
-  const result = await scanQuota.complete(attempt, outcome, () =>
-    selectIsPremium(useSubscriptionStore.getState())
-  );
-  if (selectIsPremium(useSubscriptionStore.getState()))
-    return { ...result, remaining: 30 };
-  return scanQuota.currentScope() === attempt.identity
-    ? result
-    : scanQuota.get();
-};
-export const cancelFreeScanAttempt = (attempt: ScanAttempt) =>
-  scanQuota.cancel(attempt);
-export function subscribeToScanQuotaChanges(listener: () => void): () => void {
-  const unsubscribeLedger = scanQuota.subscribe(listener);
-  const unsubscribeAuth = useAuthStore.subscribe(listener);
-  return () => {
-    unsubscribeLedger();
-    unsubscribeAuth();
+const active = new Map<string, ScanAttempt>();
+const refreshing = new Map<string, Promise<void>>();
+const currentIdentity = () => useAuthStore.getState().user?.id ?? "";
+const currentScope = () => `backend:${currentIdentity()}`;
+
+export const isFreeScanExempt = () =>
+  selectIsPremium(useSubscriptionStore.getState()) ||
+  useAuthStore.getState().user?.isSubscribed === true ||
+  useAuthStore.getState().user?.isRewarded === true;
+
+export function getCurrentBackendAiUsage() {
+  return getBackendAiUsage(currentIdentity())?.usage;
+}
+
+async function refreshUsage(): Promise<void> {
+  const identity = currentIdentity();
+  if (!identity) return;
+  const snapshot = getBackendAiUsage(identity);
+  if (snapshot && Date.now() - snapshot.receivedAt < 60000) return;
+  let pending = refreshing.get(identity);
+  if (!pending) {
+    pending = useAuthStore
+      .getState()
+      .refreshProfileSilent()
+      .then(() => undefined)
+      .catch(() => {
+        // The identify endpoint still enforces the quota if profile refresh fails.
+      })
+      .finally(() => {
+        refreshing.delete(identity);
+      });
+    refreshing.set(identity, pending);
+  }
+  await pending;
+}
+
+async function getAllowance() {
+  const scope = currentScope();
+  await refreshUsage();
+  if (scope !== currentScope()) return getAllowance();
+  const usage = getCurrentBackendAiUsage();
+  return {
+    scope,
+    used: usage?.successCount ?? 0,
+    failures: usage?.errorCount ?? 0,
+    limit: usage?.successThreshold ?? 0,
+    known: usage !== undefined,
+    remaining: usage
+      ? Math.max(0, usage.successThreshold - usage.successCount)
+      : 0,
   };
 }
 
-/** Idempotent completion for any attempt that displays the cannot-identify popup. */
-export const recordUnsuccessfulScan = (
-  id: string,
-  identity = scanQuota.currentScope()
-) =>
-  scanQuota.recordFailure(
+/** Backend counts are authoritative. Attempt handles only prevent duplicate submissions. */
+export const scanQuota = {
+  currentScope,
+  get: getAllowance,
+  subscribe: subscribeBackendAiUsage,
+  cancel(attempt: ScanAttempt) {
+    if (active.get(attempt.scope) === attempt) active.delete(attempt.scope);
+  },
+};
+
+export async function beginFreeScanAttempt(id = newScanAttemptId()) {
+  const allowance = await getAllowance();
+  if (!isFreeScanExempt() && allowance.known && allowance.remaining === 0) {
+    return { status: "blocked" as const };
+  }
+  if (active.has(allowance.scope)) return { status: "busy" as const };
+  const attempt: ScanAttempt = {
     id,
-    () => selectIsPremium(useSubscriptionStore.getState()),
-    identity
-  );
+    scope: allowance.scope,
+    identity: allowance.scope,
+    premium: isFreeScanExempt(),
+  };
+  active.set(attempt.scope, attempt);
+  return { status: "ready" as const, attempt };
+}
+
+export async function completeFreeScanAttempt(
+  attempt: ScanAttempt,
+  _outcome: ScanOutcome
+) {
+  scanQuota.cancel(attempt);
+  return getAllowance();
+}
+
+export const cancelFreeScanAttempt = (attempt: ScanAttempt) =>
+  scanQuota.cancel(attempt);
+
+export function subscribeToScanQuotaChanges(listener: () => void): () => void {
+  const unsubscribeUsage = subscribeBackendAiUsage(listener);
+  const unsubscribeAuth = useAuthStore.subscribe(listener);
+  const unsubscribeSubscription = useSubscriptionStore.subscribe(listener);
+  return () => {
+    unsubscribeUsage();
+    unsubscribeAuth();
+    unsubscribeSubscription();
+  };
+}
+
+/** Showing a popup, preprocessing failure or network failure never charges usage locally. */
+export const recordUnsuccessfulScan = (
+  _id: string,
+  _identity = currentScope()
+) => getAllowance();

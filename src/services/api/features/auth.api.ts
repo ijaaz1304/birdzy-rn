@@ -1,3 +1,4 @@
+import { withBackendScanUsage } from "../../session/backendScanRequest";
 /**
  * Authentication API endpoints
  * Complete implementation matching backend API structure
@@ -343,12 +344,13 @@ export const authApi = {
    *   "token": "eyJhbGciOi...." // Optional: New token if refreshed
    * }
    */
-  getProfile: async (): Promise<GetUserProfileResponse> => {
-    const response = await apiClient.get<GetUserProfileResponse>(
-      API_ENDPOINTS.AUTH.GET_PROFILE
-    );
-    return response.data;
-  },
+  getProfile: async (): Promise<GetUserProfileResponse> =>
+    withBackendScanUsage(async () => {
+      const response = await apiClient.get<GetUserProfileResponse>(
+        API_ENDPOINTS.AUTH.GET_PROFILE
+      );
+      return response.data;
+    }),
 
   /**
    * PATCH /auth/me

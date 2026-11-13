@@ -1,100 +1,51 @@
 import React from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createScanAllowance } from "../src/services/session/scanAllowance";
 import { useUnsuccessfulScanPopup } from "../src/hooks/useUnsuccessfulScanPopup";
-let mockAccount = "A";
-let mockPremium = false;
-let mockQuota: ReturnType<typeof createScanAllowance>;
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  __esModule: true,
-  default: { getItem: jest.fn(), setItem: jest.fn() },
-}));
+let mockScope = "backend:a";
+const mockRead = jest.fn(async () => ({ remaining: 17, known: true }));
 jest.mock("../src/services/session/scanQuota", () => ({
-  scanQuota: { currentScope: () => `account:${mockAccount}` },
-  recordUnsuccessfulScan: (id: string, identity: string) =>
-    mockQuota.recordFailure(id, () => mockPremium, identity),
+  scanQuota: { currentScope: () => mockScope },
+  recordUnsuccessfulScan: () => mockRead(),
 }));
-const onRemaining = jest.fn();
-function CannotIdentifyPopup({
-  visible,
-  attemptId,
+const changed = jest.fn();
+function Popup({
+  visible = true,
+  id = "attempt",
 }: {
-  visible: boolean;
-  attemptId: string;
+  visible?: boolean;
+  id?: string;
 }) {
-  useUnsuccessfulScanPopup(visible, attemptId, onRemaining);
+  useUnsuccessfulScanPopup(visible, id, changed);
   return null;
 }
 let renderer: ReactTestRenderer;
 beforeEach(() => {
+  mockScope = "backend:a";
   jest.clearAllMocks();
-  mockAccount = "A";
-  mockPremium = false;
-  const storage = new Map<string, string>();
-  (AsyncStorage.getItem as jest.Mock).mockImplementation(
-    async (key) => storage.get(key) ?? null
-  );
-  (AsyncStorage.setItem as jest.Mock).mockImplementation(async (key, value) => {
-    storage.set(key, value);
-  });
-  mockQuota = createScanAllowance({
-    getIdentity: () => ({ accountId: mockAccount, isGuest: false }),
-    readLegacyUsage: async () => 0,
-  });
 });
 afterEach(async () => {
   await act(async () => renderer?.unmount());
 });
-it("records all ten visible failures and updates the displayed count from the sixth", async () => {
+it("displays returned usage without deducting on repeated popups", async () => {
   await act(async () => {
-    renderer = create(
-      <CannotIdentifyPopup visible={false} attemptId="scan-0" />
-    );
+    renderer = create(<Popup />);
   });
-  for (let failure = 1; failure <= 10; failure++) {
-    await act(async () => {
-      renderer.update(
-        <CannotIdentifyPopup visible={false} attemptId={`scan-${failure}`} />
-      );
-    });
-    await act(async () => {
-      renderer.update(
-        <CannotIdentifyPopup visible attemptId={`scan-${failure}`} />
-      );
-    });
-    expect((await mockQuota.get()).remaining).toBe(
-      30 - Math.max(0, failure - 5)
-    );
-    expect(onRemaining).toHaveBeenLastCalledWith(30 - Math.max(0, failure - 5));
-  }
+  expect(changed).toHaveBeenLastCalledWith(17);
+  await act(async () => {
+    renderer.update(<Popup visible={false} />);
+  });
+  await act(async () => {
+    renderer.update(<Popup />);
+  });
+  expect(changed).toHaveBeenLastCalledWith(17);
 });
-it("deduplicates a popup for a no-match already counted by the request", async () => {
-  const start = await mockQuota.begin("same-scan", false);
-  if (start.status !== "ready") throw new Error(start.status);
-  await mockQuota.complete(start.attempt, "failure");
+it("ignores an old popup after the account changes", async () => {
   await act(async () => {
-    renderer = create(<CannotIdentifyPopup visible attemptId="same-scan" />);
+    renderer = create(<Popup visible={false} />);
   });
-  expect((await mockQuota.get()).failures).toBe(1);
-});
-it("does not count cancelled requests that never show the popup", async () => {
+  mockScope = "backend:b";
   await act(async () => {
-    renderer = create(
-      <CannotIdentifyPopup visible={false} attemptId="cancelled" />
-    );
+    renderer.update(<Popup />);
   });
-  expect((await mockQuota.get()).failures).toBe(0);
-});
-it("keeps old popup failures out of a newly signed-in account", async () => {
-  await act(async () => {
-    renderer = create(
-      <CannotIdentifyPopup visible={false} attemptId="old-scan" />
-    );
-  });
-  mockAccount = "B";
-  await act(async () => {
-    renderer.update(<CannotIdentifyPopup visible attemptId="old-scan" />);
-  });
-  expect((await mockQuota.get()).failures).toBe(0);
+  expect(changed).not.toHaveBeenCalled();
 });

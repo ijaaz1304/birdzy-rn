@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { isIdentificationNoMatch } from "../src/services/session/identificationNoMatch";
-import { createScanAllowance } from "../src/services/session/scanAllowance";
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   __esModule: true,
@@ -55,23 +54,3 @@ it.each([
     expect(isIdentificationNoMatch(error)).toBe(false);
   }
 );
-
-it("deducts no-match error responses from attempt six and publishes the updated allowance", async () => {
-  const quota = createScanAllowance({
-    getIdentity: () => ({ accountId: "free-user", isGuest: false }),
-    readLegacyUsage: async () => 0,
-  });
-  const changed = jest.fn();
-  quota.subscribe(changed);
-  for (let attempt = 1; attempt <= 7; attempt++) {
-    const start = await quota.begin(`scan-${attempt}`, false);
-    if (start.status !== "ready") throw new Error(start.status);
-    const error = { error: true, reason: "No matches found" };
-    expect(isIdentificationNoMatch(error)).toBe(true);
-    const allowance = await quota.complete(start.attempt, "failure");
-    expect(allowance.remaining).toBe(30 - Math.max(0, attempt - 5));
-    expect((await quota.get()).remaining).toBe(allowance.remaining);
-  }
-  expect(changed).toHaveBeenCalledTimes(7);
-  expect((await quota.get()).remaining).toBe(28);
-});

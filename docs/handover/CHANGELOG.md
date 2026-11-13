@@ -147,3 +147,21 @@ Validation: `npx jest` on the seven new Explore/Home UI suites passed (7 suites 
 - Org `origin/main` and `personal-mirror/main` had diverged after separate merges (Explore/lifecycle/security on org; UI polish / camera permission on personal). Merged personal-mirror into local main, resolved Explore banner + Bird details title conflicts by keeping org entry/location behavior and identification photo flow while retaining personal responsive banner scaling and `allowFontScaling` polish.
 - Updated this changelog. No environment or credential changes.
 - Validation: `python3 docs/handover/check_docs.py` reported OK (14 handover pages, 297 local links). Push both remotes to the same tip after the merge commit. Device acceptance not re-run in this sync.
+
+
+## 2026-11-12 — backend-managed free identification scans
+
+Implemented the Rockzy backend usage approach on `codex/30-free-scans-from-be`, from maintained main in an isolated worktree. Removed local scan counters, guest/device ledger migration, client failure charging and a fixed client 30-scan cap. Profile and identify responses update validated account snapshots; camera labels use backend thresholds and E004 opens limit UI. Premium/reward exemptions and separate feature quotas are preserved. See [contract and acceptance](BACKEND_FREE_SCANS.md).
+
+Validation results are recorded after execution below. No backend deployment, live scan, simulator or device acceptance performed. API/mobile QA owners remain unassigned.
+
+
+### Validation on 2026-11-12
+
+Whole-app Jest run: 89 suites passed and 1 failed (784 tests passed / 2 failed). The same coreServices suite and its 2 failures were reproduced on an unchanged main archive; they concern the existing step-by-step hardcoded payload and specimen flightPattern behavior. Final scan/photo/sound/API/session/storage regression passed 10 suites / 87 tests.
+
+Changed-file ESLint passed. Handover checker passed: 15 pages / 301 local links, blank/unique templates. `git diff --check` passed.
+
+Automated tests use mocked backend responses; they do not verify backend deployment, the server-configured allowance of 30, simulator/device UX or store builds. Those acceptance items remain open with owner unassigned.
+
+TypeScript: `tsc --noEmit --pretty false` passed.

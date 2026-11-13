@@ -120,3 +120,8 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 
 - [x] Source: shared `useExploreEntry`, Home/Catalogue banners, equal Spotted Now / Year-round tabs, empty-state wording/style, Android first-ask copy.
 - [ ] Owner unassigned. Complete the Explore entry and permission UI checklist in QA_AND_OPERATIONS.md on physical devices (Android + iOS).
+
+
+## 2026-11-12 — backend-managed identification scans
+
+Backend-managed identification scans implemented on `codex/30-free-scans-from-be`. Backend deployment/configuration (including allowance 30), provider/device validation and acceptance owners remain **unassigned/open**. See [implementation and acceptance](BACKEND_FREE_SCANS.md).

@@ -1,3 +1,4 @@
+import type { BackendAiUsage } from "../../session/backendAiUsage";
 /**
  * Bird Module API Types
  * Shapes matching Trackzio Bird core API responses.
@@ -152,7 +153,9 @@ export interface BirdIdentifyData {
   matches: BirdMatch[];
 }
 
-export interface BirdIdentifyResponse extends BackendApiResponse {
+export interface BirdIdentifyResponse
+  extends BackendApiResponse,
+    Partial<BackendAiUsage> {
   confidence?: BirdConfidenceLevel;
   userLocation?: unknown;
   data: BirdIdentifyData;

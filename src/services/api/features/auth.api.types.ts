@@ -1,3 +1,4 @@
+import type { BackendAiUsage } from "../../session/backendAiUsage";
 /**
  * Authentication API Types
  * Types matching the backend API structure
@@ -121,7 +122,9 @@ export interface RefreshTokenResponse extends BackendApiResponse {
 /**
  * Get User Profile Response
  */
-export interface GetUserProfileResponse extends BackendApiResponse {
+export interface GetUserProfileResponse
+  extends BackendApiResponse,
+    Partial<BackendAiUsage> {
   user: BackendUser;
   token?: string;
   discount?: {

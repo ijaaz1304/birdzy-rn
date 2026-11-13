@@ -105,3 +105,8 @@ Explore uses `POST /core/archetypes/explore-map-geojson` with no request body; e
 `flattenBirdSpecimenUpdate` now preserves explicit empty arrays for editable list fields, instead of silently discarding clearing requests. Unknown/immutable fields remain excluded. Mock contract regressions cover this; live clearing semantics still require backend acceptance.
 
 Notification-list refresh uses `feedService.fetchFeedNotificationDocuments` and the existing Firestore subscription remains active. Refresh results are scoped to the current owner/generation; stale responses cannot repopulate a different account's state. No new HTTP endpoint was invented.
+
+
+## 2026-11-12 — backend-managed identification scans
+
+Identification usage is supplied by the backend profile/identify responses; clients preserve `E004` and complete usage payloads. See [backend-managed free scans](BACKEND_FREE_SCANS.md) for field validation, session isolation and app-specific transport details.

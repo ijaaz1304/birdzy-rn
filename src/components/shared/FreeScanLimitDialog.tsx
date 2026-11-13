@@ -109,8 +109,8 @@ export function FreeScanLimitDialog({ active, isPremium, onUpgrade }: Props) {
             <Text style={styles.title}>Free scan limit</Text>
             <Text style={styles.description}>
               {introduction
-                ? "Free users get 30 scans in total. For unlimited scans, Go Premium"
-                : "You’ve used all 30 free scans. For unlimited scans, Go Premium"}
+                ? "Your free scan allowance is managed by your account. For unlimited scans, Go Premium"
+                : "You’ve used your free scan allowance. For unlimited scans, Go Premium"}
             </Text>
           </View>
           <Pressable

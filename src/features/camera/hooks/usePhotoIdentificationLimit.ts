@@ -4,9 +4,10 @@ import { getPhotoIdentificationLimitDisplay } from "../utils/photoIdentification
 
 export function usePhotoIdentificationLimit(enabled: boolean) {
   const [limit, setLimit] = useState({
-    dailyLimit: 30,
+    known: false,
+    dailyLimit: 0,
     usedToday: 0,
-    remaining: 30,
+    remaining: 0,
     resetMs: 0,
     resetLabel: "",
   });

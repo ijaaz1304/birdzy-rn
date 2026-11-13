@@ -106,3 +106,19 @@ Run `npx jest __tests__/lifecycle --runInBand` for account/session isolation, in
 - [ ] Capture React Profiler/device performance evidence for the busiest lists. Normal renders are expected when state changes; no FPS or render-count improvement has been measured in this source audit.
 
 Device/backend/sandbox acceptance and QA owner assignment remain open. Automated results are recorded in the handover changelog.
+
+
+## 2026-11-12 — backend-managed identification scans
+
+See [backend scan acceptance](BACKEND_FREE_SCANS.md#acceptance-still-required). Automated results for this change are recorded below after execution; backend/device acceptance remains open.
+
+
+### Validation on 2026-11-12
+
+Whole-app Jest run: 89 suites passed and 1 failed (784 tests passed / 2 failed). The same coreServices suite and its 2 failures were reproduced on an unchanged main archive; they concern the existing step-by-step hardcoded payload and specimen flightPattern behavior. Final scan/photo/sound/API/session/storage regression passed 10 suites / 87 tests.
+
+Changed-file ESLint passed. Handover checker passed: 15 pages / 301 local links, blank/unique templates. `git diff --check` passed.
+
+Automated tests use mocked backend responses; they do not verify backend deployment, the server-configured allowance of 30, simulator/device UX or store builds. Those acceptance items remain open with owner unassigned.
+
+TypeScript: `tsc --noEmit --pretty false` passed.

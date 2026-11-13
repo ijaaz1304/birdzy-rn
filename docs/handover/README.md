@@ -39,3 +39,8 @@ Run `python3 docs/handover/check_docs.py` from the repository root after updatin
 ## Firebase security handoff
 
 See [the reusable Firebase security and release brief](../NATURE_APPS_FIREBASE_UPGRADE_PLAN.md) for the issue, affected product areas, required upgrades, acceptance checks and Cursor/Claude prompts.
+
+
+## 2026-11-12 — backend-managed identification scans
+
+See [backend-managed free scans](BACKEND_FREE_SCANS.md) for the identification quota contract, removed client accounting and open acceptance.

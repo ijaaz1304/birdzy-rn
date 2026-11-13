@@ -8,7 +8,6 @@ import {
   InteractionManager,
   Modal,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
 } from "react-native";
@@ -87,7 +86,7 @@ it("shows the Figma copy and can reopen after Okay", async () => {
       .some(
         (node) =>
           node.props.children ===
-          "You’ve used all 30 free scans. For unlimited scans, Go Premium"
+          "You’ve used your free scan allowance. For unlimited scans, Go Premium"
       )
   ).toBe(true);
   expect(

@@ -1,3 +1,4 @@
+import { isAiLifetimeLimitError } from "../session/backendAiUsage";
 /**
  * Error handling utilities
  * Centralized error handling for API calls
@@ -89,10 +90,15 @@ export function getApiErrorStatus(error: unknown): number | undefined {
 
 /** True for business-limit 403 (not session/auth expiry). */
 export function isPaywallOrLimitError(error: unknown): boolean {
+  if (isAiLifetimeLimitError(error)) return true;
   const status = getApiErrorStatus(error);
   const reason = getApiErrorReason(error);
   if (status === 403 && isPaywallOrLimitReason(reason)) return true;
-  if (status === 403 && reason.trim().length > 0 && !/jwt|token|session|expired|unauthorized|forbidden access/i.test(reason)) {
+  if (
+    status === 403 &&
+    reason.trim().length > 0 &&
+    !/jwt|token|session|expired|unauthorized|forbidden access/i.test(reason)
+  ) {
     // Collection/add and similar endpoints return a plain plan-limit reason on 403.
     return /plan|collection|specimen|identif|premium|subscription|limit|upgrade|purchase/.test(
       reason.toLowerCase()
@@ -139,11 +145,21 @@ export function normalizeError(error: unknown): ApiException {
     const message =
       status === 401 || status === 403
         ? "Session expired. Please sign in again."
-        : backendReason || data?.message || error.message || "An error occurred";
+        : backendReason ||
+          data?.message ||
+          error.message ||
+          "An error occurred";
 
-    const normalized = new ApiException(message, status, data?.code, data, data?.errors);
+    const normalized = new ApiException(
+      message,
+      status,
+      data?.code,
+      data,
+      data?.errors
+    );
     const retryAfter = response.headers?.["retry-after"];
-    if (typeof retryAfter === "string" || typeof retryAfter === "number") normalized.retryAfter = String(retryAfter);
+    if (typeof retryAfter === "string" || typeof retryAfter === "number")
+      normalized.retryAfter = String(retryAfter);
     return normalized;
   }
 

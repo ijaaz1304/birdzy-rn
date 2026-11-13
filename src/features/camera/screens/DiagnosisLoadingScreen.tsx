@@ -1,3 +1,4 @@
+import { isAiLifetimeLimitError } from "../../../services/session/backendAiUsage";
 import { useUnsuccessfulScanPopup } from "../../../hooks/useUnsuccessfulScanPopup";
 import {
   beginFreeScanAttempt,
@@ -166,6 +167,10 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   };
 
   const showIdentifyFailure = (error?: unknown) => {
+    if (isAiLifetimeLimitError(error)) {
+      setShowUpgradeSheet(true);
+      return;
+    }
     if (isSoundMode) {
       setSoundError(classifySoundIdentifyError(error));
       return;
@@ -398,10 +403,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
             result: "fail",
           });
           await stopIdentificationTrace("failure");
-          await completeFreeScanAttempt(
-            scanAttempt,
-            "failure"
-          );
+          await completeFreeScanAttempt(scanAttempt, "failure");
           if (cancelled) return;
           if (!cancelled && isMountedRef.current) {
             if (isSoundMode && audioUri) {

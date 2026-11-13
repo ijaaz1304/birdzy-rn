@@ -77,7 +77,7 @@ const subscriptionConfigBase: SubscriptionConfigPayload = {
     premium: "Premium",
   },
   featureComparison: [
-    { feature: "Identification", free: "30 total", premium: "Unlimited" },
+    { feature: "Identification", free: "Limited scans", premium: "Unlimited" },
     { feature: "Collections", free: "2 max", premium: "Unlimited" },
     { feature: "Details", free: "Basic", premium: "Advanced" },
     { feature: "Feed", free: "Limited", premium: "Unlimited" },

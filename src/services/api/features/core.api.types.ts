@@ -1,3 +1,4 @@
+import type { BackendAiUsage } from "../../session/backendAiUsage";
 /**
  * Core Module API Types
  * Types matching the backend API structure
@@ -142,7 +143,9 @@ export interface MushroomMatch {
 /**
  * AI Identification Response
  */
-export interface IdentifyResponse extends BackendApiResponse {
+export interface IdentifyResponse
+  extends BackendApiResponse,
+    Partial<BackendAiUsage> {
   data: {
     imageUrls: string[];
     matchesFoundCount: number;

@@ -1,3 +1,4 @@
+import { withBackendScanUsage } from "../../session/backendScanRequest";
 import { flattenBirdSpecimenUpdate } from "./birdSpecimenUpdate";
 /** Bird core API transport. Legacy response types remain for the shared UI adapters. */
 
@@ -194,10 +195,10 @@ export const coreApi = {
     if (options?.userLocation?.length === 2) {
       formData.append("userLocation", JSON.stringify(options.userLocation));
     }
-    return postFormData<IdentifyResponse>(
-      API_ENDPOINTS.CORE.IDENTIFY,
-      formData,
-      { timeoutMs: IDENTIFY_API_TIMEOUT_MS }
+    return withBackendScanUsage(() =>
+      postFormData<IdentifyResponse>(API_ENDPOINTS.CORE.IDENTIFY, formData, {
+        timeoutMs: IDENTIFY_API_TIMEOUT_MS,
+      })
     );
   },
 
@@ -225,10 +226,12 @@ export const coreApi = {
     if (file.userLocation?.length === 2) {
       formData.append("userLocation", JSON.stringify(file.userLocation));
     }
-    return postFormData<BirdIdentifyResponse>(
-      API_ENDPOINTS.CORE.IDENTIFY_SOUND,
-      formData,
-      { timeoutMs: IDENTIFY_API_TIMEOUT_MS }
+    return withBackendScanUsage(() =>
+      postFormData<BirdIdentifyResponse>(
+        API_ENDPOINTS.CORE.IDENTIFY_SOUND,
+        formData,
+        { timeoutMs: IDENTIFY_API_TIMEOUT_MS }
+      )
     );
   },
 

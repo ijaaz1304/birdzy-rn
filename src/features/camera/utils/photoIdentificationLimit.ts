@@ -1,7 +1,4 @@
-import {
-  getFreePlanPhotoDailyLimit,
-  getPhotoIdentificationUsageToday,
-} from "../../../services/session/usageLimit.service";
+import { getIdentificationLimitDisplay } from "../../../services/session/usageLimit.service";
 import {
   formatDailyLimitResetCountdown,
   getMsUntilDailyLimitReset,
@@ -15,6 +12,7 @@ export {
 };
 
 export type PhotoIdentificationLimitDisplay = {
+  known: boolean;
   dailyLimit: number;
   usedToday: number;
   remaining: number;
@@ -22,16 +20,5 @@ export type PhotoIdentificationLimitDisplay = {
 };
 
 export async function getPhotoIdentificationLimitDisplay(): Promise<PhotoIdentificationLimitDisplay> {
-  const [usage, dailyLimit] = await Promise.all([
-    getPhotoIdentificationUsageToday(),
-    Promise.resolve(getFreePlanPhotoDailyLimit()),
-  ]);
-  const usedToday = usage.isToday ? usage.count : 0;
-  const remaining = Math.max(0, dailyLimit - usedToday);
-  return {
-    dailyLimit,
-    usedToday,
-    remaining,
-    resetMs: 0,
-  };
+  return { ...(await getIdentificationLimitDisplay()), resetMs: 0 };
 }
