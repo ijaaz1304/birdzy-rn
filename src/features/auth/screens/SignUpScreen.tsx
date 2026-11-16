@@ -595,6 +595,7 @@ export const SignupEmailScreen = () => {
                   borderRadius={AUTH_TEXT_FIELD_RADIUS}
                   hasError={isInvalidEmail}
                   containerStyle={authFormStyles.fieldContainer}
+                  wrapPlaceholder
                   inputStyle={fieldTextStyle}
                 />
                 {isInvalidEmail && (
@@ -621,6 +622,7 @@ export const SignupEmailScreen = () => {
                   borderRadius={AUTH_TEXT_FIELD_RADIUS}
                   hasError={passwordTooWeak}
                   containerStyle={authFormStyles.fieldContainer}
+                  wrapPlaceholder
                   inputStyle={fieldTextStyle}
                 />
                 {passwordTooWeak && (
@@ -649,6 +651,7 @@ export const SignupEmailScreen = () => {
                   borderRadius={AUTH_TEXT_FIELD_RADIUS}
                   hasError={confirmMismatch}
                   containerStyle={authFormStyles.fieldContainer}
+                  wrapPlaceholder
                   inputStyle={fieldTextStyle}
                 />
                 {confirmMismatch && (

@@ -1,6 +1,12 @@
 import { AppImage } from "@/components/AppImage";
-import React from "react";
-import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { APP_COLORS } from "../../config/colors";
 import { Images, PASSWORD_VISIBILITY_ICON_SIZE } from "../../assets";
@@ -34,6 +40,11 @@ export const Input = React.forwardRef<TextInput, any>(
       returnKeyType,
       onSubmitEditing,
       submitBehavior,
+      /**
+       * Show the placeholder as wrapping text (max 2 lines) so the field grows with it.
+       * Android never wraps a single-line field's placeholder, so long hints get clipped at large fonts.
+       */
+      wrapPlaceholder,
     }: any,
     ref
   ) => {
@@ -42,10 +53,48 @@ export const Input = React.forwardRef<TextInput, any>(
       typeof borderRadius === "number"
         ? borderRadius
         : theme.textFieldBorderRadius;
+    // Uncontrolled fields (no `value`) track emptiness themselves.
+    const [hasTyped, setHasTyped] = useState(false);
+    const isEmpty = typeof value === "string" ? value.length === 0 : !hasTyped;
+    const showPlaceholderText = !!wrapPlaceholder && !!placeholder && isEmpty;
+    const handleChangeText = (text: string) => {
+      setHasTyped(text.length > 0);
+      onChangeText?.(text);
+    };
+    const flatInput = StyleSheet.flatten(inputStyle) ?? {};
+    const placeholderFontSize = flatInput.fontSize ?? 15;
     const eyeIconColor =
       theme.mode === "dark"
         ? APP_COLORS.modalTextOnPrimary
         : APP_COLORS.surfaceDark;
+
+    const field = (
+      <TextInput
+        ref={ref}
+        testID={testID}
+        returnKeyType={returnKeyType}
+        onSubmitEditing={onSubmitEditing}
+        submitBehavior={submitBehavior}
+        value={value}
+        onChangeText={handleChangeText}
+        onFocus={onFocus}
+        placeholder={showPlaceholderText ? undefined : placeholder}
+        placeholderTextColor={theme.colors.textTertiary}
+        accessibilityLabel={showPlaceholderText ? placeholder : undefined}
+        secureTextEntry={secure}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        maxLength={maxLength}
+        editable={!disabled}
+        style={[
+          styles.input,
+          { color: theme.colors.text, backgroundColor: "transparent" },
+          typeof borderRadius === "number" ? { borderRadius } : null,
+          inputStyle,
+          showPlaceholderText && styles.inputOverPlaceholder,
+        ]}
+      />
+    );
 
     return (
       <View
@@ -65,29 +114,32 @@ export const Input = React.forwardRef<TextInput, any>(
           containerStyle,
         ]}
       >
-        <TextInput
-          ref={ref}
-          testID={testID}
-          returnKeyType={returnKeyType}
-          onSubmitEditing={onSubmitEditing}
-          submitBehavior={submitBehavior}
-          value={value}
-          onChangeText={onChangeText}
-          onFocus={onFocus}
-          placeholder={placeholder}
-          placeholderTextColor={theme.colors.textTertiary}
-          secureTextEntry={secure}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          maxLength={maxLength}
-          editable={!disabled}
-          style={[
-            styles.input,
-            { color: theme.colors.text, backgroundColor: "transparent" },
-            typeof borderRadius === "number" ? { borderRadius } : null,
-            inputStyle,
-          ]}
-        />
+        {wrapPlaceholder ? (
+          <View style={styles.inputWrap}>
+            {showPlaceholderText && (
+              <Text
+                pointerEvents="none"
+                numberOfLines={2}
+                style={[
+                  styles.placeholderText,
+                  {
+                    color: theme.colors.textTertiary,
+                    fontFamily: flatInput.fontFamily,
+                    fontSize: placeholderFontSize,
+                    lineHeight: Math.round(placeholderFontSize * 1.5),
+                    letterSpacing: flatInput.letterSpacing,
+                    paddingVertical: flatInput.paddingVertical ?? 10,
+                  },
+                ]}
+              >
+                {placeholder}
+              </Text>
+            )}
+            {field}
+          </View>
+        ) : (
+          field
+        )}
         {toggleSecure && (
           <TouchableOpacity
             onPress={toggleSecure}
@@ -120,6 +172,19 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
+  },
+  /** Holds the wrapping placeholder; the field grows to fit it. */
+  inputWrap: {
+    flex: 1,
+    alignSelf: "stretch",
+    justifyContent: "center",
+  },
+  placeholderText: {
+    width: "100%",
+  },
+  /** While the placeholder text shows, the input sits on top of it (taps still focus the field). */
+  inputOverPlaceholder: {
+    ...StyleSheet.absoluteFillObject,
   },
   visibilityIcon: {
     width: PASSWORD_VISIBILITY_ICON_SIZE,

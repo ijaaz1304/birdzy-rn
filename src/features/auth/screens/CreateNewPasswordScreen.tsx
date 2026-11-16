@@ -2,8 +2,16 @@
  * Create new password (forgot-password flow after OTP on VerifyEmail).
  */
 
-import React, { useState, useCallback } from "react";
-import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useCallback, useRef } from "react";
+import {
+  View,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showAlert } from "../../../store/alert.store";
 import {
@@ -30,9 +38,9 @@ import { APP_COLORS } from "../../../config/colors";
 import { SCREEN_COLORS } from "../../../constants/colorConstants";
 import { useAuthStore } from "../auth.store";
 import { AUTH_STRINGS } from "../../../config/strings/auth.strings";
-import { AUTH_TEXT_FIELD_RADIUS, AUTH_BACK_BUTTON_LEFT_OFFSET } from "../constants/authFormLayout";
-import { typography } from "../../../design-system/typography";
-import { FONTS } from "../../../common/typography";
+import { AUTH_TEXT_FIELD_RADIUS } from "../constants/authFormLayout";
+import { authFormStyles } from "../components/authFormStyles";
+import { useKeyboardAwareForm } from "../../../hooks/useKeyboardAwareForm";
 
 type CreateNewPasswordNavProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -56,6 +64,9 @@ export const CreateNewPasswordScreen = () => {
   const [confirm, setConfirm] = useState("");
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
   const [isConfirmHidden, setIsConfirmHidden] = useState(true);
+  /** Keyboard rule: focused field + Save stay visible (shared auth-form hook). */
+  const kb = useKeyboardAwareForm();
+  const confirmRef = useRef<TextInput>(null);
   const isDark = theme.mode === "dark";
 
   useFocusEffect(
@@ -67,12 +78,6 @@ export const CreateNewPasswordScreen = () => {
   const authBg = isDark
     ? APP_COLORS.surfaceAuthDark
     : APP_COLORS.surfaceAuthLight;
-  const bodyTextColor = isDark
-    ? SCREEN_COLORS.DARK.text
-    : APP_COLORS.surfaceDark;
-  const subtitleColor = isDark
-    ? SCREEN_COLORS.DARK.textSecondary
-    : SCREEN_COLORS.LIGHT.textSecondary;
 
   const handleSave = async () => {
     if (!password || !confirm) {
@@ -119,86 +124,146 @@ export const CreateNewPasswordScreen = () => {
     }
   };
 
+  const textColor = theme.colors.textPrimary;
+  const fieldTextStyle = [authFormStyles.fieldText, { color: textColor }];
+
   return (
     <ScreenContainer showBackground={false} backgroundColor={authBg} edges={[]}>
       <AuthScreenStatusBar isDark={isDark} />
       <AuthScreenBackground isDark={isDark} />
-      <View style={[styles.backRow, styles.authFormLayer, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <NavBackIcon
-            color={isDark ? SCREEN_COLORS.DARK.text : APP_COLORS.surfaceDark}
-          />
-        </TouchableOpacity>
-      </View>
-
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={[styles.flex, styles.authFormLayer]}
-        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
       >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: Math.max(insets.bottom, 16) + 16 },
+        <View
+          style={[
+            authFormStyles.page,
+            {
+              paddingTop: insets.top,
+              paddingBottom: kb.keyboardVisible
+                ? 8
+                : Math.max(insets.bottom, 16),
+            },
           ]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
         >
-          <Text
-            variant="title"
-            size="large"
-            weight="bold"
-            style={[styles.title, { color: bodyTextColor }]}
+          {/* Figma Top Navigation Bar — 52pt, stays fixed while the form scrolls */}
+          <View style={authFormStyles.navRow}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={authFormStyles.backButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+            >
+              <NavBackIcon
+                color={
+                  isDark ? SCREEN_COLORS.DARK.text : APP_COLORS.surfaceDark
+                }
+              />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            {...kb.scrollViewProps}
+            style={authFormStyles.scroll}
+            contentContainerStyle={[
+              authFormStyles.scrollContent,
+              kb.contentPaddingBottom > 0 && {
+                paddingBottom: 24 + kb.contentPaddingBottom,
+              },
+            ]}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
           >
-            {cnp.title || AUTH_STRINGS.createNewPassword.title}
-          </Text>
-          <Text style={[styles.subtitle, { color: subtitleColor }]}>
-            {cnp.subtitle || AUTH_STRINGS.createNewPassword.subtitle}
-          </Text>
+            {/* Figma 8015:114344 — title + subtitle, 4pt apart */}
+            <View style={styles.header}>
+              <Text
+                variant="title"
+                size="small"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                accessibilityRole="header"
+                style={[authFormStyles.title, { color: textColor }]}
+              >
+                {cnp.title || AUTH_STRINGS.createNewPassword.title}
+              </Text>
+              <Text style={[authFormStyles.subtitle, { color: textColor }]}>
+                {cnp.subtitle || AUTH_STRINGS.createNewPassword.subtitle}
+              </Text>
+            </View>
 
-          <Input
-            key="new-password"
-            placeholder={
-              cnp.newPasswordPlaceholder ||
-              AUTH_STRINGS.placeholders.newPassword
-            }
-            value={password}
-            onChangeText={setPassword}
-            secure={isPasswordHidden}
-            toggleSecure={() => setIsPasswordHidden((prev) => !prev)}
-            borderRadius={AUTH_TEXT_FIELD_RADIUS}
-          />
-          <Input
-            key="confirm-password"
-            placeholder={
-              cnp.reEnterPasswordPlaceholder ||
-              AUTH_STRINGS.placeholders.confirmPassword
-            }
-            value={confirm}
-            onChangeText={setConfirm}
-            secure={isConfirmHidden}
-            toggleSecure={() => setIsConfirmHidden((prev) => !prev)}
-            borderRadius={AUTH_TEXT_FIELD_RADIUS}
-          />
+            {/* Figma 8015:114347 — two 48pt password fields, 16pt apart */}
+            <View style={styles.fields} onLayout={kb.layout("fields")}>
+              <View onLayout={kb.layout("password", "fields")}>
+                <Input
+                  key="new-password"
+                  testID="new-password-input"
+                  onFocus={kb.focus("password")}
+                  placeholder={
+                    cnp.newPasswordPlaceholder ||
+                    AUTH_STRINGS.placeholders.newPassword
+                  }
+                  value={password}
+                  onChangeText={setPassword}
+                  secure={isPasswordHidden}
+                  toggleSecure={() => setIsPasswordHidden((prev) => !prev)}
+                  returnKeyType="next"
+                  submitBehavior="submit"
+                  onSubmitEditing={() => confirmRef.current?.focus()}
+                  borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                  containerStyle={authFormStyles.fieldContainer}
+                  wrapPlaceholder
+                  inputStyle={fieldTextStyle}
+                />
+              </View>
+              <View onLayout={kb.layout("confirm", "fields")}>
+                <Input
+                  key="confirm-password"
+                  ref={confirmRef}
+                  testID="confirm-new-password-input"
+                  onFocus={kb.focus("confirm")}
+                  placeholder={
+                    cnp.reEnterPasswordPlaceholder ||
+                    AUTH_STRINGS.placeholders.confirmPassword
+                  }
+                  value={confirm}
+                  onChangeText={setConfirm}
+                  secure={isConfirmHidden}
+                  toggleSecure={() => setIsConfirmHidden((prev) => !prev)}
+                  returnKeyType="done"
+                  submitBehavior="blurAndSubmit"
+                  onSubmitEditing={() => {
+                    if (password && confirm && !isLoading) handleSave();
+                  }}
+                  borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                  containerStyle={authFormStyles.fieldContainer}
+                  wrapPlaceholder
+                  inputStyle={fieldTextStyle}
+                />
+              </View>
+            </View>
 
-          <PrimaryButton
-            title={cnp.saveButtonText || AUTH_STRINGS.createNewPassword.save}
-            onPress={handleSave}
-            loading={isLoading}
-            disabled={!password || !confirm || isLoading}
-            style={{
-              backgroundColor: theme.colors.primaryCTA,
-              borderRadius: AUTH_TEXT_FIELD_RADIUS,
-              marginTop: 16,
-            }}
-            textColor={theme.colors.onPrimary}
-          />
-        </ScrollView>
+            {/* Figma: Save 16pt below the fields */}
+            <View onLayout={kb.layout("cta")}>
+              <PrimaryButton
+                testID="new-password-save"
+                title={
+                  cnp.saveButtonText || AUTH_STRINGS.createNewPassword.save
+                }
+                onPress={handleSave}
+                loading={isLoading}
+                disabled={!password || !confirm || isLoading}
+                style={{
+                  ...authFormStyles.submit,
+                  marginTop: 16,
+                  backgroundColor: theme.colors.primaryCTA,
+                }}
+                textStyle={authFormStyles.submitLabel}
+                textColor={theme.colors.onPrimary}
+              />
+            </View>
+          </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </ScreenContainer>
   );
@@ -209,30 +274,12 @@ const styles = StyleSheet.create({
   authFormLayer: {
     zIndex: 1,
   },
-  backRow: {
-    paddingHorizontal: 20,
-    zIndex: 10,
+  header: {
+    gap: 4,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "flex-start",
-    marginLeft: AUTH_BACK_BUTTON_LEFT_OFFSET,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 8,
-  },
-  title: {
-    ...typography.title.large,
-    fontFamily: FONTS.bold,
-    marginBottom: 12,
-  },
-  subtitle: {
-    ...typography.body.mediumMedium,
-    lineHeight: 20,
-    marginBottom: 12,
+  /** Figma: 24pt below the header; fields 16pt apart */
+  fields: {
+    marginTop: 24,
+    gap: 16,
   },
 });

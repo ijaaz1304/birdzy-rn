@@ -3,7 +3,14 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
-import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showAlert } from "../../../store/alert.store";
 import {
@@ -16,7 +23,8 @@ import {
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../../navigation/types";
 import { useTheme } from "../../../hooks/useTheme";
-import { Text, Button, NavBackIcon } from "../../../atoms";
+import { Text, NavBackIcon } from "../../../atoms";
+import { PrimaryButton } from "../../../atoms/PrimaryButton/PrimaryButton";
 import { ScreenContainer } from "../../../molecules";
 import {
   AuthScreenBackground,
@@ -25,11 +33,12 @@ import {
 import { Input } from "../../../molecules/Input/Input";
 import { useAuthStore } from "../auth.store";
 import { AUTH_STRINGS } from "../../../config/strings/auth.strings";
-import { typography } from "../../../design-system/typography";
-import { FONTS } from "../../../common/typography";
 import { APP_COLORS } from "../../../config/colors";
 import { useFeatureConfig } from "../../../config/context";
-import { AUTH_TEXT_FIELD_RADIUS, AUTH_BACK_BUTTON_LEFT_OFFSET } from "../constants/authFormLayout";
+import { AUTH_TEXT_FIELD_RADIUS } from "../constants/authFormLayout";
+import { AuthFieldError } from "../components/AuthFieldError";
+import { authFormStyles } from "../components/authFormStyles";
+import { useKeyboardAwareForm } from "../../../hooks/useKeyboardAwareForm";
 
 type ForgotPasswordScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -49,6 +58,8 @@ export const ForgotPasswordScreen: React.FC = () => {
   const { forgotPassword, isLoading, setError } = useAuthStore();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  /** Keyboard rule: focused field + Send reset link stay visible (shared auth-form hook). */
+  const kb = useKeyboardAwareForm();
 
   useEffect(() => {
     const pre = route.params?.prefillEmail;
@@ -93,46 +104,78 @@ export const ForgotPasswordScreen: React.FC = () => {
   const backIconColor = isDark
     ? theme.colors.textPrimary
     : APP_COLORS.surfaceDark;
-  const subtitleColor = isDark ? theme.colors.textPrimary : "#111111";
+
+  const textColor = theme.colors.textPrimary;
+  const isSuccess = message.includes("sent");
 
   return (
-    <ScreenContainer
-      showBackground={false}
-      backgroundColor={authBg}
-      edges={[]}
-    >
+    <ScreenContainer showBackground={false} backgroundColor={authBg} edges={[]}>
       <AuthScreenStatusBar isDark={isDark} />
       <AuthScreenBackground isDark={isDark} />
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={[styles.flex, styles.authFormLayer]}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
       >
-        <View style={[styles.page, { paddingTop: insets.top + 32 }]}>
-          <View style={styles.body}>
+        <View
+          style={[
+            authFormStyles.page,
+            {
+              paddingTop: insets.top,
+              paddingBottom: kb.keyboardVisible
+                ? 8
+                : Math.max(insets.bottom, 16),
+            },
+          ]}
+        >
+          {/* Figma Top Navigation Bar — 52pt, stays fixed while the form scrolls */}
+          <View style={authFormStyles.navRow}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
-              style={styles.backButton}
+              style={authFormStyles.backButton}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
             >
               <NavBackIcon color={backIconColor} />
             </TouchableOpacity>
+          </View>
 
-            <Text
-              variant="title"
-              size="large"
-              weight="bold"
-              style={styles.headerTitle}
-            >
-              {fp.title || AUTH_STRINGS.forgotPassword.title}
-            </Text>
-
-            <View style={styles.content}>
-              <Text style={[styles.subtitle, { color: subtitleColor }]}>
+          <ScrollView
+            {...kb.scrollViewProps}
+            style={authFormStyles.scroll}
+            contentContainerStyle={[
+              authFormStyles.scrollContent,
+              kb.contentPaddingBottom > 0 && {
+                paddingBottom: 24 + kb.contentPaddingBottom,
+              },
+            ]}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {/* Figma 8015:114320 — title + subtitle, 4pt apart */}
+            <View style={styles.header}>
+              <Text
+                variant="title"
+                size="small"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                accessibilityRole="header"
+                style={[authFormStyles.title, { color: textColor }]}
+              >
+                {fp.title || AUTH_STRINGS.forgotPassword.title}
+              </Text>
+              <Text style={[authFormStyles.subtitle, { color: textColor }]}>
                 {fp.subtitle || AUTH_STRINGS.forgotPassword.subtitle}
               </Text>
+            </View>
 
+            <View
+              style={[authFormStyles.fieldGroup, styles.fieldBlock]}
+              onLayout={kb.layout("email")}
+            >
               <Input
+                testID="forgot-email-input"
+                onFocus={kb.focus("email")}
                 placeholder={
                   fp.emailPlaceholder || AUTH_STRINGS.placeholders.email
                 }
@@ -144,37 +187,46 @@ export const ForgotPasswordScreen: React.FC = () => {
                 }}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                returnKeyType="send"
+                submitBehavior="blurAndSubmit"
+                onSubmitEditing={() => {
+                  if (email && !isLoading) handleResetPassword();
+                }}
                 borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                hasError={!!message && !isSuccess}
+                containerStyle={authFormStyles.fieldContainer}
+                wrapPlaceholder
+                inputStyle={[authFormStyles.fieldText, { color: textColor }]}
               />
-
               {message ? (
-                <Text
-                  variant="body"
-                  size="small"
-                  color={message.includes("sent") ? "success" : "error"}
-                  style={styles.message}
-                >
-                  {message}
-                </Text>
+                isSuccess ? (
+                  <Text variant="body" size="small" color="success">
+                    {message}
+                  </Text>
+                ) : (
+                  <AuthFieldError message={message} />
+                )
               ) : null}
             </View>
-          </View>
 
-          <View
-            style={[
-              styles.footer,
-              { paddingBottom: Math.max(insets.bottom, 16) },
-            ]}
-          >
-            <Button
-              title={submitLabel}
-              onPress={handleResetPassword}
-              loading={isLoading}
-              disabled={!email || isLoading}
-              fullWidth
-              style={styles.footerButton}
-            />
-          </View>
+            {/* Figma: Send reset link 16pt below the field */}
+            <View onLayout={kb.layout("cta")}>
+              <PrimaryButton
+                testID="forgot-submit"
+                title={submitLabel}
+                onPress={handleResetPassword}
+                loading={isLoading}
+                disabled={!email || isLoading}
+                style={{
+                  ...authFormStyles.submit,
+                  marginTop: 16,
+                  backgroundColor: theme.colors.primaryCTA,
+                }}
+                textStyle={authFormStyles.submitLabel}
+                textColor={theme.colors.onPrimary}
+              />
+            </View>
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </ScreenContainer>
@@ -186,41 +238,11 @@ const styles = StyleSheet.create({
   authFormLayer: {
     zIndex: 1,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "flex-start",
-    marginLeft: AUTH_BACK_BUTTON_LEFT_OFFSET,
+  header: {
+    gap: 4,
   },
-  headerTitle: {
-    ...typography.title.large,
-    fontFamily: FONTS.bold,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  page: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  body: {
-    flex: 1,
-  },
-  content: {
-    marginTop: 24,
-  },
-  subtitle: {
-    ...typography.body.medium,
-    fontFamily: FONTS.regular,
-    marginBottom: 12,
-  },
-  message: {
-    marginTop: 12,
-  },
-  footer: {
-    paddingTop: 16,
-  },
-  footerButton: {
-    borderRadius: AUTH_TEXT_FIELD_RADIUS,
+  /** Figma: 20pt between the header and the field */
+  fieldBlock: {
+    marginTop: 20,
   },
 });

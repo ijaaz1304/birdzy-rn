@@ -153,6 +153,7 @@ export const CompleteProfileScreen = () => {
                   onSubmitEditing={() => ageRef.current?.focus()}
                   borderRadius={AUTH_TEXT_FIELD_RADIUS}
                   containerStyle={authFormStyles.fieldContainer}
+                  wrapPlaceholder
                   inputStyle={fieldTextStyle}
                 />
               </View>
@@ -166,6 +167,7 @@ export const CompleteProfileScreen = () => {
                   returnKeyType="done"
                   borderRadius={AUTH_TEXT_FIELD_RADIUS}
                   containerStyle={authFormStyles.fieldContainer}
+                  wrapPlaceholder
                   inputStyle={fieldTextStyle}
                 />
               </View>

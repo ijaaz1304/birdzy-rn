@@ -278,6 +278,7 @@ export const VerifyEmailScreen = () => {
                 borderRadius={AUTH_TEXT_FIELD_RADIUS}
                 hasError={!!error}
                 containerStyle={authFormStyles.fieldContainer}
+                wrapPlaceholder
                 inputStyle={[authFormStyles.fieldText, { color: textColor }]}
               />
               {error ? <AuthFieldError message={error} /> : null}
