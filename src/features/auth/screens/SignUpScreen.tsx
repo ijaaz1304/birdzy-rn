@@ -7,12 +7,8 @@ import {
   Platform,
   ScrollView,
   KeyboardAvoidingView,
-  Keyboard,
-  Text as RNText,
   TextInput,
-  Dimensions,
 } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showAlert } from "../../../store/alert.store";
 import {
@@ -25,6 +21,9 @@ import {
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/types";
 import { AuthButton } from "../components/AuthScreen";
+import { AuthFieldError } from "../components/AuthFieldError";
+import { authFormStyles } from "../components/authFormStyles";
+import { useKeyboardAwareForm } from "../../../hooks/useKeyboardAwareForm";
 import {
   AuthScreenBackground,
   AuthScreenStatusBar,
@@ -60,10 +59,7 @@ import { FONTS } from "../../../common/typography";
 import { Radius } from "../../../design";
 
 import { APP_COLORS } from "../../../config/colors";
-import {
-  AUTH_TEXT_FIELD_RADIUS,
-  AUTH_BACK_BUTTON_LEFT_OFFSET,
-} from "../constants/authFormLayout";
+import { AUTH_TEXT_FIELD_RADIUS } from "../constants/authFormLayout";
 
 type SignUpRouteProp = RouteProp<AuthStackParamList, "SignUp">;
 type SignUpNavigationProp = NativeStackNavigationProp<
@@ -456,105 +452,17 @@ export const SignupEmailScreen = () => {
   const navigation = useNavigation();
   const { signup, guestId, isLoading, error, setError } = useAuthStore();
   const [email, setEmail] = useState("");
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-
-  /**
-   * Keyboard rule (responsiveness doc): keep the focused field AND the Sign up CTA visible.
-   * When the keyboard opens (or focus moves), scroll down just enough to reveal the CTA —
-   * but never so far that the focused field's top leaves the viewport.
-   */
-  const scrollRef = useRef<ScrollView>(null);
-  const scrollWrapRef = useRef<View>(null);
-  /** Scroll height left above the keyboard (0 = whole scroll view visible). */
-  const visibleH = useRef(0);
-  const [kbOverlap, setKbOverlap] = useState(0);
-  /** Keyboard Next → next field; Done on the last field submits (CTA may sit behind the keyboard on Android 15+). */
+  /** Keyboard rule: focused field + Sign up CTA stay visible (shared auth-form hook). */
+  const kb = useKeyboardAwareForm();
+  /** Keyboard Next → next field; Done on the last field submits. */
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
-  const kbVisibleRef = useRef(false);
-  const viewportH = useRef(0);
-  const scrollY = useRef(0);
-  const fieldsY = useRef(0);
-  const groupY = useRef<number[]>([0, 0, 0]);
-  const ctaBottom = useRef(0);
-  const focusedIdx = useRef<number | null>(null);
-  const revealCta = useCallback(() => {
-    if (
-      !kbVisibleRef.current ||
-      focusedIdx.current == null ||
-      !viewportH.current
-    )
-      return;
-    const focusTop = fieldsY.current + groupY.current[focusedIdx.current];
-    const visible =
-      visibleH.current > 0
-        ? Math.min(viewportH.current, visibleH.current)
-        : viewportH.current;
-    const target = Math.min(ctaBottom.current + 8 - visible, focusTop - 8);
-    if (target > scrollY.current + 1) {
-      scrollRef.current?.scrollTo({ y: target, animated: true });
-    }
-  }, []);
-  const onFieldFocus = (i: number) => () => {
-    focusedIdx.current = i;
-    setTimeout(revealCta, 120);
-  };
 
   useFocusEffect(
     useCallback(() => {
       setError(null);
     }, [setError])
   );
-
-  useEffect(() => {
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      kbVisibleRef.current = true;
-      setKeyboardVisible(true);
-      if (Platform.OS === "ios") {
-        // KeyboardAvoidingView already shrinks the layout on iOS.
-        visibleH.current = 0;
-        setTimeout(revealCta, 120);
-        return;
-      }
-      // Android 15+ edge-to-edge: the window no longer resizes and RN can report a
-      // bogus keyboard height (e.g. -24). Fall back to a conservative estimate.
-      const reported = e?.endCoordinates?.height ?? 0;
-      if (reported <= 0) {
-        // Edge-to-edge: the scroll view runs to the window bottom (minus the 8pt keyboard-open
-        // page padding), so the overlap is the estimated keyboard height minus that padding.
-        const overlap = Math.max(
-          0,
-          Dimensions.get("window").height * ANDROID_KEYBOARD_FALLBACK_SHARE - 8
-        );
-        visibleH.current = Math.max(0, viewportH.current - overlap);
-        setKbOverlap(overlap);
-        setTimeout(revealCta, 150);
-        return;
-      }
-      const kbTop = e.endCoordinates.screenY;
-      scrollWrapRef.current?.measureInWindow((_x, y, _w, h) => {
-        const overlap = Math.max(0, y + h - kbTop);
-        visibleH.current = overlap > 0 ? Math.max(0, kbTop - y) : 0;
-        // Extra bottom room so the form can scroll above the keyboard.
-        setKbOverlap(overlap);
-        setTimeout(revealCta, 150);
-      });
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      kbVisibleRef.current = false;
-      visibleH.current = 0;
-      setKbOverlap(0);
-      setKeyboardVisible(false);
-    });
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -605,7 +513,7 @@ export const SignupEmailScreen = () => {
     password.length > 0 && !SIGNUP_PASSWORD_RULE.test(password);
   const confirmMismatch = confirm.length > 0 && !passwordsMatch;
   const fieldTextStyle = [
-    styles.fieldText,
+    authFormStyles.fieldText,
     { color: theme.colors.textPrimary },
   ];
 
@@ -619,18 +527,20 @@ export const SignupEmailScreen = () => {
       >
         <View
           style={[
-            styles.emailPage,
+            authFormStyles.page,
             {
               paddingTop: insets.top,
-              paddingBottom: keyboardVisible ? 8 : Math.max(insets.bottom, 16),
+              paddingBottom: kb.keyboardVisible
+                ? 8
+                : Math.max(insets.bottom, 16),
             },
           ]}
         >
           {/* Figma Top Navigation Bar — 52pt, stays fixed while the form scrolls */}
-          <View style={styles.emailNavRow}>
+          <View style={authFormStyles.navRow}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
-              style={styles.emailBackButton}
+              style={authFormStyles.backButton}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               accessibilityRole="button"
               accessibilityLabel="Back"
@@ -638,236 +548,149 @@ export const SignupEmailScreen = () => {
               <NavBackIcon color={backIconColor} />
             </TouchableOpacity>
           </View>
-          <View
-            ref={scrollWrapRef}
-            style={styles.emailBody}
-            collapsable={false}
+          <ScrollView
+            {...kb.scrollViewProps}
+            style={authFormStyles.scroll}
+            contentContainerStyle={[
+              authFormStyles.scrollContent,
+              kb.contentPaddingBottom > 0 && {
+                paddingBottom: 24 + kb.contentPaddingBottom,
+              },
+            ]}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
           >
-            <ScrollView
-              ref={scrollRef}
-              onLayout={(e) => {
-                viewportH.current = e.nativeEvent.layout.height;
-                revealCta();
-              }}
-              onScroll={(e) => {
-                scrollY.current = e.nativeEvent.contentOffset.y;
-              }}
-              scrollEventThrottle={16}
-              style={styles.emailBody}
-              contentContainerStyle={[
-                styles.emailBodyContent,
-                kbOverlap > 0 && { paddingBottom: 24 + kbOverlap },
-              ]}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              bounces={false}
+            {/* Figma Title/20px/SemiBold — page title, max 2 lines */}
+            <Text
+              variant="title"
+              size="small"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+              accessibilityRole="header"
+              style={[authFormStyles.title, styles.emailFormTitle]}
             >
-              {/* Figma Title/20px/SemiBold — page title, max 2 lines */}
-              <Text
-                variant="title"
-                size="small"
-                numberOfLines={2}
-                ellipsizeMode="tail"
-                accessibilityRole="header"
-                style={[styles.screenHeaderTitle, styles.emailFormTitle]}
-              >
-                Sign up with email
-              </Text>
+              Sign up with email
+            </Text>
 
-              {/* Figma: fields 16pt apart; helper/error row 8pt under its field */}
+            {/* Figma: fields 16pt apart; helper/error row 8pt under its field */}
+            <View style={styles.emailFields} onLayout={kb.layout("fields")}>
               <View
-                style={styles.emailFields}
-                onLayout={(e) => {
-                  fieldsY.current = e.nativeEvent.layout.y;
-                }}
+                style={authFormStyles.fieldGroup}
+                onLayout={kb.layout("email", "fields")}
               >
-                <View
-                  style={styles.fieldGroup}
-                  onLayout={(e) => {
-                    groupY.current[0] = e.nativeEvent.layout.y;
+                <Input
+                  testID="signup-email-input"
+                  onFocus={kb.focus("email")}
+                  value={email}
+                  onChangeText={(text: string) => {
+                    setEmail(text);
+                    setError(null);
                   }}
-                >
-                  <Input
-                    testID="signup-email-input"
-                    onFocus={onFieldFocus(0)}
-                    value={email}
-                    onChangeText={(text: string) => {
-                      setEmail(text);
-                      setError(null);
-                    }}
-                    placeholder={AUTH_STRINGS.placeholders.email}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    returnKeyType="next"
-                    submitBehavior="submit"
-                    onSubmitEditing={() => passwordRef.current?.focus()}
-                    borderRadius={AUTH_TEXT_FIELD_RADIUS}
-                    hasError={isInvalidEmail}
-                    containerStyle={styles.fieldContainer}
-                    inputStyle={fieldTextStyle}
-                  />
-                  {isInvalidEmail && (
-                    <SignupFieldError message="Hmm, that doesn’t look like a valid email." />
-                  )}
-                </View>
-
-                <View
-                  style={styles.fieldGroup}
-                  onLayout={(e) => {
-                    groupY.current[1] = e.nativeEvent.layout.y;
-                  }}
-                >
-                  <Input
-                    ref={passwordRef}
-                    testID="signup-password-input"
-                    returnKeyType="next"
-                    submitBehavior="submit"
-                    onSubmitEditing={() => confirmRef.current?.focus()}
-                    onFocus={onFieldFocus(1)}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder={AUTH_STRINGS.placeholders.password}
-                    secure={passwordSecure}
-                    toggleSecure={() => setPasswordSecure((prev) => !prev)}
-                    borderRadius={AUTH_TEXT_FIELD_RADIUS}
-                    hasError={passwordTooWeak}
-                    containerStyle={styles.fieldContainer}
-                    inputStyle={fieldTextStyle}
-                  />
-                  {passwordTooWeak && (
-                    <SignupFieldError message={SIGNUP_PASSWORD_RULE_MESSAGE} />
-                  )}
-                </View>
-
-                <View
-                  style={styles.fieldGroup}
-                  onLayout={(e) => {
-                    groupY.current[2] = e.nativeEvent.layout.y;
-                  }}
-                >
-                  <Input
-                    ref={confirmRef}
-                    testID="signup-confirm-input"
-                    returnKeyType="done"
-                    submitBehavior="blurAndSubmit"
-                    onSubmitEditing={() => {
-                      if (isFormValid && !isLoading) handleSignUp();
-                    }}
-                    onFocus={onFieldFocus(2)}
-                    value={confirm}
-                    onChangeText={setConfirm}
-                    placeholder={AUTH_STRINGS.placeholders.confirmPassword}
-                    secure={confirmSecure}
-                    toggleSecure={() => setConfirmSecure((prev) => !prev)}
-                    borderRadius={AUTH_TEXT_FIELD_RADIUS}
-                    hasError={confirmMismatch}
-                    containerStyle={styles.fieldContainer}
-                    inputStyle={fieldTextStyle}
-                  />
-                  {confirmMismatch && (
-                    <SignupFieldError message="Passwords do not match." />
-                  )}
-                </View>
-
-                {error ? <SignupFieldError message={error} /> : null}
-              </View>
-
-              <View
-                onLayout={(e) => {
-                  const l = e.nativeEvent.layout;
-                  ctaBottom.current = l.y + l.height;
-                // Errors appearing while typing push the CTA down — keep it revealed.
-                revealCta();
-                }}
-              >
-                <PrimaryButton
-                  testID="signup-email-submit"
-                  title={AUTH_STRINGS.signUpScreen.signUpTitle}
-                  style={{
-                    ...styles.emailSubmit,
-                    backgroundColor: theme.colors.primaryCTA,
-                  }}
-                  textStyle={styles.emailSubmitLabel}
-                  textColor={theme.colors.onPrimary}
-                  onPress={handleSignUp}
-                  disabled={!isFormValid || isLoading}
-                  loading={isLoading}
+                  placeholder={AUTH_STRINGS.placeholders.email}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  returnKeyType="next"
+                  submitBehavior="submit"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
+                  borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                  hasError={isInvalidEmail}
+                  containerStyle={authFormStyles.fieldContainer}
+                  inputStyle={fieldTextStyle}
                 />
+                {isInvalidEmail && (
+                  <AuthFieldError message="Hmm, that doesn’t look like a valid email." />
+                )}
               </View>
-            </ScrollView>
-          </View>
+
+              <View
+                style={authFormStyles.fieldGroup}
+                onLayout={kb.layout("password", "fields")}
+              >
+                <Input
+                  ref={passwordRef}
+                  testID="signup-password-input"
+                  returnKeyType="next"
+                  submitBehavior="submit"
+                  onSubmitEditing={() => confirmRef.current?.focus()}
+                  onFocus={kb.focus("password")}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={AUTH_STRINGS.placeholders.password}
+                  secure={passwordSecure}
+                  toggleSecure={() => setPasswordSecure((prev) => !prev)}
+                  borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                  hasError={passwordTooWeak}
+                  containerStyle={authFormStyles.fieldContainer}
+                  inputStyle={fieldTextStyle}
+                />
+                {passwordTooWeak && (
+                  <AuthFieldError message={SIGNUP_PASSWORD_RULE_MESSAGE} />
+                )}
+              </View>
+
+              <View
+                style={authFormStyles.fieldGroup}
+                onLayout={kb.layout("confirm", "fields")}
+              >
+                <Input
+                  ref={confirmRef}
+                  testID="signup-confirm-input"
+                  returnKeyType="done"
+                  submitBehavior="blurAndSubmit"
+                  onSubmitEditing={() => {
+                    if (isFormValid && !isLoading) handleSignUp();
+                  }}
+                  onFocus={kb.focus("confirm")}
+                  value={confirm}
+                  onChangeText={setConfirm}
+                  placeholder={AUTH_STRINGS.placeholders.confirmPassword}
+                  secure={confirmSecure}
+                  toggleSecure={() => setConfirmSecure((prev) => !prev)}
+                  borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                  hasError={confirmMismatch}
+                  containerStyle={authFormStyles.fieldContainer}
+                  inputStyle={fieldTextStyle}
+                />
+                {confirmMismatch && (
+                  <AuthFieldError message="Passwords do not match." />
+                )}
+              </View>
+
+              {error ? <AuthFieldError message={error} /> : null}
+            </View>
+
+            <View onLayout={kb.layout("cta")}>
+              <PrimaryButton
+                testID="signup-email-submit"
+                title={AUTH_STRINGS.signUpScreen.signUpTitle}
+                style={{
+                  ...authFormStyles.submit,
+                  marginTop: 16,
+                  backgroundColor: theme.colors.primaryCTA,
+                }}
+                textStyle={authFormStyles.submitLabel}
+                textColor={theme.colors.onPrimary}
+                onPress={handleSignUp}
+                disabled={!isFormValid || isLoading}
+                loading={isLoading}
+              />
+            </View>
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </ScreenContainer>
   );
 };
 
-/** Share of the window assumed covered by the keyboard when Android reports no usable height
- * (measured Gboard: 37–41% on the test devices; 45% keeps a margin). */
-const ANDROID_KEYBOARD_FALLBACK_SHARE = 0.45;
-
 /** Figma 8015:111123 — same rule as Settings › Change password. */
 const SIGNUP_PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 const SIGNUP_PASSWORD_RULE_MESSAGE =
   "Password must be at least 8 characters and include a number, an uppercase and a lowercase letter.";
 
-/** Figma error row: 16pt alert icon + Caption/12px/Regular in error red; wraps and grows (no line cap). */
-const SignupFieldError = ({ message }: { message: string }) => {
-  const theme = useTheme();
-  const color = theme.colors.textError ?? theme.colors.error;
-  return (
-    <View style={styles.fieldErrorRow} accessibilityRole="alert">
-      <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-        <Path
-          d="M5.32 9.32C7.73 5.05 8.94 2.92 10.59 2.37a4.5 4.5 0 0 1 2.82 0c1.65.55 2.86 2.68 5.27 6.95 2.41 4.27 3.62 6.41 3.26 8.15a4.6 4.6 0 0 1-1.41 2.49C19.21 21 16.8 21 11.97 21h.06c-4.83 0-7.24 0-8.53-1.04a4.6 4.6 0 0 1-1.41-2.49c-.36-1.74.85-3.88 3.23-8.15Z"
-          stroke={color}
-          strokeWidth={1.5}
-        />
-        <Path
-          d="M12 13V9"
-          stroke={color}
-          strokeWidth={1.5}
-          strokeLinecap="round"
-        />
-        <Path
-          d="M11.99 16.5h.01"
-          stroke={color}
-          strokeWidth={2}
-          strokeLinecap="round"
-        />
-      </Svg>
-      <RNText style={[styles.fieldErrorText, { color }]}>{message}</RNText>
-    </View>
-  );
-};
-
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   authFormLayer: {
     zIndex: 1,
-  },
-  emailPage: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  emailBody: {
-    flex: 1,
-  },
-  emailBodyContent: {
-    paddingBottom: 24,
-  },
-  /** Figma Top Navigation Bar: 52pt minimum */
-  emailNavRow: {
-    minHeight: 52,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  emailBackButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "flex-start",
-    marginLeft: AUTH_BACK_BUTTON_LEFT_OFFSET,
   },
   /** Figma: title 16pt below the nav bar, 24pt above the fields */
   emailFormTitle: {
@@ -876,50 +699,6 @@ const styles = StyleSheet.create({
   },
   emailFields: {
     gap: 16,
-  },
-  fieldGroup: {
-    gap: 8,
-  },
-  /** Figma Textfield: 48pt minimum (grows with font size), 12pt gap to the eye icon */
-  fieldContainer: {
-    minHeight: 48,
-    marginTop: 0,
-    gap: 12,
-  },
-  /** Body/16px/Regular */
-  fieldText: {
-    fontFamily: FONTS.regular,
-    fontSize: 16,
-    letterSpacing: -0.16,
-    paddingVertical: 10,
-    /** Fill the field's height so the whole pill is tappable */
-    alignSelf: "stretch",
-    textAlignVertical: "center",
-  },
-  fieldErrorRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-  },
-  /** Caption/12px/Regular — scales with the user font; wraps and expands */
-  fieldErrorText: {
-    ...typography.caption.regular,
-    flex: 1,
-  },
-  /** Figma Button: 44pt minimum, 16pt below the fields; label wraps and the button grows */
-  emailSubmit: {
-    marginTop: 16,
-    minHeight: 44,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 23.789,
-  },
-  /** Button/16px Medium 16/24 */
-  emailSubmitLabel: {
-    fontFamily: FONTS.medium,
-    fontSize: 16,
-    lineHeight: 24,
-    textAlign: "center",
   },
   scroll: {
     flex: 1,

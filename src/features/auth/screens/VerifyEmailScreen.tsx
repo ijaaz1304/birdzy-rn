@@ -5,7 +5,14 @@
  * CreateNewPassword). Signup skips this screen and goes straight to CompleteProfile.
  */
 import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ViewStyle } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showAlert } from "../../../store/alert.store";
 import {
@@ -30,13 +37,15 @@ import { useTheme } from "../../../hooks/useTheme";
 import { SCREEN_COLORS } from "../../../constants/colorConstants";
 import { useAuthStore } from "../auth.store";
 import { AUTH_STRINGS } from "../../../config/strings/auth.strings";
-import { typography } from "../../../design-system/typography";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TOOLTIP_ELIGIBLE_FOR_SIGNUP_KEY } from "../../../components/AppLogsTooltip/AppLogsTooltip";
 import { FONTS } from "../../../common/typography";
 import { APP_COLORS } from "../../../config/colors";
 import { useFeatureConfig } from "../../../config/context";
-import { AUTH_TEXT_FIELD_RADIUS, AUTH_BACK_BUTTON_LEFT_OFFSET } from "../constants/authFormLayout";
+import { AUTH_TEXT_FIELD_RADIUS } from "../constants/authFormLayout";
+import { AuthFieldError } from "../components/AuthFieldError";
+import { authFormStyles } from "../components/authFormStyles";
+import { useKeyboardAwareForm } from "../../../hooks/useKeyboardAwareForm";
 
 type VerifyEmailScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -59,14 +68,9 @@ export const VerifyEmailScreen = () => {
   const initialOtp = route.params?.initialOtp;
   const [code, setCode] = useState("");
   const [resendTimer, setResendTimer] = useState(60);
+  /** Keyboard rule: focused field + Verify CTA stay visible (shared auth-form hook). */
+  const kb = useKeyboardAwareForm();
   const isDark = theme.mode === "dark";
-  const bodyTextColor = isDark
-    ? SCREEN_COLORS.DARK.text
-    : APP_COLORS.surfaceDark;
-  const subtitleColor = isDark
-    ? SCREEN_COLORS.DARK.textSecondary
-    : SCREEN_COLORS.LIGHT.textSecondary;
-  const linkColor = APP_COLORS.ctaPrimary;
 
   useFocusEffect(
     useCallback(() => {
@@ -166,126 +170,166 @@ export const VerifyEmailScreen = () => {
     }
   };
 
+  const textColor = theme.colors.textPrimary;
+  const canResend = resendTimer <= 0;
+
   return (
     <ScreenContainer showBackground={false} backgroundColor={authBg} edges={[]}>
       <AuthScreenStatusBar isDark={isDark} />
       <AuthScreenBackground isDark={isDark} />
-      <View style={[styles.backRow, styles.authFormLayer, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <NavBackIcon
-            color={isDark ? SCREEN_COLORS.DARK.text : APP_COLORS.surfaceDark}
-          />
-        </TouchableOpacity>
-      </View>
-
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={[styles.flex, styles.authFormLayer]}
-        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
       >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: Math.max(insets.bottom, 16) + 16 },
+        <View
+          style={[
+            authFormStyles.page,
+            {
+              paddingTop: insets.top,
+              paddingBottom: kb.keyboardVisible
+                ? 8
+                : Math.max(insets.bottom, 16),
+            },
           ]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
         >
-          <Text
-            variant="title"
-            size="large"
-            weight="bold"
-            style={[styles.screenTitle, { color: bodyTextColor }]}
-          >
-            {screenTitle}
-          </Text>
-
-          <Text style={[styles.desc, { color: subtitleColor }]}>
-            We sent your code to{" "}
-            <Text style={[styles.descEmail, { color: bodyTextColor }]}>
-              {email || "your email"}
-            </Text>
-            , go ahead and enter it below.{" "}
-            <Text
-              onPress={goChangeEmail}
-              style={[styles.changeEmailLink, { color: linkColor }]}
+          {/* Figma Top Navigation Bar — 52pt, stays fixed while the form scrolls */}
+          <View style={authFormStyles.navRow}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={authFormStyles.backButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
             >
-              {vf.changeEmail}
-            </Text>
-          </Text>
+              <NavBackIcon
+                color={
+                  isDark ? SCREEN_COLORS.DARK.text : APP_COLORS.surfaceDark
+                }
+              />
+            </TouchableOpacity>
+          </View>
 
-          <Text style={[styles.codeLabel, { color: bodyTextColor }]}>
-            {vf.verificationCodeLabel}
-          </Text>
-
-          <Input
-            placeholder={vf.verificationCodePlaceholder}
-            value={code}
-            onChangeText={handleCodeChange}
-            keyboardType="number-pad"
-            maxLength={6}
-            borderRadius={AUTH_TEXT_FIELD_RADIUS}
-          />
-
-          {error ? (
-            <Text
-              variant="body"
-              size="small"
-              color="error"
-              style={styles.error}
-            >
-              {error}
-            </Text>
-          ) : null}
-
-          <PrimaryButton
-            title="Verify"
-            onPress={onPressVerify}
-            disabled={code.length !== 6 || isLoading}
-            loading={isLoading}
-            style={[
-              styles.verifyButton,
-              {
-                backgroundColor: theme.colors.primaryCTA,
-                borderRadius: AUTH_TEXT_FIELD_RADIUS,
+          <ScrollView
+            {...kb.scrollViewProps}
+            style={authFormStyles.scroll}
+            contentContainerStyle={[
+              authFormStyles.scrollContent,
+              kb.contentPaddingBottom > 0 && {
+                paddingBottom: 24 + kb.contentPaddingBottom,
               },
-            ] as unknown as ViewStyle}
-            textColor={theme.colors.onPrimary}
-          />
-
-          <TouchableOpacity
-            onPress={async () => {
-              if (resendTimer > 0) return;
-              await handleResend();
-              setResendTimer(60);
-            }}
-            disabled={isLoading || resendTimer > 0}
-            style={styles.resendWrap}
-            activeOpacity={resendTimer > 0 ? 1 : 0.7}
+            ]}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
           >
-            <Text style={[styles.resendPrefix, { color: bodyTextColor }]}>
-              {vf.resendPrefix}
+            {/* Figma 8015:111087 — title + subtitle, 4pt apart */}
+            <View style={styles.header}>
               <Text
-                style={[
-                  styles.resendAction,
-                  {
-                    color:
-                      resendTimer > 0 ? theme.colors.resendTimer : linkColor,
-                    textDecorationLine: resendTimer > 0 ? "none" : "underline",
-                  },
-                ]}
+                variant="title"
+                size="small"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                accessibilityRole="header"
+                style={[authFormStyles.title, { color: textColor }]}
               >
-                {vf.resend}
-                {resendTimer > 0 ? ` ${resendTimer}s` : ""}
+                {screenTitle}
               </Text>
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
+              {/* Body/14 Regular — wraps fully (it holds the email and the change link) */}
+              <Text style={[authFormStyles.subtitle, { color: textColor }]}>
+                We sent your code to {email || "your email"}, go ahead and enter
+                it below.{" "}
+                <Text
+                  onPress={goChangeEmail}
+                  accessibilityRole="link"
+                  style={[
+                    authFormStyles.subtitle,
+                    styles.link,
+                    { color: textColor },
+                  ]}
+                >
+                  {vf.changeEmail}.
+                </Text>
+              </Text>
+            </View>
+
+            {/* Figma Textfield with label: label 14/20 Medium, 8pt gap, 48pt field */}
+            <View
+              style={[authFormStyles.fieldGroup, styles.codeGroup]}
+              onLayout={kb.layout("code")}
+            >
+              <Text
+                numberOfLines={2}
+                style={[authFormStyles.fieldLabel, { color: textColor }]}
+              >
+                {vf.verificationCodeLabel}
+              </Text>
+              <Input
+                testID="verify-code-input"
+                onFocus={kb.focus("code")}
+                placeholder={vf.verificationCodePlaceholder}
+                value={code}
+                onChangeText={handleCodeChange}
+                keyboardType="number-pad"
+                maxLength={6}
+                returnKeyType="done"
+                submitBehavior="blurAndSubmit"
+                onSubmitEditing={() => {
+                  if (code.length === 6 && !isLoading) onPressVerify();
+                }}
+                borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                hasError={!!error}
+                containerStyle={authFormStyles.fieldContainer}
+                inputStyle={[authFormStyles.fieldText, { color: textColor }]}
+              />
+              {error ? <AuthFieldError message={error} /> : null}
+            </View>
+
+            {/* Figma 8598:32477 — Verify + resend row, 4pt apart */}
+            <View style={styles.actions} onLayout={kb.layout("cta")}>
+              <PrimaryButton
+                testID="verify-submit"
+                title="Verify"
+                onPress={onPressVerify}
+                disabled={code.length !== 6 || isLoading}
+                loading={isLoading}
+                style={{
+                  ...authFormStyles.submit,
+                  backgroundColor: theme.colors.primaryCTA,
+                }}
+                textStyle={authFormStyles.submitLabel}
+                textColor={theme.colors.onPrimary}
+              />
+
+              <TouchableOpacity
+                testID="verify-resend"
+                onPress={async () => {
+                  if (!canResend) return;
+                  await handleResend();
+                  setResendTimer(60);
+                }}
+                disabled={isLoading || !canResend}
+                style={styles.resendRow}
+                activeOpacity={canResend ? 0.7 : 1}
+                accessibilityRole="button"
+              >
+                {/* Button/16 Medium — wraps and the row grows at large text */}
+                <Text style={[styles.resendText, { color: textColor }]}>
+                  {vf.resendPrefix}
+                  <Text
+                    style={[
+                      styles.resendText,
+                      canResend
+                        ? [styles.link, { color: theme.colors.primaryCTA }]
+                        : { color: theme.colors.textTertiary },
+                    ]}
+                  >
+                    {vf.resend}
+                    {canResend ? "" : ` ${resendTimer}s`}
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </ScreenContainer>
   );
@@ -296,63 +340,34 @@ const styles = StyleSheet.create({
   authFormLayer: {
     zIndex: 1,
   },
-  backRow: {
-    paddingHorizontal: 20,
-    zIndex: 10,
+  header: {
+    gap: 4,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "flex-start",
-    marginLeft: AUTH_BACK_BUTTON_LEFT_OFFSET,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-  },
-  screenTitle: {
-    ...typography.title.large,
-    fontFamily: FONTS.bold,
-    marginBottom: 12,
-  },
-  desc: {
-    ...typography.body.medium,
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  descEmail: {
-    ...typography.body.mediumSemibold,
-    lineHeight: 20,
-  },
-  changeEmailLink: {
-    ...typography.body.mediumSemibold,
-    lineHeight: 20,
+  link: {
     textDecorationLine: "underline",
   },
-  codeLabel: {
-    ...typography.body.mediumSemibold,
-    marginTop: 8,
-    marginBottom: 4,
+  /** Figma: 24pt between the header and the field */
+  codeGroup: {
+    marginTop: 24,
   },
-  verifyButton: {
-    marginTop: 12,
+  /** Figma: 16pt between the field and the actions; Verify and resend 4pt apart */
+  actions: {
+    marginTop: 16,
+    gap: 4,
   },
-  resendWrap: {
-    alignSelf: "center",
-    marginTop: 20,
+  /** Figma resend row: 44pt minimum, centred, wraps at large text */
+  resendRow: {
+    minHeight: 44,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  resendPrefix: {
-    ...typography.body.mediumMedium,
+  /** Button/16px Medium 16/24 */
+  resendText: {
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
     textAlign: "center",
-    lineHeight: 20,
-  },
-  resendAction: {
-    ...typography.body.mediumSemibold,
-    lineHeight: 20,
-  },
-  error: {
-    marginTop: 8,
-    marginBottom: 4,
   },
 });

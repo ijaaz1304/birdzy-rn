@@ -1,15 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef } from "react";
 import {
   View,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Keyboard,
-  Animated,
-  Dimensions,
-  Easing,
+  KeyboardAvoidingView,
   Platform,
-  type KeyboardEvent,
+  TextInput,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -24,12 +21,14 @@ import { ScreenContainer } from "../../../molecules/ScreenContainer/ScreenContai
 import { useTheme } from "../../../hooks/useTheme";
 import { useFeatureConfig } from "../../../config/context";
 import { typography } from "../../../design-system/typography";
-import { spacing } from "../../../design-system/spacing";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { SCREEN_COLORS } from "../../../constants/colorConstants";
 
 import { APP_COLORS } from "../../../config/colors";
 import { AUTH_TEXT_FIELD_RADIUS } from "../constants/authFormLayout";
+import { authFormStyles } from "../components/authFormStyles";
+import { useKeyboardAwareForm } from "../../../hooks/useKeyboardAwareForm";
+import { FONTS } from "../../../common/typography";
 import { useCountriesStore } from "../../../data/countries.store";
 
 type CompleteProfileScreenNavigationProp = NativeStackNavigationProp<
@@ -56,61 +55,17 @@ export const CompleteProfileScreen = () => {
     loadCountries();
   }, [loadCountries]);
 
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const footerTranslateY = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-
-    const coveredByKeyboard = (event: KeyboardEvent) => {
-      const windowHeight = Dimensions.get("window").height;
-      const overlap = windowHeight - event.endCoordinates.screenY;
-      return overlap > 0 ? overlap : event.endCoordinates.height;
-    };
-
-    const animateFooter = (toValue: number, event: KeyboardEvent) => {
-      Animated.timing(footerTranslateY, {
-        toValue,
-        duration: event.duration > 0 ? event.duration : 250,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    };
-
-    const onShow = (event: KeyboardEvent) => {
-      const height = coveredByKeyboard(event);
-      setKeyboardHeight(height);
-      animateFooter(-height, event);
-    };
-    const onHide = (event: KeyboardEvent) => {
-      setKeyboardHeight(0);
-      animateFooter(0, event);
-    };
-    const showSub = Keyboard.addListener(showEvent, onShow);
-    const hideSub = Keyboard.addListener(hideEvent, onHide);
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, [footerTranslateY]);
-
-  const keyboardOpen = keyboardHeight > 0;
-  const footerPaddingBottom = keyboardOpen
-    ? spacing[4]
-    : Math.max(insets.bottom, spacing[4]);
-  const scrollBottomInset =
-    spacing[4] + 44 + footerPaddingBottom + spacing[2];
+  /** Keyboard rule: focused field + Continue stay visible (shared auth-form hook). */
+  const kb = useKeyboardAwareForm();
+  const ageRef = useRef<TextInput>(null);
 
   const isDark = theme.mode === "dark";
   const authBg = isDark
     ? APP_COLORS.surfaceAuthDark
     : APP_COLORS.surfaceAuthLight;
-  const subtitleColor = isDark
-    ? SCREEN_COLORS.DARK.textSecondary
-    : SCREEN_COLORS.LIGHT.textSecondary;
+  const textColor = theme.colors.textPrimary;
+  const fieldTextStyle = [authFormStyles.fieldText, { color: textColor }];
+  const dropdownBg = isDark ? APP_COLORS.surfaceDark : theme.colors.surface;
 
   const finishOnboarding = useCallback(() => {
     const root = navigation.getParent();
@@ -119,186 +74,198 @@ export const CompleteProfileScreen = () => {
 
   return (
     <ScreenContainer showBackground={false} backgroundColor={authBg} edges={[]}>
-      <View
-        style={[
-          styles.page,
-          {
-            paddingTop: insets.top,
-          },
-        ]}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.flex}
       >
-        <View style={styles.topBarContent}>
-          <View style={styles.topBarSpacer} />
-          <TouchableOpacity
-            onPress={finishOnboarding}
-            style={styles.skipButton}
-            activeOpacity={0.8}
-            hitSlop={HIT_SLOP.CLOSE}
-          >
-            <Text
-              style={[
-                styles.skipText,
-                {
-                  color: isDark
-                    ? SCREEN_COLORS.DARK.text
-                    : theme.colors.text,
-                },
-              ]}
-            >
-              {completeProfileConfig.skipText}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={[
-            styles.bodyContent,
-            { paddingBottom: scrollBottomInset },
-          ]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          bounces={false}
-          automaticallyAdjustKeyboardInsets={false}
-        >
-          <Text
-            variant="title"
-            size="small"
-            weight="bold"
-            style={[styles.title, { color: theme.colors.textPrimary }]}
-          >
-            {completeProfileConfig.title}
-          </Text>
-          <Text style={[styles.subtitle, { color: subtitleColor }]}>
-            {completeProfileConfig.subtitle}
-          </Text>
-
-          <View style={styles.inputsContainer}>
-            <Input
-              placeholder={completeProfileConfig.namePlaceholder}
-              borderRadius={AUTH_TEXT_FIELD_RADIUS}
-            />
-            <Input
-              placeholder={completeProfileConfig.agePlaceholder}
-              keyboardType="numeric"
-              borderRadius={AUTH_TEXT_FIELD_RADIUS}
-            />
-            <Dropdown
-              placeholder={completeProfileConfig.genderPlaceholder}
-              options={[
-                { label: "Male", value: "male" },
-                { label: "Female", value: "female" },
-                { label: "Other", value: "other" },
-              ]}
-              value={gender}
-              onSelect={setGender}
-              size="large"
-              borderRadius={AUTH_TEXT_FIELD_RADIUS}
-              style={styles.fieldSpacing}
-              buttonBackgroundColor={
-                isDark ? APP_COLORS.surfaceDark : theme.colors.surface
-              }
-            />
-            <Dropdown
-              placeholder={
-                countriesLoading
-                  ? "Loading countries..."
-                  : completeProfileConfig.countryPlaceholder
-              }
-              options={dropdownOptions}
-              value={country}
-              onSelect={setCountry}
-              disabled={countriesLoading}
-              size="large"
-              borderRadius={AUTH_TEXT_FIELD_RADIUS}
-              style={styles.fieldSpacing}
-              buttonBackgroundColor={
-                isDark ? APP_COLORS.surfaceDark : theme.colors.surface
-              }
-            />
-          </View>
-        </ScrollView>
-
-        <Animated.View
+        <View
           style={[
-            styles.footer,
+            authFormStyles.page,
             {
-              paddingBottom: footerPaddingBottom,
-              backgroundColor: authBg,
-              transform: [{ translateY: footerTranslateY }],
+              paddingTop: insets.top,
+              paddingBottom: kb.keyboardVisible
+                ? 8
+                : Math.max(insets.bottom, 16),
             },
           ]}
         >
-          <PrimaryButton
-            title={completeProfileConfig.submitButtonText}
-            onPress={finishOnboarding}
-            style={{
-              backgroundColor: theme.colors.primaryCTA,
-              borderRadius: AUTH_TEXT_FIELD_RADIUS,
-              marginTop: 0,
-              height: 44,
-              minHeight: 44,
-              width: "82%",
-              alignSelf: "center",
-            }}
-            textColor={theme.colors.onPrimary}
-          />
-        </Animated.View>
-      </View>
+          {/* Figma Top Navigation Bar — 52pt, Skip on the right (16pt inset) */}
+          <View style={[authFormStyles.navRow, styles.navRow]}>
+            <TouchableOpacity
+              testID="complete-profile-skip"
+              onPress={finishOnboarding}
+              style={styles.skipButton}
+              activeOpacity={0.8}
+              hitSlop={HIT_SLOP.CLOSE}
+              accessibilityRole="button"
+            >
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.skipText,
+                  { color: isDark ? SCREEN_COLORS.DARK.text : textColor },
+                ]}
+              >
+                {completeProfileConfig.skipText}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            {...kb.scrollViewProps}
+            style={authFormStyles.scroll}
+            contentContainerStyle={[
+              authFormStyles.scrollContent,
+              kb.contentPaddingBottom > 0 && {
+                paddingBottom: 24 + kb.contentPaddingBottom,
+              },
+            ]}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {/* Figma 8015:111165 — title + subtitle, 4pt apart */}
+            <View style={styles.header}>
+              <Text
+                variant="title"
+                size="small"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                accessibilityRole="header"
+                style={[authFormStyles.title, { color: textColor }]}
+              >
+                {completeProfileConfig.title}
+              </Text>
+              <Text style={[authFormStyles.subtitle, { color: textColor }]}>
+                {completeProfileConfig.subtitle}
+              </Text>
+            </View>
+
+            {/* Figma 8015:111168 — 48pt fields, 16pt apart */}
+            <View style={styles.fields} onLayout={kb.layout("fields")}>
+              <View onLayout={kb.layout("name", "fields")}>
+                <Input
+                  testID="complete-profile-name"
+                  onFocus={kb.focus("name")}
+                  placeholder={completeProfileConfig.namePlaceholder}
+                  autoCapitalize="words"
+                  returnKeyType="next"
+                  submitBehavior="submit"
+                  onSubmitEditing={() => ageRef.current?.focus()}
+                  borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                  containerStyle={authFormStyles.fieldContainer}
+                  inputStyle={fieldTextStyle}
+                />
+              </View>
+              <View onLayout={kb.layout("age", "fields")}>
+                <Input
+                  ref={ageRef}
+                  testID="complete-profile-age"
+                  onFocus={kb.focus("age")}
+                  placeholder={completeProfileConfig.agePlaceholder}
+                  keyboardType="numeric"
+                  returnKeyType="done"
+                  borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                  containerStyle={authFormStyles.fieldContainer}
+                  inputStyle={fieldTextStyle}
+                />
+              </View>
+              <Dropdown
+                testID="complete-profile-gender"
+                placeholder={completeProfileConfig.genderPlaceholder}
+                options={[
+                  { label: "Male", value: "male" },
+                  { label: "Female", value: "female" },
+                  { label: "Other", value: "other" },
+                ]}
+                value={gender}
+                onSelect={setGender}
+                size="medium"
+                borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                buttonBackgroundColor={dropdownBg}
+                buttonStyle={styles.dropdownButton}
+                textStyle={styles.dropdownText}
+                valueNumberOfLines={2}
+              />
+              <Dropdown
+                testID="complete-profile-country"
+                placeholder={
+                  countriesLoading
+                    ? "Loading countries..."
+                    : completeProfileConfig.countryPlaceholder
+                }
+                options={dropdownOptions}
+                value={country}
+                onSelect={setCountry}
+                disabled={countriesLoading}
+                size="medium"
+                borderRadius={AUTH_TEXT_FIELD_RADIUS}
+                buttonBackgroundColor={dropdownBg}
+                buttonStyle={styles.dropdownButton}
+                textStyle={styles.dropdownText}
+                valueNumberOfLines={2}
+              />
+            </View>
+
+            {/* Figma 8015:111187 — Continue 16pt below the fields (full width) */}
+            <View onLayout={kb.layout("cta")}>
+              <PrimaryButton
+                testID="complete-profile-continue"
+                title={completeProfileConfig.submitButtonText}
+                onPress={finishOnboarding}
+                style={{
+                  ...authFormStyles.submit,
+                  marginTop: 16,
+                  backgroundColor: theme.colors.primaryCTA,
+                }}
+                textStyle={authFormStyles.submitLabel}
+                textColor={theme.colors.onPrimary}
+              />
+            </View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  page: {
-    flex: 1,
-    paddingHorizontal: spacing[5],
-  },
-  topBarContent: {
-    flexDirection: "row",
+  /** Skip sits 16pt from the edge (page margin is 20) */
+  navRow: {
     justifyContent: "flex-end",
-    alignItems: "center",
-    minHeight: 52,
-    paddingVertical: 12,
+    marginRight: -4,
   },
-  topBarSpacer: {
-    flex: 1,
-  },
+  /** Figma Skip button: 32pt min height, 12pt side padding, pill */
   skipButton: {
-    minWidth: 60,
+    minHeight: 32,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "transparent",
   },
+  /** Button/14px Medium 14/20 */
   skipText: {
     ...typography.button.medium,
   },
-  bodyContent: {
-    paddingTop: spacing[4],
+  header: {
+    gap: 4,
+    marginBottom: 24,
   },
-  footer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingTop: spacing[4],
-    zIndex: 2,
-    alignItems: "center",
+  fields: {
+    gap: 16,
   },
-  title: {
-    ...typography.title.small,
-    marginBottom: spacing[1],
+  /** Figma select field: 48pt minimum, 16pt side padding, 12pt to the arrow */
+  dropdownButton: {
+    minHeight: 48,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
-  subtitle: {
-    ...typography.body.medium,
-    marginBottom: spacing[6],
-  },
-  inputsContainer: {
-    width: "100%",
-  },
-  fieldSpacing: {
-    marginTop: spacing[4],
+  /** Body/16px/Regular; may wrap to 2 lines for long values (country names) */
+  dropdownText: {
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
   },
 });

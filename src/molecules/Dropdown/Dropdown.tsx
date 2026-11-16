@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ViewStyle,
+  TextStyle,
   Modal,
   FlatList,
   TouchableWithoutFeedback,
@@ -52,6 +53,13 @@ export interface DropdownProps {
   /** Replaces the default arrow-down indicator. */
   rightIcon?: React.ReactNode;
   style?: ViewStyle;
+  /** Extra button style (e.g. Figma 48pt field padding). Applied last. */
+  buttonStyle?: ViewStyle;
+  /** Extra style for the selected value / placeholder text (e.g. Figma Body/16). */
+  textStyle?: TextStyle;
+  /** Lines the selected value may use before truncating (default 1). Forms pass 2 so long values wrap. */
+  valueNumberOfLines?: number;
+  testID?: string;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -71,6 +79,10 @@ export const Dropdown: React.FC<DropdownProps> = ({
   height,
   rightIcon,
   style,
+  buttonStyle,
+  textStyle,
+  valueNumberOfLines = 1,
+  testID,
 }) => {
   const theme = useTheme();
   const isDark = useIsDark();
@@ -152,7 +164,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
         </Text>
       )}
       <TouchableOpacity
-        style={getButtonStyle()}
+        testID={testID}
+        accessibilityRole="button"
+        style={[getButtonStyle(), buttonStyle]}
         onPress={() => !disabled && setIsOpen(true)}
         disabled={disabled}
         activeOpacity={0.7}
@@ -172,8 +186,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
             variant="body"
             size={size === "large" ? "large" : "medium"}
             color={selectedOption ? "text" : "textTertiary"}
-            style={[styles.buttonText, { fontSize: buttonFontSize }]}
-            numberOfLines={1}
+            style={[styles.buttonText, { fontSize: buttonFontSize }, textStyle]}
+            numberOfLines={valueNumberOfLines}
           >
             {selectedOption?.label || placeholder}
           </Text>
@@ -225,7 +239,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
                     { borderBottomColor: theme.colors.border },
                   ]}
                 >
-                  <Text variant="title" size="medium" weight="semibold">
+                  <Text
+                    variant="title"
+                    size="medium"
+                    weight="semibold"
+                    numberOfLines={2}
+                    style={styles.modalTitle}
+                  >
                     {label || "Select an option"}
                   </Text>
                   <TouchableOpacity
@@ -350,6 +370,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: spacing[4],
     borderBottomWidth: 1,
+  },
+  /** Picker title wraps (max 2 lines) and never runs under the close button. */
+  modalTitle: {
+    flex: 1,
+    marginRight: 8,
   },
   closeButton: {
     padding: 4,
