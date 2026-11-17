@@ -14,7 +14,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NavigationProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -30,7 +33,10 @@ import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { FREE_AUDIO_GALLERY_LIMIT } from "../../../constants/appConstants";
 import { ConfirmationModal, SearchBar } from "../../../molecules";
-import { HomeStackParamList, MainTabParamList } from "../../../navigation/types";
+import {
+  HomeStackParamList,
+  MainTabParamList,
+} from "../../../navigation/types";
 import { useTheme } from "../../../hooks/useTheme";
 import { archetypeService } from "../../../services/archetype/archetype.service";
 import type { BirdGalleryAudioFile } from "../../../services/api/features/bird.api.types";
@@ -72,9 +78,8 @@ export const AudioGalleryScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<LibraryTab>("identified");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortMode>("newest");
-  const [pendingDelete, setPendingDelete] = useState<BirdGalleryAudioFile | null>(
-    null
-  );
+  const [pendingDelete, setPendingDelete] =
+    useState<BirdGalleryAudioFile | null>(null);
 
   const loadGallery = useCallback(async () => {
     setError(null);
@@ -110,9 +115,7 @@ export const AudioGalleryScreen: React.FC = () => {
     try {
       await soundRecordingService.play(file.url, {
         onEnd: () => {
-          setPlayingId((current) =>
-            current === file.fileId ? null : current
-          );
+          setPlayingId((current) => (current === file.fileId ? null : current));
         },
       });
     } catch {
@@ -243,10 +246,10 @@ export const AudioGalleryScreen: React.FC = () => {
   const emptyMessage = isLibraryEmpty
     ? null
     : normalizedQuery
-      ? strings.emptySearch
-      : activeTab === "identified"
-        ? strings.emptyIdentified
-        : strings.emptyUnknown;
+    ? strings.emptySearch
+    : activeTab === "identified"
+    ? strings.emptyIdentified
+    : strings.emptyUnknown;
 
   const renderEmpty = () => {
     if (loading || error) return null;
@@ -258,36 +261,43 @@ export const AudioGalleryScreen: React.FC = () => {
             style={styles.emptyArt}
             resizeMode="contain"
           />
-          <Text
-            variant="body"
-            size="medium"
-            weight="medium"
-            style={[styles.emptyTitle, { color: colors.textPrimary }]}
-          >
-            {strings.emptyTitle}
-          </Text>
-          <Text variant="body" size="small" style={styles.emptySubtitle}>
-            {strings.emptySubtitle}
-          </Text>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => navigateToSoundIdentify(navigation)}
-            style={styles.identifyCta}
-          >
-            <CreatePlusIcon
-              width={24}
-              height={24}
-              color={APP_COLORS.createButtonFg}
-            />
-            <Text
-              variant="body"
-              size="medium"
-              weight="medium"
-              style={styles.identifyCtaLabel}
+          <View style={styles.emptyCopyGroup}>
+            <View style={styles.emptyCopy}>
+              <Text
+                variant="body"
+                size="medium"
+                weight="medium"
+                style={[styles.emptyTitle, { color: colors.textPrimary }]}
+                numberOfLines={2}
+              >
+                {strings.emptyTitle}
+              </Text>
+              <Text variant="body" size="small" style={styles.emptySubtitle}>
+                {strings.emptySubtitle}
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigateToSoundIdentify(navigation)}
+              style={styles.identifyCta}
+              accessibilityRole="button"
             >
-              {strings.identifyCta}
-            </Text>
-          </TouchableOpacity>
+              <CreatePlusIcon
+                width={24}
+                height={24}
+                color={APP_COLORS.soundLibraryBrand}
+              />
+              <Text
+                variant="body"
+                size="medium"
+                weight="medium"
+                style={styles.identifyCtaLabel}
+                numberOfLines={2}
+              >
+                {strings.identifyCta}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       );
     }
@@ -310,6 +320,8 @@ export const AudioGalleryScreen: React.FC = () => {
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             hitSlop={HIT_SLOP.CLOSE}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
           >
             <NavBackIcon color={colors.textPrimary} size={24} />
           </TouchableOpacity>
@@ -318,6 +330,8 @@ export const AudioGalleryScreen: React.FC = () => {
             size="medium"
             weight="bold"
             style={[styles.headerTitle, { color: colors.textPrimary }]}
+            numberOfLines={2}
+            accessibilityRole="header"
           >
             {strings.title}
           </Text>
@@ -373,7 +387,10 @@ export const AudioGalleryScreen: React.FC = () => {
 
         {loading ? (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color={APP_COLORS.createButtonFg} />
+            <ActivityIndicator
+              size="large"
+              color={APP_COLORS.soundLibraryBrand}
+            />
           </View>
         ) : error ? (
           <View style={styles.centered}>
@@ -384,7 +401,7 @@ export const AudioGalleryScreen: React.FC = () => {
               <Text
                 variant="body"
                 weight="semibold"
-                style={{ color: APP_COLORS.createButtonFg }}
+                style={{ color: APP_COLORS.soundLibraryBrand }}
               >
                 {strings.retry}
               </Text>
@@ -456,7 +473,7 @@ const LibraryTabButton: React.FC<{
     style={[
       styles.tab,
       active && {
-        borderBottomColor: APP_COLORS.createButtonFg,
+        borderBottomColor: APP_COLORS.soundLibraryBrand,
       },
     ]}
   >
@@ -467,11 +484,14 @@ const LibraryTabButton: React.FC<{
       style={{
         fontFamily: active ? FONTS.medium : FONTS.regular,
         fontSize: 16,
+        letterSpacing: active ? 0 : -0.16,
         color: active
-          ? APP_COLORS.createButtonFg
+          ? APP_COLORS.soundLibraryBrand
           : APP_COLORS.textSecondaryGray,
+        lineHeight: 24,
+        textAlign: "center",
       }}
-      numberOfLines={1}
+      numberOfLines={2}
     >
       {label}
     </Text>
@@ -481,11 +501,13 @@ const LibraryTabButton: React.FC<{
 const styles = StyleSheet.create({
   root: { flex: 1 },
   safe: { flex: 1 },
+  /** Figma Top Navigation Bar: 52pt, 12pt side padding, back icon in an 8pt-padded target */
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing[4],
-    paddingBottom: spacing[2],
+    minHeight: 52,
+    paddingHorizontal: 20,
+    paddingVertical: 6,
     gap: spacing[2],
   },
   headerTitle: {
@@ -493,14 +515,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: FONTS.bold,
     fontSize: 18,
+    lineHeight: 24,
   },
   headerSpacer: { width: 24 },
+  /** Figma 8890:176254: 20pt margins, 8pt below the nav bar, 8pt between search and filter */
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing[4],
-    gap: spacing[2],
-    marginTop: spacing[1],
+    paddingHorizontal: 20,
+    gap: 8,
+    marginTop: 8,
   },
   searchBarWrap: { flex: 1, minWidth: 0 },
   searchInput: {
@@ -515,34 +539,49 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  /** 24pt below search; tabs 32pt min, brand-1 underline on the active tab */
   tabs: {
     flexDirection: "row",
-    marginTop: spacing[3],
-    paddingHorizontal: spacing[4],
+    marginTop: 24,
+    paddingHorizontal: 20,
   },
   tab: {
     flex: 1,
+    minHeight: 32,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: spacing[2],
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderBottomWidth: 2,
     borderBottomColor: "transparent",
   },
+  /** Figma: first card 16pt below the tabs, 12pt between cards; empty state 24pt below */
   listContent: {
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[4],
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   listEmptyGrow: {
     flexGrow: 1,
   },
   separator: { height: spacing[3] },
+  /** Figma: art → 22pt → copy group (295pt wide), placed right under the tabs */
   emptyWrap: {
-    flex: 1,
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing[6],
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 295,
+    marginTop: 8,
     paddingBottom: spacing[8],
-    gap: spacing[3],
+    gap: 22,
+  },
+  emptyCopyGroup: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    gap: 12,
+  },
+  emptyCopy: {
+    alignSelf: "stretch",
+    gap: 8,
   },
   emptyArt: {
     width: 219,
@@ -551,8 +590,8 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: FONTS.medium,
     fontSize: 16,
+    lineHeight: 24,
     textAlign: "center",
-    marginTop: spacing[1],
   },
   emptySubtitle: {
     fontFamily: FONTS.regular,
@@ -565,17 +604,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    height: 44,
-    paddingHorizontal: spacing[4],
-    borderRadius: 24,
-    backgroundColor: APP_COLORS.createButtonBg,
-    gap: spacing[2],
-    marginTop: spacing[2],
+    minHeight: 44,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    maxWidth: "100%",
+    borderRadius: 23.789,
+    backgroundColor: APP_COLORS.soundLibraryBrandAccent,
+    gap: 8,
+    /** Figma drop shadow 0 4 2.5 rgba(49,49,49,0.28) */
+    shadowColor: "#313131",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 2.5,
+    elevation: 4,
   },
   identifyCtaLabel: {
+    flexShrink: 1,
+    textAlign: "center",
     fontFamily: FONTS.medium,
     fontSize: 16,
-    color: APP_COLORS.createButtonFg,
+    lineHeight: 24,
+    color: APP_COLORS.soundLibraryBrand,
   },
   tabEmpty: {
     textAlign: "center",

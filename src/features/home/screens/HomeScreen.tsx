@@ -742,10 +742,10 @@ export const HomeScreen = () => {
                   />
                 )}
               </TouchableOpacity>
-              {/* Figma Body/16px/Medium — truncates so Go Pro + search never get pushed off-screen */}
+              {/* Figma Body/16px/Medium — wraps to max 2 lines (doc: labels) so Go Pro + search stay on screen */}
               <AppText
                 variant="body16"
-                numberOfLines={1}
+                numberOfLines={2}
                 style={styles.greeting}
               >
                 {homeConfig.header.greeting(userName)}
@@ -912,11 +912,13 @@ export const HomeScreen = () => {
           </View>
 
           <View style={styles.sectionBlock}>
-            <View style={[layoutStyles.rowBetween, { marginBottom: Space[4] }]}>
+            {/* Section title (max 2 lines) never runs into "View all" */}
+            <View style={[layoutStyles.rowBetween, styles.otherAppsHeader]}>
               <AppText
                 variant="body16"
                 color={colors.textPrimary}
-                style={{ fontFamily: FONTS.bold }}
+                numberOfLines={2}
+                style={styles.otherAppsTitle}
               >
                 {homeConfig.sections.otherApps.title}
               </AppText>
@@ -1253,6 +1255,15 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: "center",
     alignItems: "center",
+  },
+  /** Figma: 16pt below the section header */
+  otherAppsHeader: {
+    marginBottom: 16,
+    gap: 8,
+  },
+  otherAppsTitle: {
+    fontFamily: FONTS.bold,
+    flexShrink: 1,
   },
   otherAppsScrollContent: {
     gap: 12,

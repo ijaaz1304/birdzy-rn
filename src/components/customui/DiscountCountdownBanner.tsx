@@ -144,15 +144,20 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
               resizeMode="contain"
             />
             {isDiscountActive ? (
-              <View
-                style={[
-                  styles.percentBadge,
-                  { backgroundColor: countdown.BADGE_BG },
-                ]}
-              >
-                <Text style={styles.percentBadgeText} numberOfLines={1}>
-                  -{strings.discount.countdownBanner.badgePercent}
-                </Text>
+              // Wide anchor so the badge sizes to its text (inside the 40pt icon box it was
+              // squeezed to ~28pt and clipped "-50%" to "-5" at larger text sizes).
+              <View style={styles.percentBadgeAnchor} pointerEvents="none">
+                <View
+                  testID="discount-countdown-badge"
+                  style={[
+                    styles.percentBadge,
+                    { backgroundColor: countdown.BADGE_BG },
+                  ]}
+                >
+                  <Text style={styles.percentBadgeText} numberOfLines={1}>
+                    -{strings.discount.countdownBanner.badgePercent}
+                  </Text>
+                </View>
               </View>
             ) : null}
           </View>
@@ -163,7 +168,7 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
           */}
           <Text
             style={[styles.label, isCompact && styles.labelCompact]}
-            numberOfLines={2}
+            numberOfLines={3}
           >
             {isDiscountActive
               ? strings.discount.countdownBanner.label.trim()
@@ -274,10 +279,10 @@ const createStyles = (theme: any) =>
       shadowRadius: 6,
       elevation: 4,
     },
+    /** 44pt minimum; grows when the label / timer wrap at large text */
     wrapper: {
       width: "100%",
       minHeight: 44,
-      maxHeight: 48,
       alignSelf: "stretch",
       justifyContent: "center",
       paddingHorizontal: 8,
@@ -338,15 +343,20 @@ const createStyles = (theme: any) =>
       overflow: "visible",
       zIndex: 1,
     },
+    /** Timer drops under the label when both don't fit on one line (large text) */
     contentRow: {
       flexDirection: "row",
+      flexWrap: "wrap",
       alignItems: "center",
       gap: 8,
+      rowGap: 4,
       alignSelf: "stretch",
       overflow: "visible",
       paddingRight: 12,
     },
+    /** Top of the bar (not centred on a wrapped label) so the -50% badge never covers the label */
     iconBox: {
+      alignSelf: "flex-start",
       width: 40,
       height: 32,
       overflow: "visible",
@@ -362,11 +372,19 @@ const createStyles = (theme: any) =>
       bottom: -2,
       zIndex: 1,
     },
-    percentBadge: {
+    /** Pinned to the icon's top edge: a larger badge (big text) grows upward, never over the nest */
+    percentBadgeAnchor: {
       position: "absolute",
-      top: -16,
+      bottom: 32,
       left: 12,
-      height: 16,
+      width: 120,
+      alignItems: "flex-start",
+      zIndex: 30,
+      elevation: 30,
+    },
+    percentBadge: {
+      minHeight: 16,
+      paddingVertical: 1,
       minWidth: 34,
       paddingHorizontal: 5,
       borderRadius: 8,
@@ -392,6 +410,9 @@ const createStyles = (theme: any) =>
       lineHeight: 20,
       color: theme.colors.textPrimary,
       flexShrink: 1,
+      flexGrow: 1,
+      /** Below this the timer wraps to the next line instead of crushing the label */
+      minWidth: 96,
     },
     timerRow: {
       flexDirection: "row",
@@ -400,11 +421,8 @@ const createStyles = (theme: any) =>
       marginLeft: "auto",
       flexShrink: 0,
     },
-    /** Compact (< COMPACT_BREAKPOINT): 2 lines × 16 + padding stays within maxHeight 48 */
-    labelCompact: {
-      fontSize: 12,
-      lineHeight: 16,
-    },
+    /** Compact (< COMPACT_BREAKPOINT): typography stays at Figma 14/20 (no width-based scaling) */
+    labelCompact: {},
     timerRowCompact: {
       gap: 2,
     },
@@ -414,7 +432,7 @@ const createStyles = (theme: any) =>
     },
     timeBoxVertical: {
       minWidth: 36,
-      height: 24,
+      minHeight: 24,
       paddingHorizontal: 6,
       justifyContent: "center",
       alignItems: "center",

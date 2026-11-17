@@ -1,6 +1,6 @@
 import { useWindowDimensions } from "react-native";
 import { getResponsiveGridColumns } from "@/utils/responsiveLayout";
-import { AppImageBackground } from "@/components/AppImage";
+import { AppImage } from "@/components/AppImage";
 import React from "react";
 import {
   ImageSourcePropType,
@@ -17,54 +17,75 @@ import { useTheme } from "../../../hooks/useTheme";
 import { Radius } from "../../../design";
 
 const CARD_BORDER = "rgba(17, 17, 17, 0.05)";
-const CARD_BG = "#F5EBEB";
+/** Flat fill of the Figma card art (#EBE5EE) — icons/decorations are separate images on top. */
+const CARD_BG = "#EBE5EE";
+
+type Deco = { source: ImageSourcePropType; width: number; height: number };
 
 type CornerCardProps = {
   title: string;
   description: string;
-  background: ImageSourcePropType;
+  icon: ImageSourcePropType;
+  deco: Deco;
   onPress: () => void;
   textPrimary: string;
   textSecondary: string;
+  testID?: string;
 };
 
+/**
+ * Figma 8598:65527 / 8598:65539 — 36pt icon top-left, faded decoration in the bottom-right corner,
+ * title (max 3 lines) + description (max 4 lines). The card is 136pt minimum and grows with its text
+ * (the old single background image scaled/cropped its icons when the card stretched).
+ */
 const CornerCard: React.FC<CornerCardProps> = ({
   title,
   description,
-  background,
+  icon,
+  deco,
   onPress,
   textPrimary,
   textSecondary,
+  testID,
 }) => (
   <TouchableOpacity
+    testID={testID}
     activeOpacity={0.85}
     onPress={onPress}
     style={styles.cornerCardWrap}
+    accessibilityRole="button"
   >
-    <AppImageBackground
-      source={background}
+    <View
       style={[
         styles.cornerCard,
         { borderColor: CARD_BORDER, backgroundColor: CARD_BG },
       ]}
-      imageStyle={styles.cornerCardImage}
-      resizeMode="cover"
     >
+      <AppImage
+        source={deco.source}
+        style={[styles.deco, { width: deco.width, height: deco.height }]}
+        resizeMode="contain"
+        pointerEvents="none"
+      />
+      <AppImage source={icon} style={styles.icon} resizeMode="contain" />
+      <View style={styles.cardSpacer} />
       <View style={styles.cardCopy}>
         <AppText
           variant="body14"
+          numberOfLines={3}
           style={[styles.cardTitle, { color: textPrimary }]}
         >
           {title}
         </AppText>
         <AppText
           variant="caption12"
-          style={{ color: textSecondary, lineHeight: 16 }}
+          numberOfLines={4}
+          style={[styles.cardDescription, { color: textSecondary }]}
         >
           {description}
         </AppText>
       </View>
-    </AppImageBackground>
+    </View>
   </TouchableOpacity>
 );
 
@@ -105,7 +126,9 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
         <CornerCard
           title={corner.birdOfTheDay}
           description={corner.birdOfTheDayDescription}
-          background={Images.homeBirdOfDayCard}
+          icon={Images.homeCornerBotdIcon}
+          deco={{ source: Images.homeCornerBotdDeco, width: 78.5, height: 75 }}
+          testID="home-corner-bird-of-the-day"
           onPress={onBirdOfTheDay}
           textPrimary={textPrimary}
           textSecondary={textSecondary}
@@ -113,43 +136,58 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
         <CornerCard
           title={corner.askAi.title}
           description={corner.askAi.description}
-          background={Images.homeAskAiCardIcon}
+          icon={Images.homeCornerAskAiIcon}
+          deco={{ source: Images.homeCornerAskAiDeco, width: 65, height: 70 }}
+          testID="home-corner-ask-ai"
           onPress={onAskAi}
           textPrimary={textPrimary}
           textSecondary={textSecondary}
         />
       </View>
 
+      {/* Figma 8975:40017 — 72pt minimum row: icon, title + description, chevron; grows with text */}
       <TouchableOpacity
+        testID="home-corner-sound-library"
         activeOpacity={0.85}
         onPress={onBirdSoundLibrary}
         style={styles.libraryRowWrap}
+        accessibilityRole="button"
       >
-        <AppImageBackground
-          source={Images.homeBirdSoundLibrary}
+        <View
           style={[
             styles.libraryRow,
             { borderColor: CARD_BORDER, backgroundColor: CARD_BG },
           ]}
-          imageStyle={styles.libraryRowImage}
-          resizeMode="stretch"
         >
+          <AppImage
+            source={Images.homeCornerLibraryDeco}
+            style={styles.libraryDeco}
+            resizeMode="contain"
+            pointerEvents="none"
+          />
+          <AppImage
+            source={Images.homeCornerLibraryIcon}
+            style={styles.icon}
+            resizeMode="contain"
+          />
           <View style={styles.libraryCopy}>
             <AppText
               variant="body14"
+              numberOfLines={2}
               style={[styles.cardTitle, { color: textPrimary }]}
             >
               {corner.birdSoundLibrary.title}
             </AppText>
             <AppText
               variant="caption12"
-              style={{ color: textSecondary, lineHeight: 16 }}
+              numberOfLines={4}
+              style={[styles.cardDescription, { color: textSecondary }]}
             >
               {corner.birdSoundLibrary.description}
             </AppText>
           </View>
           <MaterialIcons name="chevron-right" size={20} color={textPrimary} />
-        </AppImageBackground>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -166,21 +204,32 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: "row",
     gap: 12,
-    minHeight: 136,
   },
   cornerCardWrap: {
     flex: 1,
   },
   cornerCard: {
     flex: 1,
+    minHeight: 136,
     borderWidth: 1,
     borderRadius: Radius.md,
     padding: 12,
     overflow: "hidden",
-    justifyContent: "flex-end",
   },
-  cornerCardImage: {
-    borderRadius: Radius.md,
+  /** Figma decoration: pinned to the card's bottom-right corner, never scaled with the card */
+  deco: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+  },
+  icon: {
+    width: 36,
+    height: 36,
+  },
+  /** Figma: copy starts 20pt below the icon; extra height pushes the copy to the bottom */
+  cardSpacer: {
+    flexGrow: 1,
+    minHeight: 20,
   },
   cardCopy: {
     gap: 4,
@@ -189,6 +238,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     lineHeight: 20,
   },
+  cardDescription: {
+    lineHeight: 16,
+  },
   libraryRowWrap: {
     width: "100%",
   },
@@ -196,17 +248,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    height: 72,
+    minHeight: 72,
     borderWidth: 1,
     borderRadius: Radius.md,
     paddingVertical: 8,
-    paddingLeft: 56,
+    paddingLeft: 12,
     paddingRight: 16,
     overflow: "hidden",
   },
-  libraryRowImage: {
-    borderRadius: Radius.md,
-    resizeMode: "stretch",
+  libraryDeco: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    width: 87,
+    height: 57,
   },
   libraryCopy: {
     flex: 1,

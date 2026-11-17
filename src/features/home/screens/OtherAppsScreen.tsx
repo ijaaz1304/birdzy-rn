@@ -22,7 +22,6 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "../../../navigation/types";
 import { useTheme } from "../../../hooks/useTheme";
-import { OVERLAY_COLORS } from "../../../constants/colorConstants";
 import { usePublishedAppsStore, PublishedApp } from "../publishedApps.store";
 import { filterPublishedAppsForCrossPromo } from "../publishedAppsFilter";
 import { useFeatureConfig } from "../../../config/context";
@@ -39,14 +38,18 @@ type OtherAppsScreenNavigationProp = NativeStackNavigationProp<
   "OtherApps"
 >;
 
+/** Figma 8015:142144: 12pt between columns, 16pt between rows, 20pt side margins */
 const CARD_GAP = 12;
+const ROW_GAP = 16;
+const SIDE_MARGIN = 20;
 
 export const OtherAppsScreen: React.FC = () => {
   const { width: windowWidth, fontScale } = useWindowDimensions();
   const gridColumns = getResponsiveGridColumns(windowWidth, fontScale);
+  /** One column's width, so a lone last card stays half-width instead of stretching */
+  const columnWidth = (windowWidth - 2 * SIDE_MARGIN - CARD_GAP) / 2;
   const theme = useTheme();
   const colors = theme.colors;
-  const Space = theme.spacing;
   const navigation = useNavigation<OtherAppsScreenNavigationProp>();
   const homeConfig = useFeatureConfig("home");
   const { result, loading, error, managePublishedApps } =
@@ -73,35 +76,44 @@ export const OtherAppsScreen: React.FC = () => {
 
   const renderItem = ({ item }: { item: PublishedApp }) => (
     <View
-      style={[
-        styles.cardWrap,
-        gridColumns === 1 && { width: "100%", maxWidth: "100%" },
-      ]}
+      style={
+        gridColumns > 1
+          ? [styles.cardWrap, { maxWidth: columnWidth }]
+          : styles.cardWrapSingle
+      }
     >
       <AppOtherAppCard
         title={item.title || "App"}
         subtitle={item.description || ""}
         image={item.imageUrl ? { uri: item.imageUrl } : Images.appIcon}
         onPress={() => handleGetApp(item)}
+        singleColumn={gridColumns === 1}
       />
     </View>
   );
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.container, { backgroundColor: colors.surfaceSecondary }]}
     >
-      <View style={[styles.header, { paddingHorizontal: Space[6] }]}>
+      {/* Figma Top Navigation Bar: 52pt min, back icon (8pt padding), Title/18 Bold left-aligned; 2 lines max */}
+      <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
         >
           <NavBackIcon color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+        <Text
+          style={[styles.headerTitle, { color: colors.textPrimary }]}
+          numberOfLines={2}
+          accessibilityRole="header"
+        >
           {homeConfig.sections.otherApps.title}
         </Text>
-        <View style={styles.placeholder} />
       </View>
 
       {loading ? (
@@ -128,7 +140,7 @@ export const OtherAppsScreen: React.FC = () => {
               ? [styles.columnWrapper, { gap: CARD_GAP }]
               : undefined
           }
-          contentContainerStyle={[styles.list, { paddingHorizontal: Space[6] }]}
+          contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -143,31 +155,36 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: OVERLAY_COLORS.BANNER_CLOSE_BORDER,
+    minHeight: 52,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    gap: 8,
+  },
+  backButton: {
+    padding: 8,
   },
   headerTitle: {
+    flex: 1,
     fontSize: 18,
+    lineHeight: 24,
     fontFamily: FONTS.bold,
   },
-  placeholder: {
-    width: 24,
-  },
   list: {
-    paddingTop: 16,
-    paddingBottom: 24,
+    paddingHorizontal: SIDE_MARGIN,
+    paddingVertical: 24,
+    gap: ROW_GAP,
   },
   columnWrapper: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: CARD_GAP,
+    alignItems: "stretch",
   },
+  /** Two equal columns; cards in a row share the taller card's height */
   cardWrap: {
     flex: 1,
     minWidth: 0,
-    maxWidth: "48%",
+  },
+  cardWrapSingle: {
+    width: "100%",
   },
   centered: {
     flex: 1,

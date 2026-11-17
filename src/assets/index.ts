@@ -469,6 +469,13 @@ export const Images = {
   homeBirdOfDayCard: require("./home/bird_of_the_day_home.webp"),
   homeAskAiCardIcon: require("./home/ask_ai_home.webp"),
   homeBirdSoundLibrary: require("./home/bird_sound_home.webp"),
+  /** Bird Corner cards: icon + corner decoration cut from the card art so cards can grow with text */
+  homeCornerBotdIcon: require("./home/home_corner_botd_icon.webp"),
+  homeCornerBotdDeco: require("./home/home_corner_botd_deco.webp"),
+  homeCornerAskAiIcon: require("./home/home_corner_askai_icon.webp"),
+  homeCornerAskAiDeco: require("./home/home_corner_askai_deco.webp"),
+  homeCornerLibraryIcon: require("./home/home_corner_library_icon.webp"),
+  homeCornerLibraryDeco: require("./home/home_corner_library_deco.webp"),
   iconGlobalSearch: require("./catalogue/icons/species/global_search.webp"),
   passwordEye: require("./catalogue/icons/species/eye.webp"),
   passwordEyeOff: require("./catalogue/icons/species/eye_off.webp"),

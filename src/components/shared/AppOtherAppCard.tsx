@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Text,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import AppText from "./AppText";
 import { useTheme, useIsDark } from "../../hooks/useTheme";
@@ -18,8 +19,6 @@ import { FONTS } from "../../common/typography";
 
 import { Radius } from "../../design";
 
-import { spacing } from "../../design-system/spacing";
-
 type Props = {
   title: string;
   subtitle: string;
@@ -27,12 +26,22 @@ type Props = {
   onPress?: () => void;
   variant?: "vertical" | "horizontal";
   width?: number;
+  /**
+   * Grid card in a single-column list (narrow screen / large text): no 196pt minimum, so the
+   * card fits its content instead of leaving empty space above it.
+   */
+  singleColumn?: boolean;
 };
 
-const CARD_HEIGHT = 220;
-const ICON_SIZE = 56;
+/** Figma grid card: 196pt tall at default text (minimum — grows with larger text) */
+const CARD_MIN_HEIGHT = 196;
+const ICON_SIZE = 40;
 const HORIZONTAL_CARD_WIDTH = 250;
 const HORIZONTAL_ICON_SIZE = 72;
+/** Above this font scale the horizontal card stacks (icon + Get on top, text full width below). */
+const HORIZONTAL_STACK_FONT_SCALE = 1.3;
+/** Home side margins (20 + 20) plus a peek of the next card. */
+const HORIZONTAL_SCREEN_RESERVE = 64;
 
 const AppOtherAppCard: React.FC<Props> = ({
   title,
@@ -41,8 +50,10 @@ const AppOtherAppCard: React.FC<Props> = ({
   onPress,
   variant = "vertical",
   width,
+  singleColumn = false,
 }) => {
   const theme = useTheme();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
   const colors = theme.colors;
   const isDark = useIsDark();
   const [imageError, setImageError] = useState(false);
@@ -63,14 +74,84 @@ const AppOtherAppCard: React.FC<Props> = ({
   const shadowOpacity = isDark ? 0.2 : 0.08;
 
   if (variant === "horizontal") {
+    // Large text: give the copy the card's full width (Figma row layout leaves ~80pt at 2× text,
+    // which breaks words letter by letter) and let the card widen with the font, within the screen.
+    const stacked = fontScale > HORIZONTAL_STACK_FONT_SCALE;
+    const baseWidth = width ?? HORIZONTAL_CARD_WIDTH;
+    const cardWidth = stacked
+      ? Math.min(
+          Math.round(baseWidth * fontScale),
+          Math.max(baseWidth, windowWidth - HORIZONTAL_SCREEN_RESERVE)
+        )
+      : baseWidth;
+    const icon = (
+      <View
+        style={[styles.horizontalIconWrap, { backgroundColor: iconWrapBg }]}
+      >
+        <AppImage
+          source={effectiveImage}
+          style={styles.horizontalIcon}
+          resizeMode="contain"
+          onError={() => setImageError(true)}
+        />
+      </View>
+    );
+    const copy = (
+      <View
+        style={
+          stacked
+            ? styles.horizontalTextBlockStacked
+            : styles.horizontalTextBlock
+        }
+      >
+        <AppText
+          variant="title18"
+          color={colors.textPrimary}
+          numberOfLines={3}
+          android_hyphenationFrequency="full"
+          style={styles.horizontalTitle}
+        >
+          {title}
+        </AppText>
+        <AppText
+          variant="body14"
+          color={colors.textSecondary}
+          numberOfLines={4}
+          android_hyphenationFrequency="full"
+        >
+          {subtitle}
+        </AppText>
+      </View>
+    );
+    const getButton = (
+      <TouchableOpacity
+        style={[
+          styles.horizontalButton,
+          { borderColor, backgroundColor: getButtonBg },
+        ]}
+        onPress={onPress}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+      >
+        <Text
+          style={[
+            styles.horizontalButtonText,
+            typography.button.medium,
+            { color: getButtonTextColor },
+          ]}
+        >
+          Get
+        </Text>
+      </TouchableOpacity>
+    );
     return (
       <View
         style={[
-          styles.horizontalCard,
+          stacked ? styles.horizontalCardStacked : styles.horizontalCard,
           {
             backgroundColor: cardBg,
             borderColor,
-            width: width ?? HORIZONTAL_CARD_WIDTH,
+            width: cardWidth,
             shadowColor: ACCENT_COLORS.SHADOW,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity,
@@ -79,89 +160,71 @@ const AppOtherAppCard: React.FC<Props> = ({
           },
         ]}
       >
-        <View
-          style={[styles.horizontalIconWrap, { backgroundColor: iconWrapBg }]}
-        >
-          <AppImage
-            source={effectiveImage}
-            style={styles.horizontalIcon}
-            resizeMode="contain"
-            onError={() => setImageError(true)}
-          />
-        </View>
-        <View style={styles.horizontalTextBlock}>
-          <AppText
-            variant="title18"
-            color={colors.textPrimary}
-            style={styles.horizontalTitle}
-          >
-            {title}
-          </AppText>
-          <AppText variant="body14" color={colors.textSecondary}>
-            {subtitle}
-          </AppText>
-        </View>
-        <TouchableOpacity
-          style={[
-            styles.horizontalButton,
-            { borderColor, backgroundColor: getButtonBg },
-          ]}
-          onPress={onPress}
-          activeOpacity={0.8}
-        >
-          <Text
-            style={[
-              styles.horizontalButtonText,
-              typography.button.medium,
-              { color: getButtonTextColor },
-            ]}
-          >
-            Get
-          </Text>
-        </TouchableOpacity>
+        {stacked ? (
+          <>
+            <View style={styles.horizontalStackedTop}>
+              {icon}
+              {getButton}
+            </View>
+            {copy}
+          </>
+        ) : (
+          <>
+            {icon}
+            {copy}
+            {getButton}
+          </>
+        )}
       </View>
     );
   }
 
+  /**
+   * Grid card — Figma 8015:142150 ("Our Other Apps"): 12pt padding and gaps, 40pt icon, title
+   * Body/16 Bold (max 3 lines), description Caption/12 (max 4 lines), "Get app" pill (label may wrap
+   * to 2 lines). Minimum 196pt tall; grows with large text instead of clipping.
+   */
   return (
     <View
       style={[
         styles.card,
-        {
-          backgroundColor: cardBg,
-          borderColor,
-          minHeight: CARD_HEIGHT,
-          shadowColor: ACCENT_COLORS.SHADOW,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity,
-          shadowRadius: 8,
-          elevation: 3,
-        },
+        singleColumn && styles.cardSingleColumn,
+        isDark
+          ? {
+              backgroundColor: cardBg,
+              borderColor,
+              shadowColor: ACCENT_COLORS.SHADOW,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity,
+              shadowRadius: 8,
+              elevation: 3,
+            }
+          : {
+              backgroundColor: colors.surfacePrimary,
+              borderColor: colors.border0,
+            },
       ]}
     >
-      <View style={styles.topContent}>
-        <View style={[styles.imageWrap, { backgroundColor: iconWrapBg }]}>
-          <AppImage
-            source={effectiveImage}
-            style={[styles.image, { width: ICON_SIZE, height: ICON_SIZE }]}
-            resizeMode="cover"
-            onError={() => setImageError(true)}
-          />
-        </View>
-        <AppText
-          variant="button14"
-          color={colors.textPrimary}
-          style={styles.title}
+      <AppImage
+        source={effectiveImage}
+        style={styles.image}
+        resizeMode="cover"
+        onError={() => setImageError(true)}
+      />
+      <View style={styles.copy}>
+        <Text
+          style={[styles.title, { color: colors.textPrimary }]}
+          numberOfLines={3}
+          android_hyphenationFrequency="full"
         >
           {title}
-        </AppText>
-        <AppText
-          variant="caption12"
-          color={colors.textSecondary}
-          style={styles.subtitle}
+        </Text>
+        <Text
+          style={[styles.subtitle, { color: colors.textSecondary }]}
+          numberOfLines={4}
         >
           {subtitle}
-        </AppText>
+        </Text>
       </View>
       <TouchableOpacity
         style={[
@@ -173,14 +236,11 @@ const AppOtherAppCard: React.FC<Props> = ({
         ]}
         onPress={onPress}
         activeOpacity={0.8}
+        accessibilityRole="button"
       >
         <Text
-          style={[
-            styles.buttonText,
-            typography.button.medium,
-            { fontStyle: "normal" as const },
-            { color: getAppButtonTextColor },
-          ]}
+          style={[styles.buttonText, { color: getAppButtonTextColor }]}
+          numberOfLines={2}
         >
           Get app
         </Text>
@@ -193,48 +253,58 @@ export default AppOtherAppCard;
 
 const styles = StyleSheet.create({
   card: {
+    flexGrow: 1,
     borderWidth: 1,
     borderRadius: Radius.md,
-    padding: spacing[4],
+    padding: 12,
+    gap: 12,
     width: "100%",
+    minHeight: CARD_MIN_HEIGHT,
     alignItems: "flex-start",
+    justifyContent: "flex-end",
     overflow: "hidden",
-    justifyContent: "space-between",
   },
-  topContent: {
-    alignItems: "flex-start",
-    flex: 1,
-  },
-  imageWrap: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-    borderRadius: Radius.md,
-    overflow: "hidden",
-    marginBottom: 10,
+  cardSingleColumn: {
+    minHeight: undefined,
+    flexGrow: 0,
   },
   image: {
-    borderRadius: Radius.md,
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+    borderRadius: 8,
   },
+  copy: {
+    alignSelf: "stretch",
+    gap: 4,
+  },
+  /** Body/16px/SemiBold (Satoshi Bold 16/24) */
   title: {
-    textAlign: "left",
     fontFamily: FONTS.bold,
-    marginBottom: 4,
+    fontSize: 16,
+    lineHeight: 24,
   },
+  /** Caption/12px/Regular at 60% opacity */
   subtitle: {
-    textAlign: "left",
-    marginBottom: 12,
+    fontFamily: FONTS.regular,
+    fontSize: 12,
+    lineHeight: 16,
+    opacity: 0.6,
   },
   button: {
-    flexDirection: "row",
+    minHeight: 28,
     paddingVertical: 4,
     paddingHorizontal: 12,
     justifyContent: "center",
     alignItems: "center",
-    gap: 8,
     alignSelf: "flex-start",
+    maxWidth: "100%",
   },
+  /** Button/14px (Satoshi Medium 14/20) */
   buttonText: {
     fontFamily: FONTS.medium,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
   },
   horizontalCard: {
     flexDirection: "row",
@@ -244,6 +314,24 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 8,
     overflow: "hidden",
+  },
+  horizontalCardStacked: {
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 8,
+    overflow: "hidden",
+  },
+  horizontalStackedTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  horizontalTextBlockStacked: {
+    gap: 4,
+    paddingHorizontal: 4,
+    paddingBottom: 4,
   },
   horizontalIconWrap: {
     width: HORIZONTAL_ICON_SIZE,

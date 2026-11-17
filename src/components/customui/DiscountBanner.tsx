@@ -1,4 +1,4 @@
-import { AppImageBackground } from "@/components/AppImage";
+import { AppImage, AppImageBackground } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
@@ -173,11 +173,14 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
   const layout = useMemo(() => {
     const widthForLayout =
       bannerWidth > 0 ? bannerWidth : HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH;
-    const scale = clamp(
-      widthForLayout / HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH,
-      0.82,
-      1.2
-    );
+    // Light mode follows the typography doc: Figma sizes × the user's font scale only (no width scaling).
+    const scale = isDark
+      ? clamp(
+          widthForLayout / HOME_LAYOUT.DISCOUNT_BANNER_DESIGN_WIDTH,
+          0.82,
+          1.2
+        )
+      : 1;
     const contentPadding = scaleSize(
       HOME_LAYOUT.DISCOUNT_BANNER_PADDING,
       scale
@@ -203,6 +206,11 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
   }, [bannerAspect, bannerHeight, bannerWidth, dynamicHeight, isDark]);
 
   const scale = layout.scale;
+  /**
+   * Light art stays at the banner's default (Figma) height even when large text makes the banner
+   * taller, so the bird keeps its size and is never cropped; the extra space shows the edge gradient.
+   */
+  const artHeight = layout.height;
   const contentPadding = layout.contentPadding;
   const type = isDark ? BANNER_TYPE : LIGHT_BANNER_TYPE;
   const bannerRadius = isDark ? HOME_LAYOUT.DISCOUNT_BANNER_RADIUS : 12;
@@ -213,7 +221,9 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
       style={[
         styles.bannerWrapper,
         {
-          height: layout.height,
+          ...(isDark
+            ? { height: layout.height }
+            : { minHeight: layout.height }),
           borderRadius: bannerRadius,
           borderWidth: isDark ? 1 : 0,
           borderColor: bannerBorderColor,
@@ -224,10 +234,16 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
         activeOpacity={0.9}
         onPress={onSubscribe}
         disabled={!onSubscribe}
-        style={styles.bannerTouchable}
+        style={isDark ? styles.bannerTouchable : styles.bannerTouchableLight}
         accessibilityRole="button"
       >
-        <View style={[styles.bannerImage, { borderRadius: bannerRadius }]}>
+        <View
+          style={[
+            isDark ? styles.bannerImage : styles.bannerImageLight,
+            { borderRadius: bannerRadius },
+            !isDark && { minHeight: layout.height },
+          ]}
+        >
           {isDark ? (
             <AppImageBackground
               source={DiscountBannerDarkSvg}
@@ -246,21 +262,29 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
               />
             </AppImageBackground>
           ) : (
-            <AppImageBackground
-              source={Images.homeDiscountBannerLight}
-              resizeMode="cover"
-              preferRNImage
-              style={styles.bannerFill}
-              imageStyle={[
-                styles.bannerFillImage,
-                { borderRadius: bannerRadius },
-              ]}
-            />
+            <>
+              {/* Fills the space the art doesn't cover (taller/wider banners); matches the art's top edge */}
+              <LinearGradient
+                colors={[...LIGHT_ART_EDGE_GRADIENT]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.bannerFill}
+              />
+              <AppImage
+                source={Images.homeDiscountBannerLight}
+                resizeMode="cover"
+                preferRNImage
+                style={[
+                  styles.bannerArtLight,
+                  { height: artHeight, width: artHeight * LIGHT_ART_ASPECT },
+                ]}
+              />
+            </>
           )}
 
           <View
             style={[
-              styles.bannerContent,
+              isDark ? styles.bannerContent : styles.bannerContentLight,
               {
                 padding: contentPadding,
                 paddingLeft: isDark ? "32%" : 20,
@@ -374,9 +398,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                         lineHeight: scaleSize(type.endsLabel.line, scale),
                       },
                     ]}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit={!isDark}
-                    minimumFontScale={isDark ? 1 : 0.85}
+                    numberOfLines={isDark ? 1 : 2}
                   >
                     {strings.discount.banner.discountEndsIn}
                   </Text>
@@ -420,7 +442,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                           backgroundColor: lightTimerBg,
                           paddingHorizontal: scaleSize(4, scale),
                           paddingVertical: 0,
-                          height: scaleSize(20, scale),
+                          minHeight: scaleSize(20, scale),
                           borderRadius: scaleSize(4, scale),
                         },
                       ]}
@@ -446,7 +468,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                     paddingVertical: scaleSize(type.cta.paddingV, scale),
                     borderRadius: scaleSize(type.cta.radius, scale),
                     alignSelf: isDark ? "center" : "flex-start",
-                    height: scaleSize(28, scale),
+                    ...(isDark ? { height: scaleSize(28, scale) } : null),
                     minHeight: scaleSize(28, scale),
                   },
                 ]}
@@ -461,7 +483,7 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
                       lineHeight: scaleSize(type.cta.line, scale),
                     },
                   ]}
-                  numberOfLines={1}
+                  numberOfLines={isDark ? 1 : 2}
                 >
                   {strings.discount.banner.subscribeNow}
                 </Text>
@@ -492,6 +514,16 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
 
 export default DiscountBanner;
 
+/** discount_banner_figma.png is 335×160 */
+const LIGHT_ART_ASPECT = 335 / 160;
+/** Top-edge colours of discount_banner_figma.png (left → right) */
+const LIGHT_ART_EDGE_GRADIENT = [
+  "#E3D2EC",
+  "#CCB2DA",
+  "#B793C3",
+  "#AB80BB",
+] as const;
+
 const styles = StyleSheet.create({
   bannerWrapper: {
     width: "100%",
@@ -511,6 +543,31 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: HOME_LAYOUT.DISCOUNT_BANNER_RADIUS,
     backgroundColor: HOME_COLORS.DISCOUNT_BANNER.FILL_GRADIENT_LIGHT[0],
+  },
+  /** Light: grows with the content (image stays behind as a cover fill). */
+  bannerTouchableLight: {
+    flexGrow: 1,
+    width: "100%",
+  },
+  bannerImageLight: {
+    flexGrow: 1,
+    width: "100%",
+    overflow: "hidden",
+    backgroundColor: HOME_COLORS.DISCOUNT_BANNER.FILL_GRADIENT_LIGHT[0],
+  },
+  /**
+   * Light art (bird on the right) is sized by the banner's height at its own aspect ratio and
+   * anchored bottom-right, so the bird is never cropped top/bottom on wide (Pro XL) or tall
+   * (large text) banners. Extra width on the left shows the edge gradient behind it.
+   */
+  bannerArtLight: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+  },
+  bannerContentLight: {
+    flexGrow: 1,
+    justifyContent: "center",
   },
   bannerFill: {
     ...StyleSheet.absoluteFillObject,
@@ -539,9 +596,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
+  /** "ON SUBSCRIPTION" drops under "50% OFF" when the text is large */
   headlineRowLight: {
     justifyContent: "flex-start",
     alignItems: "center",
+    flexWrap: "wrap",
   },
   headlineRowDark: {
     justifyContent: "center",
@@ -598,10 +657,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     flexWrap: "nowrap",
   },
+  /** The timer drops under "Discount ends in" when the text is large */
   timerBlockLight: {
     width: "100%",
     alignSelf: "flex-start",
     justifyContent: "flex-start",
+    flexWrap: "wrap",
+    rowGap: 4,
   },
   timerBlockDark: {
     alignSelf: "center",

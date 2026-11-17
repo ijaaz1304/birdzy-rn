@@ -176,6 +176,23 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
         {editable || !onPressBar ? (
           <View style={styles.inputWrap}>
             {/*
+            Invisible one-line copy of the text style: gives the field its height (24pt × the
+            user's font scale), so large text isn't clipped. Input and placeholder fill it.
+          */}
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.input,
+                styles.placeholderText,
+                styles.sizer,
+                inputStyle,
+              ]}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              {placeholder || " "}
+            </Text>
+            {/*
             Figma 8025:101792 placeholder: one line, tail-ellipsised ("Find birds by name,…").
             Android's native placeholder can't ellipsise — it wraps and gets clipped — so it's
             drawn as an overlay Text while the field is empty (screen readers still get it
@@ -209,6 +226,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
                   color: textColor,
                 },
                 inputStyle,
+                styles.inputFill,
               ]}
               placeholder=""
               editable={editable && !disabled}
@@ -330,6 +348,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignSelf: "stretch",
     justifyContent: "center",
+  },
+  /** Height-only line (see sizer Text); never visible */
+  sizer: {
+    opacity: 0,
+  },
+  /** The TextInput fills the sized area */
+  inputFill: {
+    ...StyleSheet.absoluteFillObject,
   },
   /** Fills the input area and centres the placeholder vertically */
   placeholderOverlay: {

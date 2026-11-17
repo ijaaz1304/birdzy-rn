@@ -48,9 +48,7 @@ export function clipDisplayName(
     return item.specimen?.commonName || unknownTitle;
   }
   return (
-    item.specimen?.commonName ||
-    item.specimen?.scientificName ||
-    unknownTitle
+    item.specimen?.commonName || item.specimen?.scientificName || unknownTitle
   );
 }
 
@@ -88,25 +86,29 @@ export function formatClipMeta(
 const PlayButton: React.FC<{ isPlaying: boolean; onPress: () => void }> = ({
   isPlaying,
   onPress,
-}) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.85}
-    hitSlop={HIT_SLOP.SMALL}
-    style={[styles.playBtn]}
-    accessibilityRole="button"
-    accessibilityLabel={isPlaying ? "Pause recording" : "Play recording"}
-  >
-    {isPlaying ? (
-      <View style={styles.pauseGlyph}>
-        <View style={styles.pauseBar} />
-        <View style={styles.pauseBar} />
-      </View>
-    ) : (
-      <SoundLibraryPlayIcon width={24} height={24} color="#FFFFFF" />
-    )}
-  </TouchableOpacity>
-);
+}) => {
+  const theme = useTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      hitSlop={HIT_SLOP.SMALL}
+      /* Figma Bird Sound Card: surface-brand-1 (#725481) circle */
+      style={[styles.playBtn, { backgroundColor: theme.colors.primaryCTA }]}
+      accessibilityRole="button"
+      accessibilityLabel={isPlaying ? "Pause recording" : "Play recording"}
+    >
+      {isPlaying ? (
+        <View style={styles.pauseGlyph}>
+          <View style={styles.pauseBar} />
+          <View style={styles.pauseBar} />
+        </View>
+      ) : (
+        <SoundLibraryPlayIcon width={24} height={24} color="#FFFFFF" />
+      )}
+    </TouchableOpacity>
+  );
+};
 
 const CardBody: React.FC<Props> = ({
   item,
@@ -145,7 +147,7 @@ const CardBody: React.FC<Props> = ({
             variant="body"
             size="medium"
             weight="bold"
-            numberOfLines={1}
+            numberOfLines={2}
             style={[styles.commonName, { color: colors.textPrimary }]}
           >
             {title}
@@ -168,7 +170,7 @@ const CardBody: React.FC<Props> = ({
             variant="body"
             size="medium"
             weight="bold"
-            numberOfLines={1}
+            numberOfLines={2}
             style={[styles.commonName, { color: colors.textPrimary }]}
           >
             {title}
@@ -177,7 +179,7 @@ const CardBody: React.FC<Props> = ({
             <Text
               variant="caption"
               size="small"
-              numberOfLines={1}
+              numberOfLines={2}
               style={styles.scientific}
             >
               {scientific}
@@ -189,7 +191,7 @@ const CardBody: React.FC<Props> = ({
         <Text
           variant="caption"
           size="small"
-          numberOfLines={1}
+          numberOfLines={3}
           style={styles.meta}
         >
           {meta}
@@ -200,10 +202,7 @@ const CardBody: React.FC<Props> = ({
 
   return (
     <View
-      style={[
-        styles.cardInner,
-        { backgroundColor: colors.surfacePrimary },
-      ]}
+      style={[styles.cardInner, { backgroundColor: colors.surfacePrimary }]}
     >
       {variant === "identified" || onOpen ? (
         <TouchableOpacity
@@ -223,7 +222,7 @@ const CardBody: React.FC<Props> = ({
               <View
                 style={[
                   styles.thumb,
-                  { backgroundColor: APP_COLORS.createButtonBg },
+                  { backgroundColor: APP_COLORS.soundLibraryBrandAccent },
                 ]}
               />
             )
@@ -255,7 +254,7 @@ export const AudioGalleryCard: React.FC<Props> = (props) => {
           styles.cardShell,
           {
             borderColor,
-            backgroundColor: APP_COLORS.createButtonBg,
+            backgroundColor: theme.colors.surfacePrimary,
           },
         ]}
       >
@@ -345,24 +344,27 @@ const styles = StyleSheet.create({
     gap: spacing[2],
     flexWrap: "wrap",
   },
+  /** List title: max 2 lines (responsiveness doc) */
   commonName: {
     fontFamily: FONTS.bold,
     fontSize: 16,
+    lineHeight: 24,
     flexShrink: 1,
   },
   scientific: {
     fontFamily: FONTS.regular,
     fontSize: 12,
-    fontStyle: "italic",
+    lineHeight: 16,
     color: APP_COLORS.textSecondaryGray,
   },
   meta: {
     fontFamily: FONTS.regular,
     fontSize: 12,
+    lineHeight: 16,
     color: APP_COLORS.textSecondaryGray,
   },
   badge: {
-    backgroundColor: APP_COLORS.createButtonBg,
+    backgroundColor: APP_COLORS.soundLibraryBrandAccent,
     borderRadius: 100,
     paddingHorizontal: spacing[2],
     paddingVertical: 2,
@@ -370,13 +372,12 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: FONTS.medium,
     fontSize: 12,
-    color: APP_COLORS.createButtonFg,
+    color: APP_COLORS.soundLibraryBrand,
   },
   playBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: APP_COLORS.createButtonFg,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -399,6 +400,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     paddingHorizontal: spacing[2],
-    backgroundColor: APP_COLORS.createButtonBg,
   },
 });

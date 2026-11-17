@@ -8,8 +8,8 @@ import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { FONTS } from "../../../common/typography";
 import { Radius } from "../../../design";
 
-/** Have no photos banner — rgba(222, 229, 230, 1) */
-const BANNER_BG = "#DEE5E6";
+/** Figma 8016:33111 surface-brand-2-accent — #C1D8DB (sampled from the Home frame render) */
+const BANNER_BG = "#C1D8DB";
 /**
  * Figma text-icon-primary (#091B21). The banner background is a fixed light
  * colour in both themes, so the copy stays dark in dark mode too.

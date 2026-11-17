@@ -58,6 +58,17 @@ export const WIZARD_WEEKDAY_LABELS = [
   "Sat",
 ] as const;
 
+/** Used when the 3-letter labels don't fit their column at the user's text size */
+export const WIZARD_WEEKDAY_LABELS_SHORT = [
+  "Su",
+  "Mo",
+  "Tu",
+  "We",
+  "Th",
+  "Fr",
+  "Sa",
+] as const;
+
 export const WIZARD_ANSWER_QUESTIONS: Record<WizardQuestion, string> = {
   location: "Where did you see it?",
   date: "When did you see it?",

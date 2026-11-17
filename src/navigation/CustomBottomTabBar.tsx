@@ -204,7 +204,10 @@ export function CustomBottomTabBar({
             ]}
           />
         </View>
+        {/* Responsiveness doc: navigation labels max 1 line (ellipsis at large text) */}
         <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
           style={[
             styles.tabLabel,
             { color: focused ? tabActiveColor : tabInactiveColor },

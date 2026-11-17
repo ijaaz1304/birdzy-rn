@@ -17,7 +17,12 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useFocusEffect, useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+  RouteProp,
+} from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   Images,
@@ -31,9 +36,9 @@ import { ChangeLocationBottomSheet } from "../../../molecules/Modal";
 import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { FONTS } from "../../../common/typography";
-import { Radius } from "../../../design";
 import { FindYourBirdBackground } from "../../bird-personality/components/FindYourBirdBackground";
-import { useTheme } from "../../../hooks/useTheme";
+import { useIsDark, useTheme } from "../../../hooks/useTheme";
+import { LIGHT_COLORS } from "../../../design-system/colors";
 import { HomeStackParamList } from "../../../navigation/types";
 import { getCurrentLocation } from "../../../utils/locationService";
 import { resolveLocationAddress } from "../../camera/resolveLocationAddress";
@@ -67,6 +72,14 @@ export const StepByStepScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
   const insets = useSafeAreaInsets();
+  const isDark = useIsDark();
+  /** Figma 8890:124282 disabled Next: surface-disabled #D1D1D1, button text disabled #B0B0B0 */
+  const disabledCtaBg = isDark
+    ? colors.borderSecondary
+    : LIGHT_COLORS.surface.disabled.hex;
+  const disabledCtaText = isDark
+    ? colors.textTertiary
+    : LIGHT_COLORS.text.disabled.hex;
   const navigation = useNavigation<Nav>();
   const route = useRoute<ScreenRoute>();
   const strings = HOME_STRINGS.discovery.stepByStep;
@@ -132,13 +145,19 @@ export const StepByStepScreen: React.FC = () => {
         setPhase("intro");
         setQuestionIndex(0);
         setLocationSource(null);
-        navigation.setParams({ startFresh: undefined, editQuestion: undefined });
+        navigation.setParams({
+          startFresh: undefined,
+          editQuestion: undefined,
+        });
       }
     }, [navigation, route.params?.editQuestion, route.params?.startFresh])
   );
 
   const applyLocation = useCallback(
-    (location: WizardRecentLocation, source: "search" | "current" | "recent") => {
+    (
+      location: WizardRecentLocation,
+      source: "search" | "current" | "recent"
+    ) => {
       setLocation(location);
       if (source === "search" || source === "recent") {
         rememberLocation(location);
@@ -231,7 +250,9 @@ export const StepByStepScreen: React.FC = () => {
             </Text>
             <View style={styles.locationSections}>
               <View style={styles.locationSection}>
-                <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>
+                <Text
+                  style={[styles.fieldLabel, { color: colors.textPrimary }]}
+                >
                   {strings.customLocation}
                 </Text>
                 <TouchableOpacity
@@ -257,7 +278,7 @@ export const StepByStepScreen: React.FC = () => {
                           : colors.textTertiary,
                       },
                     ]}
-                    numberOfLines={1}
+                    numberOfLines={2}
                   >
                     {customFieldLabel}
                   </Text>
@@ -265,7 +286,9 @@ export const StepByStepScreen: React.FC = () => {
               </View>
 
               <View style={styles.locationSection}>
-                <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>
+                <Text
+                  style={[styles.fieldLabel, { color: colors.textPrimary }]}
+                >
                   {strings.customLocation}
                 </Text>
                 <TouchableOpacity
@@ -315,7 +338,7 @@ export const StepByStepScreen: React.FC = () => {
                           styles.locationRowLabel,
                           { color: colors.textPrimary },
                         ]}
-                        numberOfLines={1}
+                        numberOfLines={2}
                       >
                         {item.label}
                       </Text>
@@ -368,7 +391,7 @@ export const StepByStepScreen: React.FC = () => {
             <View style={styles.introHeader}>
               <Text
                 style={[styles.introNavTitle, { color: colors.textPrimary }]}
-                numberOfLines={1}
+                numberOfLines={2}
               >
                 {strings.title}
               </Text>
@@ -378,10 +401,19 @@ export const StepByStepScreen: React.FC = () => {
                 accessibilityRole="button"
                 accessibilityLabel={strings.closeA11y}
               >
-                <CloseIcon variant="plain" size={24} color={colors.textPrimary} />
+                <CloseIcon
+                  variant="plain"
+                  size={24}
+                  color={colors.textPrimary}
+                />
               </TouchableOpacity>
             </View>
-            <View style={styles.introBody}>
+            {/* Scrolls when large text makes the intro taller than the screen */}
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.introBody}
+              showsVerticalScrollIndicator={false}
+            >
               <AppImage
                 source={Images.wizardFindYourBird}
                 style={styles.introArt}
@@ -390,12 +422,10 @@ export const StepByStepScreen: React.FC = () => {
               <Text style={[styles.introTitle, { color: colors.textPrimary }]}>
                 {strings.introTitle}
               </Text>
-              <Text
-                style={[styles.introCopy, { color: colors.textTertiary }]}
-              >
+              <Text style={[styles.introCopy, { color: colors.textTertiary }]}>
                 {strings.introBody}
               </Text>
-            </View>
+            </ScrollView>
             <View
               style={[
                 styles.footer,
@@ -405,12 +435,11 @@ export const StepByStepScreen: React.FC = () => {
               <TouchableOpacity
                 onPress={() => setPhase("question")}
                 activeOpacity={0.85}
-                style={[
-                  styles.cta,
-                  { backgroundColor: colors.primaryCTA },
-                ]}
+                style={[styles.cta, { backgroundColor: colors.primaryCTA }]}
               >
-                <Text style={styles.ctaLabel}>{strings.findOutNow}</Text>
+                <Text style={styles.ctaLabel} numberOfLines={2}>
+                  {strings.findOutNow}
+                </Text>
               </TouchableOpacity>
             </View>
           </>
@@ -445,7 +474,7 @@ export const StepByStepScreen: React.FC = () => {
                   {
                     backgroundColor: nextEnabled
                       ? colors.primaryCTA
-                      : colors.borderSecondary,
+                      : disabledCtaBg,
                   },
                 ]}
               >
@@ -453,11 +482,10 @@ export const StepByStepScreen: React.FC = () => {
                   style={[
                     styles.ctaLabel,
                     {
-                      color: nextEnabled
-                        ? "#FFFFFF"
-                        : colors.textTertiary,
+                      color: nextEnabled ? "#FFFFFF" : disabledCtaText,
                     },
                   ]}
+                  numberOfLines={2}
                 >
                   {strings.next}
                 </Text>
@@ -500,12 +528,13 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   introBody: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 54,
+    /** Same upward offset as Figma (was marginTop -40 on a centred block) */
+    paddingBottom: 80,
     gap: 8,
-    marginTop: -40,
   },
   introArt: {
     width: 150,
@@ -529,9 +558,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 24,
   },
+  /** Figma 8890:124253: 20pt below the nav bar, 20pt between title and answers */
   questionBlock: {
-    gap: 24,
-    paddingTop: 12,
+    gap: 20,
+    paddingTop: 20,
   },
   questionTitle: {
     fontFamily: FONTS.bold,
@@ -549,14 +579,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  /** Figma "Answer" pill: 12/8 padding, 12pt icon gap, fully rounded */
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
     borderWidth: 1,
-    borderRadius: Radius.md,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    borderRadius: 100,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 40,
   },
   locationRowLabel: {
     flex: 1,
@@ -581,7 +613,9 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   cta: {
-    height: 44,
+    minHeight: 44,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
@@ -591,5 +625,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     color: "#FFFFFF",
+    textAlign: "center",
   },
 });

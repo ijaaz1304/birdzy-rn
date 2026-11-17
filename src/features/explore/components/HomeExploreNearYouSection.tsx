@@ -133,6 +133,85 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
     ? EXPLORE_COLORS.panelBorderDark
     : EXPLORE_COLORS.panelBorderLight;
 
+  /**
+   * Large text (font > 1.2): stack — copy + button full width on top, map art below it (right-aligned,
+   * clipped at the card corner like Figma) instead of hiding the illustration.
+   */
+  const stacked = fontScale > 1.2;
+  const mapArt = (
+    <View
+      style={[
+        styles.mapArt,
+        stacked && styles.mapArtStacked,
+        {
+          ...(stacked
+            ? null
+            : { left: mapLeft, top: sc(EXPLORE_DESIGN.map.top) }),
+          width: sc(EXPLORE_DESIGN.map.width),
+          height: sc(EXPLORE_DESIGN.map.height),
+        },
+      ]}
+      pointerEvents="none"
+    >
+      <AppImage
+        source={exploreImages.homeMap}
+        style={[styles.mapImage, isDark && styles.dimMapImage]}
+        resizeMode="contain"
+      />
+      <Svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${EXPLORE_DESIGN.map.width} ${EXPLORE_DESIGN.map.height}`}
+        preserveAspectRatio="none"
+        style={StyleSheet.absoluteFill}
+      >
+        <Polyline
+          points={MAP_OUTLINE_POINTS}
+          fill="none"
+          stroke={outline}
+          strokeWidth={1.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </Svg>
+      {MAP_HOTSPOTS.map((spot) => (
+        <View
+          key={`${spot.left}-${spot.top}`}
+          style={[
+            styles.hotspot,
+            {
+              left: sc(spot.left),
+              top: sc(spot.top),
+              width: sc(EXPLORE_DESIGN.hotspotSize),
+              height: sc(EXPLORE_DESIGN.hotspotSize),
+            },
+          ]}
+        >
+          <ExploreHotspotIcon
+            width={sc(EXPLORE_DESIGN.hotspotSize)}
+            height={sc(EXPLORE_DESIGN.hotspotSize)}
+          />
+        </View>
+      ))}
+      <View
+        style={[
+          styles.pin,
+          {
+            left: sc(EXPLORE_DESIGN.pin.left),
+            top: sc(EXPLORE_DESIGN.pin.top),
+            width: sc(EXPLORE_DESIGN.pin.size),
+            height: sc(EXPLORE_DESIGN.pin.size),
+          },
+        ]}
+      >
+        <ExplorePinIcon
+          width={sc(EXPLORE_DESIGN.pin.size)}
+          height={sc(EXPLORE_DESIGN.pin.size)}
+        />
+      </View>
+    </View>
+  );
+
   return (
     <View
       style={[
@@ -172,76 +251,7 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
           },
         ]}
       >
-        <View
-          style={[
-            styles.mapArt,
-            fontScale > 1.2 && { opacity: 0 },
-            {
-              left: mapLeft,
-              top: sc(EXPLORE_DESIGN.map.top),
-              width: sc(EXPLORE_DESIGN.map.width),
-              height: sc(EXPLORE_DESIGN.map.height),
-            },
-          ]}
-          pointerEvents="none"
-        >
-          <AppImage
-            source={exploreImages.homeMap}
-            style={[styles.mapImage, isDark && styles.dimMapImage]}
-            resizeMode="contain"
-          />
-          <Svg
-            width="100%"
-            height="100%"
-            viewBox={`0 0 ${EXPLORE_DESIGN.map.width} ${EXPLORE_DESIGN.map.height}`}
-            preserveAspectRatio="none"
-            style={StyleSheet.absoluteFill}
-          >
-            <Polyline
-              points={MAP_OUTLINE_POINTS}
-              fill="none"
-              stroke={outline}
-              strokeWidth={1.5}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-          </Svg>
-          {MAP_HOTSPOTS.map((spot) => (
-            <View
-              key={`${spot.left}-${spot.top}`}
-              style={[
-                styles.hotspot,
-                {
-                  left: sc(spot.left),
-                  top: sc(spot.top),
-                  width: sc(EXPLORE_DESIGN.hotspotSize),
-                  height: sc(EXPLORE_DESIGN.hotspotSize),
-                },
-              ]}
-            >
-              <ExploreHotspotIcon
-                width={sc(EXPLORE_DESIGN.hotspotSize)}
-                height={sc(EXPLORE_DESIGN.hotspotSize)}
-              />
-            </View>
-          ))}
-          <View
-            style={[
-              styles.pin,
-              {
-                left: sc(EXPLORE_DESIGN.pin.left),
-                top: sc(EXPLORE_DESIGN.pin.top),
-                width: sc(EXPLORE_DESIGN.pin.size),
-                height: sc(EXPLORE_DESIGN.pin.size),
-              },
-            ]}
-          >
-            <ExplorePinIcon
-              width={sc(EXPLORE_DESIGN.pin.size)}
-              height={sc(EXPLORE_DESIGN.pin.size)}
-            />
-          </View>
-        </View>
+        {!stacked && mapArt}
         <View
           style={[
             styles.bannerCopy,
@@ -250,13 +260,12 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
               /**
                * Keep default artwork proportions; enlarged text gets the full copy width.
                */
-              width:
-                fontScale > 1.2
-                  ? Math.max(1, bannerWidth - 32)
-                  : Math.max(
-                      EXPLORE_DESIGN.copy.width,
-                      sc(EXPLORE_DESIGN.copy.width)
-                    ),
+              width: stacked
+                ? Math.max(1, bannerWidth - 32)
+                : Math.max(
+                    EXPLORE_DESIGN.copy.width,
+                    sc(EXPLORE_DESIGN.copy.width)
+                  ),
             },
           ]}
           pointerEvents="none"
@@ -299,6 +308,7 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
             </AppText>
           </View>
         </View>
+        {stacked && mapArt}
       </TouchableOpacity>
 
       {showRows ? (
@@ -365,6 +375,13 @@ const styles = StyleSheet.create({
   /** Position/size set at render from EXPLORE_DESIGN.map × scale */
   mapArt: {
     position: "absolute",
+  },
+  /** Large text: map flows under the copy, right-aligned, overhanging right/bottom (clipped) */
+  mapArtStacked: {
+    position: "relative",
+    alignSelf: "flex-end",
+    marginRight: -16,
+    marginBottom: -32,
   },
   dimMapImage: { opacity: 0.45 },
   mapImage: {

@@ -56,6 +56,10 @@ export const APP_COLORS = {
   createButtonBg: '#F5EBEB',
   createButtonFg: '#402122',
 
+  /** Figma Bird Sound Library (8890:176252): text-icon-brand-1 and surface-brand-1-accent */
+  soundLibraryBrand: '#785284',
+  soundLibraryBrandAccent: '#EDE4EF',
+
   /** Pagination dot — selected / unselected (light mode) */
   paginationDotSelectedLight: '#01474F',
   paginationDotUnselectedLight: 'rgba(1, 71, 79, 0.2)',
