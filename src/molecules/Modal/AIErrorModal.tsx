@@ -105,7 +105,7 @@ export const AIErrorModal: React.FC<AIErrorModalProps> = ({
               ]}
             >
               <AppImage
-                source={isDark ? Images.aiScanErrorDark : Images.aiScanError}
+                source={Images.aiScanError}
                 style={styles.icon}
                 resizeMode="contain"
               />

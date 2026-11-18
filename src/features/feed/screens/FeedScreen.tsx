@@ -434,7 +434,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
       ? config.emptyStates.noMyPosts
       : config.emptyStates.noPosts;
 
-  const feedHeaderImage = Images.commonBg;
+  const feedHeaderImage = isDark ? Images.feedDark : Images.commonBg;
 
   const emptyFeedImage = Images.emptyFeed;
   /**

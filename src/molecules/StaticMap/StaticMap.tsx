@@ -282,11 +282,7 @@ export const StaticMap: React.FC<StaticMapProps> = ({
       {error || showError ? (
         <View style={[styles.overlay, styles.centerContent]}>
           <AppImage
-            source={
-              theme.mode === "dark"
-                ? Images.aiScanErrorDark
-                : Images.aiScanError
-            }
+            source={Images.aiScanError}
             style={{ width: 32, height: 32 }}
             resizeMode="contain"
           />

@@ -1,4 +1,4 @@
-import { AppImageBackground } from "@/components/AppImage";
+import { AppImage, AppImageBackground } from "@/components/AppImage";
 import React from "react";
 import {
   ImageSourcePropType,
@@ -24,6 +24,9 @@ type CornerCardProps = {
   onPress: () => void;
   textPrimary: string;
   textSecondary: string;
+  illustration?: ImageSourcePropType;
+  backgroundColor: string;
+  borderColor: string;
 };
 
 const CornerCard: React.FC<CornerCardProps> = ({
@@ -33,23 +36,45 @@ const CornerCard: React.FC<CornerCardProps> = ({
   onPress,
   textPrimary,
   textSecondary,
+  illustration,
+  backgroundColor,
+  borderColor,
 }) => (
-  <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.cornerCardWrap}>
+  <TouchableOpacity
+    activeOpacity={0.85}
+    onPress={onPress}
+    style={styles.cornerCardWrap}
+  >
     <AppImageBackground
       source={background}
-      style={[styles.cornerCard, { borderColor: CARD_BORDER, backgroundColor: CARD_BG }]}
+      style={[styles.cornerCard, { borderColor, backgroundColor }]}
       imageStyle={styles.cornerCardImage}
       resizeMode="cover"
     >
+      {illustration && (
+        <AppImage
+          source={illustration}
+          style={{
+            position: "absolute",
+            top: 8,
+            left: 12,
+            width: 60,
+            height: 40,
+          }}
+          resizeMode="contain"
+        />
+      )}
       <View style={styles.cardCopy}>
-        <AppText allowFontScaling={false}
+        <AppText
+          allowFontScaling={false}
           variant="body14"
           style={[styles.cardTitle, { color: textPrimary }]}
           numberOfLines={2}
         >
           {title}
         </AppText>
-        <AppText allowFontScaling={false}
+        <AppText
+          allowFontScaling={false}
           variant="caption12"
           style={{ color: textSecondary, lineHeight: 16 }}
           numberOfLines={2}
@@ -76,15 +101,22 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
 }) => {
   const strings = useStrings();
   const theme = useTheme();
+  const isDark = theme.mode === "dark";
+  const backgroundColor = isDark ? theme.colors.surfaceSecondary : CARD_BG;
+  const borderColor = isDark ? theme.colors.borderSecondary : CARD_BORDER;
   const corner = strings.home.banners.yourBirdCorner;
   const textPrimary = theme.colors.textPrimary;
   const textSecondary = theme.colors.textSecondary;
 
   return (
     <View style={styles.section}>
-      <AppText allowFontScaling={false}
+      <AppText
+        allowFontScaling={false}
         variant="body16"
-        style={[styles.sectionTitle, { fontFamily: FONTS.bold, color: textPrimary }]}
+        style={[
+          styles.sectionTitle,
+          { fontFamily: FONTS.bold, color: textPrimary },
+        ]}
       >
         {corner.title}
       </AppText>
@@ -93,18 +125,27 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
         <CornerCard
           title={corner.birdOfTheDay}
           description={corner.birdOfTheDayDescription}
-          background={Images.homeBirdOfDayCard}
+          background={isDark ? Images.commonBgDark : Images.homeBirdOfDayCard}
+          illustration={
+            isDark ? Images.subscriptionListBirdOfDayDark : undefined
+          }
           onPress={onBirdOfTheDay}
           textPrimary={textPrimary}
           textSecondary={textSecondary}
+          backgroundColor={backgroundColor}
+          borderColor={borderColor}
         />
         <CornerCard
           title={corner.askAi.title}
           description={corner.askAi.description}
-          background={Images.homeAskAiCardIcon}
+          background={
+            isDark ? Images.homeAskAiCardDark : Images.homeAskAiCardIcon
+          }
           onPress={onAskAi}
           textPrimary={textPrimary}
           textSecondary={textSecondary}
+          backgroundColor={backgroundColor}
+          borderColor={borderColor}
         />
       </View>
 
@@ -114,19 +155,31 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
         style={styles.libraryRowWrap}
       >
         <AppImageBackground
-          source={Images.homeBirdSoundLibrary}
-          style={[styles.libraryRow, { borderColor: CARD_BORDER, backgroundColor: CARD_BG }]}
+          source={isDark ? Images.commonBgDark : Images.homeBirdSoundLibrary}
+          style={[styles.libraryRow, { borderColor, backgroundColor }]}
           imageStyle={styles.libraryRowImage}
           resizeMode="stretch"
         >
+          {isDark && (
+            <AppImage
+              source={Images.subscriptionListAiChatDark}
+              style={{ position: "absolute", left: 12, width: 32, height: 32 }}
+              resizeMode="contain"
+            />
+          )}
           <View style={styles.libraryCopy}>
-            <AppText allowFontScaling={false}
+            <AppText
+              allowFontScaling={false}
               variant="body14"
               style={[styles.cardTitle, { color: textPrimary }]}
             >
               {corner.birdSoundLibrary.title}
             </AppText>
-            <AppText allowFontScaling={false} variant="caption12" style={{ color: textSecondary, lineHeight: 16 }}>
+            <AppText
+              allowFontScaling={false}
+              variant="caption12"
+              style={{ color: textSecondary, lineHeight: 16 }}
+            >
               {corner.birdSoundLibrary.description}
             </AppText>
           </View>

@@ -38,11 +38,12 @@ import { PaginationDots } from "./PaginationDots";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("screen");
 
-/** Onboarding background art is 1500×3252 — anchor to bottom so mushrooms align with design */
+/** Onboarding background art is 1500×3252 — anchor to bottom so bird artwork aligns with design */
 const ONBOARDING_BG_ASPECT = 3252 / 1500;
 /** Figma frame: background art is 375×813pt */
 const ONBOARDING_BG_DESIGN_WIDTH = 375;
-const ONBOARDING_BG_DESIGN_HEIGHT = ONBOARDING_BG_DESIGN_WIDTH * ONBOARDING_BG_ASPECT;
+const ONBOARDING_BG_DESIGN_HEIGHT =
+  ONBOARDING_BG_DESIGN_WIDTH * ONBOARDING_BG_ASPECT;
 /** Figma: title starts at y=516 (~20pt below the illustration), in background coordinates */
 const ONBOARDING_DESIGN_TITLE_TOP = 516;
 /** Default copy block height (2-line title + 2-line subtitle + dots) before first layout */
@@ -104,14 +105,15 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     );
     const layoutWidth = width;
     const layoutLeft = 0;
-    const bgHeight = Math.max(SCREEN_HEIGHT, layoutWidth * ONBOARDING_BG_ASPECT);
+    const bgHeight = Math.max(
+      SCREEN_HEIGHT,
+      layoutWidth * ONBOARDING_BG_ASPECT
+    );
     /** How much the 375×813 design background is scaled on this screen */
     const bgScale = bgHeight / ONBOARDING_BG_DESIGN_HEIGHT;
     const contentMaxWidth = width - 40;
     const showAuthButtons = data.illustration === "authProgress";
     const hasBackgroundImage = !!data.backgroundImage;
-    /** Dark page 2 art includes stats/tabs — hide duplicate overlay at top */
-    const hideTopStatsInDark = isDark && pageIndex === 1;
     const onboardingTextMaxWidth = contentMaxWidth;
     /** Auth header uses a single 20px inset (authTextSection); avoid double-padding textSection */
     const authProgressTextMaxWidth = contentMaxWidth;
@@ -132,8 +134,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
         authHeaderHeight
     );
     const showStatsHeader =
-      !hideTopStatsInDark &&
-      (!!data.stats || (data.tabs != null && data.tabs.length > 0));
+      !!data.stats || (data.tabs != null && data.tabs.length > 0);
     const showStatsOverlay = hasBackgroundImage && showStatsHeader;
 
     const pageBackgroundStyle = {
@@ -357,12 +358,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
       /** Figma: guest button ends 40pt above the screen bottom (home indicator area + 8) */
       const ctaPaddingBottom = getOnboardingCtaBottomPadding(insets.bottom);
       const authImageSource = data.illustrationImage ?? Images.diagnoseAi;
-      /**
-       * Light mode uses the split Figma layers so the bird circle can shrink to
-       * fit the space between the copy and the buttons on any screen height.
-       * Dark mode has no split assets yet — it keeps the full-screen background.
-       */
-      const useSplitAuthLayout = !isDark;
+      /** Both themes keep bird art separate from copy and buttons. */
+      const useSplitAuthLayout = true;
       const authBirdsMaxWidth = contentMaxWidth;
       return (
         <View
@@ -376,7 +373,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
         >
           {useSplitAuthLayout ? (
             <AppImage
-              source={Images.onboardingAuthTop}
+              source={isDark ? Images.commonBgDark : Images.onboardingAuthTop}
               style={[
                 styles.authTopArt,
                 { width, height: width / AUTH_TOP_ART_ASPECT },
@@ -526,7 +523,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                     }
                   : {
                       backgroundColor: AUTH_CTA_LIGHT.secondaryBg,
-                      borderColor: SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
+                      borderColor:
+                        SUBSCRIPTION_COLORS.SECONDARY_CTA_BORDER_LIGHT,
                     },
               ]}
               activeOpacity={0.7}
@@ -584,6 +582,35 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
         ]}
       >
         {renderPageBackground()}
+        {isDark && (
+          <AppImage
+            source={
+              [
+                Images.subscriptionListIdentificationDark,
+                Images.subscriptionListCollectionDark,
+                Images.subscriptionListDetailsDark,
+                Images.subscriptionListAiChatDark,
+              ][pageIndex] ?? Images.subscriptionListIdentificationDark
+            }
+            style={{
+              position: "absolute",
+              width: contentMaxWidth,
+              height: Math.max(
+                0,
+                Math.min(
+                  280,
+                  Math.min(anchoredTextTop, maxTextTop) -
+                    20 -
+                    (insets.top + (showStatsHeader ? 150 : 32))
+                )
+              ),
+              left: 20,
+              top: insets.top + (showStatsHeader ? 150 : 32),
+            }}
+            resizeMode="contain"
+            pointerEvents="none"
+          />
+        )}
         {showStatsOverlay && renderStatsHeader()}
         {/* Content: image first, then title+sub below; no scroll when titleBelowImageNoScroll */}
         <ContentWrapper {...contentWrapperProps}>
@@ -621,13 +648,19 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                     <View
                       style={[
                         styles.illustrationRowPage4,
-                        { height: illustrationHeight, maxWidth: contentMaxWidth },
+                        {
+                          height: illustrationHeight,
+                          maxWidth: contentMaxWidth,
+                        },
                       ]}
                     >
                       <View
                         style={[
                           styles.imageContainerPage4Main,
-                          { height: illustrationHeight, width: contentMaxWidth },
+                          {
+                            height: illustrationHeight,
+                            width: contentMaxWidth,
+                          },
                         ]}
                       >
                         <AppImage
@@ -666,7 +699,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                       <View
                         style={[
                           styles.imageContainer,
-                          { height: illustrationHeight, width: contentMaxWidth },
+                          {
+                            height: illustrationHeight,
+                            width: contentMaxWidth,
+                          },
                         ]}
                       >
                         <AppImage
@@ -682,7 +718,10 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                       <View
                         style={[
                           styles.imageContainer,
-                          { height: illustrationHeight, width: contentMaxWidth },
+                          {
+                            height: illustrationHeight,
+                            width: contentMaxWidth,
+                          },
                         ]}
                       >
                         <AppImage
@@ -792,7 +831,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
               </View>
             )}
           </ContentTopWrapper>
-
         </ContentWrapper>
 
         {/* Title + subtitle + dots — positioned relative to the scaled background art */}

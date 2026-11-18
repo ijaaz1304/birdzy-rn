@@ -19,6 +19,7 @@
     "ci:install": "npm install --legacy-peer-deps",
     "ci:lint-prettier": "npm run prettier:check && npm run lint",
     "test": "jest",
+    "verify:dark-assets": "node scripts/verify-dark-assets.js",
     "verify:image-pipeline": "node scripts/verify-image-pipeline.js && node scripts/verify-app-image-routing.js",
     "start": "react-native start",
     "start:dev": "npm run env:dev && react-native start --reset-cache",

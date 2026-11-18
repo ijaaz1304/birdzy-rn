@@ -144,3 +144,7 @@ node scripts/report-missing-testids.js --components=Button,Pressable
 ---
 
 **Recommendation:** Run with `--dry-run` first. Commit one script’s changes at a time and run tests/lint after each.
+
+## Dark artwork guard
+
+Run `npm run verify:dark-assets` after changing the asset registry. It checks every relative source image reference, requires `Dark` exports to resolve to dark-folder or `_dark` files, and prevents the obsolete files listed in `docs/dark-assets-manifest.json` from returning. It cannot determine image subject or native rendering; visually review new artwork and run device acceptance.

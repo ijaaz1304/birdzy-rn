@@ -776,7 +776,7 @@ export const HomeScreen = () => {
                   style={styles.goProIconButton}
                 >
                   <AppImage
-                    source={Images.goPro}
+                    source={isDark ? Images.goProDark : Images.goPro}
                     style={styles.goProImage}
                     resizeMode="contain"
                   />

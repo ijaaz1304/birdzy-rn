@@ -105,3 +105,7 @@ Explore uses `POST /core/archetypes/explore-map-geojson` with no request body; e
 `flattenBirdSpecimenUpdate` now preserves explicit empty arrays for editable list fields, instead of silently discarding clearing requests. Unknown/immutable fields remain excluded. Mock contract regressions cover this; live clearing semantics still require backend acceptance.
 
 Notification-list refresh uses `feedService.fetchFeedNotificationDocuments` and the existing Firestore subscription remains active. Refresh results are scoped to the current owner/generation; stale responses cannot repopulate a different account's state. No new HTTP endpoint was invented.
+
+## Quiz artwork cleanup — 18 November 2026
+
+The existing quiz/archetype IDs have not changed. Bundled mushroom photographs have been removed; all eight legacy IDs currently use Birdzy's generic bird mascot. `quizImageMap.ts` no longer consumes `quizMushroomImage_*` Remote Config values or the inherited mushroom URL defaults for display; its remote image map is empty, and rendering uses curated bundled artwork. Backend/API payloads and Remote Config key definitions are unchanged. Distinct approved bird artwork and a bird-specific remote image contract are open product work (owner unassigned).

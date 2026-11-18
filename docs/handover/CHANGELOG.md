@@ -1,5 +1,20 @@
 # Birdzy — handover change history
 
+## 2026-11-18 — remove inherited mushroom artwork and dark fallbacks
+
+- Re-audited 308 bundled PNG/WebP files with contact sheets/full-size spot checks. Deleted 46 identified mushroom or obsolete assets, including 44 rasters and both unused legacy subscription SVG backgrounds. Added `docs/dark-assets-manifest.json` and `npm run verify:dark-assets` to prevent broken references, deleted files returning and light assets behind Dark aliases.
+- Remapped dark backgrounds, onboarding, cards, banners, quiz/personality, AI avatars, feed and popup artwork to supplied bird/generic resources. Home identify copy is now native/localized; dark onboarding has native illustrations/stats; neutral transparent gift/error art uses shared names rather than fake dark aliases. Quiz IDs remain unchanged, use a generic bird mascot and ignore inherited remote mushroom image overrides. Dark rollout gates remain unchanged.
+- Updated development, API/data, QA, handover ownership, specialist asset audit/checklist and scripts guidance. Distinct bird quiz archetype art remains product follow-up, owner unassigned.
+- Validation: TypeScript passed; 4 targeted Jest suites / 14 tests passed; dark-asset guard passed (387 registry references, 46 removed files); standalone image routing passed (322 bundled entries); targeted ESLint passed with inline-style warnings; documentation checker and `git diff --check` passed. The broader image-pipeline audit retains its pre-existing SettingsAccountDialog Image/import finding from the earlier check.
+- Not run: native builds or phone/tablet acceptance. Full SVG preview could not be completed: local-file browser preview was blocked by browser URL policy; no bypass attempted. Simple existing SVG icons were retained. Native contrast/cropping and SVG fidelity remain open, owner unassigned.
+
+## 2026-11-18 — audit and wire suitable dark assets
+
+- Created `codex/dark-mode` from local `main`. Corrected dark subscription carousel entries, paywall background selection, Home Go Pro, Identify tab, bird-of-the-day header/popup assets and sound-identification popup art. Light variants and rollout gates are unchanged.
+- Audited all 59 dark-folder PNG/WebP files visually. Several contain inherited mushroom artwork or white backgrounds; these are explicitly recorded as follow-up in DEVELOPMENT and HANDOVER_60_DAYS. Retained raster paywall background because its SVG uses filters/blending; existing simple SVG icons remain vectors.
+- Validation: `tsc --noEmit` passed; theme Jest suites passed (3 suites, 12 tests); standalone `verify-app-image-routing.js` passed (329 bundled entries); documentation checker passed; `git diff --check` passed. `npm run verify:image-pipeline` failed on pre-existing direct Image usage/import in unchanged SettingsAccountDialog.tsx; its chained routing check was run independently and passed.
+- Not verified: native builds, phone/tablet rendering, cropping, SVG fidelity, dark contrast. Owner unassigned for artwork replacement and iOS/Android acceptance before enabling the master gate.
+
 ## 2026-11-12 — Sound matches header + step-by-step test payload
 
 - Sound Possible Matches header: the ⋯ menu used a fixed-width middle spacer, so it sat next to back instead of the top-right. Middle slot is now `flex: 1` (`OtherPossibleMatchesScreen`).

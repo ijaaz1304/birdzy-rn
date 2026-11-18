@@ -34,13 +34,13 @@ const LOCATION_GRADIENT_TOP = "#FFFFFF";
 const LOCATION_GRADIENT_BOTTOM = "#F7E6CD";
 
 /** Post-auth onboarding, subscription, and paywall backgrounds. */
-export function getPostAuthOnboardingBackground(_isDark: boolean) {
-  return Images.commonBg;
+export function getPostAuthOnboardingBackground(isDark: boolean) {
+  return isDark ? Images.commonBgDark : Images.commonBg;
 }
 
 /** Full-screen subscription / paywall background. */
 export function getSubscriptionBackground(isDark: boolean) {
-  return getPostAuthOnboardingBackground(isDark);
+  return isDark ? Images.subscriptionBackgroundDark : Images.commonBg;
 }
 
 type PostAuthOnboardingBackgroundProps = {

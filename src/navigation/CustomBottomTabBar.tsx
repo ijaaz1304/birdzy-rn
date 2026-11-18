@@ -243,7 +243,7 @@ export function CustomBottomTabBar({
       >
         <View style={styles.tabIconWrap}>
           <AppImage
-            source={Images.bottomTabIdentify}
+            source={theme.mode === "dark" ? Images.bottomTabIdentifyDark : Images.bottomTabIdentify}
             style={styles.identifyTabIcon}
             resizeMode="contain"
           />

@@ -106,3 +106,9 @@ Run `npx jest __tests__/lifecycle --runInBand` for account/session isolation, in
 - [ ] Capture React Profiler/device performance evidence for the busiest lists. Normal renders are expected when state changes; no FPS or render-count improvement has been measured in this source audit.
 
 Device/backend/sandbox acceptance and QA owner assignment remain open. Automated results are recorded in the handover changelog.
+
+## Dark asset cleanup acceptance — 18 November 2026
+
+Automated checks: `npm run verify:dark-assets`, `node scripts/verify-app-image-routing.js`, `npx tsc --noEmit`, and `npx jest src/features/theme src/features/quiz/data/quizImageMap.test.ts --runInBand --watchman=false`. The source guard prevents known removed paths and non-dark registry aliases; it does not classify image content.
+
+Device acceptance is open (owner unassigned). With a QA build's existing theme gate enabled, check both themes on phone/tablet: all onboarding pages and native stats/copy/CTAs; auth and personality backgrounds; Home Identify banner, bird/AI cards and sound-library row; Identify tab and Go Pro; feed header; discount/rate/feedback and permission sheets; bird-of-the-day and sound-limit popups; all seven subscription slides; quiz intro/analysis/results. Confirm no mushroom artwork or baked-in mushroom text, and no overlapping copy or incorrect cropping. Native SVG fidelity, white panels in supplied dark artwork and contrast remain unverified. The shipping master theme gate is unchanged.

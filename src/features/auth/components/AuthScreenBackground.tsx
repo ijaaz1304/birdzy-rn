@@ -13,10 +13,12 @@ type AuthScreenBackgroundProps = {
   isDark?: boolean;
 };
 
-export function AuthScreenBackground({ isDark = false }: AuthScreenBackgroundProps) {
+export function AuthScreenBackground({
+  isDark = false,
+}: AuthScreenBackgroundProps) {
   return (
     <AppImage
-      source={Images.commonBg}
+      source={isDark ? Images.authBgDark : Images.commonBg}
       style={styles.background}
       resizeMode="cover"
       pointerEvents="none"

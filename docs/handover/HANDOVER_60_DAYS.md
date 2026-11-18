@@ -120,3 +120,10 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 
 - [x] Source: shared `useExploreEntry`, Home/Catalogue banners, equal Spotted Now / Year-round tabs, empty-state wording/style, Android first-ask copy.
 - [ ] Owner unassigned. Complete the Explore entry and permission UI checklist in QA_AND_OPERATIONS.md on physical devices (Android + iOS).
+
+## Dark asset acceptance — 18 November 2026
+
+- [x] Re-audited bundled raster artwork, removed identified mushroom/obsolete resources and replaced dark routes with audited supplied dark assets. Added a repeatable asset-reference guard. See [development guidance](DEVELOPMENT.md#dark-asset-selection--18-november-2026).
+- [x] Replaced inherited quiz photographs with a generic bird mascot and stopped legacy remote mushroom images overriding the bundled artwork. Existing archetype IDs remain unchanged.
+- [ ] Owner unassigned: accept phone/tablet light/dark renders and contrast/cropping on iOS and Android before enabling the master gate.
+- [ ] Owner unassigned: supply distinct bird archetype artwork and define a bird-specific remote quiz-image contract.

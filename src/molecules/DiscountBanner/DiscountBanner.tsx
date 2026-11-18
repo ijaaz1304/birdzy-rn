@@ -64,7 +64,7 @@ export const DiscountBanner: React.FC<DiscountBannerProps> = ({
             color="textSecondary"
             style={styles.label}
           >
-            MUSHROOM OF THE DAY
+            BIRD OF THE DAY
           </Text>
           <Text
             variant="title"

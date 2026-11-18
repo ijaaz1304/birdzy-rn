@@ -92,13 +92,13 @@ Use `- [ ]` / `- [x]` as you complete items.
 - [ ] **App icon** — Android mipmap + iOS AppIcon (replace teal placeholder)
 - [ ] **Splash screen** — iOS LaunchScreen + `src/assets/branding/splash/`
 - [ ] **Logo** — `src/assets/branding/logo/`
-- [ ] **Onboarding** illustrations (replace any Shroomzy art)
-- [ ] **Ask AI** hero / upload illustrations (`src/assets/askai/*`)
+- [x] **Onboarding** inherited mushroom artwork removed; supplied dark bird illustrations layered over audited dark backgrounds (18 November 2026; device acceptance open)
+- [x] **Ask AI** mushroom avatar/hero replaced with the bundled bird mascot (18 November 2026; device acceptance open)
 - [ ] **Subscription** paywall carousel art
 - [ ] **Catalogue** species placeholder icons (`catalogue/icons/species/`)
-- [ ] **Quiz** archetype images — replace `src/assets/quiz/which_shroom/` with bird art
-- [ ] **Personality quiz** intro hero (currently mushroom center image)
-- [ ] **Tab bar / empty state** icons if still mushroom-themed
+- [ ] **Quiz** distinct bird archetype artwork: mushroom photos removed; all IDs currently use a generic bird mascot (18 November 2026)
+- [x] **Personality quiz** mushroom center image replaced with the bird mascot (18 November 2026; device acceptance open)
+- [x] **Tab bar / empty state** identified mushroom icons removed and mapped to bird/generic artwork (18 November 2026; device acceptance open)
 
 **Reference:** `docs/BRANDING_PLACEHOLDERS.md`, `docs/ASSET_AUDIT.md`
 

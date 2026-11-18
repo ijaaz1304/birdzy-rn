@@ -2,7 +2,7 @@ import { AppImage } from "@/components/AppImage";
 import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { Images } from "../../../assets";
-import { APP_COLORS } from "../../../../theme/colors";
+import { useTheme } from "../../../hooks/useTheme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("screen");
 
@@ -14,13 +14,15 @@ const COMMON_BG_HEIGHT = Math.max(
 );
 
 export function FindYourBirdBackground() {
+  const theme = useTheme();
+  const isDark = theme.mode === "dark";
   return (
     <View
-      style={[styles.backgroundHost, { backgroundColor: APP_COLORS.surfaceAuthLight }]}
+      style={[styles.backgroundHost, { backgroundColor: theme.colors.surface }]}
       pointerEvents="none"
     >
       <AppImage
-        source={Images.commonBg}
+        source={isDark ? Images.commonBgDark : Images.commonBg}
         style={styles.background}
         resizeMode="cover"
         preferRNImage
