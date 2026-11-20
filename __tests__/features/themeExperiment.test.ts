@@ -25,14 +25,17 @@ describe("themeExperiment", () => {
     expect(normalizeThemeDefaultRc("variant_b")).toBe("light");
   });
 
-  it("hides appearance for light arm in prod", () => {
+  it("still classifies the light Remote Config arm", () => {
     expect(isAppearanceOptionVisibleForThemeDefault("light")).toBe(false);
     expect(isThemeLockedToLightForThemeDefault("light")).toBe(true);
   });
 
-  it("dev APK always shows appearance and never locks theme", () => {
-    mockedLocalRollout.mockReturnValue(true);
+  it("shows Appearance and does not lock the theme when dark mode is on", () => {
+    mockedLocalRollout.mockReturnValue(false);
     expect(isAppearanceOptionVisibleForBuild("light", true)).toBe(true);
+    expect(isAppearanceOptionVisibleForBuild("system", true)).toBe(true);
     expect(isThemeLockedToLightForBuild("light", true)).toBe(false);
+    expect(isAppearanceOptionVisibleForBuild("system", false)).toBe(false);
+    expect(isThemeLockedToLightForBuild("system", false)).toBe(true);
   });
 });

@@ -338,13 +338,13 @@ Detail: `docs/THEME_EXPERIMENT_EVENTS.md`
 | `theme_experiment_variant_assigned` | Cold start |
 | `experiment_exposure` | Same | `experiment_id` = `dark_mode_test` |
 | `theme_default_applied` | RC theme applied on start |
-| `appearance_settings_opened` | Settings → Appearance (Variant A only) |
+| `appearance_settings_opened` | Settings → Appearance |
 | `theme_changed` | Pick Light / Dark / System |
 | `theme_mode_changed` | Same switch |
 
 User properties: `theme_exp_variant`, `theme_default`, `theme_mode`.
 
-Variant B (`theme_default` = `light`): Appearance is hidden — appearance events will **not** fire.
+Appearance stays visible for both `theme_default` arms. Choosing Light, Dark, or System logs `theme_changed` and `theme_mode_changed`.
 
 ---
 

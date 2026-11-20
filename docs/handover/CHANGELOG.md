@@ -1,5 +1,11 @@
 # Birdzy — handover change history
 
+## 2026-11-19 — show Appearance and enable dark mode
+
+- Settings → Appearance was hidden because `isDarkModeEnabledForApp()` returned false, and a Light Remote Config arm also hid the row and locked the theme. Dark mode is now on for the whole app. Appearance offers Light, Dark, and System on every build. `theme_default` only sets the first theme when the user has not chosen one. A stored Light value with no explicit choice can follow the system default. iOS `UIUserInterfaceStyle` is Automatic.
+- Updated product, flow, development, QA, Firebase setup, and theme-experiment docs.
+- Validation: 4 theme Jest suites / 15 tests passed; handover link checker passed. Not run: native rebuild, phone/tablet light/dark walkthrough. iOS Automatic appearance is not on an already installed binary until that binary is rebuilt. Owner for device contrast/cropping remains unassigned.
+
 ## 2026-11-18 — remove inherited mushroom artwork and dark fallbacks
 
 - Re-audited 308 bundled PNG/WebP files with contact sheets/full-size spot checks. Deleted 46 identified mushroom or obsolete assets, including 44 rasters and both unused legacy subscription SVG backgrounds. Added `docs/dark-assets-manifest.json` and `npm run verify:dark-assets` to prevent broken references, deleted files returning and light assets behind Dark aliases.

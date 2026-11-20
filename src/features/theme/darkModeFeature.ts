@@ -1,6 +1,6 @@
 /**
  * Dark mode feature gate — Appearance picker visibility.
- * Disabled globally until dark UI is ready; then Variant A/B rules apply.
+ * Visible for the whole app whenever dark mode is enabled.
  */
 
 import { isDarkModeEnabledForApp } from "../../constants/featureFlags";

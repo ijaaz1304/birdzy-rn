@@ -1,11 +1,10 @@
 /**
- * `themeDefault` Remote Config experiment — theme A/B.
+ * `theme_default` Remote Config value.
  *
- * Variant A (control): `system` | `variant_a` — default follows device, appearance visible.
- * Variant B (treatment): `light` | `variant_b` — locked to light, appearance hidden.
+ * `system` / `variant_a` — initial theme follows the device.
+ * `light` / `variant_b` — initial theme is Light.
+ * Neither arm hides Appearance or locks the app once dark mode is enabled.
  */
-
-import { isDarkModeLocalRolloutEnabled } from "../../constants/featureFlags";
 
 export type ThemeDefaultArm = "system" | "light";
 
@@ -19,26 +18,22 @@ export function isAppearanceOptionVisibleForThemeDefault(raw: string): boolean {
   return normalizeThemeDefaultRc(raw) === "system";
 }
 
-/** Dev APK always shows appearance controls when dark mode is on; prod follows `themeDefault`. */
+/** Appearance stays visible on every build once dark mode is on. */
 export function isAppearanceOptionVisibleForBuild(
-  raw: string,
+  _raw: string,
   darkModeEnabled: boolean
 ): boolean {
-  if (!darkModeEnabled) return false;
-  if (isDarkModeLocalRolloutEnabled()) return true;
-  return isAppearanceOptionVisibleForThemeDefault(raw);
+  return darkModeEnabled;
 }
 
 export function isThemeLockedToLightForThemeDefault(raw: string): boolean {
   return normalizeThemeDefaultRc(raw) === "light";
 }
 
-/** Dev APK never locks theme; prod may lock to light per `themeDefault`. */
+/** Dark mode is never locked to light once it is enabled for the app. */
 export function isThemeLockedToLightForBuild(
-  raw: string,
+  _raw: string,
   darkModeEnabled: boolean
 ): boolean {
-  if (!darkModeEnabled) return true;
-  if (isDarkModeLocalRolloutEnabled()) return false;
-  return isThemeLockedToLightForThemeDefault(raw);
+  return !darkModeEnabled;
 }

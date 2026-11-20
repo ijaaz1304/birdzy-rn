@@ -324,14 +324,14 @@
       "defaultValue": {
         "value": "system"
       },
-      "description": "Dark mode A/B: system/variant_a = follow device + Appearance; light/variant_b = lock light, hide Appearance.",
+      "description": "Initial theme only. system/variant_a follow the device; light/variant_b start on Light. Appearance stays available.",
       "valueType": "STRING"
     },
     "theme_default": {
       "defaultValue": {
         "value": "system"
       },
-      "description": "Dark mode A/B: system/variant_a = follow device + Appearance; light/variant_b = lock light, hide Appearance.",
+      "description": "Initial theme only. system/variant_a follow the device; light/variant_b start on Light. Appearance stays available.",
       "valueType": "STRING"
     },
     "appLogsEnabled": {

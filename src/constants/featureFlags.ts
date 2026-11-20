@@ -1,16 +1,17 @@
 import { isProdIntent } from "../lib/env/appEnv";
 
 /**
- * Master switch for in-app dark mode UI.
- * Keep false until dark theme screens are implemented.
+ * Master switch for in-app dark mode.
+ * When true, Settings → Appearance is available and Light / Dark / System
+ * apply across the app.
  */
 export function isDarkModeEnabledForApp(): boolean {
-  return false;
+  return true;
 }
 
 /**
- * Dev APK normally enables dark-mode rollout locally when the master switch is on.
- * Prod follows Remote Config `darkModeEnabled` + `themeDefault` A/B.
+ * True on non-production builds when dark mode is enabled.
+ * Appearance and the active theme do not depend on this helper.
  */
 export function isDarkModeLocalRolloutEnabled(): boolean {
   return isDarkModeEnabledForApp() && !isProdIntent();

@@ -38,7 +38,7 @@ type PersistedThemeState = {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      themeMode: "light",
+      themeMode: "system",
       hasUserSelectedTheme: false,
       experimentSyncToken: 0,
 
@@ -89,10 +89,12 @@ export const useThemeStore = create<ThemeState>()(
       }),
       merge: (persistedState, currentState) => {
         const persisted = (persistedState ?? {}) as PersistedThemeState;
-        // Returning users already had a stored themeMode before this experiment.
-        // Treat them as having a preference so RC does not re-assign them.
+        // A stored non-light mode from before the selection flag existed is a
+        // real preference. Stored "light" with no flag was the old lock, so
+        // Remote Config may replace it with the system default.
         const isLegacyInstall =
           persisted.themeMode != null &&
+          persisted.themeMode !== "light" &&
           persisted.hasUserSelectedTheme === undefined &&
           persisted.hasThemePreference === undefined;
 

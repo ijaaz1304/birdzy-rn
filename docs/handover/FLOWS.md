@@ -69,6 +69,14 @@ Choose observation location, date, and bird size; submit the answers and review 
 
 Evidence: [src/features/discovery/screens/StepByStepScreen.tsx](../../src/features/discovery/screens/StepByStepScreen.tsx); [src/features/discovery/utils/runStepByStepAnalysis.ts](../../src/features/discovery/utils/runStepByStepAnalysis.ts).
 
+## Settings appearance
+
+Open Settings → Preferences → Appearance. Choose Light theme, Dark theme, or Use System theme. The selected theme is stored on the device and applied across the app. It remains after logout. System uses the current device appearance and updates when the device appearance changes.
+
+**Acceptance/recovery:** Confirm the Appearance row is visible, each option updates the open screen and the next screen, a saved choice survives a restart, and System follows a device appearance change. iOS needs a native rebuild before `UIUserInterfaceStyle` Automatic is on the installed binary.
+
+Evidence: [src/features/settings/screens/SettingsScreen.tsx](../../src/features/settings/screens/SettingsScreen.tsx); [src/features/settings/screens/AppearanceScreen.tsx](../../src/features/settings/screens/AppearanceScreen.tsx); [src/app/ThemeProvider.tsx](../../src/app/ThemeProvider.tsx).
+
 ## Explore Near You
 
 Open Explore from the Home banner (whole panel tappable), the Spotted Now / Year-round rows, or Catalogue's "Explore Near You" button and map banner. Home and Catalogue share [useExploreEntry](../../src/features/explore/useExploreEntry.tsx): location access is requested first ("Enable Location Access" on Android, existing iOS App Review wording), then the map opens. The Home / Catalogue banner reads "Enable Location" while access is off and "Explore Map" when it is on; the Catalogue banner is hidden while catalogue filters are applied. On the map, switch Spotted Now / Year-round (equal halves of the tab row), select a group, and open bird details. Map filters affect map activity; seasonal tabs affect the nearby list.

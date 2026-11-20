@@ -121,14 +121,15 @@ interface RemoteConfigValues {
   mushroomOfTheDayFirstSession: number;
   mushroomOfTheDayPopupCooldownHours: number;
 
-  /** When false, app uses light mode only (ignores theme preference and system). For first prod deployment. Default false. */
+  /** Kept for Remote Config compatibility. In-app dark mode follows the app theme flag. */
   darkModeEnabled: boolean;
 
   /**
-   * Dark Mode A/B experiment default theme source.
+   * Initial theme when the user has not chosen Appearance yet.
    * Values: "system" | "light" | "variant_a" | "variant_b"
-   * - system / variant_a → follow device theme, Appearance visible
-   * - light / variant_b → locked to light, Appearance hidden
+   * - system / variant_a → follow device theme
+   * - light / variant_b → start on Light
+   * Appearance stays available either way.
    */
   theme_default: string;
 
@@ -233,7 +234,7 @@ const DEFAULT_CONFIG: RemoteConfigValues = {
   mushroomOfTheDayPopupCooldownHours: 24, // Don't show Rock of the Day banner again for 24h after close
 
   darkModeEnabled: true,
-  theme_default: "system", // Variant A default; Firebase A/B can assign "light" / "variant_b"
+  theme_default: "system", // Initial theme only; Appearance stays available
   appLogsEnabled: false, // Settings → App Logs hidden in prod unless enabled via Remote Config
   appleSubscriptionsEnabled: true, // iOS App Store subscriptions on by default; set false via Remote Config to disable
 

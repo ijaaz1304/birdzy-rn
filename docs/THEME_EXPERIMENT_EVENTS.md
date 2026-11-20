@@ -10,15 +10,15 @@ You do **not** pre-create Analytics event names in Console. They appear after th
 
 ## Experiment plan
 
-| Arm | Remote Config `theme_default` | Theme | Settings → Appearance |
-|-----|-------------------------------|-------|------------------------|
-| **Variant A (control)** | `system` or `variant_a` | Follows device | Visible |
-| **Variant B** | `light` or `variant_b` | Locked to Light | Hidden |
+| Arm | Remote Config `theme_default` | Initial theme | Settings → Appearance |
+|-----|-------------------------------|----------------|------------------------|
+| **Variant A** | `system` or `variant_a` | Follows device | Visible |
+| **Variant B** | `light` or `variant_b` | Starts on Light | Visible |
 
-- Split: 50 / 50 in Firebase A/B Testing (not in app code).
-- In-app default if RC is missing: `system` (Variant A).
-- Returning users who already picked a theme stay on Variant A behavior (preference is not overwritten).
-- Variant B always forces Light and hides Appearance.
+- Appearance is available for the whole app. Neither arm hides it or locks a later choice.
+- In-app default if RC is missing: `system`.
+- A theme the user already picked is not overwritten.
+- A stored Light value with no explicit Appearance choice was the old lock and can be replaced by the system default.
 
 **Goals:** D1 retention, D7 retention. Secondary: session duration, `identification_done_success`.
 
@@ -51,7 +51,7 @@ Fired once per app process on cold start, when the experiment assignment is appl
 | `variant` | `variant_a` / `variant_b` | Arm |
 | `theme_default` | `system` / `light` / `variant_a` / `variant_b` | Raw RC value |
 | `initial_theme` | `system` / `light` | Mapped initial theme mode |
-| `appearance_enabled` | `true` / `false` | Whether Appearance is shown |
+| `appearance_enabled` | `true` | Appearance is shown while dark mode is on |
 
 ### 2. `experiment_exposure`
 
@@ -66,7 +66,7 @@ Fired once with assignment (same moment as above). Use for A/B exposure cross-ch
 
 ### 3. `theme_default_applied`
 
-Fired once when the RC default is written into the theme store.
+Fired once, for either arm, when the Remote Config default is written and the user has not already chosen a theme. `locked` is not sent.
 
 **Variant B**
 
@@ -77,9 +77,8 @@ Fired once when the RC default is written into the theme store.
 | `theme` | `light` |
 | `source` | `remote_config` |
 | `changed` | `true` / `false` |
-| `locked` | `true` |
 
-**Variant A** (only if the user has not already chosen a theme)
+**Variant A**
 
 | Param | Example |
 |-------|---------|
@@ -91,7 +90,7 @@ Fired once when the RC default is written into the theme store.
 
 ### 4. `appearance_settings_opened`
 
-Fired when the user taps **Settings → Appearance** (Variant A only).
+Fired when the user taps **Settings → Appearance**.
 
 | Param | Example |
 |-------|---------|
@@ -164,7 +163,7 @@ Optional conversions / A/B secondary metrics: `theme_changed`, `theme_mode_chang
 1. Rebuild the app (events are in this build, not Console).
 2. Firebase → **Analytics → DebugView**.
 3. Cold start → expect `theme_experiment_variant_assigned`, `experiment_exposure`, `theme_default_applied`.
-4. Variant A: Settings → Appearance → change mode → `appearance_settings_opened`, `theme_changed`, `theme_mode_changed`.
-5. Variant B: force `theme_default` = `light` in Remote Config (Test with device) → Appearance row gone; no appearance events.
+4. Settings → Appearance → change mode → `appearance_settings_opened`, `theme_changed`, `theme_mode_changed`.
+5. `theme_default` = `light` still shows Appearance. It sets the initial theme only when the user has not chosen one.
 
 Events list in Console can lag up to 24 hours. DebugView is immediate.

@@ -70,19 +70,20 @@ describe("themeExperiment.service", () => {
 
   describe("Variant B (light / variant_b)", () => {
     it.each(["light", "variant_b"])(
-      "locks to light and hides Appearance for %s",
+      "keeps Appearance available and does not lock the theme for %s",
       (value) => {
         mockGetRemoteConfigValue.mockReturnValue(value);
         expect(getThemeExperimentVariant()).toBe("variant_b");
-        expect(isAppearanceSettingsEnabled()).toBe(false);
-        expect(isThemeLockedToLight()).toBe(true);
+        expect(isAppearanceSettingsEnabled()).toBe(true);
+        expect(isThemeLockedToLight()).toBe(false);
       }
     );
 
-    it("forces light theme on apply", () => {
+    it("applies light only as the initial theme", () => {
       mockGetRemoteConfigValue.mockReturnValue("light");
       applyThemeExperimentFromRemoteConfig();
-      expect(mockForceExperimentTheme).toHaveBeenCalledWith("light");
+      expect(mockApplyExperimentDefault).toHaveBeenCalledWith("light");
+      expect(mockForceExperimentTheme).not.toHaveBeenCalled();
       expect(mockNotifyExperimentApplied).toHaveBeenCalled();
     });
   });

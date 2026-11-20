@@ -4,8 +4,9 @@
  * Reads Firebase Remote Config A/B parameter `theme_default` and applies it
  * as the INITIAL theme experience.
  *
- * Variant A (system): follow device; Appearance settings visible.
- * Variant B (light): locked to Light; Appearance settings hidden.
+ * `theme_default` only sets the initial theme when the user has not chosen one.
+ * Appearance (Light / Dark / System) stays available whenever dark mode is on.
+ * Variant B does not lock the app to Light or hide Appearance.
  */
 
 import { analyticsService } from "../../services/analytics/analytics.service";
@@ -65,13 +66,12 @@ export const getThemeExperimentVariant = (): ThemeExperimentVariant =>
 export const getThemeExperimentInitialMode = (): ThemeMode =>
   mapThemeDefaultToMode(getThemeDefaultRcValue());
 
-/** Appearance (System / Light / Dark) is only available for Variant A. */
+/** Appearance (System / Light / Dark) is available whenever dark mode is on. */
 export const isAppearanceSettingsEnabled = (): boolean =>
-  isDarkModeEnabledForApp() && getThemeExperimentVariant() === "variant_a";
+  isDarkModeEnabledForApp();
 
-/** Dark mode disabled globally, or Variant B locked to light. */
-export const isThemeLockedToLight = (): boolean =>
-  !isDarkModeEnabledForApp() || getThemeExperimentVariant() === "variant_b";
+/** Light lock applies only when dark mode is switched off for the app. */
+export const isThemeLockedToLight = (): boolean => !isDarkModeEnabledForApp();
 
 /** True after startup has applied the experiment (UI may paint). */
 export const isThemeExperimentInitialized = (): boolean =>
@@ -92,8 +92,8 @@ const waitForThemeStoreHydration = (): Promise<void> => {
 
 /**
  * Apply current Remote Config theme default.
- * Variant B always forces Light (no Appearance).
- * Variant A applies only when the user has not chosen yet.
+ * The value is only an initial theme. It never hides Appearance or
+ * overwrites a theme the user already chose.
  */
 export const applyThemeExperimentFromRemoteConfig = (): void => {
   if (!isDarkModeEnabledForApp()) {
@@ -118,7 +118,7 @@ export const applyThemeExperimentFromRemoteConfig = (): void => {
       variant,
       theme_default: rcValue,
       initial_theme: initialMode,
-      appearance_enabled: variant === "variant_a" ? "true" : "false",
+      appearance_enabled: "true",
     });
     analyticsService.logEvent(EVENTS.experiment_exposure, {
       experiment_id: "dark_mode_test",
@@ -133,40 +133,10 @@ export const applyThemeExperimentFromRemoteConfig = (): void => {
     });
   }
 
-  const {
-    hasUserSelectedTheme,
-    themeMode,
-    applyExperimentDefault,
-    forceExperimentTheme,
-  } = useThemeStore.getState();
+  const { hasUserSelectedTheme, themeMode, applyExperimentDefault } =
+    useThemeStore.getState();
 
-  // Variant B: lock to Light and hide Appearance in Settings.
-  if (variant === "variant_b") {
-    const changed = forceExperimentTheme("light");
-
-    if (!hasLoggedDefaultApplied) {
-      hasLoggedDefaultApplied = true;
-      analyticsService.logEvent(EVENTS.theme_default_applied, {
-        variant,
-        theme_default: rcValue,
-        theme: "light",
-        source: "remote_config",
-        changed: changed ? "true" : "false",
-        locked: "true",
-      });
-    }
-
-    if (__DEV__) {
-      console.log(
-        "[THEME_EXPERIMENT] Variant B locked to light",
-        changed ? "(updated)" : "(already light)"
-      );
-    }
-    useThemeStore.getState().notifyExperimentApplied();
-    return;
-  }
-
-  // Variant A: respect saved Appearance choice
+  // Respect a saved Appearance choice for every Remote Config arm.
   if (hasUserSelectedTheme) {
     if (__DEV__) {
       console.log(

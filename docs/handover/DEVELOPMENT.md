@@ -101,7 +101,7 @@ The source review followed startup/authentication → Home/focus → catalogue a
 
 ## Dark asset selection — 18 November 2026
 
-Work is on `codex/dark-mode`, created from local `main`. Existing theme hooks select images. The master dark-mode flag and Remote Config appearance gates remain unchanged; this asset cleanup is not release acceptance.
+Dark theme assets are selected by the existing theme hooks. `isDarkModeEnabledForApp()` is on, so Settings → Appearance is available on every build. `theme_default` only sets the initial theme when the user has not chosen one. It does not hide Appearance or lock the app to Light. iOS `UIUserInterfaceStyle` is Automatic; that plist value reaches a device only after a native rebuild. This is source behavior, not device acceptance.
 
 Dark registry entries now resolve exclusively to supplied dark-folder or `_dark` assets. The audited subscription dark PNG supplies a neutral decorative background for onboarding, auth, personality screens, generic sheets and paywalls. Mushroom splash/onboarding/sheet/banner bitmaps and obsolete subscription SVG backgrounds have been deleted rather than left available for accidental reuse. Dark onboarding overlays the supplied bird feature illustrations and native stats/copy; its auth page uses separate bird art and buttons in both themes. Home cards, the Identify tab, Go Pro, feed header, bird-of-the-day and sound-identification popups select suitable supplied dark artwork. Simple SVG notification, face and details-action icons remain vectors. Full SVG rendering fidelity is not verified.
 

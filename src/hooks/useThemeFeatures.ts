@@ -1,9 +1,6 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import {
-  isDarkModeEnabledForApp,
-  isDarkModeLocalRolloutEnabled,
-} from "../constants/featureFlags";
+import { isDarkModeEnabledForApp } from "../constants/featureFlags";
 import {
   isAppearanceOptionVisibleForBuild,
   isThemeLockedToLightForBuild,
@@ -16,9 +13,7 @@ export function readThemeDefaultRcValue(): string {
 }
 
 export function readDarkModeEnabledFromRemoteConfig(): boolean {
-  if (!isDarkModeEnabledForApp()) return false;
-  if (isDarkModeLocalRolloutEnabled()) return true;
-  return getRemoteConfigValue("darkModeEnabled") === true;
+  return isDarkModeEnabledForApp();
 }
 
 export function readAppearanceOptionVisible(): boolean {
@@ -35,7 +30,7 @@ export function readThemeLockedToLight(): boolean {
   );
 }
 
-/** Reactive dark-mode RC gate (dev APK bypasses RC). */
+/** True while in-app dark mode is enabled. */
 export function useDarkModeEnabled(): boolean {
   const [enabled, setEnabled] = useState(() =>
     readDarkModeEnabledFromRemoteConfig()

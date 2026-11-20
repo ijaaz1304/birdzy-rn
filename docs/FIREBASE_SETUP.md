@@ -101,7 +101,7 @@ Contains tunable app parameters (limits, delays, store URLs, feature flags). Exa
 | `androidPlayStoreUrl` / `iosAppStoreUrl` | STRING | Store links for share / rate |
 | `quizEnabled` | NUMBER | Quiz feature toggle |
 | `darkModeEnabled` | BOOLEAN | Dark mode master flag |
-| `theme_default` | STRING | Dark mode A/B: `system` / `variant_a` = follow device + Appearance; `light` / `variant_b` = lock light, hide Appearance |
+| `theme_default` | STRING | Initial theme only. `system` / `variant_a` follow the device; `light` / `variant_b` start on Light. Appearance stays available. |
 
 Defaults are also mirrored in `src/services/remoteConfig/remoteConfig.service.ts` so the app works offline before the first fetch.
 
