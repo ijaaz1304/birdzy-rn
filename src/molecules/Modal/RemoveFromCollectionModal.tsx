@@ -112,7 +112,7 @@ export const RemoveFromCollectionModal: React.FC<
   const { showToast } = useToast();
   const isDark = useIsDark();
   const modalBg = isDark
-    ? APP_COLORS.surfaceDark
+    ? APP_COLORS.homeSurfaceDark
     : APP_COLORS.modalTextOnPrimary;
   const ctaBg = isDark
     ? SUBSCRIPTION_COLORS.CTA_PRIMARY_DARK

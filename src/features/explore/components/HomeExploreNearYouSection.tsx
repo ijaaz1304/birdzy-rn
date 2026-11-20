@@ -19,6 +19,8 @@ import { EXPLORE_HOME_STRINGS } from "../content/explore.strings";
 import { EXPLORE_COLORS } from "../content/explore.colors";
 import { FONTS } from "../../../common/typography";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
+import { Images } from "../../../assets";
+import { APP_COLORS } from "../../../../theme/colors";
 import { Radius } from "../../../design";
 
 /** Figma 8230:72834 / 8230:72835 — map art only; copy is live text */
@@ -145,8 +147,12 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
               borderColor: panelBorder,
             }
           : {
-              backgroundColor: theme.colors.surfacePrimary,
-              borderColor: EXPLORE_OUTER_BORDER,
+              backgroundColor: isDark
+                ? APP_COLORS.homeSurfaceDark
+                : theme.colors.surfacePrimary,
+              borderColor: isDark
+                ? APP_COLORS.homeBorderDark
+                : EXPLORE_OUTER_BORDER,
             },
       ]}
     >
@@ -166,9 +172,11 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
           {
             height: sc(EXPLORE_DESIGN.bannerHeight),
             backgroundColor: isDark
-              ? theme.colors.surfaceSecondary
+              ? APP_COLORS.homeSurfaceDark
               : EXPLORE_BANNER_BG,
-            borderColor: isDark ? theme.colors.border0 : EXPLORE_INNER_BORDER,
+            borderColor: isDark
+              ? APP_COLORS.homeBorderDark
+              : EXPLORE_INNER_BORDER,
           },
         ]}
       >
@@ -185,26 +193,28 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
           pointerEvents="none"
         >
           <AppImage
-            source={exploreImages.homeMap}
-            style={[styles.mapImage, isDark && styles.dimMapImage]}
+            source={isDark ? Images.homeExploreMapDark : exploreImages.homeMap}
+            style={styles.mapImage}
             resizeMode="contain"
           />
-          <Svg
-            width="100%"
-            height="100%"
-            viewBox={`0 0 ${EXPLORE_DESIGN.map.width} ${EXPLORE_DESIGN.map.height}`}
-            preserveAspectRatio="none"
-            style={StyleSheet.absoluteFill}
-          >
-            <Polyline
-              points={MAP_OUTLINE_POINTS}
-              fill="none"
-              stroke={outline}
-              strokeWidth={1.5}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-          </Svg>
+          {!isDark && (
+            <Svg
+              width="100%"
+              height="100%"
+              viewBox={`0 0 ${EXPLORE_DESIGN.map.width} ${EXPLORE_DESIGN.map.height}`}
+              preserveAspectRatio="none"
+              style={StyleSheet.absoluteFill}
+            >
+              <Polyline
+                points={MAP_OUTLINE_POINTS}
+                fill="none"
+                stroke={outline}
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            </Svg>
+          )}
           {MAP_HOTSPOTS.map((spot) => (
             <View
               key={`${spot.left}-${spot.top}`}
@@ -275,9 +285,15 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
             </AppText>
             <AppText
               variant="caption12"
-              color="textSecondary"
               allowFontScaling={false}
-              style={styles.bannerDescription}
+              style={[
+                styles.bannerDescription,
+                {
+                  color: isDark
+                    ? theme.colors.textPrimary
+                    : theme.colors.textSecondary,
+                },
+              ]}
             >
               {strings.description}
             </AppText>
@@ -289,7 +305,9 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
               styles.mapButton,
               {
                 backgroundColor: theme.colors.surfacePrimary,
-                borderColor: EXPLORE_OUTER_BORDER,
+                borderColor: isDark
+                  ? APP_COLORS.homeBorderDark
+                  : EXPLORE_OUTER_BORDER,
               },
             ]}
           >

@@ -63,6 +63,17 @@ test("the whole banner is tappable and shows Explore Map when location is on", a
   expect(h.onExploreMap).toHaveBeenCalled();
 });
 
+test("shows the Explore Near You description under the heading", async () => {
+  await render({ locationGranted: true });
+  const labels = tree.root
+    .findAllByType("AppText" as never)
+    .map((node) => String(node.props.children));
+  expect(labels).toContain("Explore Near You");
+  expect(labels).toContain(
+    "Discover bird sightings, hotspots, and species around your area."
+  );
+});
+
 test("shows Enable Location when location access is off", async () => {
   await render({ locationGranted: false });
   expect(labelled("Enable Location")).toHaveLength(1);

@@ -29,10 +29,11 @@ export const POPUP_BORDER_RADIUS = MODAL.cardRadius;
 /** Figma secondary popup CTA radius — Radius-xl / 24px */
 export const POPUP_SECONDARY_CTA_RADIUS = 24;
 
-/** Primary popup CTA fill — bird brand purple (`primaryCTA` / `#725481`) */
+/** Primary popup CTA — light purple / dark teal. */
 export function getPopupPrimaryCtaStyle(theme: Theme): ViewStyle {
   return {
     backgroundColor: theme.colors.primaryCTA,
+    ...getDarkPrimaryCtaStyle(theme),
   };
 }
 
@@ -88,4 +89,17 @@ export function getBottomSheetChromeStyle(theme: Theme): ViewStyle {
         }
       : {}),
   };
+}
+
+/** Figma 9375:212793 — shared dark primary CTA; light callers receive no overrides. */
+export function getDarkPrimaryCtaStyle(theme: Theme): ViewStyle {
+  return theme.mode === "dark" ? {
+    backgroundColor: theme.colors.primaryCTA,
+    borderRadius: 24,
+    shadowColor: "#FFAE00",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.26,
+    shadowRadius: 12.5,
+    elevation: 6,
+  } : {};
 }

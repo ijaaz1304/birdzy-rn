@@ -122,9 +122,9 @@ export const PostAuthOnboardingScreen: React.FC = () => {
   const colors = useMemo(() => getPostAuthOnboardingColors(isDark), [isDark]);
   const onboardingImages = useMemo(
     () => ({
-      notification: Images.onboardingNotification,
-      gift: Images.onboardingGift,
-      discount: Images.onboarding50Percent,
+      notification: isDark ? Images.onboardingNotificationDark : Images.onboardingNotification,
+      gift: isDark ? Images.onboardingGiftDark : Images.onboardingGift,
+      discount: isDark ? Images.onboarding50PercentDark : Images.onboarding50Percent,
     }),
     [isDark]
   );

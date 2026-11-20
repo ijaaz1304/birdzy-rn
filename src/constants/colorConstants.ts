@@ -145,14 +145,14 @@ export const AI_CHAT_COLORS = {
 
   // Answer boxes - Dark Mode - Figma Surface-brand-2-Accent on Surface-Primary
   ANSWER_UNSELECTED_BORDER_DARK: SCREEN_COLORS.DARK.border,
-  ANSWER_UNSELECTED_BG_DARK: "#111111",
+  ANSWER_UNSELECTED_BG_DARK: APP_COLORS.homeSurfaceDark,
   ANSWER_SELECTED_BORDER_DARK: DARK_SURFACE_BRAND_1,
   ANSWER_SELECTED_BG_DARK: "#3C2B1A",
   ANSWER_SELECTED_TEXT_DARK: DARK_SURFACE_BRAND_1,
 
   /** Ask AI suggested question chips — dark: Radius xl, border #DCA50D, bg #111 */
   SUGGESTED_QUESTION_BORDER_DARK: "#DCA50D",
-  SUGGESTED_QUESTION_BG_DARK: "#111111",
+  SUGGESTED_QUESTION_BG_DARK: APP_COLORS.homeSurfaceDark,
 
   // Loader
   LOADER_BORDER: FIGMA_TOKENS.brand1.primary,
@@ -170,9 +170,9 @@ export const AI_CHAT_COLORS = {
 
   // Select photo
   SELECT_PHOTO_BG_LIGHT: APP_COLORS.surfaceAuthLight,
-  SELECT_PHOTO_BG_DARK: "#111111",
+  SELECT_PHOTO_BG_DARK: APP_COLORS.homeSurfaceDark,
   SELECT_PHOTO_CONTAINER_LIGHT: APP_COLORS.modalTextOnPrimary,
-  SELECT_PHOTO_CONTAINER_DARK: "#111111",
+  SELECT_PHOTO_CONTAINER_DARK: APP_COLORS.homeSurfaceDark,
   CAPTURE_BORDER_LIGHT: SCREEN_COLORS.LIGHT.border,
   CAPTURE_BORDER_DARK: SCREEN_COLORS.DARK.border,
 
@@ -221,12 +221,12 @@ export const SUBSCRIPTION_COLORS = {
   CARD_UNSELECTED_BORDER_LIGHT: SCREEN_COLORS.LIGHT.border,
   CARD_UNSELECTED_BORDER_DARK: SCREEN_COLORS.DARK.border,
   CARD_BG_LIGHT: APP_COLORS.modalTextOnPrimary,
-  CARD_BG_DARK: "#111111",
+  CARD_BG_DARK: APP_COLORS.homeSurfaceDark,
 
   // CTA colors - EXACT SPEC
   CTA_PRIMARY_LIGHT: APP_COLORS.ctaPrimary,
   CTA_TEXT_LIGHT: APP_COLORS.modalTextOnPrimary,
-  CTA_PRIMARY_DARK: APP_COLORS.ctaPrimary,
+  CTA_PRIMARY_DARK: APP_COLORS.ctaPrimaryDark,
   CTA_TEXT_DARK: APP_COLORS.modalTextOnPrimary,
 
   // Later button - EXACT SPEC
@@ -239,11 +239,11 @@ export const SUBSCRIPTION_COLORS = {
 
   // Success popup
   POPUP_BG_LIGHT: APP_COLORS.modalTextOnPrimary,
-  POPUP_BG_DARK: "#111111",
+  POPUP_BG_DARK: APP_COLORS.homeSurfaceDark,
 
   // Discount bottom sheets
   BOTTOM_SHEET_BG_LIGHT: APP_COLORS.modalTextOnPrimary,
-  BOTTOM_SHEET_BG_DARK: "#111111",
+  BOTTOM_SHEET_BG_DARK: APP_COLORS.homeSurfaceDark,
   BOTTOM_SHEET_HANDLE_LIGHT: "#E7E7E7",
   BOTTOM_SHEET_HANDLE_DARK: "#333333",
 } as const;
@@ -316,7 +316,7 @@ export const ACCENT_COLORS = {
 export const FEED_COLORS = {
   // Background fill colors (below feed asset header image)
   BACKGROUND_FILL_LIGHT: APP_COLORS.surfaceAuthLight,
-  BACKGROUND_FILL_DARK: "#111111",
+  BACKGROUND_FILL_DARK: APP_COLORS.homeSurfaceDark,
 
   // Post card styling
   CARD: {
@@ -325,7 +325,7 @@ export const FEED_COLORS = {
       BORDER: SCREEN_COLORS.LIGHT.border,
     },
     DARK: {
-      BACKGROUND: "#111111",
+      BACKGROUND: APP_COLORS.homeSurfaceDark,
       BORDER: SCREEN_COLORS.DARK.border,
     },
   },
@@ -341,8 +341,8 @@ export const FEED_COLORS = {
       TEXT: "#785284",
     },
     DARK: {
-      BACKGROUND: APP_COLORS.createButtonBg,
-      TEXT: APP_COLORS.createButtonFg,
+      BACKGROUND: APP_COLORS.homeSurfaceDark,
+      TEXT: APP_COLORS.ctaPrimaryDark,
     },
     BORDER_RADIUS: 24,
   },
@@ -369,7 +369,7 @@ export const HOME_COLORS = {
   // DiscountBanner – Figma spec (ImageBackground + gradient + 50% OFF + timer + CTA + close)
   DISCOUNT_BANNER: {
     BG_LIGHT: "#F5F5F5",
-    BG_DARK: "#1A1A1A",
+    BG_DARK: APP_COLORS.homeSurfaceDark,
     /** 50% OFF and body text – Figma 8598:66213 (dark text on purple gradient) */
     /** Figma text-icon-primary (light) */
     HEADLINE_LIGHT: "#091B21",
@@ -391,7 +391,7 @@ export const HOME_COLORS = {
     TIMER_BOX_TEXT_LIGHT: "#FFFFFF",
     TIMER_BOX_TEXT_DARK: "#FFFFFF",
     /** Subscribe now CTA (dark mode) */
-    CTA_BG_DARK: APP_COLORS.ctaPrimary,
+    CTA_BG_DARK: APP_COLORS.ctaPrimaryDark,
     CTA_TEXT_DARK: APP_COLORS.modalTextOnPrimary,
     /** Banner border (dark mode) — Border-brand 2 */
     BORDER_DARK: "rgba(199, 99, 12, 0.16)",
@@ -417,7 +417,7 @@ export const HOME_COLORS = {
     BADGE_BG: "#01474F",
     BORDER_DARK: "#FFE477",
     TIME_BOX_BG_LIGHT: APP_COLORS.modalTextOnPrimary,
-    TIME_BOX_BG_DARK: "#111111",
+    TIME_BOX_BG_DARK: APP_COLORS.homeSurfaceDark,
     TIME_BOX_OVERLAY_DARK: "rgba(255, 197, 69, 0.12)",
     TIME_BOX_BORDER_LIGHT: "#7B7BAA",
     TIME_BOX_BORDER_DARK: "#FFE477",
@@ -439,12 +439,12 @@ export const HOME_COLORS = {
   // Other app card (use theme for dark BG/border when available)
   OTHER_APP_CARD: {
     BG_LIGHT: APP_COLORS.modalTextOnPrimary,
-    BG_DARK: "#111111",
+    BG_DARK: APP_COLORS.homeSurfaceDark,
     GET_TEXT_DARK: "#FFFFFF",
     BORDER_LIGHT: "rgba(0,0,0,0.06)",
     ICON_WRAP_LIGHT: "#F5F5F5",
     /** Get app CTA — dark mode only */
-    GET_APP_CTA_BG: APP_COLORS.ctaPrimary,
+    GET_APP_CTA_BG: APP_COLORS.ctaPrimaryDark,
     GET_APP_CTA_TEXT: APP_COLORS.modalTextOnPrimary,
     GET_APP_CTA_RADIUS: 24,
   },
@@ -460,7 +460,7 @@ export const CARD_COLORS = {
   DARK: {
     borderRadius: radius.md,
     border: SCREEN_COLORS.DARK.border,
-    background: "#111111",
+    background: APP_COLORS.homeSurfaceDark,
   },
 } as const;
 
@@ -529,7 +529,7 @@ export const TAB_BAR_COLORS = {
     background: SEMANTIC_LIGHT.surface.primary,
   },
   DARK: {
-    line: UI_COLORS.TAB_BAR_ACTIVE,
+    line: SEMANTIC_DARK.border.brandInverse,
     selected: SEMANTIC_DARK.content.primary,
     unselected: SEMANTIC_DARK.content.tertiary,
     border: SEMANTIC_DARK.border.zero,
@@ -640,27 +640,27 @@ export const AI_DETAILS_SPEC = {
     CTA_RADIUS: 24,
   },
   DARK: {
-    PAGE_BG: APP_COLORS.surfaceAuthDark,
-    CARD_BG: "#111111",
+    PAGE_BG: APP_COLORS.homeSurfaceDark,
+    CARD_BG: APP_COLORS.homeSurfaceDark,
     BORDER: SCREEN_COLORS.DARK.border,
     PRIMARY_TEXT: APP_COLORS.modalTextOnPrimary,
     SECONDARY_TEXT: "#D1D1D1",
     TAB_ACTIVE_TEXT: APP_COLORS.modalTextOnPrimary,
-    TAB_ACTIVE_UNDERLINE: APP_COLORS.brandPrimary,
+    TAB_ACTIVE_UNDERLINE: APP_COLORS.ctaPrimaryDark,
     TAB_INACTIVE_TEXT: "#D1D1D1",
     TAB_DIVIDER: SCREEN_COLORS.DARK.border,
     SECTION_HEADER: APP_COLORS.modalTextOnPrimary,
     LABEL: "#D1D1D1",
     VALUE: APP_COLORS.modalTextOnPrimary,
     ROW_DIVIDER: SCREEN_COLORS.DARK.border,
-    MAP_CARD_BG: "#111111",
+    MAP_CARD_BG: APP_COLORS.homeSurfaceDark,
     MAP_CARD_BORDER: SCREEN_COLORS.DARK.border,
     MOHS_NUMBER: APP_COLORS.brandPrimary,
     MOHS_INDICATOR: APP_COLORS.modalTextOnPrimary,
     DISCLAIMER_BG: "rgba(255, 99, 99, 0.1)",
     DISCLAIMER_BORDER: "#5C2B2B",
     DISCLAIMER_TEXT: "#D1D1D1",
-    CTA_BG: APP_COLORS.ctaPrimary,
+    CTA_BG: APP_COLORS.ctaPrimaryDark,
     CTA_TEXT: APP_COLORS.modalTextOnPrimary,
     CTA_RADIUS: 24,
   },
@@ -681,8 +681,8 @@ export const EDIT_ROCK_SPEC = {
     SECTION_TITLE: "#111111",
   },
   DARK: {
-    PAGE_BG: "#111111",
-    INPUT_BG: "#171717",
+    PAGE_BG: APP_COLORS.homeSurfaceDark,
+    INPUT_BG: APP_COLORS.homeSurfaceDark,
     INPUT_BORDER: SCREEN_COLORS.DARK.border,
     INPUT_TEXT: APP_COLORS.modalTextOnPrimary,
     PLACEHOLDER: FIGMA_TOKENS.dark.text.tertiary,
@@ -705,7 +705,7 @@ export const COLLECTION_CARD_SPEC = {
     SUBTITLE: "#5D5D5D",
   },
   DARK: {
-    CARD_BG: "#111111",
+    CARD_BG: APP_COLORS.homeSurfaceDark,
     CARD_BORDER: SCREEN_COLORS.DARK.border,
     CARD_RADIUS: 12,
     IMAGE_RADIUS: 8,
@@ -717,7 +717,7 @@ export const COLLECTION_CARD_SPEC = {
 /** Bottom Sheet and Modal backgrounds */
 export const SHEET_COLORS = {
   LIGHT: "#ffffff",
-  DARK: "#111111",
+  DARK: APP_COLORS.homeSurfaceDark,
 } as const;
 
 /** Collection screen backgrounds */
@@ -728,7 +728,7 @@ export const COLLECTION_SCREEN_COLORS = {
   },
   DARK: {
     collectionBg: APP_COLORS.surfaceAuthDark,
-    screenBg: "#111111",
+    screenBg: APP_COLORS.homeSurfaceDark,
   },
 } as const;
 
@@ -768,7 +768,7 @@ export const BG_COLORS = {
   LIGHT_SURFACE: APP_COLORS.surfaceAuthLight, // Secondary surface in light mode
   LIGHT_BG: APP_COLORS.modalTextOnPrimary, // Primary background in light mode
   DARK_SURFACE: APP_COLORS.surfaceAuthDark, // Secondary surface in dark mode
-  DARK_BG: "#111111", // Primary background in dark mode
+  DARK_BG: APP_COLORS.homeSurfaceDark, // Primary background in dark mode
 } as const;
 
 /** Default location coordinates (zero position) */

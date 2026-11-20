@@ -12,6 +12,8 @@ export interface RadioButtonProps extends Omit<TouchableOpacityProps, "style"> {
   label?: string;
   selected?: boolean;
   disabled?: boolean;
+  /** When false, renders a non-touchable indicator (use inside a parent Pressable row). */
+  interactive?: boolean;
   size?: "small" | "medium" | "large";
   labelPosition?: "left" | "right";
   style?: ViewStyle;
@@ -28,10 +30,12 @@ export const RadioButton: React.FC<RadioButtonProps> = ({
   label,
   selected = false,
   disabled = false,
+  interactive = true,
   size = "medium",
   labelPosition = "right",
   style,
   labelStyle,
+  onPress,
   ...props
 }) => {
   const theme = useTheme();
@@ -93,12 +97,31 @@ export const RadioButton: React.FC<RadioButtonProps> = ({
     </Text>
   ) : null;
 
+  const rowStyle = [styles.row, style];
+
+  if (!interactive) {
+    return (
+      <View
+        style={rowStyle}
+        pointerEvents="none"
+        accessibilityRole="radio"
+        accessibilityState={{ selected, disabled }}
+      >
+        {labelPosition === "left" && labelComponent}
+        {radio}
+        {labelPosition === "right" && labelComponent}
+      </View>
+    );
+  }
+
   return (
     <TouchableOpacity
       activeOpacity={disabled ? 1 : 0.7}
-      onPress={props.onPress}
+      onPress={onPress}
       disabled={disabled}
-      style={[styles.row, style]}
+      style={rowStyle}
+      accessibilityRole="radio"
+      accessibilityState={{ selected, disabled }}
       {...props}
     >
       {labelPosition === "left" && labelComponent}

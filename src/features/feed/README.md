@@ -178,3 +178,13 @@ interface Post {
 ✅ **Consistent** - Shared styles ensure UI consistency
 ✅ **Flexible** - Easy to customize for different apps
 ✅ **Testable** - Easy to test with different configurations
+
+
+## Birdzy dark appearance — 20 November 2026
+
+The current Birdzy flow uses configured feed/community content and API post imagery. Dark feed fill, cards, post details, create-post and Community Rules surfaces use the shared `#091B21` palette; the supplied header image remains visible. Selected feed tabs and the Create label use the dark teal token. Community Rules delegates to AppSheet, with a themed header, scrollable configured rules and the existing agree/close actions. Light styling is retained. See `docs/handover/QA_AND_OPERATIONS.md` for the pending dark/light device acceptance sweep; earlier generic Plants examples above are not Birdzy runtime verification.
+
+
+### Post-details comments — 20 November 2026
+
+Dark post details follows Figma 9406:7143 spacing and compact comment/send/action controls. Expanded dark replies use a header row and separate body at the existing inset. Comment/reply More opens the shared CommentActionSheet with Reply and Copy text; no deletion/report endpoint is introduced. Settings → Previews → Bottom sheets exposes post/comment action sheets with local callbacks. Live content, avatar images, likes, share and comment/reply submission remain dynamic. Device acceptance is recorded in the handover QA guide.

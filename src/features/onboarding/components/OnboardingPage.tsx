@@ -358,8 +358,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
       /** Figma: guest button ends 40pt above the screen bottom (home indicator area + 8) */
       const ctaPaddingBottom = getOnboardingCtaBottomPadding(insets.bottom);
       const authImageSource = data.illustrationImage ?? Images.diagnoseAi;
-      /** Both themes keep bird art separate from copy and buttons. */
-      const useSplitAuthLayout = true;
+      /** Dark artwork already contains the bird circle; preserve the light split layout. */
+      const useSplitAuthLayout = !isDark;
       const authBirdsMaxWidth = contentMaxWidth;
       return (
         <View
@@ -582,35 +582,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
         ]}
       >
         {renderPageBackground()}
-        {isDark && (
-          <AppImage
-            source={
-              [
-                Images.subscriptionListIdentificationDark,
-                Images.subscriptionListCollectionDark,
-                Images.subscriptionListDetailsDark,
-                Images.subscriptionListAiChatDark,
-              ][pageIndex] ?? Images.subscriptionListIdentificationDark
-            }
-            style={{
-              position: "absolute",
-              width: contentMaxWidth,
-              height: Math.max(
-                0,
-                Math.min(
-                  280,
-                  Math.min(anchoredTextTop, maxTextTop) -
-                    20 -
-                    (insets.top + (showStatsHeader ? 150 : 32))
-                )
-              ),
-              left: 20,
-              top: insets.top + (showStatsHeader ? 150 : 32),
-            }}
-            resizeMode="contain"
-            pointerEvents="none"
-          />
-        )}
         {showStatsOverlay && renderStatsHeader()}
         {/* Content: image first, then title+sub below; no scroll when titleBelowImageNoScroll */}
         <ContentWrapper {...contentWrapperProps}>

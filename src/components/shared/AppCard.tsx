@@ -1,3 +1,5 @@
+import CatalogueVolume from "../../assets/dark/figma/catalogue_volume.svg";
+import CatalogueVolumeOff from "../../assets/dark/figma/catalogue_volume_off.svg";
 import { AppImage } from "@/components/AppImage";
 import React from "react";
 import { View, StyleSheet, TouchableOpacity, ImageSourcePropType } from "react-native";
@@ -174,23 +176,23 @@ const AppCard: React.FC<Props> = React.memo(
                 soundPlaying ? "Stop bird sound" : "Play bird sound"
               }
             >
-              <AppImage
-                source={
-                  soundPlaying ? Images.soundVolumeHigh : Images.noSound
-                }
+              {isDark ? <View style={styles.soundIconDark}>
+                {soundPlaying ? <CatalogueVolumeOff /> : <CatalogueVolume />}
+              </View> : <AppImage
+                source={soundPlaying ? Images.soundVolumeHigh : Images.noSound}
                 style={styles.soundIcon}
                 resizeMode="contain"
-              />
+              />}
             </TouchableOpacity>
           ) : null}
         </View>
 
         {/* Text section */}
-        <View style={styles.textContainer}>
+        <View style={[styles.textContainer, isDark && styles.textContainerDark]}>
           <AppText
             variant="body16"
             color={colors.textPrimary}
-            numberOfLines={2}
+            numberOfLines={isDark ? 1 : 2}
             ellipsizeMode="tail"
             style={styles.title}
           >
@@ -200,8 +202,8 @@ const AppCard: React.FC<Props> = React.memo(
             <AppText
               variant="body14"
               color={colors.textSecondary}
-              style={styles.subtitle}
-              numberOfLines={2}
+              style={[styles.subtitle, isDark && { fontSize: 12, lineHeight: 16 }]}
+              numberOfLines={isDark ? 1 : 2}
               ellipsizeMode="tail"
             >
               {subtitle}
@@ -309,6 +311,7 @@ const styles = StyleSheet.create({
   soundButton: {
     bottom: 8,
   },
+  soundIconDark: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
   soundIcon: {
     width: 24,
     height: 24,
@@ -333,6 +336,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     lineHeight: 14,
   },
+  textContainerDark: { padding: 12 },
   textContainer: {
     padding: Space.md,
     alignItems: "flex-start",

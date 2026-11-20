@@ -101,6 +101,7 @@ export const Accordion: React.FC<AccordionProps> = ({
                   <RadioButton
                     selected={isSelected}
                     size="small"
+                    interactive={false}
                     style={styles.radio}
                   />
                 )}

@@ -344,7 +344,7 @@ export const SubscriptionIntroScreen: React.FC = () => {
               })
             }
             fullWidth
-            style={{ backgroundColor: SUBSCRIPTION_CTA_COLOR }}
+            style={{ backgroundColor: isDark ? theme.colors.primaryCTA : SUBSCRIPTION_CTA_COLOR }}
           />
           <TouchableOpacity
             onPress={() => navigation.goBack()}

@@ -1,3 +1,4 @@
+import { useSheetPreview, PREVIEW_COLLECTIONS } from "./SheetPreviewContext";
 import {
   canSubmitFeedback,
   isValidFeedbackEmail,
@@ -509,7 +510,7 @@ function getSubscriptionSheetCloseButtonStyle(
   }
   return {
     backgroundColor: isDark
-      ? APP_COLORS.surfaceDarkAlt
+      ? APP_COLORS.homeSurfaceDark
       : APP_COLORS.surfaceAuthLight,
     borderRadius: 20,
     alignItems: "center",
@@ -1587,6 +1588,7 @@ function AddToCollectionContent({
   theme: ReturnType<typeof useTheme>;
   isDark: boolean;
 }) {
+  const preview = useSheetPreview();
   const strings = useStrings();
   const isPremium = useSubscriptionStore(selectIsPremium);
   const maxItemsPerCollection = COLLECTION_LIMITS.MAX_ITEMS_PER_COLLECTION;
@@ -1604,6 +1606,7 @@ function AddToCollectionContent({
   const [confirming, setConfirming] = useState(false);
 
   const fetchCollections = useCallback(async () => {
+    if (preview) { setCollections(PREVIEW_COLLECTIONS); setLoading(false); return; }
     setLoading(true);
     try {
       const [res, identifiedPage, wishlistPage, allSpecimensPage] =
@@ -1682,7 +1685,7 @@ function AddToCollectionContent({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [preview]);
 
   useEffect(() => {
     if (mushroomId) {
@@ -1721,7 +1724,7 @@ function AddToCollectionContent({
     !confirming &&
     !atFreeSpecimenCap &&
     !(selected && isCollectionFull(selected.specimenCount));
-  const _sheetBg = isDark ? APP_COLORS.surfaceDark : APP_COLORS.surfaceWhite;
+  const _sheetBg = isDark ? APP_COLORS.homeSurfaceDark : APP_COLORS.surfaceWhite;
   const textPrimary = theme.colors.textPrimary;
   const textSecondary = theme.colors.textSecondary;
   const borderColor = isDark
@@ -1861,6 +1864,7 @@ function RenameCollectionContent({
   isDark: boolean;
   showToast: (msg: string, type?: "success" | "error") => void;
 }) {
+  const preview = useSheetPreview();
   const strings = useStrings();
   const [name, setName] = useState(initialName);
   const [loading, setLoading] = useState(false);
@@ -1870,6 +1874,7 @@ function RenameCollectionContent({
   }, [initialName]);
 
   const handleSave = async () => {
+    if (preview) { onClose(); return; }
     const trimmed = name.trim();
     if (!trimmed) {
       showToast(strings.collection.forms.collectionName.required, "error");
@@ -2002,6 +2007,7 @@ function UserCollectionPickerContent({
   theme: ReturnType<typeof useTheme>;
   isDark: boolean;
 }) {
+  const preview = useSheetPreview();
   const strings = useStrings();
   const isPremium = useSubscriptionStore(selectIsPremium);
   const copy =
@@ -2023,6 +2029,7 @@ function UserCollectionPickerContent({
   );
 
   const fetchCollections = useCallback(async () => {
+    if (preview) { setCollections(PREVIEW_COLLECTIONS); setLoading(false); return; }
     setLoading(true);
     try {
       const res = await collectionService.fetchAllCollections({
@@ -2047,7 +2054,7 @@ function UserCollectionPickerContent({
     } finally {
       setLoading(false);
     }
-  }, [excludeSet]);
+  }, [excludeSet, preview]);
 
   useEffect(() => {
     setSelectedId(initialSelectedCollectionId ?? null);
@@ -2185,7 +2192,7 @@ function CommunityRulesContent({
   onAgree,
   onClose,
   theme,
-  isDark: _isDark,
+  isDark,
   insets,
 }: {
   config: FeedConfig;
@@ -2198,7 +2205,7 @@ function CommunityRulesContent({
   const { communityRules } = config;
 
   return (
-    <View style={styles.communityRulesContainer}>
+    <View style={[styles.communityRulesContainer, isDark && { backgroundColor: theme.colors.surfacePrimary }]}>
       <View style={styles.communityRulesScrollWrap}>
         <ScrollView
           showsVerticalScrollIndicator={true}
@@ -2603,11 +2610,13 @@ function CreateCollectionContent({
   isDark: boolean;
   showToast: (msg: string, type?: "success" | "error") => void;
 }) {
+  const preview = useSheetPreview();
   const strings = useStrings();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const handleCreate = async () => {
+    if (preview) { onClose(); return; }
     const t = name.trim();
     if (!t || loading) return;
     setLoading(true);
@@ -2852,7 +2861,7 @@ function RateUsContent({
 }
 
 const ALLOW_TEXT_COLOR = APP_COLORS.modalTextOnPrimary;
-const NOT_NOW_BG_DARK = APP_COLORS.surfaceDark;
+const NOT_NOW_BG_DARK = APP_COLORS.homeSurfaceDark;
 const NOT_NOW_BG_LIGHT = APP_COLORS.modalTextOnPrimary;
 const NOT_NOW_TEXT_DARK = APP_COLORS.modalTextOnPrimary;
 const NOT_NOW_TEXT_LIGHT = APP_COLORS.surfaceDark;
@@ -2985,10 +2994,12 @@ function NotificationPermissionContent({
   theme: ReturnType<typeof useTheme>;
   isDark: boolean;
 }) {
+  const preview = useSheetPreview();
   const [shouldOpenSettings, setShouldOpenSettings] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
+    if (preview) return;
     analyticsService.logEvent(EVENTS.notif_popup);
     analyticsService.logEvent(EVENTS.notification_modal_shown);
     analyticsService.logEvent(EVENTS.native_permission);
@@ -3002,9 +3013,10 @@ function NotificationPermissionContent({
       }
     };
     load();
-  }, []);
+  }, [preview]);
 
   const handleEnable = async () => {
+    if (preview) { onClose(); return; }
     setIsProcessing(true);
     try {
       if (shouldOpenSettings) {
@@ -3078,12 +3090,14 @@ function LocationPermissionContent({
   theme: ReturnType<typeof useTheme>;
   isDark: boolean;
 }) {
+  const preview = useSheetPreview();
   const strings = MODAL_STRINGS.bottomSheets.enableLocation;
   const settingsCopy = MODAL_STRINGS.bottomSheets.locationManageAccess;
   const [isProcessing, setIsProcessing] = useState(false);
   const [needsSettings, setNeedsSettings] = useState(false);
 
   useEffect(() => {
+    if (preview) return;
     let mounted = true;
     void getLocationPermissionEntryAction().then((entry) => {
       if (!mounted) return;
@@ -3092,9 +3106,10 @@ function LocationPermissionContent({
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [preview]);
 
   const handleEnable = () => {
+    if (preview) { onClose(); return; }
     if (needsSettings) {
       setIsProcessing(true);
       void openDeviceSettings().finally(() => {

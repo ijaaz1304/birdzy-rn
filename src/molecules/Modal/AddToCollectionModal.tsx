@@ -60,7 +60,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
   const addNewTextColor = APP_COLORS.surfaceWhite;
 
   const sheetBg = isDark
-    ? APP_COLORS.surfaceDark
+    ? APP_COLORS.homeSurfaceDark
     : APP_COLORS.modalTextOnPrimary;
 
   return (

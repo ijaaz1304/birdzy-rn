@@ -329,6 +329,10 @@ export const SettingsScreen: React.FC = () => {
           </SettingsSection>
         ) : null}
 
+        <SettingsSection title="Previews">
+          <SettingsItem title="Bottom sheets" subtitle="View all sheets in the current appearance" onPress={() => navigation.navigate("BottomSheetGallery")} showArrow />
+        </SettingsSection>
+
         <SettingsSection title={M.sections.others}>
           <SettingsItem
             icon="file"

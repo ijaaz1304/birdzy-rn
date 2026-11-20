@@ -15,6 +15,7 @@ import { Images } from "../../../assets";
 import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { FONTS } from "../../../common/typography";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
+import { APP_COLORS } from "../../../../theme/colors";
 import { Radius } from "../../../design";
 
 /** Identify by sound card background */
@@ -40,7 +41,7 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
   const theme = useTheme();
   const isDark = useIsDark();
   const strings = HOME_STRINGS.discovery;
-  const cardBg = isDark ? theme.colors.surfaceSecondary : "#EBE4EE";
+  const cardBg = isDark ? APP_COLORS.homePhotoCardDark : "#EBE4EE";
   const titleColor = theme.colors.textPrimary;
   const { width: windowWidth } = useWindowDimensions();
   const isCompact = windowWidth < COMPACT_BREAKPOINT;
@@ -50,12 +51,16 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={onSoundPress}
-        style={styles.soundCard}
+        style={[
+          styles.soundCard,
+          isDark && { backgroundColor: APP_COLORS.ctaPrimaryDark },
+        ]}
         accessibilityRole="button"
         accessibilityLabel={strings.soundIdentify.title}
       >
         <View style={styles.soundHeader}>
-          <AppText allowFontScaling={false}
+          <AppText
+            allowFontScaling={false}
             variant="body14"
             numberOfLines={1}
             style={[styles.soundTitle, isCompact && styles.titleCompact]}
@@ -66,7 +71,12 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
             <IdentifySoundArrow />
           </View>
         </View>
-        <View style={styles.soundPanel}>
+        <View
+          style={[
+            styles.soundPanel,
+            isDark && { backgroundColor: "rgba(255,255,255,0.6)" },
+          ]}
+        >
           <View style={styles.wave}>
             <IdentifySoundWave />
           </View>
@@ -82,7 +92,8 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
         style={[styles.card, { backgroundColor: cardBg }]}
       >
         <View style={styles.cardHeader}>
-          <AppText allowFontScaling={false}
+          <AppText
+            allowFontScaling={false}
             variant="body14"
             numberOfLines={1}
             style={[
@@ -93,15 +104,11 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
           >
             {strings.identifyByPhoto.title}
           </AppText>
-          <MaterialIcons
-            name="chevron-right"
-            size={20}
-            color={titleColor}
-          />
+          <MaterialIcons name="chevron-right" size={20} color={titleColor} />
         </View>
         <View style={styles.photoIllustration}>
           <AppImage
-            source={Images.homeIdentifyByPhoto}
+            source={isDark ? Images.homeIdentifyByPhotoDark : Images.homeIdentifyByPhoto}
             style={styles.illustrationImage}
             resizeMode="contain"
           />

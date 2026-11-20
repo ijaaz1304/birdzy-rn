@@ -79,7 +79,7 @@ Evidence: [src/features/settings/screens/SettingsScreen.tsx](../../src/features/
 
 ## Explore Near You
 
-Open Explore from the Home banner (whole panel tappable), the Spotted Now / Year-round rows, or Catalogue's "Explore Near You" button and map banner. Home and Catalogue share [useExploreEntry](../../src/features/explore/useExploreEntry.tsx): location access is requested first ("Enable Location Access" on Android, existing iOS App Review wording), then the map opens. The Home / Catalogue banner reads "Enable Location" while access is off and "Explore Map" when it is on; the Catalogue banner is hidden while catalogue filters are applied. On the map, switch Spotted Now / Year-round (equal halves of the tab row), select a group, and open bird details. Map filters affect map activity; seasonal tabs affect the nearby list.
+Open Explore from the Home banner (whole panel tappable), the Spotted Now / Year-round rows, or Catalogue's "Explore Near You" button and map banner. Under the **Explore Near You** heading the banner shows: "Discover bird sightings, hotspots, and species around your area." Home and Catalogue share [useExploreEntry](../../src/features/explore/useExploreEntry.tsx): location access is requested first ("Enable Location Access" on Android, existing iOS App Review wording), then the map opens. The Home / Catalogue banner reads "Enable Location" while access is off and "Explore Map" when it is on; the Catalogue banner is hidden while catalogue filters are applied. On the map, switch Spotted Now / Year-round (equal halves of the tab row), select a group, and open bird details. Map filters affect map activity; seasonal tabs affect the nearby list.
 
 **Acceptance/recovery:** Check map token, denied location from Home and Catalogue, Android first-ask copy, custom location sheet, manual search, delayed requests, map-only retry, clusters, full-screen return, pagination, empty/filtered empty states, and dark mode.
 
@@ -104,3 +104,19 @@ Feed notifications now belong to a stored account owner. Switching accounts or s
 The legacy Discount Code route now offers “View Plans” and opens SubscriptionMain. It explicitly says a supplied code has not been applied; the store controls actual eligibility and final price. There is no implemented arbitrary coupon redemption contract.
 
 Specimen PATCH transport preserves explicit empty editable arrays (including collections, habitat and captured sounds); omitted values remain unchanged and immutable image fields remain excluded. A caller must intentionally supply an empty list to clear it.
+
+
+## Settings bottom-sheet previews — 20 November 2026
+
+Settings → Previews → Bottom sheets opens a gallery in the current Light/Dark appearance. It lists every registered AppSheet type, all nine limit/upgrade categories, 50%/70% offers, custom/post/comment action sheets, password create/change, location add/change, removal, plan selection/switching and promotional sheet variants. Select a row to open the real component; close/backdrop/drag follow that sheet's normal dismissal rules. Community Rules can be dismissed with its close control even though backdrop dismissal is disabled.
+
+Preview-only collection pickers use local sample collections. Create/rename/remove, native permission requests and manual geocoding are intercepted in the Settings preview context; callbacks for purchases, passwords, ratings, feedback, reports and other sample actions only close the preview. Plan information may still come from existing read-only pricing hooks. Preview form inputs are interactive but do not submit user changes. The preview context defaults off and is scoped to the gallery.
+
+Post details retains real post/comment/reply data. In dark appearance it follows Figma 9406:7143 spacing, 116-point comment field, compact Send state and bottom action row. Comment/reply More opens Reply / Copy text actions; Reply uses the existing inline composer, Copy text copies only that selected comment/reply. No comment deletion/reporting API is added.
+
+
+## Home offer fallback and identification name sound — 20 November 2026
+
+For non-premium users who have not dismissed the inline Home offer, Dark shows the active discount banner only while the offer is active and its displayed countdown is positive. In an inactive/disabled discount phase or at zero countdown, show the full-price Upgrade to Pro banner (Figma 9375:212476). Subscribe now opens SubscriptionMain with the plan modal and `discount50: false`; the close control retains existing dismissal behavior. The existing Light banner selection/artwork is preserved.
+
+In dark identification/Bird Details, available name sound playback remains in the 48-point control at the right edge of the full-width name row, 20 points from the page edge (Figma 9375:213219). It uses dark fill, border-0 and a white volume glyph. Existing sound availability, play/stop handler and accessibility labels are retained; no sound button is fabricated when no sound URL exists.

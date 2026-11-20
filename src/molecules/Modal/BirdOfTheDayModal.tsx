@@ -127,8 +127,8 @@ export const BirdOfTheDayModal = ({
     : SUBSCRIPTION_COLORS.CTA_TEXT_LIGHT;
 
   const labelColor = LABEL_GREY;
-  const secondaryButtonBg = isDark ? colors.surfaceSecondary : "#FFFFFF";
-  const secondaryButtonBorder = isDark ? colors.borderSecondary : "#E7E7E7";
+  const secondaryButtonBg = isDark ? colors.surfacePrimary : "#FFFFFF";
+  const secondaryButtonBorder = isDark ? colors.border0 : "#E7E7E7";
   const secondaryButtonText = isDark ? colors.textPrimary : "#111111";
   const closeBg = isDark ? colors.surfaceSecondary : "#111111";
   const closeBorder = isDark ? colors.borderSecondary : "#6D6D6D";
@@ -337,7 +337,7 @@ export const BirdOfTheDayModal = ({
                     showRefresh
                       ? [
                           styles.viewDetailButtonInline,
-                          styles.viewDetailButtonPrimary,
+                          !isDark && styles.viewDetailButtonPrimary,
                           { backgroundColor: ctaBg, borderColor: ctaBg },
                         ]
                       : {

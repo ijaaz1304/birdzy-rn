@@ -79,3 +79,6 @@ android/.kotlin/
 
 # Logs
 *.log
+
+# Design dump (runtime copies live under src/assets/dark/)
+Dark Mode/

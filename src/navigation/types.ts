@@ -348,6 +348,7 @@ export type AskAIStackParamList = {
 };
 
 export type SettingsStackParamList = {
+  BottomSheetGallery: undefined;
   LoginSecurity: undefined;
   ChangePassword: undefined;
   CreatePassword: undefined;

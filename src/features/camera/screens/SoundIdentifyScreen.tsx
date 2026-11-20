@@ -1,5 +1,6 @@
+import EntryMicrophoneDark from "../../../assets/dark/figma/sound_entry_microphone.svg";
 /**
- * Identify by sound — entry (Figma 8890:125339) then live recording (8890:125340 / 8890:125341).
+ * Identify by sound — dark entry (Figma 9380:170994), light entry (8890:125339), then live recording (8890:125340 / 8890:125341).
  */
 
 import { AppImage } from "@/components/AppImage";
@@ -11,9 +12,13 @@ import {
   Animated,
   Easing,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { Images } from "../../../assets";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme } from "../../../hooks/useTheme";
@@ -58,6 +63,14 @@ export const SoundIdentifyScreen: React.FC = () => {
   logSoundRenderCount("SoundIdentifyScreen");
   const theme = useTheme();
   const colors = theme.colors;
+  const isDark = theme.mode === "dark";
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  // Figma: 100pt below the 52pt header; reduce only when needed on short screens.
+  const entryTopGap = Math.min(
+    100,
+    Math.max(16, screenHeight - insets.top - insets.bottom - 52 - 346 - 72 - 16)
+  );
   const navigation = useNavigation<Nav>();
   const {
     location,
@@ -86,7 +99,9 @@ export const SoundIdentifyScreen: React.FC = () => {
         columnCount: spectrogramColumns.length,
         uri,
       });
-      useSoundRecordingSpectrogramStore.getState().setColumns(spectrogramColumns);
+      useSoundRecordingSpectrogramStore
+        .getState()
+        .setColumns(spectrogramColumns);
       setCropSession({
         audioUri: uri,
         durationSec: Math.max(1, Math.round(durationSec)),
@@ -237,13 +252,23 @@ export const SoundIdentifyScreen: React.FC = () => {
 
   const locationCard = !locationOn ? (
     <View
-      style={[styles.locationCard, { backgroundColor: colors.surfaceSecondary }]}
+      style={[
+        styles.locationCard,
+        { backgroundColor: colors.surfaceSecondary },
+        isDark && phase === "entry" && styles.darkEntryLocationCard,
+      ]}
     >
       <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
         {copy.enableLocation}
       </Text>
       <Toggle
         value={false}
+        trackColor={
+          isDark && phase === "entry" ? { inactive: "#B0B0B0" } : undefined
+        }
+        thumbColor={
+          isDark && phase === "entry" ? { inactive: "#FFFFFF" } : undefined
+        }
         onToggle={(on) => {
           if (on) handleToggleOn();
         }}
@@ -251,7 +276,11 @@ export const SoundIdentifyScreen: React.FC = () => {
     </View>
   ) : (
     <TouchableOpacity
-      style={[styles.locationCard, { backgroundColor: colors.surfaceSecondary }]}
+      style={[
+        styles.locationCard,
+        { backgroundColor: colors.surfaceSecondary },
+        isDark && phase === "entry" && styles.darkEntryLocationCard,
+      ]}
       onPress={() => openCustomLocationSheet()}
       activeOpacity={0.85}
     >
@@ -265,7 +294,21 @@ export const SoundIdentifyScreen: React.FC = () => {
   if (phase === "entry") {
     return (
       <View style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
-        <FindYourBirdBackground />
+        {isDark ? (
+          <AppImage
+            source={Images.soundIdentifyEntryBackgroundDark}
+            style={[
+              styles.darkEntryBackground,
+              { width: screenWidth, height: (screenWidth * 587) / 375 },
+            ]}
+            resizeMode="contain"
+            pointerEvents="none"
+            preferRNImage
+            fadeDuration={0}
+          />
+        ) : (
+          <FindYourBirdBackground />
+        )}
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
           <View style={styles.header}>
             <TouchableOpacity
@@ -278,43 +321,77 @@ export const SoundIdentifyScreen: React.FC = () => {
             <View style={styles.headerBtn} />
           </View>
 
-          <View style={styles.entryBody}>
-            <View style={styles.entryMiddle}>
+          <View style={[styles.entryBody, isDark && styles.darkEntryBody]}>
+            <View
+              style={[
+                styles.entryMiddle,
+                isDark && [styles.darkEntryMiddle, { paddingTop: entryTopGap }],
+              ]}
+            >
               <AppImage
-                source={Images.soundIdentifyHero}
+                source={
+                  isDark
+                    ? Images.soundIdentifyHeroDark
+                    : Images.soundIdentifyHero
+                }
                 style={styles.hero}
                 resizeMode="contain"
               />
               <View style={styles.entryCopy}>
-                <Text style={[styles.entryTitle, { color: colors.textPrimary }]}>
+                <Text
+                  style={[styles.entryTitle, { color: colors.textPrimary }]}
+                >
                   {copy.title}
                 </Text>
                 <Text
-                  style={[styles.entrySubtitle, { color: colors.textSecondary }]}
+                  style={[
+                    styles.entrySubtitle,
+                    { color: colors.textSecondary },
+                  ]}
                 >
                   {copy.subtitle}
                 </Text>
-                <Text
-                  style={[styles.entryNote, { color: colors.textTertiary }]}
-                >
-                  {copy.noPhotoRequired}
-                </Text>
+                {!isDark && (
+                  <Text
+                    style={[styles.entryNote, { color: colors.textTertiary }]}
+                  >
+                    {copy.noPhotoRequired}
+                  </Text>
+                )}
               </View>
               {locationCard}
             </View>
 
-            <View style={styles.entryControls}>
+            <View
+              style={[styles.entryControls, isDark && styles.darkEntryControls]}
+            >
               <TouchableOpacity
                 onPress={handleEntryRecordPress}
-                style={styles.entryRecordBtn}
+                style={[
+                  styles.entryRecordBtn,
+                  isDark && styles.darkEntryRecordBtn,
+                ]}
                 accessibilityLabel={copy.startRecording}
                 activeOpacity={0.85}
               >
-                <AppImage
-                  source={Images.soundRecord}
-                  style={styles.entryRecordImage}
-                  resizeMode="contain"
-                />
+                {isDark ? (
+                  <View
+                    style={[
+                      styles.darkEntryMicCircle,
+                      { backgroundColor: colors.primaryCTA },
+                    ]}
+                  >
+                    <View style={styles.darkEntryMicSlot}>
+                      <EntryMicrophoneDark />
+                    </View>
+                  </View>
+                ) : (
+                  <AppImage
+                    source={Images.soundRecord}
+                    style={styles.entryRecordImage}
+                    resizeMode="contain"
+                  />
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -334,7 +411,21 @@ export const SoundIdentifyScreen: React.FC = () => {
   if (phase === "crop" && cropSession) {
     return (
       <View style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
-        <FindYourBirdBackground />
+        {isDark ? (
+          <AppImage
+            source={Images.soundIdentifyEntryBackgroundDark}
+            style={[
+              styles.darkEntryBackground,
+              { width: screenWidth, height: (screenWidth * 587) / 375 },
+            ]}
+            resizeMode="contain"
+            pointerEvents="none"
+            preferRNImage
+            fadeDuration={0}
+          />
+        ) : (
+          <FindYourBirdBackground />
+        )}
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
           <SoundRecordingCropContent
             session={cropSession}
@@ -440,6 +531,34 @@ const styles = StyleSheet.create({
   headerBtn: {
     width: 44,
     height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  darkEntryBackground: { position: "absolute", left: 0, top: 0 },
+  darkEntryBody: { paddingBottom: 0 },
+  darkEntryMiddle: { justifyContent: "flex-start", gap: 22 },
+  darkEntryLocationCard: {
+    marginTop: 2,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#091B21",
+  },
+  darkEntryControls: { paddingBottom: 0 },
+  darkEntryRecordBtn: {
+    padding: 12,
+    borderRadius: 999,
+    backgroundColor: "rgba(17,17,17,0.05)",
+  },
+  darkEntryMicCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  darkEntryMicSlot: {
+    width: 24,
+    height: 24,
     alignItems: "center",
     justifyContent: "center",
   },

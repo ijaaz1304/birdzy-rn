@@ -1,3 +1,4 @@
+import { BottomSheetGalleryScreen } from "../features/settings/screens/BottomSheetGalleryScreen";
 import { LoginSecurityScreen } from "../features/settings/screens/LoginSecurityScreen";
 import { ChangePasswordScreen } from "../features/settings/screens/ChangePasswordScreen";
 import { CreatePasswordScreen } from "../features/settings/screens/CreatePasswordScreen";
@@ -32,6 +33,7 @@ export const SettingsStack: React.FC = () => {
         animationDuration: 180,
       }}
     >
+      <Stack.Screen name="BottomSheetGallery" component={BottomSheetGalleryScreen} />
       <Stack.Screen name="SettingsMain" component={SettingsScreen} />
       <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
       <Stack.Screen name="AccountActions" component={AccountActionsScreen} />

@@ -131,7 +131,7 @@ export const SwitchPlanBottomSheet: React.FC<Props> = ({
       <View style={styles.backdrop}>
         <Pressable style={styles.backdropPress} onPress={onClose} />
         <View
-          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]}
+          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }, isDark && { backgroundColor: "#091B21" }]}
         >
           <View style={styles.headerRow}>
             <TouchableOpacity

@@ -49,8 +49,12 @@ export const APP_COLORS = {
   modalEmojiSelectedBg: '#FFA726',
   modalCheckIconOnSuccess: '#FFFFFF',
 
-  /** Primary CTA button fill — light and dark mode */
+  /** Primary CTA button fill — light mode */
   ctaPrimary: '#725481',
+  /** Dark primary CTA and selected pagination dot — Figma 9373:171149. */
+  ctaPrimaryDark: '#16B6B4',
+  /** Dark unselected pagination dot — Figma 9373:171150, 20% opacity. */
+  paginationDotUnselectedDark: 'rgba(22, 182, 180, 0.2)',
 
   /** Figma 8035:46238 — Feed / Collection Create chip */
   createButtonBg: '#F5EBEB',
@@ -62,6 +66,15 @@ export const APP_COLORS = {
 
   /** Splash + native launch screen background */
   splashBackground: '#01474F',
+
+  /** Dark Home surfaces — Figma Home 9375:212474 / 9375:212475. */
+  homeCardDark: '#072C38',
+  homePhotoCardDark: '#0E2230',
+  homeSurfaceDark: '#091B21',
+  homeBorderDark: '#333333',
+  homeAccentBorderDark: '#41EDE9',
+  homeTextDark: '#FFFFFF',
+  homeSecondaryTextDark: '#D1D1D1',
 
   // Brand — Mushroom app (Figma Brand 1 orange + Brand 2 earth brown)
   brandPrimary: '#FDBE62',
@@ -96,7 +109,7 @@ export const APP_COLORS = {
   cancelSecondaryBorderLight: '#E7E7E7',
   cancelSecondaryBorderDark: '#333333',
   surfaceAuthLight: '#F6F6F6',
-  surfaceAuthDark: '#171717',
+  surfaceAuthDark: '#091B21',
 
   // Shadows / neutrals
   shadowBlack: '#000000',

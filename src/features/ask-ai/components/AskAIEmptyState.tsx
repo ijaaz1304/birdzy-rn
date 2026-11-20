@@ -2,7 +2,7 @@ import { AppImage } from "@/components/AppImage";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../../../atoms";
-import { useTheme } from "../../../hooks/useTheme";
+import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { Images } from "../../../assets";
 import { type AskAiSuggestedPromptId } from "../../../config/strings/ask-ai.strings";
 import { AskAISuggestedQuestionCard } from "./AskAISuggestedQuestionCard";
@@ -12,7 +12,10 @@ export type AskAiPromptItem = {
   question: string;
 };
 
-const PROMPT_ICONS: Record<AskAiSuggestedPromptId, typeof Images.askAiPromptIconParrot> = {
+const PROMPT_ICONS: Record<
+  AskAiSuggestedPromptId,
+  typeof Images.askAiPromptIconParrot
+> = {
   parrot: Images.askAiPromptIconParrot,
   weather: Images.askAiPromptIconWeather,
   brain: Images.askAiPromptIconBrain,
@@ -36,6 +39,7 @@ export function AskAIEmptyState({
   onSelectQuestion,
 }: Props) {
   const theme = useTheme();
+  const isDark = useIsDark();
   const colors = theme.colors;
 
   return (
@@ -47,7 +51,7 @@ export function AskAIEmptyState({
     >
       <View style={styles.heroBlock}>
         <AppImage
-          source={Images.askAiHeroMascot}
+          source={isDark ? Images.askAiHeroMascotDark : Images.askAiHeroMascot}
           style={styles.heroImage}
           resizeMode="contain"
         />

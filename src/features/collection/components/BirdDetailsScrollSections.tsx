@@ -1,3 +1,4 @@
+import { SubscribeToPremiumCard } from "./SubscribeToPremiumCard";
 /**
  * Bird details scroll sections.
  */
@@ -623,6 +624,7 @@ function PremiumLockedSection({
         style={[
           styles.premiumContentWrap,
           locked && styles.premiumContentLocked,
+          locked && isDark && { minHeight: 272 },
         ]}
       >
         {children}
@@ -634,7 +636,7 @@ function PremiumLockedSection({
               style={StyleSheet.absoluteFillObject}
             />
             <View style={styles.premiumGoProWrap} pointerEvents="box-none">
-              <GoProGateButton onPress={onGetPremium} />
+              {isDark ? <SubscribeToPremiumCard isDark onPress={onGetPremium} /> : <GoProGateButton onPress={onGetPremium} />}
             </View>
           </>
         ) : null}
@@ -880,7 +882,7 @@ export const BirdDetailsScrollSections: React.FC<Props> = ({
             styles.descriptionCard,
             {
               backgroundColor: isDark
-                ? surfaceSecondary
+                ? APP_COLORS.homeCardDark
                 : OVERVIEW_CARD_BG_LIGHT,
             },
           ]}

@@ -40,7 +40,7 @@ Implementation reference: [src/features/discovery/screens/StepByStepScreen.tsx](
 
 ### Explore Near You
 
-Open Explore from Home, search for a place or use location access, inspect activity on the map, switch Spotted Now / Year-round, select a group, and open bird details. Map filters affect map activity; seasonal tabs affect the nearby list.
+Open Explore from Home, search for a place or use location access, inspect activity on the map, switch Spotted Now / Year-round, select a group, and open bird details. The Home / Catalogue Explore Near You card shows the subtitle "Discover bird sightings, hotspots, and species around your area." under the heading. Map filters affect map activity; seasonal tabs affect the nearby list.
 
 Implementation reference: [src/features/explore/screens/ExploreMapScreen.tsx](../../src/features/explore/screens/ExploreMapScreen.tsx); [src/features/explore/README.md](../../src/features/explore/README.md).
 

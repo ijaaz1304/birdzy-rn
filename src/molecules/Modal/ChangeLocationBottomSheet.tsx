@@ -1,3 +1,4 @@
+import { useSheetPreview } from "../../components/AppSheet/SheetPreviewContext";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Keyboard, Platform, Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -50,6 +51,7 @@ export const ChangeLocationBottomSheet: React.FC<
   variant = "custom",
 }) => {
   const theme = useTheme();
+  const preview = useSheetPreview();
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const strings = MODAL_STRINGS.bottomSheets.changeLocation;
@@ -97,7 +99,7 @@ export const ChangeLocationBottomSheet: React.FC<
   }, [visible, initialQuery]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || preview) return;
     const trimmed = query.trim();
     if (trimmed.length < MIN_SEARCH_CHARS) {
       setSuggestions([]);
@@ -125,7 +127,7 @@ export const ChangeLocationBottomSheet: React.FC<
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [query, visible]);
+  }, [query, visible, preview]);
 
   const handleSelectSuggestion = useCallback(
     (item: LocationSuggestion) => {
@@ -142,6 +144,7 @@ export const ChangeLocationBottomSheet: React.FC<
   );
 
   const handleManualSubmit = useCallback(async () => {
+    if (preview) { onClose(); return; }
     if (submitting) return;
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -166,7 +169,7 @@ export const ChangeLocationBottomSheet: React.FC<
     } finally {
       setSubmitting(false);
     }
-  }, [onClose, onConfirm, query, submitting]);
+  }, [onClose, onConfirm, query, submitting, preview]);
 
   const focusInput = useCallback(() => {
     inputRef.current?.focus();

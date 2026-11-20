@@ -1,3 +1,4 @@
+import { useTheme } from "../../../hooks/useTheme";
 /**
  * Bird-specific detail UI — sounds player, range map, and trait rows.
  */
@@ -442,7 +443,7 @@ export function BirdOverviewExtras({
                   styles.colorChip,
                   {
                     borderColor: chipBorder,
-                    backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF",
+                    backgroundColor: isDark ? "#091B21" : "#FFFFFF",
                   },
                 ]}
               >
@@ -489,6 +490,7 @@ function BirdSizeScale({
   textSecondary: string;
 }) {
   const strings = COLLECTION_STRINGS.birdDetails.characteristics;
+  const theme = useTheme();
   return (
     <View style={styles.sizeScaleBlock}>
       <Text allowFontScaling={false} style={[styles.blockTitle, { color: textPrimary }]}>
@@ -506,6 +508,7 @@ function BirdSizeScale({
               style={[
                 styles.sizeDot,
                 selected ? styles.sizeDotSelected : styles.sizeDotIdle,
+                theme.mode === "dark" && { borderColor: selected ? theme.colors.primaryCTA : theme.colors.border0, backgroundColor: selected ? theme.colors.primaryCTA : theme.colors.surfacePrimary },
               ]}
             />
           );

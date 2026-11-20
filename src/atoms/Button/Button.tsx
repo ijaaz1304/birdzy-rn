@@ -1,3 +1,5 @@
+import { getDarkPrimaryCtaStyle } from "../../design-system/modalTokens";
+import { FONTS } from "../../common/typography";
 /**
  * Button atom component
  */
@@ -84,6 +86,7 @@ export const Button: React.FC<ButtonProps> = ({
       ...baseStyle,
       ...sizeStyles[size],
       ...variantStyles[variant],
+      ...(variant === "primary" ? getDarkPrimaryCtaStyle(theme) : {}),
       ...(fullWidth && { width: "100%" }),
       ...(disabled && { opacity: 0.5 }),
       ...(StyleSheet.flatten(style) ?? {}),
@@ -116,7 +119,7 @@ export const Button: React.FC<ButtonProps> = ({
           /* Fixed-size labels (allowFontScaling=false) keep their design size; Android ignores minimumFontScale and over-shrinks */
           adjustsFontSizeToFit={allowFontScaling}
           minimumFontScale={0.85}
-          style={[{ color: getTextColor(), textAlign: "center" }, textStyle]}
+          style={[{ color: getTextColor(), textAlign: "center" }, theme.mode === "dark" && variant === "primary" && { fontFamily: FONTS.medium, fontSize: 16, lineHeight: 24 }, textStyle]}
         >
           {title}
         </Text>

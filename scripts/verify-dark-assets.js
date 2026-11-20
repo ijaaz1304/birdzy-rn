@@ -28,6 +28,26 @@ for (const match of registry.matchAll(
   if (!isDarkPath(match[2]))
     errors.push(`Dark export uses non-dark asset: ${match[1]} -> ${match[2]}`);
 }
+// Supplied runtime dark artwork must remain present; light routes stay protected.
+const suppliedList = Array.isArray(manifest.suppliedAssets)
+  ? manifest.suppliedAssets
+  : Object.keys(manifest.suppliedAssets || {});
+for (const asset of suppliedList) {
+  if (!fs.existsSync(path.join(root, asset))) {
+    errors.push(`Missing supplied dark artwork: ${asset}`);
+  }
+}
+if (fs.existsSync(path.join(root, "Dark Mode"))) {
+  errors.push(
+    "Root Dark Mode/ design dump should stay removed; runtime copies live under src/assets/dark/supplied/"
+  );
+}
+for (const [key, relative] of Object.entries(
+  manifest.protectedLightRoutes || {}
+)) {
+  if (!registry.includes(`${key}: require("${relative}")`))
+    errors.push(`Light/shared asset route changed: ${key}`);
+}
 for (const removed of manifest.removedAssets) {
   if (fs.existsSync(path.join(root, removed)))
     errors.push(`Removed legacy asset returned: ${removed}`);

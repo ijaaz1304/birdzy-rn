@@ -2,7 +2,7 @@ import { APP_COLORS } from "../../../theme/colors";
 
 /** Primary onboarding CTA — dark mode */
 export const ONBOARDING_CTA_DARK = {
-  backgroundColor: APP_COLORS.ctaPrimary,
+  backgroundColor: APP_COLORS.ctaPrimaryDark,
   borderRadius: 23.789,
 } as const;
 

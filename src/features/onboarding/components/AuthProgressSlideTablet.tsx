@@ -75,7 +75,7 @@ export const AuthProgressSlideTablet: React.FC<Props> = ({
         ]}
         pointerEvents="box-none"
       >
-        {SHOW_SLIDE_COPY_ON_TABLET ? (
+        {SHOW_SLIDE_COPY_ON_TABLET || theme.mode === "dark" ? (
           <View style={styles.authTextSection}>
             <View style={styles.onboardingTextPairCentered}>
               <Text

@@ -1,10 +1,12 @@
+import { AppImage } from "../../../components/AppImage";
+import { Images } from "../../../assets";
 /**
  * Crop a live recording before sound identification.
  * Figma 8908:90380 / 8908:90466 — fixed 9/18/27s window, drag to move.
  */
 
 import React, { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -23,13 +25,16 @@ type ScreenRoute = RouteProp<CameraStackParamList, "SoundCrop">;
 export const SoundCropScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
+  const { width } = useWindowDimensions();
   const navigation = useNavigation<Nav>();
   const { audioUri, durationSec, recordedAt, spectrogramColumns } =
     useRoute<ScreenRoute>().params;
 
   useEffect(() => {
     if (spectrogramColumns && spectrogramColumns.length > 0) {
-      useSoundRecordingSpectrogramStore.getState().setColumns(spectrogramColumns);
+      useSoundRecordingSpectrogramStore
+        .getState()
+        .setColumns(spectrogramColumns);
     }
   }, [spectrogramColumns]);
 
@@ -41,7 +46,24 @@ export const SoundCropScreen: React.FC = () => {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
-      <FindYourBirdBackground />
+      {theme.mode === "dark" ? (
+        <AppImage
+          source={Images.soundIdentifyEntryBackgroundDark}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width,
+            height: (width * 587) / 375,
+          }}
+          resizeMode="contain"
+          pointerEvents="none"
+          preferRNImage
+          fadeDuration={0}
+        />
+      ) : (
+        <FindYourBirdBackground />
+      )}
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <SoundRecordingCropContent
           session={session}

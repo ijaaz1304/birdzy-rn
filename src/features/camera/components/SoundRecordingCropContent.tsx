@@ -1,5 +1,5 @@
-import { useIsFocused } from '@react-navigation/native';
-import { useFreeScanPromptSurface } from '../../../hooks/useFreeScanPromptSurface';
+import { useIsFocused } from "@react-navigation/native";
+import { useFreeScanPromptSurface } from "../../../hooks/useFreeScanPromptSurface";
 /**
  * Recorded-sound crop + identify UI (shared by SoundIdentify crop phase and SoundCrop route).
  */
@@ -72,6 +72,7 @@ export function SoundRecordingCropContent({
   useFreeScanPromptSurface(useIsFocused());
   const theme = useTheme();
   const colors = theme.colors;
+  const isDark = theme.mode === "dark";
   const spectrogramColumns = useSoundRecordingSpectrogramStore(
     (s) => s.columns
   );
@@ -104,7 +105,7 @@ export function SoundRecordingCropContent({
   } = useSoundIdentificationFlow(navigation, { onRetrySound });
 
   const [chip, setChip] = useState<SoundCropDuration | null>(() =>
-    defaultSoundCropChip(durationSec)
+    isDark ? null : defaultSoundCropChip(durationSec)
   );
   const [startSec, setStartSec] = useState(0);
 
@@ -120,7 +121,7 @@ export function SoundRecordingCropContent({
 
   const selectChip = (next: SoundCropDuration) => {
     if (isAnalyzing || !isSoundCropChipAvailable(next, durationSec)) return;
-    setChip(next);
+    setChip(isDark && chip === next ? null : next);
     setStartSec(0);
   };
 
@@ -150,7 +151,9 @@ export function SoundRecordingCropContent({
   //   [spectrogramColumns]
   // );
   const [previewing, setPreviewing] = useState(false);
-  const selectionKey = `${audioUri}:${clampedStart.toFixed(2)}:${windowSec.toFixed(2)}`;
+  const selectionKey = `${audioUri}:${clampedStart.toFixed(
+    2
+  )}:${windowSec.toFixed(2)}`;
   const selectionKeyRef = useRef(selectionKey);
 
   useEffect(() => {
@@ -217,15 +220,19 @@ export function SoundRecordingCropContent({
       </View>
 
       <View style={styles.body}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>
-          {copy.recordedSound}
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          {copy.cropBody}
-        </Text>
-        <Text style={[styles.noPhotoNote, { color: colors.textTertiary }]}>
-          {copy.noPhotoRequired}
-        </Text>
+        <View style={isDark ? styles.darkCopy : styles.lightCopy}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
+            {copy.recordedSound}
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {copy.cropBody}
+          </Text>
+          {!isDark && (
+            <Text style={[styles.noPhotoNote, { color: colors.textTertiary }]}>
+              {copy.noPhotoRequired}
+            </Text>
+          )}
+        </View>
 
         <View style={styles.chips}>
           {SOUND_CROP_DURATIONS.filter((item) =>
@@ -240,7 +247,11 @@ export function SoundRecordingCropContent({
                 style={[
                   styles.chip,
                   {
-                    borderColor: selected ? colors.primaryCTA : colors.border0,
+                    borderColor: selected
+                      ? colors.primaryCTA
+                      : isDark
+                      ? "#B0B0B0"
+                      : colors.border0,
                     backgroundColor: selected
                       ? colors.primaryCTA
                       : "transparent",
@@ -283,13 +294,16 @@ export function SoundRecordingCropContent({
             style={[
               styles.locationCard,
               { backgroundColor: colors.surfaceSecondary },
+              isDark && styles.darkLocationCard,
             ]}
           >
-            <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
+            <Text style={[styles.locationCopy, { color: isDark ? "#091B21" : colors.textPrimary }]}>
               {copy.enableLocation}
             </Text>
             <Toggle
               value={false}
+              trackColor={isDark ? { inactive: "#B0B0B0" } : undefined}
+              thumbColor={isDark ? { inactive: "#FFFFFF" } : undefined}
               onToggle={(on) => {
                 if (on) handleToggleOn();
               }}
@@ -300,14 +314,15 @@ export function SoundRecordingCropContent({
             style={[
               styles.locationCard,
               { backgroundColor: colors.surfaceSecondary },
+              isDark && styles.darkLocationCard,
             ]}
             onPress={() => openCustomLocationSheet()}
             activeOpacity={0.85}
             disabled={isAnalyzing}
           >
-            <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
+            <Text style={[styles.locationCopy, { color: isDark ? "#091B21" : colors.textPrimary }]}>
               {copy.locationSpottedPrefix}
-              <Text style={styles.locationLink}>{place}</Text>
+              <Text style={styles.locationLink}>{isDark ? `<${place}>` : place}</Text>
             </Text>
           </TouchableOpacity>
         )}
@@ -365,6 +380,15 @@ export function SoundRecordingCropContent({
 }
 
 const styles = StyleSheet.create({
+  darkCopy: { width: "100%", gap: 8 },
+  lightCopy: { width: "100%", gap: 16 },
+  darkLocationCard: {
+    marginTop: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E7E7E7",
+    backgroundColor: "#F6F6F6",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",

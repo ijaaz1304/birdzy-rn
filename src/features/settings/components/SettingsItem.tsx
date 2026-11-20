@@ -82,7 +82,11 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
         <TouchableOpacity
           activeOpacity={0.8}
           disabled={disabled}
-          onPress={() => onSwitchChange(!switchValue)}
+          onPress={(e) => {
+            e?.stopPropagation?.();
+            onSwitchChange(!switchValue);
+          }}
+          hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
           accessibilityRole="switch"
           accessibilityState={{ checked: switchValue, disabled }}
           accessibilityLabel={title}

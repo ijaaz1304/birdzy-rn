@@ -69,6 +69,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   onLike,
   onOptions,
   onReplyLike,
+  onReplyOptions,
   isReplying = false,
   replyText = "",
   onReplyTextChange,
@@ -190,7 +191,18 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
       {repliesVisible && (hasReplies || isReplying) && (
         <View style={styles.repliesBlock}>
-          {comment.replies?.map((reply) => (
+          {comment.replies?.map((reply) => isDark ? (
+            <View key={reply.id} style={styles.darkReplyItem}>
+              <View style={styles.commentHeader}>
+                <View style={styles.commentHeaderLeft}>
+                  <Avatar name={reply.userName} size={24} source={reply.userAvatar} />
+                  <Text variant="body" size="small" weight="medium" color="text" style={styles.userName}>{reply.userName}</Text>
+                </View>
+                {onReplyOptions && <IconButton icon="more-horizontal" variant="ghost" size="small" onPress={() => onReplyOptions(comment.id, reply.id, !!reply.isMyReply)} style={styles.moreButton} />}
+              </View>
+              <Text variant="body" size="small" color="textSecondary" style={styles.commentBody}>{reply.content}</Text>
+            </View>
+          ) : (
             <View key={reply.id} style={styles.replyItem}>
               <Avatar name={reply.userName} size={24} source={reply.userAvatar} />
               <View style={styles.replyBodyWrap}>
@@ -221,7 +233,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 style={[
                   styles.inlineReplyField,
                   {
-                    backgroundColor: theme.colors.textFieldBackground,
+                    backgroundColor: isDark ? theme.colors.surfacePrimary : theme.colors.textFieldBackground,
                     borderColor: theme.colors.textFieldBorder,
                   },
                 ]}
@@ -314,6 +326,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     gap: 8,
   },
+  darkReplyItem: { width: "100%", gap: 8 },
   replyItem: {
     flexDirection: "row",
     alignItems: "flex-start",

@@ -112,3 +112,63 @@ Device/backend/sandbox acceptance and QA owner assignment remain open. Automated
 Automated checks: `npm run verify:dark-assets`, `node scripts/verify-app-image-routing.js`, `npx tsc --noEmit`, and `npx jest src/features/theme src/features/quiz/data/quizImageMap.test.ts --runInBand --watchman=false`. The source guard prevents known removed paths and non-dark registry aliases; it does not classify image content.
 
 Device acceptance is open (owner unassigned). The master theme gate is on and Appearance is visible. Check both themes on phone/tablet: all onboarding pages and native stats/copy/CTAs; auth and personality backgrounds; Home Identify banner, bird/AI cards and sound-library row; Identify tab and Go Pro; feed header; discount/rate/feedback and permission sheets; bird-of-the-day and sound-limit popups; all seven subscription slides; quiz intro/analysis/results. Confirm no mushroom artwork or baked-in mushroom text, and no overlapping copy or incorrect cropping. Native SVG fidelity, white panels in supplied dark artwork and contrast remain unverified. iOS Automatic appearance needs a native rebuild before it is on an installed binary.
+
+
+## Supplied dark artwork acceptance — 20 November 2026
+
+Run `npm run verify:dark-assets` for missing paths, supplied dark asset presence, unchanged light/shared registry mappings, obsolete-file checks, and absence of the root `Dark Mode/` dump. Run `npm run verify:image-pipeline` for bundled image routing. On iOS/Android phones and tablets, switch Light → Dark → Light and inspect all five onboarding pages: one illustration from the background only, readable native copy, no duplicate top artwork, working Next/Get started/auth buttons. Compare light onboarding with the previous build, including its split auth artwork. Review dark Home cards, Ask AI, feed/collection/catalogue empty states, post-auth notification/gift pages, permission sheets and upgrade sheets for crop and contrast. Device acceptance and native builds remain open.
+
+
+### Dark pagination and CTA acceptance — 20 November 2026
+
+On phone and tablet, verify dark onboarding pagination has equal 8×8 circles: selected teal `#16B6B4`, unselected teal at 20% opacity. Swipe between pages to check color interpolation and confirm primary buttons use the teal fill. Switch to Light and confirm existing purple CTA and light dot colors. Source token assertions and targeted lint passed; rendered device acceptance remains open.
+
+
+### Dark Home Figma acceptance — 20 November 2026
+
+Check Home in Dark with an active offer: wizard background `#072C38`, Identify by Photo `#0E2230` with dark inner artwork, readable Bird of the Day/Ask AI/Library cards, 50% offer with crowned bird on the right and live timer/CTA on the left, sticky countdown with teal border/pills and nest, teal/purple Go Pro header. Verify premium header state, expired-offer branch, close controls and subscription navigation. Explore should show an undimmed dark map with teal edge, markers, dark panel/button borders and working permission/entry actions. Compare Light before/after on iOS/Android phones/tablets; check narrow layouts, text wrapping and image cropping. Static asset/geometry checks are not device-render acceptance.
+
+
+### Dark CTA / Catalogue / details acceptance — 20 November 2026
+
+Compare Light → Dark → Light on iOS/Android phones/tablets. Check shared primary buttons, subscription intro/purchase CTAs, post-auth onboarding and camera Identify for teal/white contrast and disabled/loading behavior. Bird of the Day View details must open details; Refresh must retain its limit/upgrade behavior. Inspect Catalogue idle/focused/filled search borders and cursor, teal selected tabs, dynamic grid images/names, single-line labels and dark card edges. Tap sound to play, tap the mute icon to stop, and scroll/navigate away to confirm existing cleanup. Verify Details dark page/cards, Overview contrast, traits, selected size indicators, sounds and locked-section premium overlays; Get Premium must retain its subscription destination. Native visual fidelity and real playback remain device acceptance tasks.
+
+The image pipeline audit currently exits nonzero for the existing raw Image/import finding in `SettingsAccountDialog.tsx`; the separate AppImage routing verifier passes. This finding is outside the requested screens.
+
+
+### Dark tab/feed/community/background sweep — 20 November 2026
+
+On iOS/Android phones/tablets, inspect plain dark page/sheet/form backgrounds for `#091B21`; check auth/profile, collection/edit and add/remove sheets, subscription retry UI, notifications, create-post/post-details and community rules. Keep supplied image backgrounds visible and verify accent-panel and focused-search contrast. Open all five bottom actions: dark selected line and label, 48-point Identify scan circle, safe-area spacing, repeated-tab reset and chooser navigation; compare Light tab sizing/artwork against the prior build.
+
+Ask AI should show the night-sky illustration without the old dimming, readable prompt cards, and working composer/upload/send. Feed should retain its header art, dark cards and teal tabs/Create action. Open Community Rules, scroll through real configured content, dismiss via close, then agree via Okay and confirm existing feed behavior. Check details Add to Collection destination. Native visual/navigation acceptance remains open; token/source checks do not establish runtime completion.
+
+
+### Post details and Settings sheet gallery acceptance — 20 November 2026
+
+Open Settings → Previews → Bottom sheets in Light and Dark, then open every row. Check sample collection rows and selection, create/rename/remove forms, notification/location prompts, rating/feedback/report, community rules scrolling, all nine upgrade types, both offers, both password/location modes, plan selector/switch, promotion variants and post/comment menus. Actions must only close or update local preview state: verify no collection/account mutation, permission prompt/settings launch, password change, purchase or report submission. Plan/pricing reads may still occur. Ensure each sheet can close and reopen; check keyboard dismissal and back navigation.
+
+Open a real post in Dark and verify 52-point header, 8-point author/content gaps, 116-point comment field, 32-point Send pill with a disabled grey state, 16-point bottom action icons and inset replies. Send comments/replies, toggle likes, expand/collapse replies and test More → Reply / Copy text for both comment and reply. Confirm selected text is copied correctly and subscription/navigation behavior is unchanged. Compare Light against the previous build. Native render and end-to-end acceptance remain open.
+
+
+### Inactive Home banner and name-sound checks — 20 November 2026
+
+For a non-premium account in Dark, inspect Home during an active positive discount countdown, inactive cooldown, zero countdown and disabled timer state. Confirm the full-price banner shows Upgrade to Pro, supplied crowned bird and teal Subscribe now in the latter states, without 50% discount copy. Check localized annual pricing, missing-price behavior, banner dismissal and `discount50: false` plan navigation. Verify premium users remain excluded and Light retains its prior banner.
+
+Open dark identification results/Bird Details with a playable sound and with a long common/scientific name: volume control remains 48×48 at the row's right edge with 20-point page inset, dark fill/grey border and visible white glyph. Test play/stop/end and no-sound eligibility, then compare Light. Native store-price/layout/audio acceptance remains open.
+
+
+### First sound-identification screen — 20 November 2026
+
+Open Identify by Sound from Home and the Identify chooser in Dark. Check the night-sky background at the top, 219×168 bird/wave illustration, title/subtitle without the extra tagline, readable bordered location row, grey/white off toggle and bottom 48-point teal microphone circle in its 72-point target. Check short phones, tablets, safe areas and rotation for copy/record overlap. Enable location and edit an existing location through the current flow. Tap record and verify permission denial/grant/settings recovery, live recording, pause/stop/minimum length, crop and identification behavior. Compare Light entry against the prior build. Source geometry and timer tests do not establish physical microphone or device-render acceptance.
+
+
+### Dark sound crop UI — 20 November 2026
+
+Record a clip longer than 27 seconds and inspect both the in-place crop phase and standalone SoundCrop route in Dark: whole recording initially selected, all available duration chips, 100-point spectrogram, red frame/grips, teal endpoint labels, real timestamp/location and sticky Identify CTA. Select 9/18/27 seconds; drag the fixed window to both ends and confirm bounds/labels. Tap the selected chip to restore full. Tap the spectrogram to preview/pause; verify taps do not move selection and drags do not accidentally trigger playback. Check screen-reader play/pause action, analyzing/disabled states and long/short clips with fewer available chips.
+
+Verify Identify sends either the full recording or the selected start/duration through the existing flow, and still handles no-bird/noise/limit states. Confirm real PCM spectrogram content, safe areas and short/tablet layouts. Compare Light default selection, center play control and crop behavior with the previous build. Automated crop/finalization/timer tests do not establish physical-device gesture/audio acceptance.
+
+
+### Dark crop location-card follow-up — 20 November 2026
+
+Inspect the sound crop screen in Dark with location off and with a long location: the full-width card is light grey with dark 14/20 text, a thin border and 8-point corners; a known place is blue/underlined inside angle brackets and can wrap without clipping. Tap to edit the known place and test the off toggle's permission flow. Check analyzing-disabled behavior and unchanged Light rendering. Device acceptance remains open.

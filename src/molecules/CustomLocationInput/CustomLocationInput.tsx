@@ -58,7 +58,7 @@ export const CustomLocationInput: React.FC<CustomLocationInputProps> = ({
   const isDark = theme.mode === "dark";
   /** Input bg: #FFF light / #111 dark to match Edit screen */
   const inputBg = isDark
-    ? APP_COLORS.surfaceDark
+    ? APP_COLORS.homeSurfaceDark
     : APP_COLORS.modalTextOnPrimary;
   const inputBorderColor = isDark
     ? SCREEN_COLORS.DARK.border

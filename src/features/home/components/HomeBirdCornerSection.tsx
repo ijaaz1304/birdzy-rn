@@ -12,6 +12,7 @@ import { Images } from "../../../assets";
 import { FONTS } from "../../../common/typography";
 import { useStrings } from "../../../hooks/useStrings";
 import { useTheme } from "../../../hooks/useTheme";
+import { APP_COLORS } from "../../../../theme/colors";
 import { Radius } from "../../../design";
 
 const CARD_BORDER = "rgba(17, 17, 17, 0.05)";
@@ -102,8 +103,8 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
   const strings = useStrings();
   const theme = useTheme();
   const isDark = theme.mode === "dark";
-  const backgroundColor = isDark ? theme.colors.surfaceSecondary : CARD_BG;
-  const borderColor = isDark ? theme.colors.borderSecondary : CARD_BORDER;
+  const backgroundColor = isDark ? APP_COLORS.homeCardDark : CARD_BG;
+  const borderColor = isDark ? APP_COLORS.homeBorderDark : CARD_BORDER;
   const corner = strings.home.banners.yourBirdCorner;
   const textPrimary = theme.colors.textPrimary;
   const textSecondary = theme.colors.textSecondary;
@@ -125,9 +126,8 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
         <CornerCard
           title={corner.birdOfTheDay}
           description={corner.birdOfTheDayDescription}
-          background={isDark ? Images.commonBgDark : Images.homeBirdOfDayCard}
-          illustration={
-            isDark ? Images.subscriptionListBirdOfDayDark : undefined
+          background={
+            isDark ? Images.homeBirdOfDayCardDark : Images.homeBirdOfDayCard
           }
           onPress={onBirdOfTheDay}
           textPrimary={textPrimary}
@@ -155,18 +155,15 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
         style={styles.libraryRowWrap}
       >
         <AppImageBackground
-          source={isDark ? Images.commonBgDark : Images.homeBirdSoundLibrary}
+          source={
+            isDark
+              ? Images.homeBirdSoundLibraryDark
+              : Images.homeBirdSoundLibrary
+          }
           style={[styles.libraryRow, { borderColor, backgroundColor }]}
           imageStyle={styles.libraryRowImage}
           resizeMode="stretch"
         >
-          {isDark && (
-            <AppImage
-              source={Images.subscriptionListAiChatDark}
-              style={{ position: "absolute", left: 12, width: 32, height: 32 }}
-              resizeMode="contain"
-            />
-          )}
           <View style={styles.libraryCopy}>
             <AppText
               allowFontScaling={false}

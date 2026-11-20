@@ -4,7 +4,7 @@ import { SettingsHeader } from "../components/SettingsHeader";
  */
 
 import React, { useCallback, useEffect } from "react";
-import { StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { StyleSheet, ScrollView, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -17,6 +17,7 @@ import { SETTINGS_STRINGS } from "../../../config/strings/settings.strings";
 import { ThemeMode } from "../../../design-system/themes";
 import { spacing } from "../../../design-system/spacing";
 import { FONTS } from "../../../common/typography";
+import { useSettingsColors } from "../settingsColors";
 import { trackThemeChanged } from "../../theme/themeExperiment.service";
 import { useThemeExperiment } from "../../theme/useThemeExperiment";
 
@@ -44,6 +45,7 @@ export const AppearanceScreen: React.FC = () => {
   const navigation = useNavigation<AppearanceScreenNavigationProp>();
   const theme = useTheme();
   const colors = theme.colors;
+  const settingsColors = useSettingsColors();
   const { themeMode, setThemeMode } = useThemeContext();
   const { canChangeAppearance } = useThemeExperiment();
 
@@ -71,7 +73,7 @@ export const AppearanceScreen: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.container, { backgroundColor: settingsColors.screen }]}
       edges={["top", "bottom"]}
     >
       <SettingsHeader
@@ -87,17 +89,30 @@ export const AppearanceScreen: React.FC = () => {
         {APPEARANCE_OPTIONS.map((option) => {
           const selected = themeMode === option.mode;
           return (
-            <TouchableOpacity
+            <Pressable
               key={option.mode}
-              activeOpacity={0.7}
               onPress={() => handleSelect(option.mode)}
-              style={styles.row}
+              style={({ pressed }) => [
+                styles.row,
+                pressed && styles.rowPressed,
+              ]}
+              accessibilityRole="radio"
+              accessibilityState={{ selected }}
+              accessibilityLabel={option.label}
+              hitSlop={{ top: 4, bottom: 4, left: 0, right: 0 }}
             >
-              <Text style={[styles.rowLabel, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.rowLabel, { color: colors.textPrimary }]}
+                numberOfLines={1}
+              >
                 {option.label}
               </Text>
-              <RadioButton selected={selected} size="medium" />
-            </TouchableOpacity>
+              <RadioButton
+                selected={selected}
+                size="medium"
+                interactive={false}
+              />
+            </Pressable>
           );
         })}
       </ScrollView>
@@ -121,7 +136,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    minHeight: 52,
+    paddingVertical: spacing[3],
+  },
+  rowPressed: {
+    opacity: 0.7,
   },
   rowLabel: {
     fontSize: 14,

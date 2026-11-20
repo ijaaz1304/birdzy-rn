@@ -28,7 +28,7 @@ export const darkColors = {
     brandInvert: darkText.brand1Invert,
     invert: darkText.invert,
     /** Primary CTA button fill in dark mode */
-    primaryCTA: APP_COLORS.ctaPrimary,
+    primaryCTA: APP_COLORS.ctaPrimaryDark,
   },
 
   border: {

@@ -127,3 +127,58 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 - [x] Replaced inherited quiz photographs with a generic bird mascot and stopped legacy remote mushroom images overriding the bundled artwork. Existing archetype IDs remain unchanged.
 - [ ] Owner unassigned: accept phone/tablet light/dark renders and contrast/cropping on iOS and Android before enabling the master gate.
 - [ ] Owner unassigned: supply distinct bird archetype artwork and define a bird-specific remote quiz-image contract.
+
+
+## Supplied dark artwork acceptance — 20 November 2026
+
+- [x] Connected dark artwork through dark-only routes under `src/assets/dark/supplied/`; removed duplicate dark onboarding and Home illustrations. Root `Dark Mode/` design dump removed; supplied-path and light-route guards remain.
+- [ ] Owner unassigned: accept iOS/Android phone/tablet dark artwork, onboarding copy/CTA placement, and Light → Dark → Light regression checks in QA_AND_OPERATIONS.md. Native builds/device walkthroughs remain unverified; no access or ownership change is claimed.
+
+- [x] 20 November 2026: checked Figma selected/unselected pagination nodes and implemented dark teal CTA/dot tokens; source assertions confirm light CTA/dot tokens remain unchanged.
+- [ ] Owner unassigned: verify dark pagination animation and teal primary CTA on iOS/Android phones/tablets and complete the Light regression check.
+
+
+## Dark Home Figma acceptance — 20 November 2026
+
+- [x] Implemented dark Home surface overrides, corresponding composite artwork, native discount/countdown/header promotion styling and Explore map asset from the supplied Figma nodes. Kept Light routes and root artwork folder.
+- [ ] Owner unassigned: accept Home promotion geometry/contrast, live timers, dismiss/subscription actions and premium/expired-offer states on iOS/Android phones/tablets, including Light regression checks. No native-build/device acceptance or access grant is claimed.
+
+
+## Shared dark CTA / Catalogue / details acceptance — 20 November 2026
+
+- [x] Implemented referenced CTA, Catalogue/search/sound and details dark styles; reused premium card and preserved API/navigation/playback handlers. Source assertions confirmed the complete Light theme and Light semantic/detail/card tokens are unchanged.
+- [ ] Owner unassigned: accept all shared dark-token consumers, Bird of the Day actions, real Catalogue play/stop/search and premium Details on iOS/Android phones/tablets; check Light regression and disabled/loading states. Native builds and device walkthrough remain unverified.
+- [ ] Owner unassigned: resolve the existing SettingsAccountDialog image-pipeline audit finding before claiming the combined image-pipeline check passes.
+
+
+## Dark background / tab / feed flow acceptance — 20 November 2026
+
+- [x] Audited shared and explicit plain dark surface routes; set `#091B21`, retained artwork and Light mappings, corrected dark bottom navigation geometry/Identify art, feed accents and Ask AI background visibility. Community Rules uses the shared dark surface throughout its native content.
+- [ ] Owner unassigned: accept iOS/Android phone/tablet plain-background consistency, bottom navigation safe areas/chooser/reset, Ask AI send/upload, feed create/details and community rules scroll/agree/close, plus Light regressions. Native builds/device walkthrough not performed.
+
+
+## Post details / Settings sheet gallery acceptance — 20 November 2026
+
+- [x] Added a Settings-accessible sheet gallery, exhaustive registered/limit mappings, standalone variants and preview context guards for collection, location and permission effects. Implemented referenced dark post-details geometry and comment/reply Reply/Copy actions.
+- [ ] Owner unassigned: open every preview in Light/Dark on iOS/Android phone/tablet and confirm all actions are local; verify closing, keyboard and plan-price-unavailable states. Complete real comment/reply/copy/like/share and Light regression checks. Native builds/device checks not performed.
+
+
+## Inactive offer / name-sound acceptance — 20 November 2026
+
+- [x] Implemented dark full-price Home banner selection with live full-price plan data and dark name-sound alignment/contrast; retained Light branches and existing playback/subscription handlers.
+- [ ] Owner unassigned: accept active/off/zero/disabled timer states, live localized/missing prices, full-price navigation and long-name sound layout/playback on iOS/Android phones/tablets. Native builds/device/store/audio checks not performed.
+
+
+## Sound identification entry acceptance — 20 November 2026
+
+- [x] Implemented dark first-screen artwork/layout from Figma 9380:170994 and retained Light/recording/crop branches. Source dimensions and short-screen spacing checked; recording timer/minimum-duration regression suites passed.
+- [ ] Owner unassigned: accept phone/tablet Light/Dark rendering, short-screen/rotation spacing, location and real microphone permission/recording transitions on iOS/Android. Native builds/device tests remain open.
+
+
+## Recorded-sound crop acceptance — 20 November 2026
+
+- [x] Implemented dark crop design 9380:171133 for both crop entry points, full-recording default and chip reset, red frame/grips and tap-to-preview. Preserved Light defaults/controls and existing trim/identify services.
+- [ ] Owner unassigned: verify tap-versus-drag gestures, crop bounds, real preview/identify audio, short/tablet layouts and screen-reader actions on iOS/Android physical devices; complete Light regressions. Native builds/device renders remain unverified.
+
+- [x] 20 November 2026: matched the dark crop location view to the explicit light-card Figma reference, with dark text and blue underlined location.
+- [ ] Owner unassigned: accept location-off/known/long-place states, edit/permission actions and Light regression on iOS/Android crop screens.

@@ -586,7 +586,7 @@ const SubscriptionSheetContent: React.FC<Props> = ({
                   styles.retryBanner,
                   {
                     backgroundColor: isDark
-                      ? APP_COLORS.surfaceDarkAlt
+                      ? APP_COLORS.homeSurfaceDark
                       : APP_COLORS.surfaceLightAlt,
                     borderColor: isDark
                       ? APP_COLORS.borderDarkLighter

@@ -1,3 +1,4 @@
+import { DarkHomeDiscountBanner } from "../../features/home/components/DarkHomePromotions";
 import { AppImageBackground } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
@@ -191,6 +192,10 @@ const DiscountBanner: React.FC<DiscountBannerProps> = ({
   const contentPadding = layout.contentPadding;
   const type = isDark ? BANNER_TYPE : LIGHT_BANNER_TYPE;
   const bannerRadius = isDark ? HOME_LAYOUT.DISCOUNT_BANNER_RADIUS : 12;
+
+  if (isDark) {
+    return <DarkHomeDiscountBanner time={timeLeftDisplay} discountPercent={discountPercent} height={bannerHeight} onPress={onSubscribe} onClose={onClose} />;
+  }
 
   return (
     <View

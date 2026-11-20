@@ -916,9 +916,9 @@ export const CatalogueScreen: React.FC = () => {
                       onPress={() => handleTabPress(tab.value)}
                       variant="underline"
                       size="small"
-                      activeColor={APP_COLORS.ctaPrimary}
+                      activeColor={(isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary)}
                       inactiveColor={colors.textSecondary}
-                      underlineColor={APP_COLORS.ctaPrimary}
+                      underlineColor={(isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary)}
                     />
                   </View>
                 );
@@ -962,7 +962,7 @@ export const CatalogueScreen: React.FC = () => {
                       styles.filterChip,
                       {
                         backgroundColor: colors.surfacePrimary,
-                        borderColor: APP_COLORS.ctaPrimary,
+                        borderColor: isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary,
                       },
                     ]}
                   >
@@ -1023,8 +1023,8 @@ export const CatalogueScreen: React.FC = () => {
                 <RefreshControl
                   refreshing={refreshing}
                   onRefresh={handleRefresh}
-                  tintColor={APP_COLORS.ctaPrimary}
-                  colors={[APP_COLORS.ctaPrimary]}
+                  tintColor={(isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary)}
+                  colors={[isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary]}
                 />
               }
             >
@@ -1070,8 +1070,8 @@ export const CatalogueScreen: React.FC = () => {
                 <RefreshControl
                   refreshing={refreshing}
                   onRefresh={handleRefresh}
-                  tintColor={APP_COLORS.ctaPrimary}
-                  colors={[APP_COLORS.ctaPrimary]}
+                  tintColor={(isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary)}
+                  colors={[isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary]}
                 />
               }
               initialNumToRender={FLATLIST_CONFIG.INITIAL_NUM_TO_RENDER}

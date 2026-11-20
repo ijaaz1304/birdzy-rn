@@ -10,7 +10,7 @@ import { IDENTIFICATION_TIP_LIGHT_IMAGES } from "./identificationTipImages";
 
 // Audited raster backgrounds replace the legacy subscription SVG artwork.
 export { default as SubscriptionBackground } from "./home/common_bg.webp";
-export { default as SubscriptionBackgroundDark } from "./subscription/background/dark/subscription_bg.png";
+export { default as SubscriptionBackgroundDark } from "./dark/supplied/Authentication + subscription/PNG/Background 4.png";
 
 // SVG / banner exports (bundled WebP where noted)
 export { default as PlantCardsSvg } from "./onboarding/light/background_1.webp";
@@ -20,14 +20,14 @@ export { default as PlantScanSvg } from "./askai/scan.webp";
 export { default as AiBannerSvg } from "./home/ask_ai.webp";
 export { default as AiBannerFullSvg } from "./home/ask_ai.webp";
 export { default as DiscountBannerSvg } from "./home/images/banner/light/discount_banner.webp";
-export { default as DiscountBannerDarkSvg } from "./subscription/background/dark/subscription_bg.png";
+export { default as DiscountBannerDarkSvg } from "./dark/supplied/Authentication + subscription/PNG/Background 4.png";
 export { default as BirdOfTheDayBannerSvg } from "./home/popup/sheet/light/bird_of_the_day_popup.webp";
 export { default as BirdOfTheDayBannerDarkSvg } from "./home/popup/sheet/dark/bird_of_the_day_sheet.webp";
 export { default as BirdOfTheDayBgSvg } from "./home/common_bg.webp";
 export { default as Banner1Svg } from "./home/common_bg.webp";
-export { default as Banner1DarkSvg } from "./subscription/background/dark/subscription_bg.png";
+export { default as Banner1DarkSvg } from "./dark/supplied/Authentication + subscription/PNG/Background 4.png";
 export { default as Banner2Svg } from "./home/common_bg.webp";
-export { default as Banner2DarkSvg } from "./subscription/background/dark/subscription_bg.png";
+export { default as Banner2DarkSvg } from "./dark/supplied/Authentication + subscription/PNG/Background 4.png";
 
 export {
   IDENTIFICATION_TIP_LIGHT_IMAGES,
@@ -84,6 +84,21 @@ export const QUIZ_BIRD_LOCAL_IMAGES = {
 } as const;
 
 export const Images = {
+  soundIdentifyHeroDark: require("./dark/supplied/AI Identifier/PNG/Illus_Identification by Sound.png"),
+  soundIdentifyEntryBackgroundDark: require("./dark/supplied/AI Identifier/PNG/popup.png"),
+  homeIdentifyByPhotoDark: require("./dark/supplied/Home/PNG/Identify by photo.png"),
+  homeExploreMapDark: require("./dark/figma/home_map.png"),
+  homeWizardBannerDark: require("./dark/supplied/Home/PNG/Step by step.png"),
+  homeProMedalDark: require("./dark/supplied/Home/PNG/Capa_1.png"),
+  homeDiscountBannerDark: require("./dark/supplied/Home/PNG/Full Price Banner.png"),
+  onboarding50PercentDark: require("./dark/supplied/Authentication + subscription/PNG/gif box 4.png"),
+  onboardingGiftDark: require("./dark/supplied/Authentication + subscription/PNG/Gif.png"),
+  onboardingNotificationDark: require("./dark/supplied/Authentication + subscription/PNG/noti.png"),
+  askAiHeroMascotDark: require("./dark/supplied/Ask AI/PNG/Illus.png"),
+  homeBirdSoundLibraryDark: require("./dark/supplied/Home/PNG/Bird Sound Library.png"),
+  homeBirdOfDayCardDark: require("./dark/supplied/Home/PNG/Bird of the day-1.png"),
+  emptyFeedDark: require("./dark/supplied/Feed/PNG/no post.png"),
+  onboardingSplashDark: require("./dark/supplied/Authentication + subscription/PNG/Onboarding_2.1.png"),
   birdSample: require("./catalogue/icons/empty_catalogue_lights.webp"),
   /** @deprecated Use birdSample */
   plantSample: require("./catalogue/icons/empty_catalogue_lights.webp"),
@@ -101,9 +116,9 @@ export const Images = {
   mineralsLight: require("./home/popup/sheet/light/bird_of_the_day_popup.webp"),
   diagnoseAi: require("./askai/scan.webp"),
   authIdentifyIllustration: require("./askai/scan.webp"),
-  /** Login / sign-up backgrounds: bird sky in light; audited gradient in dark. */
+  /** Login / sign-up backgrounds: bird sky in light; supplied night sky in dark. */
   authBgLight: require("./home/common_bg.webp"),
-  authBgDark: require("./subscription/background/dark/subscription_bg.png"),
+  authBgDark: require("./dark/supplied/Authentication + subscription/PNG/Background 4.png"),
   authScreenBg: require("./home/common_bg.webp"),
 
   appIcon: require("./branding/splash/splash_bird.png"),
@@ -113,11 +128,11 @@ export const Images = {
   onboardingBg3: require("./onboarding/light/background_3.webp"),
   onboardingBg4: require("./onboarding/light/background_4.webp"),
   onboardingBg5: require("./onboarding/light/background_5.webp"),
-  onboardingBg1Dark: require("./subscription/background/dark/subscription_bg.png"),
-  onboardingBg2Dark: require("./subscription/background/dark/subscription_bg.png"),
-  onboardingBg3Dark: require("./subscription/background/dark/subscription_bg.png"),
-  onboardingBg4Dark: require("./subscription/background/dark/subscription_bg.png"),
-  onboardingBg5Dark: require("./subscription/background/dark/subscription_bg.png"),
+  onboardingBg1Dark: require("./dark/supplied/Authentication + subscription/PNG/Onboarding_2.2.png"),
+  onboardingBg2Dark: require("./dark/supplied/Authentication + subscription/PNG/Onboarding_2.3.png"),
+  onboardingBg3Dark: require("./dark/supplied/Authentication + subscription/PNG/Onboarding_2.4.png"),
+  onboardingBg4Dark: require("./dark/supplied/Authentication + subscription/PNG/Onboarding_2.5.png"),
+  onboardingBg5Dark: require("./dark/supplied/Authentication + subscription/PNG/Onboarding_2.6.png"),
   /** Auth onboarding slide (light) — Figma 8230:64231 top clouds, 375×293 @3x */
   onboardingAuthTop: require("./onboarding/light/auth_top.png"),
   /** Auth onboarding slide (light) — Figma 8251:5879 bird circle, 335×346 @3x, transparent */
@@ -126,7 +141,7 @@ export const Images = {
   onboardingSplash: require("./onboarding/light/splash.webp"),
 
   subscription: require("./subscription/subscription.png"),
-  subscriptionBackgroundDark: require("./subscription/background/dark/subscription_bg.png"),
+  subscriptionBackgroundDark: require("./dark/supplied/Authentication + subscription/PNG/Background 4.png"),
   subscriptionFailed: require("./catalogue/icons/species/subscription_failed.webp"),
   subscriptionFailedDark: require("./catalogue/icons/species/dark/subscription_failed.png"),
   subscriptionDiscountBox: require("./subscription/discount/subscription_gift_icon.png"),
@@ -213,12 +228,12 @@ export const Images = {
   emptyCatalogue: require("./catalogue/icons/empty_catalogue_lights.webp"),
   noCatalogue: require("./catalogue/icons/species/no_catalogue.png"),
   emptyCatalogueLight: require("./catalogue/icons/empty_catalogue_lights.webp"),
-  emptyCatalogueDark: require("./catalogue/icons/empty_catalogue_darks.webp"),
+  emptyCatalogueDark: require("./dark/supplied/Catalogue/PNG/Collection.png"),
   emptyCollection: require("./catalogue/icons/species/no_collection.webp"),
   emptyCollectionLight: require("./collection/icons/empty_collection_light.webp"),
-  emptyCollectionDark: require("./collection/icons/empty_collection_dark.webp"),
+  emptyCollectionDark: require("./dark/supplied/Collection/PNG/Collection_empty.png"),
   emptySearch: require("./catalogue/icons/empty_catalogue_lights.webp"),
-  emptySearchDark: require("./catalogue/icons/empty_catalogue_darks.webp"),
+  emptySearchDark: require("./dark/supplied/Catalogue/PNG/Search.png"),
   emptyResult: require("./common/emptystate/empty_result.png"),
   /** Catalogue — no results after applying filters (folder + magnifying glass) */
   emptyFilter: require("./common/emptystate/empty_search.png"),
@@ -228,7 +243,7 @@ export const Images = {
   popupFeed: require("./feed/popup_feed.png"),
 
   feedLight: require("./feed/feed_my_posts.webp"),
-  feedDark: require("./feed/feed_dark.png"),
+  feedDark: require("./dark/supplied/Feed/PNG/Background.png"),
   feedLike: require("./feed/thumbs_up_not_selected.png"),
   feedLikeSelected: require("./feed/thumbs_selected.png"),
   feedLikeDark: require("./feed/thumbs_up_dark.png"),
@@ -260,39 +275,39 @@ export const Images = {
 
   rateUsPopupIllustration: require("./home/popup/sheet/light/rate_us_popup.webp"),
   rateUsSheetBgLight: require("./home/popup/sheet/light/rate_us.webp"),
-  /** Dark Rate Us + Feedback use the audited neutral dark background. */
-  rateUsSheetBgDark: require("./subscription/background/dark/subscription_bg.png"),
+  /** Dark Rate Us + Feedback use supplied night-sky artwork. */
+  rateUsSheetBgDark: require("./dark/supplied/Popup/PNG/Rate us.png"),
   popUp50Light: require("./home/common_bg.webp"),
-  popUp50Dark: require("./subscription/background/dark/subscription_bg.png"),
+  popUp50Dark: require("./dark/supplied/Authentication + subscription/PNG/Background 4.png"),
   popUp70Light: require("./home/popup/sheet/light/subs_offer_bg.webp"),
-  popUp70Dark: require("./subscription/background/dark/subscription_bg.png"),
+  popUp70Dark: require("./dark/supplied/Authentication + subscription/PNG/Background 4.png"),
 
   subscriptionPopup50Light: require("./home/popup/sheet/light/subs_pop_org.webp"),
-  subscriptionPopup50Dark: require("./subscription/background/dark/subscription_bg.png"),
+  subscriptionPopup50Dark: require("./dark/supplied/Authentication + subscription/PNG/Background 4.png"),
   subscriptionPopup70Light: require("./home/popup/sheet/light/subs_offer_bg.webp"),
-  subscriptionPopup70Dark: require("./subscription/background/dark/subscription_bg.png"),
+  subscriptionPopup70Dark: require("./dark/supplied/Authentication + subscription/PNG/Background 4.png"),
 
   /** Limit-reached upgrade sheet — full-bleed popup artwork (bg + illustration). */
   subscriptionPopupIconCollection: require("./home/popup/sheet/light/collection.webp"),
-  subscriptionPopupIconCollectionDark: require("./home/popup/sheet/dark/collection.webp"),
+  subscriptionPopupIconCollectionDark: require("./dark/supplied/Authentication + subscription/PNG/collection.png"),
   subscriptionPopupIconIdentification: require("./home/popup/sheet/light/identify_popup_bg.webp"),
-  subscriptionPopupIconIdentificationDark: require("./home/popup/sheet/dark/identify_popup_bg.webp"),
+  subscriptionPopupIconIdentificationDark: require("./dark/supplied/Authentication + subscription/PNG/identify.png"),
   subscriptionPopupIconDetails: require("./home/popup/sheet/light/detail.webp"),
-  subscriptionPopupIconDetailsDark: require("./home/popup/sheet/dark/detail.webp"),
+  subscriptionPopupIconDetailsDark: require("./dark/supplied/Authentication + subscription/PNG/detail.png"),
   subscriptionPopupIconFeed: require("./home/popup/sheet/light/feed_popup_bg.png"),
-  subscriptionPopupIconFeedDark: require("./home/popup/sheet/dark/feed_popup_bg.png"),
+  subscriptionPopupIconFeedDark: require("./dark/supplied/Authentication + subscription/PNG/unlimited posts.png"),
   /** Sound library storage limit — full-bleed upgrade sheet. */
   subscriptionPopupIconSoundGallery: require("./home/popup/sheet/light/sound_popup_bg.webp"),
-  subscriptionPopupIconSoundGalleryDark: require("./home/popup/sheet/dark/sound_popup_bg.webp"),
+  subscriptionPopupIconSoundGalleryDark: require("./dark/supplied/Bird Sound Library & Recordings/PNG/unlimited storage.png"),
   /** Daily sound ID limit — full-bleed upgrade sheet (not the 550px icon crop). */
   subscriptionPopupIconSoundIdentification: require("./home/popup/sheet/light/sound_popup_bg.webp"),
-  subscriptionPopupIconSoundIdentificationDark: require("./home/popup/sheet/dark/sound_identify_popup_bg.webp"),
+  subscriptionPopupIconSoundIdentificationDark: require("./dark/supplied/Authentication + subscription/PNG/bird sounds.png"),
   /** Bird of the Day refresh limit — full-bleed sheet (not the 1340px header banner). */
   subscriptionPopupIconBirdOfDay: require("./home/common_bg.webp"),
   subscriptionPopupIconBirdOfDayDark: require("./home/popup/sheet/dark/bird_of_the_day_sheet.webp"),
   /** AI chat limit — full-bleed sheet (not the 375px carousel icon). */
   subscriptionPopupIconAiChat: require("./askai/ask_ai_bg.webp"),
-  subscriptionPopupIconAiChatDark: require("./askai/dark/ask_ai_bg.webp"),
+  subscriptionPopupIconAiChatDark: require("./dark/supplied/Authentication + subscription/PNG/Meet the Paywall - Limitation in Asking AI.png"),
 
   bannerLight: require("./home/images/banner/light/discount_banner.webp"),
   bannerDark: require("./subscription/background/dark/subscription_bg.png"),
@@ -326,23 +341,23 @@ export const Images = {
   soundLibraryEmptyBird: require("./discovery/sound_library_empty_bird.png"),
   /** Shared full-screen background — subs, feed, post-auth onboarding, Ask AI, Find Your Bird */
   commonBg: require("./home/common_bg.webp"),
-  commonBgDark: require("./subscription/background/dark/subscription_bg.png"),
+  commonBgDark: require("./dark/supplied/Authentication + subscription/PNG/Background 4.png"),
 
   navGoBack: require("./common/navigation/go_back.png"),
   navCancel: require("./common/navigation/cancel.png"),
 
   splashBgLight: require("./home/common_bg.webp"),
-  splashBgDark: require("./subscription/background/dark/subscription_bg.png"),
-  splashDark: require("./subscription/background/dark/subscription_bg.png"),
+  splashBgDark: require("./dark/supplied/Authentication + subscription/PNG/Onboarding_2.1.png"),
+  splashDark: require("./dark/supplied/Authentication + subscription/PNG/Onboarding_2.1.png"),
 
   analysisBg: require("./askai/ask_ai_bg.webp"),
   newOnboardBgLight: require("./onboarding/post_auth/light/background.webp"),
-  newOnboardBgDark: require("./subscription/background/dark/subscription_bg.png"),
+  newOnboardBgDark: require("./dark/supplied/Authentication + subscription/PNG/Background 4.png"),
   onboardingNotification: require("./onboarding/post_auth/light/notification.webp"),
   onboardingGift: require("./onboarding/post_auth/light/gift.webp"),
   onboarding50Percent: require("./subscription/discount/subscription_gift_icon.png"),
   analyseAi: require("./askai/ask_ai_bg.webp"),
-  analyseAiDark: require("./askai/dark/ask_ai_bg.webp"),
+  analyseAiDark: require("./dark/supplied/Ask AI/PNG/Background.png"),
   whichBirdAreYouBg: require("./home/common_bg.webp"),
   findYourBirdBg: require("./home/common_bg.webp"),
   identifyBg: require("./identification/light/identification_bg.webp"),
@@ -425,11 +440,11 @@ export const Images = {
   uploadFeedDark: require("./common/iconfix/upload_feed_dark.png"),
   /** Permission sheets — full-bleed art (same approach as upgrade/limit-reached). */
   popupNotificationPermissionBg: require("./home/popup/sheet/light/notification_permission_bg.webp"),
-  popupNotificationPermissionBgDark: require("./home/popup/sheet/dark/notification_permission_bg.webp"),
+  popupNotificationPermissionBgDark: require("./dark/supplied/Popup/PNG/Notification.png"),
   popupLocationPermissionBg: require("./home/popup/sheet/light/location_permission_bg.webp"),
-  popupLocationPermissionBgDark: require("./home/popup/sheet/dark/location_permission_bg.webp"),
+  popupLocationPermissionBgDark: require("./dark/supplied/Popup/PNG/Location.png"),
   popupCongratulationsBg: require("./home/popup/sheet/light/congratulations_bg.webp"),
-  popupCongratulationsBgDark: require("./home/popup/sheet/dark/congratulations_bg.webp"),
+  popupCongratulationsBgDark: require("./dark/supplied/Popup/PNG/Congratulations_bottomsheet_2.png"),
   popupStoragePermissionBg: require("./home/popup/sheet/light/storage_permission_bg.webp"),
   popupStoragePermissionBgDark: require("./home/popup/sheet/dark/storage_permission_bg.webp"),
   birdEdibleBadge: require("./collection/details/bird/edible.webp"),
@@ -445,11 +460,11 @@ export const Images = {
   homeGlowingStar: require("./home/glowing_star.webp"),
   homeOuterCard: require("./home/outer_card.webp"),
   homeFindSpecies: require("./home/wizard_banner.png"),
-  homeFindSpeciesDark: require("./subscription/list/dark/1.webp"),
+  homeFindSpeciesDark: require("./dark/supplied/Home/PNG/Step by step.png"),
   homeAskAiCard: require("./home/ask_ai.webp"),
-  homeAskAiCardDark: require("./home/dark/ask_ai.png"),
+  homeAskAiCardDark: require("./dark/supplied/Home/PNG/Ask AI.png"),
   homeBirdOfDay: require("./home/popup/sheet/light/bird_of_the_day_popup.webp"),
-  homeBirdOfDayDark: require("./home/popup/sheet/dark/bird_of_the_day_sheet.webp"),
+  homeBirdOfDayDark: require("./dark/supplied/Home/PNG/Bird of the day-1.png"),
   homeIdentifyBanner: require("./home/common_bg.webp"),
   homeIdentifyBannerDark: require("./subscription/background/dark/subscription_bg.png"),
   homeIdentifyBySound: require("./home/identify_by_sound_inner.png"),

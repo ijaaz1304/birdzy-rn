@@ -16,7 +16,10 @@ export function AskAIScreenBackground({ isDark = false }: Props) {
   if (isDark) {
     return (
       <View
-        style={[styles.backgroundHost, { backgroundColor: APP_COLORS.surfaceAuthDark }]}
+        style={[
+          styles.backgroundHost,
+          { backgroundColor: APP_COLORS.surfaceAuthDark },
+        ]}
         pointerEvents="none"
       >
         <AppImage
@@ -25,12 +28,6 @@ export function AskAIScreenBackground({ isDark = false }: Props) {
           resizeMode="cover"
           preferRNImage
           fadeDuration={0}
-          pointerEvents="none"
-        />
-        <LinearGradient
-          colors={["rgba(0,0,0,0)", APP_COLORS.surfaceAuthDark]}
-          locations={[0.45, 1]}
-          style={styles.darkFade}
           pointerEvents="none"
         />
       </View>
@@ -96,7 +93,7 @@ const styles = StyleSheet.create({
   },
   darkBackground: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.35,
+    opacity: 1,
   },
   darkFade: {
     ...StyleSheet.absoluteFillObject,

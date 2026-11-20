@@ -96,7 +96,7 @@ export const AppLogsTooltip: React.FC<AppLogsTooltipProps> = ({
   const theme = useTheme();
   const colors = theme.colors;
   const isDark = theme.mode === "dark";
-  const tooltipBg = isDark ? APP_COLORS.surfaceDark : APP_COLORS.surfaceWhite;
+  const tooltipBg = isDark ? APP_COLORS.homeSurfaceDark : APP_COLORS.surfaceWhite;
   const tooltipTextColor = isDark
     ? APP_COLORS.tooltipTextLight
     : APP_COLORS.tooltipTextDark;

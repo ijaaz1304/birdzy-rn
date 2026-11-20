@@ -443,7 +443,7 @@ export const BirdDetailsScreen: React.FC = () => {
   };
 
   const SECTION_CARD_BG = isDark
-    ? APP_COLORS.surfaceDark
+    ? spec.CARD_BG
     : APP_COLORS.modalTextOnPrimary;
 
   const [mushroomData, setMushroomData] = useState<MushroomDetail | null>(null);
@@ -1924,7 +1924,7 @@ export const BirdDetailsScreen: React.FC = () => {
   const renderIdentificationRateMatch = () => {
     if (!isFromIdentification) return null;
     const rateMatchInputBg = isDark
-      ? APP_COLORS.surfaceDark
+      ? APP_COLORS.homeSurfaceDark
       : APP_COLORS.modalTextOnPrimary;
     const rateMatchBorderColor = isDark
       ? APP_COLORS.borderBrown
@@ -2152,9 +2152,9 @@ export const BirdDetailsScreen: React.FC = () => {
             textSecondary={
               isDark ? TEXT_SECONDARY : APP_COLORS.textSecondaryGray
             }
-            surfacePrimary={isDark ? SHEET_COLORS.DARK : SHEET_COLORS.LIGHT}
+            surfacePrimary={isDark ? spec.CARD_BG : SHEET_COLORS.LIGHT}
             surfaceSecondary={
-              isDark ? APP_COLORS.surfaceAuthDark : APP_COLORS.surfaceAuthLight
+              isDark ? APP_COLORS.homeSurfaceDark : APP_COLORS.surfaceAuthLight
             }
             onNavigatePremium={() =>
               navigation.getParent()?.navigate("SubscriptionStack", {
@@ -2256,7 +2256,7 @@ export const BirdDetailsScreen: React.FC = () => {
     !showRemoveFromWishlistConfirm &&
     (!isWishlistListContext || isWishlisted);
   const stickyAddToCollectionBarInset = 56 + Math.max(insets.bottom, 12);
-  const scrollBottomSurface = isDark ? SHEET_COLORS.DARK : SHEET_COLORS.LIGHT;
+  const scrollBottomSurface = isDark ? spec.CARD_BG : SHEET_COLORS.LIGHT;
   const scrollBottomSpacerHeight = showStickyAddToCollection
     ? stickyAddToCollectionBarInset
     : isBirdOfTheDay &&
@@ -3411,9 +3411,9 @@ export const BirdDetailsScreen: React.FC = () => {
 
                 <View style={{ backgroundColor: SECTION_CARD_BG }}>
                   <View
-                    style={[styles.aiRockTitleContainer, { marginTop: 16 }]}
+                    style={[styles.aiRockTitleContainer, isDark && styles.darkBirdTitleContainer, { marginTop: 16 }]}
                   >
-                    <View style={styles.birdNameRow}>
+                    <View style={[styles.birdNameRow, isDark && styles.darkBirdNameRow]}>
                       <View style={styles.birdNameCopy}>
                         <Text
                           allowFontScaling={false}
@@ -3454,7 +3454,7 @@ export const BirdDetailsScreen: React.FC = () => {
                       </View>
                       {(mushroomData.soundUrls?.length ?? 0) > 0 ? (
                         <TouchableOpacity
-                          style={styles.birdNameSoundButton}
+                          style={[styles.birdNameSoundButton, isDark && styles.darkBirdNameSoundButton]}
                           onPress={() => {
                             const url = mushroomData.soundUrls?.find(
                               (item) => typeof item === "string" && item.trim()
@@ -3483,13 +3483,13 @@ export const BirdDetailsScreen: React.FC = () => {
                               : COLLECTION_STRINGS.birdDetails.nameSoundA11y
                           }
                         >
-                          <CatalogueVolumeIcon
+                          {isDark ? <View style={styles.birdNameSoundIconSlot}>
+                            <CatalogueVolumeIcon color={TEXT_PRIMARY} />
+                          </View> : <CatalogueVolumeIcon
                             width={24}
                             height={24}
-                            color={
-                              isDark ? TEXT_PRIMARY : APP_COLORS.surfaceDark
-                            }
-                          />
+                            color={APP_COLORS.surfaceDark}
+                          />}
                         </TouchableOpacity>
                       ) : null}
                     </View>
@@ -4145,6 +4145,10 @@ const styles = StyleSheet.create({
     marginTop: 0,
     alignItems: "flex-start",
   },
+  darkBirdTitleContainer: { width: "100%", marginHorizontal: 0, paddingHorizontal: 20 },
+  darkBirdNameRow: { justifyContent: "space-between", alignSelf: "stretch" },
+  darkBirdNameSoundButton: { flexShrink: 0, alignSelf: "flex-start", backgroundColor: "#091B21", borderColor: "#333333" },
+  birdNameSoundIconSlot: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
   birdNameRow: {
     flexDirection: "row",
     alignItems: "flex-start",

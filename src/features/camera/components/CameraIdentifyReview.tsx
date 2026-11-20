@@ -1,3 +1,4 @@
+import { useTheme } from "../../../hooks/useTheme";
 /**
  * Post-capture review UI for multi-photo identify (Figma 8890:124151 — 1 photo).
  */
@@ -55,6 +56,7 @@ export const CameraIdentifyReview: React.FC<Props> = ({
   onAddAnother,
   onIdentify,
 }) => {
+  const theme = useTheme();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, 8) + ACTIONS_BOTTOM_GAP;
@@ -163,6 +165,7 @@ export const CameraIdentifyReview: React.FC<Props> = ({
             disabled={isProcessing}
             style={({ pressed }) => [
               styles.primaryButton,
+              theme.mode === "dark" && { backgroundColor: theme.colors.primaryCTA },
               (pressed || isProcessing) && styles.buttonPressed,
             ]}
             accessibilityRole="button"

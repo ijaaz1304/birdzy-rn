@@ -1,3 +1,4 @@
+import { DarkHomeCountdown } from "../../features/home/components/DarkHomePromotions";
 import { AppImage, AppImageBackground } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React from "react";
@@ -62,6 +63,10 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
   const timeBoxRadius = isDark
     ? countdown.TIME_BOX_RADIUS_DARK
     : countdown.TIME_BOX_RADIUS_LIGHT;
+
+  if (isDark) {
+    return <DarkHomeCountdown hours={hours} minutes={minutes} seconds={seconds} isDiscountActive={isDiscountActive} onPress={onPress} onClose={onClose} />;
+  }
 
   const renderTimeBox = (
     value: number,

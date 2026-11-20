@@ -436,7 +436,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
 
   const feedHeaderImage = isDark ? Images.feedDark : Images.commonBg;
 
-  const emptyFeedImage = Images.emptyFeed;
+  const emptyFeedImage = isDark ? Images.emptyFeedDark : Images.emptyFeed;
   /**
    * Responsive empty state: Figma 173×152 illustration, never wider than 60% of the
    * screen, placed ~14% of the screen height below the tabs (Figma: 113pt on 812pt).
@@ -579,8 +579,8 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               active={activeTab === "all"}
               onPress={() => handleTabChange("all")}
               variant="underline"
-              activeColor={APP_COLORS.ctaPrimary}
-              underlineColor={APP_COLORS.ctaPrimary}
+              activeColor={isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary}
+              underlineColor={isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary}
             />
           </View>
           <View style={{ flex: 1 }}>
@@ -589,8 +589,8 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               active={activeTab === "mine"}
               onPress={() => handleTabChange("mine")}
               variant="underline"
-              activeColor={APP_COLORS.ctaPrimary}
-              underlineColor={APP_COLORS.ctaPrimary}
+              activeColor={isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary}
+              underlineColor={isDark ? APP_COLORS.ctaPrimaryDark : APP_COLORS.ctaPrimary}
             />
           </View>
         </View>

@@ -1,3 +1,4 @@
+import { getDarkPrimaryCtaStyle } from "../../design-system/modalTokens";
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, GestureResponderEvent } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
@@ -73,8 +74,8 @@ const AppButton: React.FC<Props> = ({
     switch (variant) {
       case "primary":
         return {
-          backgroundColor: colors.surfaceBrand,
-          textColor: colors.textInverse,
+          backgroundColor: theme.mode === "dark" ? colors.primaryCTA : colors.surfaceBrand,
+          textColor: theme.mode === "dark" ? colors.onPrimary : colors.textInverse,
           borderColor: "transparent",
         };
       case "secondary":
@@ -123,6 +124,7 @@ const AppButton: React.FC<Props> = ({
           alignSelf: "flex-start",
           opacity: disabled ? 1 : 1,
         },
+        variant === "primary" && getDarkPrimaryCtaStyle(theme),
         style,
       ]}
     >
@@ -133,6 +135,7 @@ const AppButton: React.FC<Props> = ({
             fontSize: font.fontSize,
             fontFamily: FONTS.medium,
           },
+          theme.mode === "dark" && variant === "primary" && (size === "medium" || size === "large") && { fontSize: 16, lineHeight: 24 },
           textStyle,
         ]}
       >

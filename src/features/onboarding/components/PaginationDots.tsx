@@ -1,6 +1,7 @@
 /**
  * Pagination Dots Component for Onboarding
  * Figma: 8×8 circles, 4px gap; active/inactive differ only by color.
+ * Dark: Figma 9373:171149 / 9373:171150 — #16B6B4, inactive at 20%.
  * Color interpolates smoothly with the horizontal scroll offset.
  */
 

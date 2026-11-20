@@ -1,7 +1,7 @@
 /**
- * Premium gate card on mushroom details (catalogue / locked sections).
+ * Premium gate card on bird details (catalogue / locked sections).
  * Light: bundled subs_to_premium artwork (title + body + Get Premium).
- * Dark: themed subscription_premium card with the same copy — not the generic popup bg.
+ * Dark: Figma 9399:160040 native premium card.
  */
 
 import { AppImage } from "@/components/AppImage";
@@ -17,7 +17,7 @@ import {
 import { Images } from "../../../assets";
 import { FONTS } from "../../../common/typography";
 import { SUBSCRIPTION_COLORS } from "../../../constants/colorConstants";
-import { Radius } from "../../../design";
+import { APP_COLORS } from "../../../config/colors";
 import { darkColors } from "../../../theme/colors/dark";
 
 const LIGHT_ASPECT = 836 / 1308;
@@ -41,8 +41,7 @@ export function SubscribeToPremiumCard({ isDark, onPress, style }: Props) {
       >
         <Text style={styles.darkTitle}>Subscribe to Premium</Text>
         <Text style={styles.darkBody}>
-          Subscribe to our premium plan to view more details about your
-          mushroom.
+          Subscribe to our premium plan to view more details about this bird.
         </Text>
         <View style={styles.darkCta}>
           <Text style={styles.darkCtaText}>Get Premium</Text>
@@ -78,43 +77,44 @@ const styles = StyleSheet.create({
     height: Math.round(CARD_WIDTH * LIGHT_ASPECT),
   },
   darkCard: {
-    width: CARD_WIDTH,
-    backgroundColor: darkColors.surface.tertiary,
-    borderRadius: Radius.sm,
+    width: "100%",
+    maxWidth: 327,
+    backgroundColor: APP_COLORS.homeCardDark,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: darkColors.border.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    borderColor: "#01474F",
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
     alignItems: "center",
   },
   darkTitle: {
     fontFamily: FONTS.bold,
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 24,
+    lineHeight: 29,
     color: darkColors.text.primary,
     textAlign: "center",
   },
   darkBody: {
     marginTop: 8,
     fontFamily: FONTS.regular,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 16,
+    lineHeight: 24,
     color: darkColors.text.secondary,
     textAlign: "center",
   },
   darkCta: {
-    marginTop: 14,
+    marginTop: 24,
     backgroundColor: SUBSCRIPTION_COLORS.CTA_PRIMARY_DARK,
-    borderRadius: 30,
-    paddingHorizontal: 22,
+    borderRadius: 24,
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    minWidth: 140,
     alignItems: "center",
   },
   darkCtaText: {
-    fontFamily: FONTS.bold,
-    fontSize: 14,
-    lineHeight: 18,
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
     color: SUBSCRIPTION_COLORS.CTA_TEXT_DARK,
   },
 });

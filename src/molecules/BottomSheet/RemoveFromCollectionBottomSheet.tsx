@@ -1,3 +1,4 @@
+import { useSheetPreview, PREVIEW_COLLECTIONS } from "../../components/AppSheet/SheetPreviewContext";
 /**
  * Remove From Collection Bottom Sheet
  * Shows collections with checkboxes to remove mineral from
@@ -30,6 +31,7 @@ export const RemoveFromCollectionBottomSheet: React.FC<
   RemoveFromCollectionBottomSheetProps
 > = ({ visible, mushroomId, mushroomName, onClose, onSuccess }) => {
   const theme = useTheme();
+  const preview = useSheetPreview();
   const colors = theme.colors;
   const _spacing = theme.spacing;
   const { user } = useAuthStore();
@@ -45,6 +47,7 @@ export const RemoveFromCollectionBottomSheet: React.FC<
 
   // Fetch all collections and check which ones contain this mineral
   useEffect(() => {
+    if (preview) { setCollections(PREVIEW_COLLECTIONS.map((item) => ({ ...item, containsMineral: true }))); setLoading(false); return; }
     if (!visible || !user?.id) return;
 
     const loadCollections = async () => {
@@ -103,7 +106,7 @@ export const RemoveFromCollectionBottomSheet: React.FC<
     };
 
     loadCollections();
-  }, [visible, mushroomId, user?.id]);
+  }, [visible, mushroomId, user?.id, preview]);
 
   const toggleCollection = useCallback((collectionId: string) => {
     setSelectedCollections((prev) => {
@@ -118,6 +121,7 @@ export const RemoveFromCollectionBottomSheet: React.FC<
   }, []);
 
   const handleRemove = useCallback(async () => {
+    if (preview) { onClose(); return; }
     if (selectedCollections.size === 0) {
       showToast("Please select at least one collection", "warning");
       return;
@@ -167,7 +171,7 @@ export const RemoveFromCollectionBottomSheet: React.FC<
     } finally {
       setRemoving(false);
     }
-  }, [selectedCollections, mushroomId, onSuccess, onClose]);
+  }, [selectedCollections, mushroomId, onSuccess, onClose, preview]);
 
   const strings = MODAL_STRINGS.bottomSheets.removeCollection;
 

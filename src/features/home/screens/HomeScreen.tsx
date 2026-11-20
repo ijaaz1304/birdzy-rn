@@ -1,3 +1,5 @@
+import { HomeFullPriceBanner } from "../components/HomeFullPriceBanner";
+import { DarkHomeProBadge } from "../components/DarkHomePromotions";
 import { HomeExploreNearYouSection } from "../../explore/components/HomeExploreNearYouSection";
 import { useExploreEntry } from "../../explore/useExploreEntry";
 import { useLocationPermissionGranted } from "../../explore/useLocationPermissionGranted";
@@ -754,12 +756,12 @@ export const HomeScreen = () => {
             </View>
             <View style={[screenStyles.headerRight, styles.headerRightActions]}>
               {isPremium ? (
-                <View style={styles.youAreProWrap} pointerEvents="none">
-                  <AppImage
+                <View style={[styles.youAreProWrap, isDark && { height: 43 }]} pointerEvents="none">
+                  {isDark ? <DarkHomeProBadge label={strings.home.header.proBadge} /> : <AppImage
                     source={Images.youArePro}
                     style={styles.youAreProImage}
                     resizeMode="contain"
-                  />
+                  />}
                 </View>
               ) : (
                 <TouchableOpacity
@@ -773,13 +775,13 @@ export const HomeScreen = () => {
                     });
                   }}
                   activeOpacity={0.8}
-                  style={styles.goProIconButton}
+                  style={[styles.goProIconButton, isDark && { height: 43 }]}
                 >
-                  <AppImage
-                    source={isDark ? Images.goProDark : Images.goPro}
+                  {isDark ? <DarkHomeProBadge label={strings.home.header.goPro} /> : <AppImage
+                    source={Images.goPro}
                     style={styles.goProImage}
                     resizeMode="contain"
-                  />
+                  />}
                 </TouchableOpacity>
               )}
               <TouchableOpacity
@@ -830,7 +832,7 @@ export const HomeScreen = () => {
 
           {!isPremium && showInlineDiscountBanner && (
             <View style={[styles.sectionBlock, styles.discountBannerSection]}>
-              {discountOffer.isActive ? (
+              {discountOffer.isActive && (!isDark || countdown.hours + countdown.minutes + countdown.seconds > 0) ? (
                 <DiscountBanner
                   hours={countdown.hours}
                   minutes={countdown.minutes}
@@ -848,6 +850,19 @@ export const HomeScreen = () => {
                     });
                   }}
                 />
+              ) : isDark ? (
+                <View style={styles.fullPriceDarkWrap}>
+                  <HomeFullPriceBanner onSubscribe={() => {
+                    analyticsService.logEvent(EVENTS.subs_discount_banner);
+                    rootNavigation.navigate("SubscriptionStack", {
+                      screen: "SubscriptionMain",
+                      params: { openPlanModal: true, discount50: false },
+                    });
+                  }} />
+                  <TouchableOpacity style={styles.fullSubsClose} onPress={() => setShowInlineDiscountBanner(false)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close upgrade banner">
+                    <CloseIcon isDark style={styles.fullSubsCloseIcon} />
+                  </TouchableOpacity>
+                </View>
               ) : (
                 <View style={styles.fullSubsWrap}>
                   <TouchableOpacity
@@ -1121,6 +1136,7 @@ const styles = StyleSheet.create({
     width: HOME_LAYOUT.YOU_ARE_PRO_IMAGE_WIDTH,
     height: HOME_LAYOUT.YOU_ARE_PRO_IMAGE_HEIGHT,
   },
+  fullPriceDarkWrap: { width: "100%", alignSelf: "stretch" },
   fullSubsWrap: {
     width: "100%",
     alignSelf: "stretch",

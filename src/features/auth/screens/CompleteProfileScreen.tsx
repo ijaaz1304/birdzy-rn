@@ -197,7 +197,7 @@ export const CompleteProfileScreen = () => {
               borderRadius={AUTH_TEXT_FIELD_RADIUS}
               style={styles.fieldSpacing}
               buttonBackgroundColor={
-                isDark ? APP_COLORS.surfaceDark : theme.colors.surface
+                isDark ? APP_COLORS.homeSurfaceDark : theme.colors.surface
               }
             />
             <Dropdown
@@ -214,7 +214,7 @@ export const CompleteProfileScreen = () => {
               borderRadius={AUTH_TEXT_FIELD_RADIUS}
               style={styles.fieldSpacing}
               buttonBackgroundColor={
-                isDark ? APP_COLORS.surfaceDark : theme.colors.surface
+                isDark ? APP_COLORS.homeSurfaceDark : theme.colors.surface
               }
             />
           </View>

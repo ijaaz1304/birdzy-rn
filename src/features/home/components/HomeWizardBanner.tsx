@@ -6,13 +6,15 @@ import { AppText } from "../../../components/shared";
 import { Images } from "../../../assets";
 import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { FONTS } from "../../../common/typography";
+import { useIsDark } from "../../../hooks/useTheme";
+import { APP_COLORS } from "../../../../theme/colors";
 import { Radius } from "../../../design";
 
 /** Have no photos banner — rgba(222, 229, 230, 1) */
 const BANNER_BG = "#DEE5E6";
 /**
  * Figma text-icon-primary (#091B21). The banner background is a fixed light
- * colour in both themes, so the copy stays dark in dark mode too.
+ * colour in light mode; dark mode uses the supplied night palette.
  */
 const BANNER_TEXT_COLOR = "#091B21";
 
@@ -28,6 +30,8 @@ type Props = {
  * the copy can wrap to more lines on narrow screens instead of being clipped.
  */
 export const HomeWizardBanner: React.FC<Props> = ({ onPress }) => {
+  const isDark = useIsDark();
+  const textColor = isDark ? APP_COLORS.homeTextDark : BANNER_TEXT_COLOR;
   const title = HOME_STRINGS.discovery.wizardBanner.title;
 
   return (
@@ -36,10 +40,13 @@ export const HomeWizardBanner: React.FC<Props> = ({ onPress }) => {
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={title}
-      style={[styles.banner, { backgroundColor: BANNER_BG }]}
+      style={[
+        styles.banner,
+        { backgroundColor: isDark ? APP_COLORS.homeCardDark : BANNER_BG },
+      ]}
     >
       <AppImage
-        source={Images.homeWizardBanner}
+        source={isDark ? Images.homeWizardBannerDark : Images.homeWizardBanner}
         style={styles.wizardArt}
         resizeMode="contain"
       />
@@ -48,15 +55,11 @@ export const HomeWizardBanner: React.FC<Props> = ({ onPress }) => {
         <AppText
           variant="body14"
           allowFontScaling={false}
-          style={styles.title}
+          style={[styles.title, { color: textColor }]}
         >
           {title}
         </AppText>
-        <MaterialIcons
-          name="chevron-right"
-          size={20}
-          color={BANNER_TEXT_COLOR}
-        />
+        <MaterialIcons name="chevron-right" size={20} color={textColor} />
       </View>
     </TouchableOpacity>
   );

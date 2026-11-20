@@ -1,3 +1,4 @@
+import CropGripDark from "../../../assets/dark/figma/sound_crop_grip.svg";
 /**
  * Post-recording waveform. Selected range is highlighted; tap plays that range.
  */
@@ -48,6 +49,7 @@ export function RecordedSoundPreview({
   const theme = useTheme();
   const isDark = useIsDark();
   const colors = theme.colors;
+  const renderedTrackHeight = isDark ? 100 : TRACK_HEIGHT;
   const trackBg = isDark ? "#2C2C30" : "#ECECEF";
   // Waveform colors, kept with the commented bar renderer.
   // const idleBar = isDark ? "rgba(255,255,255,0.38)" : "#C5C5CC";
@@ -97,6 +99,18 @@ export function RecordedSoundPreview({
       runOnJS(onSelectionStartChange)(startRatio.value * durationSec);
     });
 
+  const tap = Gesture.Tap()
+    .enabled(isDark && !disabled)
+    .onEnd((_event, success) => {
+      if (success) runOnJS(onTogglePlay)();
+    });
+  const selectionFrameStyle = useAnimatedStyle(() => ({
+    left: `${clamp01(startRatio.value) * 100}%`,
+    width: `${
+      Math.max(0, clamp01(endRatio.value) - clamp01(startRatio.value)) * 100
+    }%`,
+  }));
+
   // Waveform selection fill. Cropping still uses the red handles below.
   // const clipStyle = useAnimatedStyle(() => {
   //   const start = clamp01(startRatio.value);
@@ -125,35 +139,66 @@ export function RecordedSoundPreview({
   const startLabelRatio = ratio(selectionStartSec, durationSec);
   const endLabelRatio = ratio(selectionEndSec, durationSec);
   const showStartLabel = startLabelRatio > 0.12;
-  const showEndLabel = endLabelRatio < 0.88 && endLabelRatio - startLabelRatio > 0.1;
+  const showEndLabel =
+    endLabelRatio < 0.88 && endLabelRatio - startLabelRatio > 0.1;
   const selectedLabel = copy.selectedWindow.replace(
     "{seconds}",
     String(Math.max(1, Math.round(windowSec)))
   );
 
   return (
-    <View style={styles.block}>
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
-          {copy.recordedSound}
-        </Text>
-        <Text style={[styles.headerMeta, { color: colors.textSecondary }]}>
-          {selectedLabel}
-        </Text>
-      </View>
+    <View style={[styles.block, isDark && styles.darkBlock]}>
+      {!isDark && (
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+            {copy.recordedSound}
+          </Text>
+          <Text style={[styles.headerMeta, { color: colors.textSecondary }]}>
+            {selectedLabel}
+          </Text>
+        </View>
+      )}
 
       <View>
-        <GestureDetector gesture={pan}>
+        <GestureDetector gesture={isDark ? Gesture.Race(pan, tap) : pan}>
           <View
             collapsable={false}
-            style={[styles.track, { backgroundColor: trackBg }]}
+            accessible={isDark}
+            accessibilityRole={isDark ? "button" : undefined}
+            accessibilityState={
+              isDark ? { disabled, selected: isPlaying } : undefined
+            }
+            accessibilityLabel={
+              isDark
+                ? isPlaying
+                  ? "Pause selected recording"
+                  : "Play selected recording"
+                : undefined
+            }
+            accessibilityHint={
+              isDark
+                ? "Tap to preview. Drag left or right to move the selected crop window."
+                : undefined
+            }
+            onAccessibilityTap={
+              isDark
+                ? () => {
+                    if (!disabled) onTogglePlay();
+                  }
+                : undefined
+            }
+            style={[
+              styles.track,
+              { backgroundColor: trackBg },
+              isDark && styles.darkTrack,
+            ]}
             onLayout={(event) => {
               trackWidth.value = event.nativeEvent.layout.width;
             }}
           >
             <LiveSpectrogramView
               columns={columns}
-              height={TRACK_HEIGHT}
+              height={renderedTrackHeight}
               playheadCenter={false}
             />
             {/* Waveform bars
@@ -166,29 +211,69 @@ export function RecordedSoundPreview({
             */}
             <Animated.View
               pointerEvents="none"
-              style={[styles.handle, leftHandleStyle]}
+              style={[
+                styles.handle,
+                leftHandleStyle,
+                isDark && styles.darkLeftHandle,
+              ]}
             />
             <Animated.View
               pointerEvents="none"
-              style={[styles.handle, rightHandleStyle]}
+              style={[
+                styles.handle,
+                rightHandleStyle,
+                isDark && styles.darkRightHandle,
+              ]}
             />
+            {isDark && (
+              <>
+                <Animated.View
+                  pointerEvents="none"
+                  style={[styles.darkSelectionFrame, selectionFrameStyle]}
+                />
+                <Animated.View
+                  pointerEvents="none"
+                  style={[styles.darkGrip, leftHandleStyle]}
+                >
+                  <CropGripDark style={styles.darkGripGlyph} />
+                </Animated.View>
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.darkGrip,
+                    rightHandleStyle,
+                    styles.darkRightGrip,
+                  ]}
+                >
+                  <CropGripDark style={styles.darkGripGlyph} />
+                </Animated.View>
+              </>
+            )}
           </View>
         </GestureDetector>
-        <View pointerEvents="box-none" style={styles.playOverlay}>
-          <SoundPlayButton
-            isPlaying={isPlaying}
-            onPress={onTogglePlay}
-            size={56}
-            accessibilityLabel={
-              isPlaying ? "Pause selected audio" : copy.tapToPreview
-            }
-          />
-        </View>
+        {!isDark && (
+          <View pointerEvents="box-none" style={styles.playOverlay}>
+            <SoundPlayButton
+              isPlaying={isPlaying}
+              onPress={onTogglePlay}
+              size={56}
+              accessibilityLabel={
+                isPlaying ? "Pause selected audio" : copy.tapToPreview
+              }
+            />
+          </View>
+        )}
       </View>
 
       <View style={styles.times}>
-        <Text style={[styles.time, { color: colors.textPrimary }]}>
+        <Text
+          style={[
+            styles.time,
+            { color: isDark ? colors.primaryCTA : colors.textPrimary },
+          ]}
+        >
           {formatSoundMmSs(0)}
+          {isDark ? "s" : ""}
         </Text>
         {showStartLabel ? (
           <Text
@@ -212,26 +297,34 @@ export function RecordedSoundPreview({
             {formatSoundMmSs(selectionEndSec)}
           </Text>
         ) : null}
-        <Text style={[styles.time, { color: colors.textPrimary }]}>
+        <Text
+          style={[
+            styles.time,
+            { color: isDark ? colors.primaryCTA : colors.textPrimary },
+          ]}
+        >
           {formatSoundMmSs(durationSec)}
+          {isDark ? "s" : ""}
         </Text>
       </View>
 
-      <TouchableOpacity
-        onPress={onTogglePlay}
-        disabled={disabled}
-        activeOpacity={0.7}
-        style={styles.hintRow}
-      >
-        <MaterialIcons
-          name="play-circle-outline"
-          size={16}
-          color={colors.textTertiary}
-        />
-        <Text style={[styles.hint, { color: colors.textTertiary }]}>
-          {copy.tapToPreview}
-        </Text>
-      </TouchableOpacity>
+      {!isDark && (
+        <TouchableOpacity
+          onPress={onTogglePlay}
+          disabled={disabled}
+          activeOpacity={0.7}
+          style={styles.hintRow}
+        >
+          <MaterialIcons
+            name="play-circle-outline"
+            size={16}
+            color={colors.textTertiary}
+          />
+          <Text style={[styles.hint, { color: colors.textTertiary }]}>
+            {copy.tapToPreview}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -263,6 +356,40 @@ function clamp01(value: number): number {
 }
 
 const styles = StyleSheet.create({
+  darkBlock: { gap: 4 },
+  darkTrack: { height: 100, borderRadius: 8 },
+  darkSelectionFrame: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    borderTopWidth: 3,
+    borderBottomWidth: 3,
+    borderColor: "#EF4444",
+  },
+  darkLeftHandle: {
+    top: 0,
+    bottom: 0,
+    marginLeft: 0,
+    backgroundColor: "#EF4444",
+  },
+  darkRightHandle: {
+    top: 0,
+    bottom: 0,
+    marginLeft: -3,
+    backgroundColor: "#EF4444",
+  },
+  darkGrip: {
+    position: "absolute",
+    top: 40,
+    width: 9,
+    height: 20,
+    borderRadius: 2,
+    backgroundColor: "#EF4444",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  darkRightGrip: { marginLeft: -9 },
+  darkGripGlyph: { transform: [{ rotate: "90deg" }] },
   block: {
     width: "100%",
     gap: 8,

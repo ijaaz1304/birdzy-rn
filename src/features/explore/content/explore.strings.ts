@@ -29,7 +29,8 @@ export const EXPLORE_STRINGS = {
 
 export const EXPLORE_HOME_STRINGS = {
   title: "Explore Near You",
-  description: "Discover birds around you",
+  description:
+    "Discover bird sightings, hotspots, and species around your area.",
   exploreMap: "Explore Map",
   enableLocation: "Enable Location",
   growingNow: "Spotted Now",

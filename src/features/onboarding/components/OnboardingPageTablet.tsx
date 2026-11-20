@@ -79,7 +79,7 @@ export const OnboardingPageTablet: React.FC<OnboardingPageTabletProps> =
             />
           ) : null}
 
-          {SHOW_SLIDE_COPY_ON_TABLET ? (
+          {SHOW_SLIDE_COPY_ON_TABLET || theme.mode === "dark" ? (
             <View
               style={[
                 styles.textSection,

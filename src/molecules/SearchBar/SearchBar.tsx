@@ -18,7 +18,7 @@ import { CancelIconLight, CancelIconDark } from "../../assets";
 import { spacing } from "../../design-system/spacing";
 import { FONTS } from "../../common/typography";
 import { UI_COLORS } from "../../constants/colorConstants";
-import { DARK_SURFACE_BRAND_1 } from "../../theme/colors/dark";
+import CatalogueSearch from "../../assets/dark/figma/catalogue_search.svg";
 
 export type SearchBarState =
   | "normal"
@@ -54,7 +54,7 @@ const getBorderColor = (
 ): string => {
   switch (state) {
     case "focus":
-      return isDark ? DARK_SURFACE_BRAND_1 : theme.borderBrand;
+      return isDark ? theme.borderBrandInvert : theme.borderBrand;
     case "error":
       return theme.borderError;
     case "success":
@@ -62,9 +62,7 @@ const getBorderColor = (
     case "disabled":
       return "transparent";
     default:
-      return isDark
-        ? DARK_SURFACE_BRAND_1
-        : theme.textFieldBorder ?? theme.border0;
+      return isDark ? theme.border0 : theme.textFieldBorder ?? theme.border0;
   }
 };
 
@@ -72,6 +70,7 @@ const getBackgroundColor = (state: SearchBarState, theme: ReturnType<typeof useT
   if (state === "disabled") {
     return theme.colors.surfaceSecondary;
   }
+  if (theme.mode === "dark") return state === "focus" ? theme.colors.textFieldBackground : theme.colors.surfacePrimary;
   return theme.colors.textFieldBackground ?? theme.colors.surfacePrimary;
 };
 
@@ -153,7 +152,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
       >
         {/* Left Icon */}
         {leftIcon && (
-          <Icon
+          isDark && leftIcon === "search" ? <View style={styles.darkSearchIcon}><CatalogueSearch /></View> : <Icon
             name={leftIcon}
             size={SEARCH_ICON_SIZE}
             color={theme.colors.textTertiary}
@@ -192,8 +191,8 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
             accessibilityLabel={props.accessibilityLabel ?? placeholder}
             allowFontScaling={false}
             /* Figma: cursor uses the brand colour (text-icon-brand-1) */
-            cursorColor={theme.colors.borderBrand}
-            selectionColor={theme.colors.borderBrand}
+            cursorColor={isDark ? theme.colors.borderBrandInvert : theme.colors.borderBrand}
+            selectionColor={isDark ? theme.colors.borderBrandInvert : theme.colors.borderBrand}
             style={[
               styles.input,
               {
@@ -306,6 +305,7 @@ const styles = StyleSheet.create({
     width: "100%",
     overflow: "hidden",
   },
+  darkSearchIcon: { width: 24, height: 24, marginRight: 12, alignItems: "center", justifyContent: "center" },
   leftIcon: {
     marginRight: 12,
   },

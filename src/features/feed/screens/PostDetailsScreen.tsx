@@ -1,3 +1,5 @@
+import Clipboard from "@react-native-clipboard/clipboard";
+import { CommentActionSheet } from "../components/CommentActionSheet";
 /**
  * Post Details Screen — Figma feed post / comments (9162:109674)
  */
@@ -59,10 +61,10 @@ export const PostDetailsScreen: React.FC = () => {
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showReportSheet, setShowReportSheet] = useState(false);
-  const [_selectedCommentId, setSelectedCommentId] = useState<string | null>(
+  const [selectedCommentId, setSelectedCommentId] = useState<string | null>(
     null
   );
-  const [_selectedReplyId, setSelectedReplyId] = useState<string | null>(null);
+  const [selectedReplyId, setSelectedReplyId] = useState<string | null>(null);
   const [replyingToCommentId, setReplyingToCommentId] = useState<string | null>(
     null
   );
@@ -285,7 +287,7 @@ export const PostDetailsScreen: React.FC = () => {
   const currentUserName = user?.name ?? user?.email ?? "You";
 
   const renderHeader = () => (
-    <View style={styles.header}>
+    <View style={[styles.header, isDark && styles.darkHeader]}>
       <TouchableOpacity
         onPress={() => navigation.goBack()}
         activeOpacity={0.7}
@@ -354,13 +356,14 @@ export const PostDetailsScreen: React.FC = () => {
             style={styles.content}
             contentContainerStyle={[
               styles.contentContainer,
+              isDark && styles.darkContentContainer,
               { paddingBottom: 24 + insets.bottom + 56 },
             ]}
             keyboardShouldPersistTaps="handled"
           >
             {/* Post block */}
-            <View style={styles.postBlock}>
-              <View style={styles.postAuthorRow}>
+            <View style={[styles.postBlock, isDark && styles.darkPostBlock]}>
+              <View style={[styles.postAuthorRow, isDark && styles.darkPostAuthorRow]}>
                 <Avatar
                   name={post.userName}
                   size={40}
@@ -426,7 +429,7 @@ export const PostDetailsScreen: React.FC = () => {
               </Text>
 
               {!replyingToCommentId && (
-                <View style={styles.composerBlock}>
+                <View style={[styles.composerBlock, isDark && styles.darkComposerBlock]}>
                   <View style={styles.composerUserRow}>
                     <Avatar
                       name={currentUserName}
@@ -441,8 +444,9 @@ export const PostDetailsScreen: React.FC = () => {
                   <View
                     style={[
                       styles.composerField,
+                      isDark && styles.darkComposerField,
                       {
-                        backgroundColor: theme.colors.textFieldBackground,
+                        backgroundColor: isDark ? theme.colors.surfacePrimary : theme.colors.textFieldBackground,
                         borderColor: theme.colors.textFieldBorder,
                       },
                     ]}
@@ -466,8 +470,8 @@ export const PostDetailsScreen: React.FC = () => {
                       variant="primary"
                       disabled={!canSend}
                       onPress={handleAddComment}
-                      style={styles.sendPill}
-                      textStyle={styles.sendPillText}
+                      style={[styles.sendPill, ...(isDark ? [styles.darkSendPill, ...(!canSend ? [{ backgroundColor: theme.colors.border0, opacity: 1 }] : [])] : [])]}
+                      textStyle={{ ...styles.sendPillText, ...(isDark && !canSend ? { color: theme.colors.textTertiary } : {}) }}
                     />
                   </View>
                 </View>
@@ -491,6 +495,7 @@ export const PostDetailsScreen: React.FC = () => {
                     onLike={handleCommentLike}
                     onOptions={(commentId, _isMyComment) => {
                       setSelectedCommentId(commentId);
+                      setSelectedReplyId(null);
                     }}
                     onReplyLike={handleReplyLike}
                     onReplyOptions={(commentId, replyId, _isMyReply) => {
@@ -524,13 +529,13 @@ export const PostDetailsScreen: React.FC = () => {
             ]}
           >
             <TouchableOpacity
-              style={styles.bottomActionHalf}
+              style={[styles.bottomActionHalf, isDark && styles.darkBottomAction]}
               onPress={handlePostLike}
               activeOpacity={0.7}
             >
               <AppImage
                 source={post.isLiked ? likeIconSelected : likeIcon}
-                style={styles.bottomIcon}
+                style={[styles.bottomIcon, isDark && styles.darkBottomIcon]}
                 resizeMode="contain"
               />
               <Text
@@ -544,13 +549,13 @@ export const PostDetailsScreen: React.FC = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.bottomActionHalf}
+              style={[styles.bottomActionHalf, isDark && styles.darkBottomAction]}
               onPress={handleShare}
               activeOpacity={0.7}
             >
               <AppImage
                 source={shareIcon}
-                style={styles.bottomIcon}
+                style={[styles.bottomIcon, isDark && styles.darkBottomIcon]}
                 resizeMode="contain"
               />
               <Text variant="body" size="small" weight="medium" color="text">
@@ -559,6 +564,17 @@ export const PostDetailsScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
+
+        <CommentActionSheet
+          visible={selectedCommentId != null}
+          onClose={() => { setSelectedCommentId(null); setSelectedReplyId(null); }}
+          onReply={() => { if (selectedCommentId) handleReply(selectedCommentId); }}
+          onCopy={() => {
+            const selected = comments.find((item) => item.id === selectedCommentId);
+            const text = selectedReplyId ? selected?.replies?.find((item) => item.id === selectedReplyId)?.content : selected?.content;
+            if (text) { Clipboard.setString(text); showToast("Comment copied", "success"); }
+          }}
+        />
 
         <PostActionSheet
           visible={showActionSheet}
@@ -603,6 +619,15 @@ export const PostDetailsScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  darkHeader: { height: 52, paddingVertical: 6, paddingHorizontal: 16 },
+  darkContentContainer: { paddingTop: 0 },
+  darkPostBlock: { gap: 8 },
+  darkPostAuthorRow: { gap: 8 },
+  darkComposerBlock: { gap: 8 },
+  darkComposerField: { minHeight: 116, borderRadius: 7.93, paddingVertical: 10 },
+  darkSendPill: { height: 32, minHeight: 32, minWidth: 54, paddingHorizontal: 12, shadowOpacity: 0, elevation: 0 },
+  darkBottomAction: { minHeight: 20 },
+  darkBottomIcon: { width: 16, height: 16 },
   container: {
     flex: 1,
   },

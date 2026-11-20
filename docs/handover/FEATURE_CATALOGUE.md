@@ -101,3 +101,12 @@ This map is derived from the current source tree. A folder or screen declaration
 ## Adding a feature
 
 Add its purpose, product entry point, happy/error flows, source ownership, API/provider requirements, permissions/entitlements and acceptance checks to the relevant handover pages. Link deeper feature docs here. A newly created folder must not be recorded as a shipped capability until its route/flag/build is verified.
+
+
+## Sheet gallery and comment actions — 20 November 2026
+
+- Settings → Bottom sheets: [gallery screen](../../src/features/settings/screens/BottomSheetGalleryScreen.tsx), registered in [SettingsStack](../../src/navigation/SettingsStack.tsx). Exposes registered and standalone sheets using local preview actions.
+- Preview isolation: [SheetPreviewContext](../../src/components/AppSheet/SheetPreviewContext.tsx), consumed by AppSheet and standalone removal/location sheets.
+- Post details comment/reply actions: [CommentActionSheet](../../src/features/feed/components/CommentActionSheet.tsx). Reply and Copy text; no delete/report endpoint added.
+
+- Home inactive-discount offer: [HomeFullPriceBanner](../../src/features/home/components/HomeFullPriceBanner.tsx), selected by HomeScreen for the dark full-price state; uses existing annual store-price and subscription-navigation contracts.

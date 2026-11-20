@@ -1,3 +1,5 @@
+import IdentifyBirdDark from "../assets/dark/figma/tab_identify_bird.svg";
+import IdentifyFrameDark from "../assets/dark/figma/tab_identify_frame.svg";
 /**
  * Bottom tab bar — layout and selection treatment match Shroom-Ai MainTabs.
  * Identify stays a chooser (does not switch to the Camera tab).
@@ -110,6 +112,7 @@ export function CustomBottomTabBar({
 }: BottomTabBarProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const isDark = theme.mode === "dark";
   const { openIdentifyMethodChooser } = useIdentificationEntry();
   const tabColors =
     theme.mode === "dark"
@@ -120,7 +123,7 @@ export function CustomBottomTabBar({
   const tabLineColor = tabColors.line;
   const tabInactiveColor = tabColors.unselected;
   const tabBarBottomInset = Math.max(insets.bottom, 10);
-  const tabBarHeight = TAB_BAR_BASE_HEIGHT + tabBarBottomInset;
+  const tabBarHeight = (isDark ? 56 : TAB_BAR_BASE_HEIGHT) + tabBarBottomInset;
 
   const focusedRoute = state.routes[state.index];
   const focusedOptions = descriptors[focusedRoute.key].options;
@@ -174,8 +177,8 @@ export function CustomBottomTabBar({
   const renderSideTab = (name: SideTabName) => {
     const focused = focusedRoute.name === name;
     const iconStyle: ImageStyle = {
-      width: TAB_ICON_SIZE,
-      height: TAB_ICON_SIZE,
+      width: isDark ? 16 : TAB_ICON_SIZE,
+      height: isDark ? 16 : TAB_ICON_SIZE,
       tintColor: focused ? tabActiveColor : tabInactiveColor,
     };
 
@@ -186,9 +189,9 @@ export function CustomBottomTabBar({
         accessibilityLabel={TAB_LABELS[name]}
         accessibilityState={focused ? { selected: true } : {}}
         onPress={() => handleSideTabPress(name)}
-        style={styles.sideTab}
+        style={[styles.sideTab, isDark && styles.darkSideTab]}
       >
-        <View style={styles.tabIconWrap}>
+        <View style={[styles.tabIconWrap, isDark && styles.darkTabIconWrap]}>
           <AppImage
             source={TAB_ICONS[name]}
             style={iconStyle}
@@ -197,6 +200,7 @@ export function CustomBottomTabBar({
           <View
             style={[
               styles.activeLine,
+              isDark && styles.darkActiveLine,
               {
                 opacity: focused ? 1 : 0,
                 backgroundColor: tabLineColor,
@@ -207,7 +211,11 @@ export function CustomBottomTabBar({
         <Text
           style={[
             styles.tabLabel,
+            isDark && styles.darkTabLabel,
             { color: focused ? tabActiveColor : tabInactiveColor },
+            isDark && {
+              fontFamily: focused ? "Satoshi-Medium" : "Satoshi-Regular",
+            },
           ]}
           numberOfLines={1}
           adjustsFontSizeToFit
@@ -224,8 +232,9 @@ export function CustomBottomTabBar({
     <View
       style={[
         styles.bar,
+        isDark && styles.darkBar,
         {
-          backgroundColor: theme.colors.surface,
+          backgroundColor: isDark ? tabColors.background : theme.colors.surface,
           borderTopColor: theme.colors.border,
           paddingBottom: tabBarBottomInset,
           height: tabBarHeight,
@@ -239,14 +248,28 @@ export function CustomBottomTabBar({
         tabName="Camera"
         accessibilityLabel={NAVIGATION_STRINGS.tabs.identify}
         onPress={handleIdentifyPress}
-        style={styles.centerTab}
+        style={[styles.centerTab, isDark && styles.darkCenterTab]}
       >
         <View style={styles.tabIconWrap}>
-          <AppImage
-            source={theme.mode === "dark" ? Images.bottomTabIdentifyDark : Images.bottomTabIdentify}
-            style={styles.identifyTabIcon}
-            resizeMode="contain"
-          />
+          {isDark ? (
+            <View
+              style={[
+                styles.darkIdentifyCircle,
+                { backgroundColor: theme.colors.primaryCTA },
+              ]}
+            >
+              <View style={styles.darkScanSlot}>
+                <IdentifyBirdDark style={styles.darkScanBird} />
+                <IdentifyFrameDark style={styles.darkScanFrame} />
+              </View>
+            </View>
+          ) : (
+            <AppImage
+              source={Images.bottomTabIdentify}
+              style={styles.identifyTabIcon}
+              resizeMode="contain"
+            />
+          )}
         </View>
       </MeasuredTabTarget>
 
@@ -279,6 +302,27 @@ function resetTabToRoot(
 }
 
 const styles = StyleSheet.create({
+  darkBar: { paddingHorizontal: 16, paddingTop: 0, gap: 8 },
+  darkCenterTab: { flex: 0, width: 48, height: 56 },
+  darkSideTab: { height: 56 },
+  darkTabIconWrap: { width: "100%", height: 16, marginTop: 8 },
+  darkActiveLine: { top: -12, height: 2, width: "100%", borderRadius: 0 },
+  darkTabLabel: {
+    marginTop: 4,
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: "Satoshi-Medium",
+  },
+  darkIdentifyCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  darkScanSlot: { width: 24, height: 24 },
+  darkScanBird: { position: "absolute", left: 5, top: 4.83 },
+  darkScanFrame: { position: "absolute", left: 1.9, top: 0.53 },
   bar: {
     flexDirection: "row",
     alignItems: "center",

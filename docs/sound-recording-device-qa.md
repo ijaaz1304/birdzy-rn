@@ -116,3 +116,22 @@ If jank is severe, file a ticket for Skia migration with device model + OS versi
 |----------|--------------|-----|--------|------|-----------|
 | iOS | | | | | |
 | Android | | | | | |
+
+
+## Dark entry-screen design acceptance — 20 November 2026
+
+- [ ] Compare the first Identify by Sound screen against Figma 9380:170994 using the dark palette: night-sky background, bird/wave illustration, title/subtitle, location row and bottom microphone control.
+- [ ] Verify no overlap on short phones/tablets and after rotation; toggle location and start recording through denied/granted/settings paths.
+- [ ] Confirm Light entry and later recording/crop controls retain their existing behavior.
+
+Source validation: TypeScript and targeted lint passed; recordingTimer and soundRecording.constants suites passed (8 tests). Physical microphone/device-render acceptance is not claimed.
+
+
+## Dark crop design acceptance — 20 November 2026
+
+- [ ] Compare Figma 9380:171133: compact copy/chips, 100-point spectrogram, red frame/grips, timestamp/location and Identify CTA.
+- [ ] Confirm Dark begins with full recording; duration selection and same-chip reset work. Drag the fixed window to each boundary, then preview the selected audio by tapping the spectrogram.
+- [ ] Check tap/drag arbitration, screen-reader play/pause, disabled/analyzing states and the exact crop range sent for identification.
+- [ ] Repeat via SoundIdentify's in-place crop and the standalone SoundCrop route, then check Light's existing default and overlay play control.
+
+Source checks: 4 crop/finalization/timer/constants suites / 15 tests passed; TypeScript and targeted lint passed. Real gesture/audio/device acceptance remains open.

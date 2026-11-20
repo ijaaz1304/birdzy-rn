@@ -195,7 +195,7 @@ export const SignUpScreen = () => {
               onPress={() => handleSocialLogin("apple")}
               buttonBackgroundColor={
                 theme.mode === "dark"
-                  ? APP_COLORS.surfaceDark
+                  ? APP_COLORS.homeSurfaceDark
                   : APP_COLORS.modalTextOnPrimary
               }
             />
@@ -209,7 +209,7 @@ export const SignUpScreen = () => {
             onPress={() => handleSocialLogin("google")}
             buttonBackgroundColor={
               theme.mode === "dark"
-                ? APP_COLORS.surfaceDark
+                ? APP_COLORS.homeSurfaceDark
                 : APP_COLORS.modalTextOnPrimary
             }
           />
@@ -245,7 +245,7 @@ export const SignUpScreen = () => {
             }}
             buttonBackgroundColor={
               theme.mode === "dark"
-                ? APP_COLORS.surfaceDark
+                ? APP_COLORS.homeSurfaceDark
                 : APP_COLORS.modalTextOnPrimary
             }
           />
@@ -302,7 +302,7 @@ export const SignUpScreen = () => {
             }}
             buttonBackgroundColor={
               theme.mode === "dark"
-                ? APP_COLORS.surfaceDark
+                ? APP_COLORS.homeSurfaceDark
                 : APP_COLORS.modalTextOnPrimary
             }
           />
