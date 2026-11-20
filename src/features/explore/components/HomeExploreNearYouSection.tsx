@@ -171,8 +171,9 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
           panelOnly && { borderRadius: 0 },
           {
             height: sc(EXPLORE_DESIGN.bannerHeight),
+            /** Figma 9375:212475 dark "banner - Op2": surface-brand-1-accent #072C38 */
             backgroundColor: isDark
-              ? APP_COLORS.homeSurfaceDark
+              ? APP_COLORS.homeCardDark
               : EXPLORE_BANNER_BG,
             borderColor: isDark
               ? APP_COLORS.homeBorderDark
@@ -289,8 +290,9 @@ export const HomeExploreNearYouSection: React.FC<Props> = ({
               style={[
                 styles.bannerDescription,
                 {
+                  /** Figma dark: text-icon-secondary #D1D1D1 */
                   color: isDark
-                    ? theme.colors.textPrimary
+                    ? APP_COLORS.homeSecondaryTextDark
                     : theme.colors.textSecondary,
                 },
               ]}

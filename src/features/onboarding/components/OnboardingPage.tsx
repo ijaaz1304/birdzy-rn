@@ -32,7 +32,9 @@ import { APP_COLORS } from "../../../config/colors";
 import {
   ONBOARDING_CTA_DARK,
   ONBOARDING_CTA_HEIGHT,
+  ONBOARDING_TEXT_CTA_GAP_DARK,
   getOnboardingCtaBottomPadding,
+  getOnboardingCtaMetrics,
 } from "../onboardingCta.constants";
 import { PaginationDots } from "./PaginationDots";
 
@@ -46,6 +48,8 @@ const ONBOARDING_BG_DESIGN_HEIGHT =
   ONBOARDING_BG_DESIGN_WIDTH * ONBOARDING_BG_ASPECT;
 /** Figma: title starts at y=516 (~20pt below the illustration), in background coordinates */
 const ONBOARDING_DESIGN_TITLE_TOP = 516;
+/** Dark: Figma art→title gap (9373:171232 cards end y≈464, title y=516) — kept fixed in pt */
+const ONBOARDING_DARK_ART_TITLE_GAP = 52;
 /** Default copy block height (2-line title + 2-line subtitle + dots) before first layout */
 const ONBOARDING_TEXT_DEFAULT_HEIGHT = 144;
 /** Never let the copy block get closer than this to the Next button */
@@ -62,6 +66,9 @@ const AUTH_TOP_ART_ASPECT = 1125 / 879;
 const AUTH_BIRDS_ASPECT = 335 / 346;
 /** Figma: title at y=106 = 44pt status bar + 62 */
 const AUTH_SPLIT_TITLE_TOP_BELOW_STATUS_BAR = 62;
+/** Dark auth CTAs end 40pt above the frame bottom (34pt inset + 6; min 40) */
+const AUTH_CTA_DARK_ABOVE_INSET = 6;
+const AUTH_CTA_DARK_MIN_BOTTOM = 40;
 /** Figma light-mode secondary buttons (Log in / Continue as guest) */
 const AUTH_CTA_LIGHT = {
   secondaryBg: "#FFFFFF",
@@ -249,6 +256,25 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     };
     const renderPageBackground = () => {
       if (!hasBackgroundImage) return null;
+      if (isDark) {
+        return (
+          <>
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: theme.colors.surfacePrimary },
+              ]}
+            />
+            <AppImage
+              source={data.backgroundImage!}
+              style={darkBackgroundStyle}
+              resizeMode="cover"
+              preferRNImage
+              fadeDuration={0}
+            />
+          </>
+        );
+      }
       return (
         <AppImage
           source={data.backgroundImage!}
@@ -275,6 +301,40 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
       (ONBOARDING_BG_DESIGN_HEIGHT - ONBOARDING_DESIGN_TITLE_TOP) * bgScale;
     const maxTextTop = SCREEN_HEIGHT - contentPaddingBottom - textHeight;
     const textTop = Math.min(anchoredTextTop, maxTextTop);
+    /**
+     * Dark (Figma 9373:171154): copy is pinned to the Next button, not the art,
+     * so the dots→button gap is exactly 64pt on every screen height.
+     */
+    const darkCta = getOnboardingCtaMetrics(true, insets.bottom);
+    const darkTextBottom =
+      darkCta.bottomPadding + darkCta.height + ONBOARDING_TEXT_CTA_GAP_DARK;
+    const textAnchorPosition = isDark
+      ? { bottom: darkTextBottom }
+      : { top: textTop };
+    /**
+     * Dark: anchor the art to the copy, not the screen bottom, so the
+     * art→title gap matches Figma (e.g. 9373:171232: cards end y≈463, title
+     * y=516 → ~52pt) on every screen height. Figma's title line (y=516) is
+     * mapped onto the real title top; the scale also covers the full width and
+     * never leaves a gap above the sky (top ≤ 0).
+     */
+    const darkTextTop = SCREEN_HEIGHT - darkTextBottom - textHeight;
+    /** Figma art bottom line; it sits a fixed (unscaled) gap above the title */
+    const darkArtBottomDesignY =
+      ONBOARDING_DESIGN_TITLE_TOP - ONBOARDING_DARK_ART_TITLE_GAP;
+    const darkArtBottom = darkTextTop - ONBOARDING_DARK_ART_TITLE_GAP;
+    const darkBgScale = Math.max(
+      layoutWidth / ONBOARDING_BG_DESIGN_WIDTH,
+      darkArtBottom / darkArtBottomDesignY
+    );
+    const darkBackgroundStyle = {
+      position: "absolute" as const,
+      left: layoutLeft + (layoutWidth - ONBOARDING_BG_DESIGN_WIDTH * darkBgScale) / 2,
+      top: darkArtBottom - darkArtBottomDesignY * darkBgScale,
+      width: ONBOARDING_BG_DESIGN_WIDTH * darkBgScale,
+      height: ONBOARDING_BG_DESIGN_HEIGHT * darkBgScale,
+      zIndex: 0,
+    };
     const illustrationHeight =
       pageIndex === 0
         ? 560
@@ -356,10 +416,17 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
     // Auth page: 3-section layout — text top, image below, CTA at bottom (no absolute positioning)
     if (showAuthButtons) {
       /** Figma: guest button ends 40pt above the screen bottom (home indicator area + 8) */
-      const ctaPaddingBottom = getOnboardingCtaBottomPadding(insets.bottom);
+      /** Dark (Figma 9373:171355): guest button ends at y=772 → 40pt above the frame bottom */
+      const ctaPaddingBottom = isDark
+        ? Math.max(insets.bottom + AUTH_CTA_DARK_ABOVE_INSET, AUTH_CTA_DARK_MIN_BOTTOM)
+        : getOnboardingCtaBottomPadding(insets.bottom);
       const authImageSource = data.illustrationImage ?? Images.diagnoseAi;
-      /** Dark artwork already contains the bird circle; preserve the light split layout. */
-      const useSplitAuthLayout = !isDark;
+      /**
+       * Both themes use Figma's split layout (light 8230:64231, dark 9373:171355):
+       * top art, title 62pt below the status bar, bird circle 20pt below the
+       * subtitle and 28pt above Sign up, then the CTAs.
+       */
+      const useSplitAuthLayout = true;
       const authBirdsMaxWidth = contentMaxWidth;
       return (
         <View
@@ -367,13 +434,16 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
             styles.container,
             styles.containerAuth,
             useSplitAuthLayout && styles.containerAuthSplit,
+            isDark && { backgroundColor: theme.colors.surfacePrimary },
             { width },
           ]}
           collapsable={false}
         >
           {useSplitAuthLayout ? (
             <AppImage
-              source={isDark ? Images.commonBgDark : Images.onboardingAuthTop}
+              source={
+                isDark ? Images.onboardingAuthTopDark : Images.onboardingAuthTop
+              }
               style={[
                 styles.authTopArt,
                 { width, height: width / AUTH_TOP_ART_ASPECT },
@@ -410,21 +480,27 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
                 if (h > 0 && h !== authHeaderHeight) setAuthHeaderHeight(h);
               }}
             >
-              <Text
-                variant="title"
-                size="large"
-                weight="bold"
-                allowFontScaling={false}
-                style={[
-                  styles.titleAuthProgress,
-                  {
-                    maxWidth: authProgressTextMaxWidth,
-                    color: isDark ? theme.colors.text : "#091B21",
-                  },
-                ]}
-              >
-                {data.title}
-              </Text>
+              <View style={styles.titleAuthProgressBlock}>
+                {data.title.split("\n").map((line) => (
+                  <Text
+                    key={line}
+                    variant="title"
+                    size="large"
+                    weight="bold"
+                    allowFontScaling={false}
+                    numberOfLines={1}
+                    style={[
+                      styles.titleAuthProgress,
+                      {
+                        maxWidth: authProgressTextMaxWidth,
+                        color: isDark ? "#FFFFFF" : "#091B21",
+                      },
+                    ]}
+                  >
+                    {line}
+                  </Text>
+                ))}
+              </View>
               <Text
                 variant="body"
                 size="medium"
@@ -445,7 +521,11 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
           {useSplitAuthLayout && (
             <View style={styles.authBirdsSection}>
               <AppImage
-                source={Images.onboardingAuthBirds}
+                source={
+                  isDark
+                    ? Images.onboardingAuthBirdsDark
+                    : Images.onboardingAuthBirds
+                }
                 style={{
                   width: "100%",
                   height: "100%",
@@ -490,11 +570,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
               style={[
                 styles.authButtonCta,
                 { backgroundColor: theme.colors.primaryCTA },
-                isDark && {
-                  borderRadius: ONBOARDING_CTA_DARK.borderRadius,
-                  borderWidth: 1,
-                  borderColor: theme.colors.border0,
-                },
+                /** Figma 9373:171384: flat brand fill, no border */
+                isDark && { borderRadius: ONBOARDING_CTA_DARK.borderRadius },
               ]}
               activeOpacity={0.7}
             >
@@ -806,7 +883,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = React.memo(
 
         {/* Title + subtitle + dots — positioned relative to the scaled background art */}
         <View
-          style={[styles.onboardingTextAnchor, { top: textTop }]}
+          style={[styles.onboardingTextAnchor, textAnchorPosition]}
           onLayout={(e) => {
             const h = Math.round(e.nativeEvent.layout.height);
             if (h > 0 && h !== textHeight) setTextHeight(h);
@@ -1181,13 +1258,18 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     includeFontPadding: false,
   },
-  /** Last onboarding screen: Figma Title/28px/Bold — 28px, 700, 36px line-height, center */
+  /** Last onboarding screen: Figma Title/28px/Bold — two lines, 28/36, centered */
+  titleAuthProgressBlock: {
+    alignSelf: "stretch",
+    alignItems: "center",
+  },
   titleAuthProgress: {
     fontSize: 28,
     fontFamily: FONTS.bold,
     fontStyle: "normal",
     fontWeight: "700",
     lineHeight: 36,
+    letterSpacing: 0,
     includeFontPadding: false,
     textAlign: "center",
     alignSelf: "center",

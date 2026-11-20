@@ -41,7 +41,8 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
   const theme = useTheme();
   const isDark = useIsDark();
   const strings = HOME_STRINGS.discovery;
-  const cardBg = isDark ? APP_COLORS.homePhotoCardDark : "#EBE4EE";
+  /** Figma 9375:212475 dark: surface-brand-1-accent #072C38 */
+  const cardBg = isDark ? APP_COLORS.homeCardDark : "#EBE4EE";
   const titleColor = theme.colors.textPrimary;
   const { width: windowWidth } = useWindowDimensions();
   const isCompact = windowWidth < COMPACT_BREAKPOINT;
@@ -106,7 +107,12 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
           </AppText>
           <MaterialIcons name="chevron-right" size={20} color={titleColor} />
         </View>
-        <View style={styles.photoIllustration}>
+        <View
+          style={[
+            styles.photoIllustration,
+            isDark && { backgroundColor: "rgba(255,255,255,0.1)" },
+          ]}
+        >
           <AppImage
             source={isDark ? Images.homeIdentifyByPhotoDark : Images.homeIdentifyByPhoto}
             style={styles.illustrationImage}

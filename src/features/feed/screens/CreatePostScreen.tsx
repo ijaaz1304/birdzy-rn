@@ -23,7 +23,6 @@ import {
 } from "../../camera/iosGallerySelection";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
-import { UI_COLORS } from "../../../constants/colorConstants";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { Text } from "../../../atoms";
 import { Avatar } from "../../../atoms";
@@ -45,7 +44,7 @@ import {
 } from "../../../services/analytics/analytics.service";
 import { useToast } from "../../../hooks/useToast";
 import { navigateToSubscriptionMain } from "../../../utils/navigation";
-import { Images, UploadIconSvg } from "../../../assets";
+import { AskAiCameraIconSvg, UploadIconSvg } from "../../../assets";
 import {
   checkStoragePermission,
 } from "../../../services/permissions";
@@ -221,7 +220,6 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
     route.params?.itemName,
   ]);
 
-  const cameraIcon = Images.plusIcon;
 
   const cropAndApplyImage = useCallback(
     async (
@@ -639,7 +637,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
               },
             ]}
             placeholder={createPost.titlePlaceholder}
-            placeholderTextColor={theme.colors.textSecondary}
+            placeholderTextColor={TITLE_PLACEHOLDER}
             value={title}
             onChangeText={setTitle}
             editable={!uploading}
@@ -654,7 +652,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
               },
             ]}
             placeholder={createPost.helperText(displayName)}
-            placeholderTextColor={UI_COLORS.TEXT_TERTIARY}
+            placeholderTextColor={BODY_PLACEHOLDER}
             value={content}
             onChangeText={setContent}
             multiline
@@ -754,7 +752,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
               backgroundColor: backgroundFillColor,
               paddingBottom: isKeyboardVisible
                 ? 12
-                : Math.max(16, insets.bottom),
+                : Math.max(36, insets.bottom),
               ...(Platform.OS === "android" && keyboardHeight > 0
                 ? {
                     marginBottom: Math.max(0, keyboardHeight - insets.bottom),
@@ -775,7 +773,7 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
               <UploadIconSvg
                 width={MEDIA_ICON_SIZE}
                 height={MEDIA_ICON_SIZE}
-                color={isDark ? UI_COLORS.WHITE : UI_COLORS.BLACK}
+                color={theme.colors.text}
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -786,7 +784,11 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
               style={styles.mediaButton}
               activeOpacity={0.7}
             >
-              <AppImage source={cameraIcon} style={styles.mediaIcon} />
+              <AskAiCameraIconSvg
+                width={MEDIA_ICON_SIZE}
+                height={MEDIA_ICON_SIZE}
+                color={theme.colors.text}
+              />
             </TouchableOpacity>
           </View>
           <Button
@@ -841,13 +843,17 @@ export const CreatePostScreen: React.FC<CreatePostScreenProps> = ({
   );
 };
 
-/** Figma 8025:84417 layout */
+/** Figma 9406:7194 layout */
 const SIDE_MARGIN = 20;
 const AVATAR_SIZE = 24;
 const MEDIA_ICON_SIZE = 20;
 /** Figma surface-disabled / button text-color disabled */
 const POST_DISABLED_BG = "#D1D1D1";
 const POST_DISABLED_TEXT = "#B0B0B0";
+/** Figma title placeholder: text secondary */
+const TITLE_PLACEHOLDER = "#5D5D5D";
+/** Figma body placeholder: text tertiary */
+const BODY_PLACEHOLDER = "#949494";
 
 const styles = StyleSheet.create({
   container: {
@@ -981,10 +987,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     justifyContent: "center",
     alignItems: "center",
-  },
-  mediaIcon: {
-    width: MEDIA_ICON_SIZE,
-    height: MEDIA_ICON_SIZE,
   },
   /** Figma Button: 44pt, 16/10 padding, radius 24 */
   postButton: {

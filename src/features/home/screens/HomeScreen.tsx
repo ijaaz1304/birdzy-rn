@@ -662,11 +662,21 @@ export const HomeScreen = () => {
     setShowBirdOfTheDayModal(true);
   }, [mushroomOfTheDay]);
 
+  /** Dark 50% offer banner keeps its close button inside the card, so it needs no top overhang room. */
+  const darkOfferBannerShown =
+    isDark &&
+    discountOffer.isActive &&
+    countdown.hours + countdown.minutes + countdown.seconds > 0;
+
   return (
     <SafeAreaView
       style={[
         screenStyles.safeArea,
-        { backgroundColor: colors.surfaceSecondary },
+        {
+          backgroundColor: isDark
+            ? HOME_BG_DARK
+            : colors.surfaceSecondary,
+        },
       ]}
       edges={["top"]}
     >
@@ -694,11 +704,17 @@ export const HomeScreen = () => {
           <View
             style={[
               screenStyles.header,
-              {
-                paddingHorizontal: HORIZONTAL_MARGIN,
-                paddingTop: Space[4],
-                paddingBottom: Space[2],
-              },
+              isDark
+                ? {
+                    paddingHorizontal: HORIZONTAL_MARGIN,
+                    paddingTop: DARK_HEADER_TOP_GAP,
+                    paddingBottom: 0,
+                  }
+                : {
+                    paddingHorizontal: HORIZONTAL_MARGIN,
+                    paddingTop: Space[4],
+                    paddingBottom: Space[2],
+                  },
             ]}
           >
             <View
@@ -754,7 +770,13 @@ export const HomeScreen = () => {
                 {homeConfig.header.greeting(userName)}
               </AppText>
             </View>
-            <View style={[screenStyles.headerRight, styles.headerRightActions]}>
+            <View
+              style={[
+                screenStyles.headerRight,
+                styles.headerRightActions,
+                isDark && styles.headerRightActionsDark,
+              ]}
+            >
               {isPremium ? (
                 <View style={[styles.youAreProWrap, isDark && { height: 43 }]} pointerEvents="none">
                   {isDark ? <DarkHomeProBadge label={strings.home.header.proBadge} /> : <AppImage
@@ -808,7 +830,12 @@ export const HomeScreen = () => {
             </View>
           </View>
 
-          <View style={[styles.sectionBlock, styles.identifyBannerSection]}>
+          <View
+            style={[
+              styles.sectionBlock,
+              isDark ? styles.identifyBannerSectionDark : styles.identifyBannerSection,
+            ]}
+          >
             <HomeIdentifyCardsSection
               onSoundPress={() => {
                 startSoundIdentificationEntry();
@@ -831,7 +858,13 @@ export const HomeScreen = () => {
           </View>
 
           {!isPremium && showInlineDiscountBanner && (
-            <View style={[styles.sectionBlock, styles.discountBannerSection]}>
+            <View
+              style={[
+                styles.sectionBlock,
+                styles.discountBannerSection,
+                darkOfferBannerShown && styles.discountBannerSectionDarkOffer,
+              ]}
+            >
               {discountOffer.isActive && (!isDark || countdown.hours + countdown.minutes + countdown.seconds > 0) ? (
                 <DiscountBanner
                   hours={countdown.hours}
@@ -929,7 +962,7 @@ export const HomeScreen = () => {
               <AppText allowFontScaling={false}
                 variant="body16"
                 color={colors.textPrimary}
-                style={{ fontFamily: FONTS.bold }}
+                style={isDark ? styles.otherAppsTitleDark : { fontFamily: FONTS.bold }}
               >
                 {homeConfig.sections.otherApps.title}
               </AppText>
@@ -978,7 +1011,12 @@ export const HomeScreen = () => {
         </ScrollView>
 
         {!isPremium && showDiscountBanner ? (
-          <View style={styles.stickyDiscountBanner}>
+          <View
+            style={[
+              styles.stickyDiscountBanner,
+              isDark && styles.stickyDiscountBannerDark,
+            ]}
+          >
             <DiscountCountdownBanner
               hours={countdown.hours}
               minutes={countdown.minutes}
@@ -1091,6 +1129,16 @@ const HORIZONTAL_MARGIN = 20;
 const SECTION_GAP = 24;
 /** Breathing room below last home section (tab bar already occupies bottom inset). */
 const HOME_SCROLL_BOTTOM_PADDING = 2;
+/**
+ * Figma 9375:212475 (dark Home, non-pro). Page background is
+ * surface-secondary #091421 (the shared dark token is #091B21).
+ */
+const HOME_BG_DARK = "#091421";
+/**
+ * Figma header block is 92pt: 44pt status bar + a 43pt row (Go Pro pill)
+ * bottom-aligned → 5pt above the row; content starts at 92 with 24pt padding.
+ */
+const DARK_HEADER_TOP_GAP = 5;
 
 const styles = StyleSheet.create({
   homeBody: {
@@ -1101,6 +1149,16 @@ const styles = StyleSheet.create({
   },
   headerRightActions: {
     gap: 4,
+  },
+  /** Figma dark: 8pt between Go Pro and search */
+  headerRightActionsDark: {
+    gap: 8,
+  },
+  /** Figma Title/18px/Medium — 18/24 */
+  otherAppsTitleDark: {
+    fontFamily: FONTS.medium,
+    fontSize: 18,
+    lineHeight: 24,
   },
   /** Left side takes the leftover width so a long name can't push the actions off-screen */
   headerLeftFlexible: {
@@ -1204,6 +1262,14 @@ const styles = StyleSheet.create({
   identifyBannerSection: {
     marginTop: 8,
   },
+  /** Figma dark: content padding-top 24 below the 92pt header */
+  identifyBannerSectionDark: {
+    marginTop: SECTION_GAP,
+  },
+  /** Figma dark: plain 24pt section gap above the 50% banner */
+  discountBannerSectionDarkOffer: {
+    paddingTop: 0,
+  },
   discountBannerSection: {
     width: "100%",
     alignSelf: "stretch",
@@ -1225,6 +1291,10 @@ const styles = StyleSheet.create({
     zIndex: 30,
     elevation: 30,
     overflow: "visible",
+  },
+  /** Figma dark: toast bottom 104 vs 93pt tab bar → 11pt above the tab bar */
+  stickyDiscountBannerDark: {
+    paddingBottom: 11,
   },
   premiumBadge: {
     paddingHorizontal: 10,

@@ -68,9 +68,10 @@ import { isSessionExpiryError } from "../../../services/api/errors";
 
 import { Radius } from "../../../design";
 import { useExploreEntry } from "../../explore/useExploreEntry";
-import { useLocationPermissionGranted } from "../../explore/useLocationPermissionGranted";
 import { ExploreEntryButton } from "../../explore/components/ExploreEntryButton";
-import { HomeExploreNearYouSection } from "../../explore/components/HomeExploreNearYouSection";
+// Figma 9399:156319 has no map banner under the search. The header pill stays.
+// import { useLocationPermissionGranted } from "../../explore/useLocationPermissionGranted";
+// import { HomeExploreNearYouSection } from "../../explore/components/HomeExploreNearYouSection";
 
 import {
   mapMushroomToCatalogueCard,
@@ -158,7 +159,7 @@ export const CatalogueScreen: React.FC = () => {
   >(undefined);
   const strings = useStrings();
   const { openExplore, popups: explorePopups } = useExploreEntry();
-  const locationPermissionGranted = useLocationPermissionGranted();
+  // const locationPermissionGranted = useLocationPermissionGranted();
   const { showToast } = useToast();
   const { playingId, toggleSound } = useCatalogueCardSound();
 
@@ -843,6 +844,7 @@ export const CatalogueScreen: React.FC = () => {
 
         {/* Main content below header */}
         <View style={styles.contentBelowHeader}>
+          {/* Figma 9399:156319 — no Explore near you map banner between search and tabs.
           {!hasActiveFilters && (
             <View
               style={[
@@ -860,6 +862,7 @@ export const CatalogueScreen: React.FC = () => {
               />
             </View>
           )}
+          */}
           {/* Category Tabs – hidden when filters are active */}
           {!hasActiveFilters && (
             <ScrollView

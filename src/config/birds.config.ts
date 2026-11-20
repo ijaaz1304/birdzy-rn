@@ -73,7 +73,7 @@ export const birdsAppConfig: AppConfig = {
 
   catalogue: {
     screenTitle: "Catalogue",
-    searchPlaceholder: "Find birds by name or traits...",
+    searchPlaceholder: "Find birds by name...",
     categories: [
       { label: "All (0)", value: "All" },
       { label: "Near you (0)", value: "Near you" },
@@ -269,6 +269,7 @@ export const birdsAppConfig: AppConfig = {
         imageKey: "auth_scans",
       },
       {
+        // Figma 9373:171381 — two centered lines, not one wrapping sentence.
         title: "Keep track of\nyour bird journey",
         subtitle:
           "Sign up and log in to ensure your bird discoveries are never lost",

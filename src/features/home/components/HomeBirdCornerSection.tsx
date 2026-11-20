@@ -160,7 +160,11 @@ export const HomeBirdCornerSection: React.FC<Props> = ({
               ? Images.homeBirdSoundLibraryDark
               : Images.homeBirdSoundLibrary
           }
-          style={[styles.libraryRow, { borderColor, backgroundColor }]}
+          style={[
+            styles.libraryRow,
+            { borderColor, backgroundColor },
+            isDark && styles.libraryRowDark,
+          ]}
           imageStyle={styles.libraryRowImage}
           resizeMode="stretch"
         >
@@ -235,6 +239,15 @@ const styles = StyleSheet.create({
     paddingLeft: 56,
     paddingRight: 16,
     overflow: "hidden",
+  },
+  /**
+   * Figma 9375:212475 dark: pl 12 + 36pt icon + 12 gap → copy at 60pt; py 8,
+   * height hugs the two-line description (min 72).
+   */
+  libraryRowDark: {
+    height: undefined,
+    minHeight: 72,
+    paddingLeft: 60,
   },
   libraryRowImage: {
     borderRadius: Radius.md,

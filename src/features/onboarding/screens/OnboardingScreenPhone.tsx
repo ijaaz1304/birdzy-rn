@@ -19,9 +19,12 @@ import { HIT_SLOP } from "../../../constants/uiConstants";
 import { Button } from "../../../atoms";
 import {
   ONBOARDING_CTA_DARK,
+  ONBOARDING_CTA_DARK_METRICS,
+  ONBOARDING_CTA_NO_SHADOW,
   ONBOARDING_CTA_HEIGHT,
   ONBOARDING_CTA_LIGHT_RADIUS,
-  getOnboardingCtaBottomPadding,
+  ONBOARDING_TOP_BAR_DARK,
+  getOnboardingCtaMetrics,
 } from "../onboardingCta.constants";
 import { ScreenContainer } from "../../../molecules/ScreenContainer/ScreenContainer";
 import { OnboardingPage } from "../components/OnboardingPage";
@@ -178,6 +181,12 @@ export const OnboardingScreenPhone: React.FC = () => {
   // Initial page from route params (e.g. from SignUp X "go to last page of onboarding")
   const totalPages = ONBOARDING_PAGES.length;
   const getStartedPageIndex = totalPages - 2;
+  /**
+   * Dark Figma (9373:171314) keeps Skip + "Next" on the last slide before
+   * sign-up; light keeps the existing "Get started" slide without Skip.
+   */
+  const skipHiddenFromIndex = isDark ? totalPages - 1 : getStartedPageIndex;
+  const ctaMetrics = getOnboardingCtaMetrics(isDark, insets.bottom);
   const paginatedPageCount = totalPages - 1;
   const initialPageParam = route.params?.initialPage as number | undefined;
 
@@ -401,16 +410,26 @@ export const OnboardingScreenPhone: React.FC = () => {
       <View
         style={[
           styles.topBar,
-          { backgroundColor: "transparent", paddingTop: insets.top + 20 },
+          isDark
+            ? {
+                backgroundColor: "transparent",
+                paddingTop: insets.top + ONBOARDING_TOP_BAR_DARK.paddingTop,
+                paddingHorizontal: ONBOARDING_TOP_BAR_DARK.paddingHorizontal,
+              }
+            : { backgroundColor: "transparent", paddingTop: insets.top + 20 },
         ]}
       >
         <View style={styles.topBarContent}>
           <View style={styles.spacer} />
           {/* Skip — top right; hidden on Get started and final auth pages */}
-          {currentPage < getStartedPageIndex && (
+          {currentPage < skipHiddenFromIndex && (
             <TouchableOpacity
               onPress={handleSkip}
-              style={[styles.skipButton, ONBOARDING_SKIP]}
+              style={[
+                styles.skipButton,
+                ONBOARDING_SKIP,
+                isDark && styles.skipButtonDark,
+              ]}
               activeOpacity={0.8}
               hitSlop={HIT_SLOP.CLOSE}
             >
@@ -473,7 +492,7 @@ export const OnboardingScreenPhone: React.FC = () => {
         style={[
           styles.bottomSection,
           {
-            paddingBottom: getOnboardingCtaBottomPadding(insets.bottom),
+            paddingBottom: ctaMetrics.bottomPadding,
             opacity:
               ONBOARDING_PAGES[currentPage]?.illustration === "authProgress"
                 ? 0
@@ -489,7 +508,7 @@ export const OnboardingScreenPhone: React.FC = () => {
           <View style={styles.buttonContainer}>
             <Button
               title={
-                currentPage === getStartedPageIndex
+                currentPage === getStartedPageIndex && !isDark
                   ? onboardingConfig.getStartedText
                   : onboardingConfig.continueText
               }
@@ -503,6 +522,11 @@ export const OnboardingScreenPhone: React.FC = () => {
                   ? {
                       backgroundColor: theme.colors.primaryCTA,
                       borderRadius: ONBOARDING_CTA_DARK.borderRadius,
+                      /** Figma 9373:171344: 44pt tall, 10pt vertical padding */
+                      minHeight: ONBOARDING_CTA_DARK_METRICS.height,
+                      height: ONBOARDING_CTA_DARK_METRICS.height,
+                      paddingVertical: ONBOARDING_CTA_DARK_METRICS.paddingVertical,
+                      ...ONBOARDING_CTA_NO_SHADOW,
                     }
                   : { backgroundColor: theme.colors.primaryCTA },
               ]}
@@ -531,6 +555,10 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
+  },
+  /** Figma: Skip hugs its label (12pt padding), right edge 12pt from the bar edge */
+  skipButtonDark: {
+    minWidth: 0,
   },
   skipButton: {
     minWidth: 60,

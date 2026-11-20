@@ -86,7 +86,9 @@ export const QUIZ_BIRD_LOCAL_IMAGES = {
 export const Images = {
   soundIdentifyHeroDark: require("./dark/supplied/AI Identifier/PNG/Illus_Identification by Sound.png"),
   soundIdentifyEntryBackgroundDark: require("./dark/supplied/AI Identifier/PNG/popup.png"),
-  homeIdentifyByPhotoDark: require("./dark/supplied/Home/PNG/Identify by photo.png"),
+  /** Supplied "Identify by photo.png" with its baked #263844 panel made transparent;
+   *  the card draws Figma's rgba(255,255,255,0.1) panel behind it (9375:212475). */
+  homeIdentifyByPhotoDark: require("./dark/figma/home_identify_by_photo.png"),
   homeExploreMapDark: require("./dark/figma/home_map.png"),
   homeWizardBannerDark: require("./dark/supplied/Home/PNG/Step by step.png"),
   homeProMedalDark: require("./dark/supplied/Home/PNG/Capa_1.png"),
@@ -137,6 +139,10 @@ export const Images = {
   onboardingAuthTop: require("./onboarding/light/auth_top.png"),
   /** Auth onboarding slide (light) — Figma 8251:5879 bird circle, 335×346 @3x, transparent */
   onboardingAuthBirds: require("./onboarding/light/auth_birds.png"),
+  /** Auth onboarding slide (dark) — Figma 9394:88114 "BG - darkmode" top scenery + fade, 375×293 @3x */
+  onboardingAuthTopDark: require("./onboarding/dark/auth_top.png"),
+  /** Auth onboarding slide (dark) — Figma 9373:171359 bird circle, 335×346 @3x, transparent */
+  onboardingAuthBirdsDark: require("./onboarding/dark/auth_birds.png"),
   /** Pre-onboarding / app splash — 1500×3248 */
   onboardingSplash: require("./onboarding/light/splash.webp"),
 
@@ -195,6 +201,8 @@ export const Images = {
   speciesLocation: require("./catalogue/icons/species/location.webp"),
   speciesLocationDark: require("./catalogue/icons/species/dark/location.webp"),
   locationPost: require("./catalogue/icons/species/location_post.webp"),
+  /** Figma 9373:165524 (dark "travel-map 1", 335×313 @4x, transparent bg) */
+  locationPostDark: require("./catalogue/icons/species/dark/location_post.webp"),
   speciesCapturePopup: require("./catalogue/icons/species/capture_popup.webp"),
   microphonePopup: require("./common/icons/microphone.png"),
   identifyMethodPopup: require("./common/icons/identify_option_icon.png"),

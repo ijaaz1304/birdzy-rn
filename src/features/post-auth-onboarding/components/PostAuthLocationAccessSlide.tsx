@@ -24,6 +24,9 @@ import { usePostAuthOnboardingIsDark } from "../utils/theme";
 
 /** Figma text-icon-primary (light) for permission slide titles */
 const TITLE_COLOR_LIGHT = "#091B21";
+/** Figma 9373:165509 (dark): title text-icon-primary, subtitle text-icon-secondary */
+const TITLE_COLOR_DARK = "#FFFFFF";
+const BODY_COLOR_DARK = "#D1D1D1";
 
 /**
  * Figma notifications slide (375×812): content card starts under the 52pt nav
@@ -37,6 +40,22 @@ const PINNED_HERO_BOTTOM_GAP_COMPACT = 40;
 const PINNED_MIN_COPY_TO_HERO_GAP = 24;
 /** Figma home-indicator bar under "Maybe later" */
 const PINNED_FOOTER_BOTTOM = 32;
+/**
+ * Centered hero (Figma 9373:165509 location slide, 812pt frame): copy ends at
+ * 208, map frame 295–608, CTA bar starts at 676 → 87pt above the map, 68pt
+ * below it to the CTA bar (84pt to the button). Centering in the free space
+ * with a 19pt top bias reproduces that exactly and splits extra height evenly
+ * on taller phones instead of pushing the map down onto the CTA.
+ */
+const CENTERED_HERO_TOP_BIAS = 19;
+/**
+ * Figma location slide: title top is 116pt from the top of the SCREEN
+ * (44 status bar + 52 nav bar + 20 card padding). Measured from the screen,
+ * not the safe area, so short Android status bars don't pull the heading up;
+ * never less than 72pt below the safe area on tall-inset iPhones.
+ */
+const CENTERED_COPY_TOP_FROM_SCREEN = 116;
+const CENTERED_HERO_MIN_GAP = 24;
 
 type PostAuthLocationAccessSlideProps = {
   onContinue: () => void;
@@ -58,6 +77,11 @@ type PostAuthLocationAccessSlideProps = {
    * the bottom of the content area at up to this size (Figma notifications layout).
    */
   heroDesignSize?: { width: number; height: number };
+  /**
+   * With heroDesignSize: "bottom" pins the hero above the CTA (notifications),
+   * "center" places it midway between copy and CTA (location). Default "bottom".
+   */
+  heroAlign?: "bottom" | "center";
 };
 
 export const PostAuthLocationAccessSlide: React.FC<
@@ -76,6 +100,7 @@ export const PostAuthLocationAccessSlide: React.FC<
   secondaryLabel,
   onSecondaryPress,
   heroDesignSize,
+  heroAlign = "bottom",
 }) => {
   const strings = useStrings();
   const insets = useSafeAreaInsets();
@@ -89,7 +114,9 @@ export const PostAuthLocationAccessSlide: React.FC<
   const heading = title ?? copy.title;
   const body = subtitle ?? copy.subtitle;
   const cta = continueLabel ?? copy.continue;
-  const hero = image ?? Images.locationPost;
+  const hero = image ?? (isDark ? Images.locationPostDark : Images.locationPost);
+  const titleColor = isDark ? TITLE_COLOR_DARK : TITLE_COLOR_LIGHT;
+  const bodyColor = isDark ? BODY_COLOR_DARK : textSecondary ?? textPrimary;
 
   /**
    * Figma "bottom-pinned hero" layout (notifications slide):
@@ -97,14 +124,19 @@ export const PostAuthLocationAccessSlide: React.FC<
    * free space in between. Illustration shrinks on short screens.
    */
   const pinned = heroDesignSize != null;
-  const contentTopPadding = pinned
+  const centered = pinned && heroAlign === "center";
+  const contentTopPadding = centered
+    ? Math.max(PINNED_CONTENT_TOP, CENTERED_COPY_TOP_FROM_SCREEN - insets.top)
+    : pinned
     ? layout.isVeryCompact
       ? 48
       : layout.isCompact
       ? 60
       : PINNED_CONTENT_TOP
     : layout.contentTopPadding;
-  const heroBottomGap = pinned
+  const heroBottomGap = centered
+    ? 0
+    : pinned
     ? layout.isCompact
       ? PINNED_HERO_BOTTOM_GAP_COMPACT
       : PINNED_HERO_BOTTOM_GAP
@@ -120,9 +152,13 @@ export const PostAuthLocationAccessSlide: React.FC<
     }
     const aspect = heroDesignSize.width / heroDesignSize.height;
     const maxWidth = (heroDesignSize.width * windowWidth) / FIGMA_FRAME_WIDTH;
-    const width = Math.min(maxWidth, heroBox.w, heroBox.h * aspect);
+    /** Centered: keep the top bias + a minimum gap on both sides on short screens */
+    const maxHeight = centered
+      ? heroBox.h - CENTERED_HERO_TOP_BIAS - CENTERED_HERO_MIN_GAP * 2
+      : heroBox.h;
+    const width = Math.max(0, Math.min(maxWidth, heroBox.w, maxHeight * aspect));
     return { width, height: width / aspect };
-  }, [heroBox, heroDesignSize, windowWidth]);
+  }, [centered, heroBox, heroDesignSize, windowWidth]);
   /** SafeAreaView already pads insets.bottom; top up to Figma's 32pt home-indicator area */
   const footerPaddingBottom = pinned
     ? Math.max(0, PINNED_FOOTER_BOTTOM - insets.bottom)
@@ -140,17 +176,14 @@ export const PostAuthLocationAccessSlide: React.FC<
           variant="title"
           size="large"
           allowFontScaling={false}
-          style={[
-            styles.title,
-            { color: isDark ? textPrimary : TITLE_COLOR_LIGHT },
-          ]}
+          style={[styles.title, { color: titleColor }]}
         >
           {heading}
         </Text>
 
         <Text
           allowFontScaling={false}
-          style={[styles.body, { color: textSecondary ?? textPrimary }]}
+          style={[styles.body, { color: bodyColor }]}
         >
           {body}
         </Text>
@@ -158,8 +191,14 @@ export const PostAuthLocationAccessSlide: React.FC<
         <View
           style={[
             styles.heroWrap,
-            pinned && styles.heroWrapPinned,
-            { marginTop: pinned ? PINNED_MIN_COPY_TO_HERO_GAP : layout.titleToHeroGap },
+            pinned && !centered && styles.heroWrapPinned,
+            centered
+              ? { paddingTop: CENTERED_HERO_TOP_BIAS }
+              : {
+                  marginTop: pinned
+                    ? PINNED_MIN_COPY_TO_HERO_GAP
+                    : layout.titleToHeroGap,
+                },
           ]}
           onLayout={
             pinned
@@ -226,7 +265,7 @@ export const PostAuthLocationAccessSlide: React.FC<
               numberOfLines={1}
               style={[
                 styles.secondaryLabel,
-                { color: isDark ? textPrimary : TITLE_COLOR_LIGHT },
+                { color: titleColor },
               ]}
             >
               {secondaryLabel}

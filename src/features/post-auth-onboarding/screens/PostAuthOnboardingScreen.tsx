@@ -572,6 +572,7 @@ export const PostAuthOnboardingScreen: React.FC = () => {
         title="Enable Location Access"
         subtitle="Our identification accuracy exceeds 90% with location access"
         heroDesignSize={LOCATION_HERO_DESIGN_SIZE}
+        heroAlign="center"
         continueLabel="Allow"
         secondaryLabel="Maybe later"
         onSecondaryPress={handleLocationMaybeLater}
