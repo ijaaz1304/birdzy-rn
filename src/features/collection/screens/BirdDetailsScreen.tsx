@@ -611,6 +611,7 @@ export const BirdDetailsScreen: React.FC = () => {
   const strings = useStrings();
   const isPremium = useSubscriptionStore(selectIsPremium);
   const insets = useSafeAreaInsets();
+  const [detailsHeaderHeight, setDetailsHeaderHeight] = useState(52);
   /** Resolved coords from country name(s) when API has no gpsLocation (premium map). Predefined or one-time cached geocode. */
   const [countryMapCoords, setCountryMapCoords] = useState<{
     latitude: number;
@@ -2274,6 +2275,9 @@ export const BirdDetailsScreen: React.FC = () => {
       >
         {/* Header — same layout for catalogue and identification (hero below, not overlaid). */}
         <View
+          onLayout={(event) =>
+            setDetailsHeaderHeight(event.nativeEvent.layout.height)
+          }
           style={[
             styles.header,
             {
@@ -2292,6 +2296,7 @@ export const BirdDetailsScreen: React.FC = () => {
             variant="title"
             size="medium"
             weight="semibold"
+            numberOfLines={2}
             style={styles.headerCenter}
           >
             {isIdentificationOverlay ? "Best matches" : "Bird details"}
@@ -2320,7 +2325,17 @@ export const BirdDetailsScreen: React.FC = () => {
               style={StyleSheet.absoluteFillObject}
               onPress={() => setShowMenu(false)}
             />
-            <View style={[styles.menu, { backgroundColor: SECTION_CARD_BG }]}>
+            <View
+              style={[
+                styles.menu,
+                // The overlay fills the SafeAreaView from the screen top (its padding is not applied to
+                // absolute children), so the status-bar inset is added to sit below the header.
+                {
+                  backgroundColor: SECTION_CARD_BG,
+                  top: insets.top + detailsHeaderHeight,
+                },
+              ]}
+            >
               {/* Edit: only for Owned / Identified; hidden when from catalogue or Wishlist */}
               {canEdit && (
                 <TouchableOpacity
@@ -4088,7 +4103,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 8,
     paddingHorizontal: 12,
-    minHeight: 32,
+    minHeight: 48,
     borderWidth: 1,
     alignSelf: "flex-end",
   },
@@ -4228,7 +4243,8 @@ const styles = StyleSheet.create({
   /** Figma tab-atom: 32pt tall, 12pt horizontal padding, 8pt gap to the Pro badge */
   aiTabScrollable: {
     flexShrink: 0,
-    height: 32,
+    minHeight: 44,
+    paddingVertical: 8,
     paddingHorizontal: 12,
     gap: 8,
   },

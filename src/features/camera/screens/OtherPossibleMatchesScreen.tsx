@@ -6,9 +6,9 @@
 import { AppImage } from "@/components/AppImage";
 import React, { useCallback, useRef, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { View, StyleSheet, FlatList, TouchableOpacity, StatusBar, Pressable } from "react-native";
+import { View, StyleSheet, FlatList, TouchableOpacity, StatusBar, Pressable, useWindowDimensions } from "react-native";
 import { CachedRemoteImage } from "@/components/AppImage";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
@@ -57,6 +57,7 @@ import { HIT_SLOP } from "../../../constants/uiConstants";
 import { saveUnknownSoundRecording } from "../utils/saveSoundRecording";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { shareMushroom } from "../../../utils/shareUtils";
+import { getMatchThumbnailSize } from "../matchThumbnailSize";
 
 const CARD_IMAGE_WIDTH = POSSIBLE_MATCH_THUMBNAIL_WIDTH;
 const CARD_IMAGE_HEIGHT = POSSIBLE_MATCH_THUMBNAIL_HEIGHT;
@@ -83,6 +84,11 @@ type OtherPossibleMatchesScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 export const OtherPossibleMatchesScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
+  const thumbSize = getMatchThumbnailSize(fontScale);
+  const thumbSizeStyle = { width: thumbSize, height: thumbSize };
+  const [headerHeight, setHeaderHeight] = useState(52);
   const theme = useTheme();
   const colors = theme.colors;
   const isDark = useIsDark();
@@ -562,21 +568,21 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
           </View>
           <View style={styles.soundMatchCopy}>
             <Text
-              numberOfLines={1}
+              numberOfLines={2}
               style={[styles.matchName, { color: colors.textPrimary }]}
             >
               {displayName}
             </Text>
             {scientific ? (
               <Text
-                numberOfLines={1}
+                numberOfLines={2}
                 style={[styles.soundScientific, { color: colors.textSecondary }]}
               >
                 {scientific}
               </Text>
             ) : null}
             <Text
-              numberOfLines={1}
+              numberOfLines={2}
               style={[styles.soundMeta, { color: colors.textSecondary }]}
             >
               {soundStamp}  •  {soundPlace}
@@ -639,13 +645,14 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
           <View
             style={[
               styles.thumbnailWrap,
+              thumbSizeStyle,
               { backgroundColor: colors.surfaceVariant },
             ]}
           >
             {imageUri && !thumbnailError ? (
               <CachedRemoteImage
                 uri={imageUri}
-                style={styles.matchThumbnail}
+                style={[styles.matchThumbnail, thumbSizeStyle]}
                 resizeMode="cover"
                 priority="high"
                 onError={() =>
@@ -657,7 +664,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
             ) : (
               <AppImage
                 source={Images.card_image_placeholder}
-                style={styles.matchThumbnail}
+                style={[styles.matchThumbnail, thumbSizeStyle]}
                 resizeMode="cover"
               />
             )}
@@ -702,7 +709,10 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
       edges={["top", "bottom"]}
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-      <View style={styles.header}>
+      <View
+        style={styles.header}
+        onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+      >
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backButton}
@@ -718,6 +728,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
             variant="title"
             size="medium"
             weight="bold"
+            numberOfLines={2}
             style={[styles.headerTitle, { color: colors.textPrimary }]}
           >
             {screenTitle}
@@ -752,6 +763,8 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
           <View
             style={[
               styles.menu,
+              // Overlay starts at the screen top (SafeAreaView padding does not offset absolute children).
+              { top: insets.top + headerHeight },
               {
                 backgroundColor: isDark
                   ? colors.surfacePrimary
@@ -950,6 +963,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
       <View
         style={[
           styles.savedBanner,
+          { bottom: Math.max(insets.bottom, 16) },
           {
             borderColor: colors.success,
             backgroundColor: colors.surfaceSuccess,

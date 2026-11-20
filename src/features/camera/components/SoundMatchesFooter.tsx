@@ -39,7 +39,9 @@ export function SoundCantFindSection({
         activeOpacity={0.85}
         style={[styles.save, { backgroundColor: theme.colors.primaryCTA }]}
       >
-        <Text style={styles.saveLabel}>{copy.saveRecording}</Text>
+        <Text numberOfLines={2} style={styles.saveLabel}>
+          {copy.saveRecording}
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={onReport} hitSlop={8}>
         <Text style={[styles.report, { color: theme.colors.primaryCTA }]}>
@@ -83,7 +85,9 @@ const styles = StyleSheet.create({
   save: {
     marginTop: 8,
     alignSelf: "stretch",
-    height: 44,
+    minHeight: 48,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",

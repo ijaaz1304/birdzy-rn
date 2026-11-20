@@ -74,7 +74,9 @@ export function WizardCantFindSection({
           { backgroundColor: theme.colors.primaryCTA },
         ]}
       >
-        <Text style={styles.addButtonLabel}>{addManuallyLabel}</Text>
+        <Text numberOfLines={2} style={styles.addButtonLabel}>
+          {addManuallyLabel}
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={onReport} hitSlop={8} style={styles.reportWrap}>
         <Text style={[styles.report, { color: theme.colors.primaryCTA }]}>
@@ -306,7 +308,9 @@ const styles = StyleSheet.create({
   addButton: {
     marginTop: 8,
     alignSelf: "stretch",
-    height: 48,
+    minHeight: 48,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 48,
     alignItems: "center",
     justifyContent: "center",
