@@ -22,7 +22,11 @@ const PREVIEW_HORIZONTAL_INSET = 20;
 const PREVIEW_SIZE = 335;
 const PREVIEW_MIN_SIZE = 160;
 const TOAST_DISMISS_MS = 3000;
-const TOAST_CLEARANCE = 56;
+/**
+ * Toast sits just below the top chrome (location banner), over the top edge of the preview.
+ * Placing it above topInset covered the banner's location text once that banner grew with large fonts.
+ */
+const TOAST_GAP = 12;
 const SLOT_BLOCK_HEIGHT = 74;
 const ACTIONS_BLOCK_HEIGHT = 108;
 const ACTIONS_BOTTOM_GAP = 16;
@@ -91,7 +95,7 @@ export const CameraIdentifyReview: React.FC<Props> = ({
     <View style={styles.root} pointerEvents="box-none">
       {showToast ? (
         <View
-          style={[styles.toast, { top: Math.max(12, topInset - TOAST_CLEARANCE) }]}
+          style={[styles.toast, { top: topInset + TOAST_GAP }]}
           pointerEvents="none"
         >
           <Text

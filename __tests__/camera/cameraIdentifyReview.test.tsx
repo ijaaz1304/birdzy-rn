@@ -49,7 +49,8 @@ it("keeps the photo and slot previews below the location banner", async () => {
 
   const toast = renderer!.root.findAllByType(View).find((node) => {
     const style = StyleSheet.flatten(node.props.style);
-    return style?.top === topInset - 56;
+    // Toast sits 12pt below the location banner so it never covers the banner text at large fonts
+    return style?.top === topInset + 12;
   });
   expect(toast).toBeTruthy();
 

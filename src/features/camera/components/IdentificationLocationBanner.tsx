@@ -144,6 +144,7 @@ export const IdentificationLocationBanner: React.FC<
     { color: isDark ? theme.colors.textPrimary : LINK_COLOR },
   ];
   const locationNameStyle = [
+    styles.locationName,
     isResolvingName || isCoordLabel
       ? pendingLocationStyle
       : styles.locationLink,
@@ -176,6 +177,7 @@ export const IdentificationLocationBanner: React.FC<
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={onPressLocation}
+          style={styles.locationPressable}
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           accessibilityRole="button"
           accessibilityLabel={displayLabel}
@@ -238,9 +240,17 @@ const styles = StyleSheet.create({
   galleryPromptPressableText: {
     flex: 0,
   },
+  locationPressable: {
+    flexShrink: 1,
+    maxWidth: "100%",
+  },
+  locationName: {
+    flexShrink: 1,
+  },
   locationLink: {
     color: LINK_COLOR,
     textDecorationLine: "underline",
+    flexShrink: 1,
   },
   pendingLocation: {
     fontStyle: "italic",

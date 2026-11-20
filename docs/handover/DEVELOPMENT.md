@@ -140,4 +140,6 @@ Day 1 of the screen pass follows the Mobile App Responsive Design report. Phone 
 
 Reference frames for Android light mode: small 360×800, standard 393×852, large 430×932. Font size up to 200% and a larger display size stay part of the same check. Dark mode and iOS are outside this pass.
 
-Source updated for Home identify cards and banner, the Identify method chooser, both location permission dialogs, the Identify hub, the inline camera permission state, and the live camera chrome (close, flash, gallery, shutter, zoom, scan count, and the free-scan banner). Those controls use the safe area and the shared type scale. Gallery, crop, and the identifying loader are not in this change. No device matrix was run.
+Day 1 source covers Home identify cards and banner, the Identify method chooser, both location permission dialogs, the Identify hub, the inline camera permission state, and the live camera chrome. Day 1 was checked on device at 360, 393, and 430, at the default and largest font, in light mode.
+
+Day 2 source covers the gallery review (header, photo preview, location line, and Next), the identifying loader (scanner preview, status copy, and Go back), and the crop host. The crop controls themselves are the system cropper presented on top of that host. The gallery footer is measured so a wrapped location line does not cover the photo. The identifying copy scrolls, and the preview shrinks on a short window. No Day 2 device matrix was run.

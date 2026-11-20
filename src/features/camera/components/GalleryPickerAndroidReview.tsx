@@ -70,7 +70,13 @@ export const GalleryPickerAndroidReview = React.memo(
             size={32}
             color={theme.colors.primary}
           />
-          <Text variant="body" size="medium" weight="medium">
+          <Text
+            variant="body"
+            size="medium"
+            weight="medium"
+            numberOfLines={2}
+            style={styles.chooseLabel}
+          >
             {strings.camera.buttons.chooseFromGallery}
           </Text>
         </TouchableOpacity>
@@ -95,6 +101,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: "100%",
     maxWidth: 280,
+  },
+  chooseLabel: {
+    textAlign: "center",
   },
   previewHost: {
     flex: 1,

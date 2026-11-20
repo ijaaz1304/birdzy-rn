@@ -11,7 +11,7 @@ import type { ScanAttempt } from "../../../services/session/scanAllowance";
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator, ScrollView, useWindowDimensions } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import {
   SafeAreaView,
@@ -59,10 +59,10 @@ import {
 } from "../components/BirdSoundErrorModals";
 import { IdentificationScannerFrame } from "../components/IdentificationScannerFrame";
 import { rescheduleInactivityNotifications } from "../../../services/notifications/scheduledNotifications.service";
-import { spacing } from "../../../design-system/spacing";
 import { useIdentificationEntryStore } from "../identificationEntry.store";
 import { useIdentificationResultsStore } from "../identificationResults.store";
 import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
+import { getDiagnosisPreviewSize } from "../diagnosisLoadingLayout";
 import { fetchStepByStepMatches } from "../../discovery/utils/runStepByStepAnalysis";
 
 const navigateHomeFromDiagnosis = (
@@ -113,6 +113,16 @@ export const DiagnosisLoadingScreen: React.FC = () => {
   const colors = theme.colors;
   const isDark = useIsDark();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight, fontScale } =
+    useWindowDimensions();
+  const previewSize = getDiagnosisPreviewSize(
+    windowWidth,
+    windowHeight,
+    insets.top,
+    Math.max(insets.bottom, 16),
+    fontScale
+  );
+  const horizontalInset = 24 + Math.max(insets.left, insets.right);
   const navigation = useNavigation<DiagnosisLoadingScreenNavigationProp>();
   const route = useRoute<DiagnosisLoadingScreenRouteProp>();
   const {
@@ -514,12 +524,24 @@ export const DiagnosisLoadingScreen: React.FC = () => {
           {/* Top inset only — bottom bg stays edge-to-edge; CTA pads for home indicator */}
           <SafeAreaView style={styles.safeArea} edges={["top"]}>
             <View style={styles.mainColumn}>
-              <View style={styles.content}>
+              <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={[
+                  styles.content,
+                  { paddingHorizontal: horizontalInset },
+                ]}
+                keyboardShouldPersistTaps="handled"
+              >
                 {isSoundMode ? (
                   <View
                     style={[
                       styles.soundPreview,
-                      { backgroundColor: `${colors.primaryCTA}14` },
+                      {
+                        width: previewSize,
+                        height: previewSize,
+                        borderRadius: previewSize / 2,
+                        backgroundColor: `${colors.primaryCTA}14`,
+                      },
                     ]}
                   >
                     <MaterialIcons
@@ -534,6 +556,7 @@ export const DiagnosisLoadingScreen: React.FC = () => {
                     fallbackImage={
                       isStepByStepMode ? Images.wizardFindYourBird : undefined
                     }
+                    size={previewSize}
                     style={styles.scannerFrameWrapper}
                   />
                 )}
@@ -550,11 +573,14 @@ export const DiagnosisLoadingScreen: React.FC = () => {
                     ? "Preparing your top matches..."
                     : "Analyzing your data... almost there, stay tuned for the final result!"}
                 </Text>
-              </View>
+              </ScrollView>
               <View
                 style={[
                   styles.bottomCtaWrap,
-                  { paddingBottom: Math.max(insets.bottom, 16) },
+                  {
+                    paddingBottom: Math.max(insets.bottom, 16),
+                    paddingHorizontal: horizontalInset,
+                  },
                 ]}
               >
                 <Button
@@ -565,7 +591,6 @@ export const DiagnosisLoadingScreen: React.FC = () => {
                   onPress={() =>
                     navigateHomeFromDiagnosis(navigation, isStepByStepMode)
                   }
-                  textStyle={{ flexShrink: 0 }}
                 />
               </View>
             </View>
@@ -647,17 +672,19 @@ const styles = StyleSheet.create({
     minHeight: 0,
     zIndex: 1,
   },
-  content: {
+  scroll: {
     flex: 1,
+    minHeight: 0,
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24,
     minHeight: 0,
   },
   bottomCtaWrap: {
     alignSelf: "stretch",
     width: "100%",
-    paddingHorizontal: spacing[6],
     paddingTop: 8,
     flexShrink: 0,
   },
@@ -665,9 +692,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   soundPreview: {
-    width: 280,
-    height: 280,
-    borderRadius: 140,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
@@ -679,9 +703,8 @@ const styles = StyleSheet.create({
   },
   text: {
     textAlign: "center",
-    paddingHorizontal: 32,
     lineHeight: 22,
-    maxWidth: 320,
+    alignSelf: "stretch",
   },
   promoTitle: {
     marginBottom: 8,

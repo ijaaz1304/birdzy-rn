@@ -1,6 +1,7 @@
-import { Platform } from "react-native";
+import { PixelRatio, Platform } from "react-native";
 import ImagePicker, { type Options } from "react-native-image-crop-picker";
 import { AI_CROPPER_OPTIONS } from "../../constants/imagePipeline.constants";
+import { cropperOptionsForFontScale } from "./cropperFontScale";
 import { normalizeFileUri } from "../../utils/imageProcessing/normalizeFileUri";
 import {
   CroppedImageObject,
@@ -173,6 +174,7 @@ export const openInteractiveCropper = async (
         cropperToolbarTitle:
           (options?.cropperOverrides as { cropperToolbarTitle?: string })
             ?.cropperToolbarTitle ?? "Crop Image",
+        ...cropperOptionsForFontScale(PixelRatio.getFontScale()),
         ...(Platform.OS === "ios"
           ? {
               forceJpg: true,

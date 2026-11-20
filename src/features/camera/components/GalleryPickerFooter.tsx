@@ -18,16 +18,20 @@ import { resolvePreviewImageUri } from "../camera.utils";
 
 type GalleryPickerFooterProps = {
   bottomInset: number;
+  horizontalInset?: number;
   submitting: boolean;
   onNext: () => void;
   layout?: "overlay" | "stacked";
+  onHeightChange?: (height: number) => void;
 };
 
 export const GalleryPickerFooter = React.memo(function GalleryPickerFooter({
   bottomInset,
+  horizontalInset = 0,
   submitting,
   onNext,
   layout = "overlay",
+  onHeightChange,
 }: GalleryPickerFooterProps) {
   const theme = useTheme();
   const selected = useGalleryPickerSelectionStore((s) => s.selected);
@@ -113,8 +117,10 @@ export const GalleryPickerFooter = React.memo(function GalleryPickerFooter({
         {
           backgroundColor: theme.colors.surfacePrimary,
           paddingBottom: bottomInset,
+          paddingHorizontal: 20 + horizontalInset,
         },
       ]}
+      onLayout={(event) => onHeightChange?.(event.nativeEvent.layout.height)}
       pointerEvents="box-none"
     >
       <IdentificationLocationBanner
@@ -137,7 +143,7 @@ export const GalleryPickerFooter = React.memo(function GalleryPickerFooter({
             <TouchableOpacity
               style={styles.thumbRemove}
               onPress={() => setSelected(null)}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
             >
               <MaterialIcons name="close" size={12} color="#FFFFFF" />
             </TouchableOpacity>
@@ -156,6 +162,7 @@ export const GalleryPickerFooter = React.memo(function GalleryPickerFooter({
                 variant="body"
                 size="small"
                 weight="medium"
+                numberOfLines={2}
                 style={styles.nextText}
               >
                 Next
@@ -224,14 +231,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   nextButton: {
-    width: 100,
-    height: 32,
+    minWidth: 100,
+    minHeight: 48,
+    maxWidth: "70%",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: "auto",
+    flexShrink: 1,
   },
   nextText: {
     color: "#FFFFFF",
+    textAlign: "center",
   },
 });

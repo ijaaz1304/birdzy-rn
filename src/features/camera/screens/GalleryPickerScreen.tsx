@@ -296,25 +296,38 @@ export const GalleryPickerScreen: React.FC = () => {
     showManagePopup;
 
   const footerBottomInset = Math.max(insets.bottom, 12);
-  const gridFooterPadding =
-    !showUpgradeSheet ? GALLERY_FOOTER_RESERVE + footerBottomInset : 0;
+  const horizontalInset = Math.max(insets.left, insets.right);
+  const [footerHeight, setFooterHeight] = useState(GALLERY_FOOTER_RESERVE);
+  const gridFooterPadding = !showUpgradeSheet ? footerHeight : 0;
 
   const renderGalleryHeader = () => (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingHorizontal: 20 + horizontalInset }]}>
       <TouchableOpacity
         onPress={() => navigation.goBack()}
+        style={styles.headerButton}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        accessibilityRole="button"
+        accessibilityLabel="Close gallery"
       >
         <MaterialIcons name="close" size={24} color={theme.colors.textPrimary} />
       </TouchableOpacity>
 
-      <Text variant="body" size="small" weight="medium">
+      <Text
+        variant="body"
+        size="small"
+        weight="medium"
+        numberOfLines={1}
+        style={styles.headerTitle}
+      >
         Gallery
       </Text>
 
       <TouchableOpacity
         onPress={() => navigation.navigate("CameraMain")}
+        style={styles.headerButton}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        accessibilityRole="button"
+        accessibilityLabel="Open camera"
       >
         <MaterialIcons
           name="photo-camera"
@@ -331,7 +344,7 @@ export const GalleryPickerScreen: React.FC = () => {
         styles.container,
         { backgroundColor: theme.colors.surfaceSecondary },
       ]}
-      edges={["top", "bottom"]}
+      edges={["top"]}
     >
       <View style={styles.mainColumn}>
         {!overlayBlocksGalleryGrid ? (
@@ -356,9 +369,11 @@ export const GalleryPickerScreen: React.FC = () => {
         {!showUpgradeSheet ? (
           <GalleryPickerFooter
             bottomInset={footerBottomInset}
+            horizontalInset={horizontalInset}
             submitting={submitting}
             onNext={handleNext}
             layout="overlay"
+            onHeightChange={setFooterHeight}
           />
         ) : null}
       </View>
@@ -392,8 +407,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
     paddingVertical: 12,
+  },
+  headerButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 8,
   },
   gridHost: {
     flex: 1,

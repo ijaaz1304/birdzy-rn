@@ -20,11 +20,15 @@ export type IdentificationScannerFrameProps = {
   imageUri?: string;
   fallbackImage?: ImageSourcePropType;
   style?: StyleProp<ViewStyle>;
+  /** Outer frame size. Defaults to the Figma 280 frame and shrinks on short windows. */
+  size?: number;
 };
 
 export const IdentificationScannerFrame: React.FC<
   IdentificationScannerFrameProps
-> = ({ imageUri, fallbackImage = Images.mineralSample, style }) => {
+> = ({ imageUri, fallbackImage = Images.mineralSample, style, size }) => {
+  const frameSize = size && size > 0 ? size : FRAME_SIZE;
+  const innerSize = Math.round(frameSize * (INNER_SIZE / FRAME_SIZE));
   const scanProgress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -50,14 +54,14 @@ export const IdentificationScannerFrame: React.FC<
 
   const beamTranslateY = scanProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [-SCAN_BEAM_HEIGHT, INNER_SIZE],
+    outputRange: [-SCAN_BEAM_HEIGHT, innerSize],
   });
 
   const trailColors = [`${SCANNER_COLOR}99`, `${SCANNER_COLOR}33`, `${SCANNER_COLOR}00`];
 
   return (
-    <View style={[styles.wrapper, style]}>
-      <View style={styles.innerImage}>
+    <View style={[styles.wrapper, { width: frameSize, height: frameSize }, style]}>
+      <View style={[styles.innerImage, { width: innerSize, height: innerSize }]}>
         {imageUri ? (
           <LoadingImage
             uri={imageUri}
@@ -90,9 +94,9 @@ export const IdentificationScannerFrame: React.FC<
       </View>
 
       <IdentificationScannerOverlay
-        width={FRAME_SIZE}
-        height={FRAME_SIZE}
-        style={styles.cornerOverlay}
+        width={frameSize}
+        height={frameSize}
+        style={[styles.cornerOverlay, { width: frameSize, height: frameSize }]}
       />
     </View>
   );
