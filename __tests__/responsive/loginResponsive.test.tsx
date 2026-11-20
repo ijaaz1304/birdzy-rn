@@ -43,6 +43,13 @@ import { LoginScreen } from "../../src/features/auth/screens/LoginScreen";
 import { ForgotPasswordScreen } from "../../src/features/auth/screens/ForgotPasswordScreen";
 import { CreateNewPasswordScreen } from "../../src/features/auth/screens/CreateNewPasswordScreen";
 
+// Default font and display settings: Typography Build A keeps exact Figma sizes at font scale 1
+// (React Native's Jest setup otherwise reports a font scale of 2).
+jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
+  __esModule: true,
+  default: () => ({ width: 393, height: 852, scale: 3, fontScale: 1 }),
+}));
+
 const nav = require("@react-navigation/native");
 const store = require("../../src/features/auth/auth.store").__state;
 const navObj = { navigate: jest.fn(), goBack: jest.fn(), dispatch: jest.fn(), canGoBack: () => true, getParent: jest.fn() };

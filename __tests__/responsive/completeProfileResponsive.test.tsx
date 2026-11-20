@@ -42,6 +42,13 @@ jest.mock("../../src/molecules/ScreenContainer/ScreenContainer", () => ({ Screen
 
 import { CompleteProfileScreen } from "../../src/features/auth/screens/CompleteProfileScreen";
 
+// Default font and display settings: Typography Build A keeps exact Figma sizes at font scale 1
+// (React Native's Jest setup otherwise reports a font scale of 2).
+jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
+  __esModule: true,
+  default: () => ({ width: 393, height: 852, scale: 3, fontScale: 1 }),
+}));
+
 let tree: ReactTestRenderer;
 afterEach(async () => {
   if (tree) await act(async () => tree.unmount());

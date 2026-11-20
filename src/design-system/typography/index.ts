@@ -6,6 +6,11 @@
 import { TextStyle } from "react-native";
 import { FONTS } from "../../common/typography";
 
+export {
+  getAccessibilityFontScale,
+  scaleFigmaFontSize,
+} from "../../common/typography";
+
 export type FontWeight =
   | "normal"
   | "400"

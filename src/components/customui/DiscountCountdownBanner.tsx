@@ -43,7 +43,9 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
    * timer pills don't fit on one row at full size, so use a compact layout
    * (12pt label on up to 2 lines, slimmer pills) instead of truncating.
    */
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  /** Label never narrower than its longest word at the user's font size (timer wraps below instead) */
+  const labelMinWidth = Math.min(96 * fontScale, windowWidth - 120);
   const isCompact = windowWidth < COMPACT_BREAKPOINT;
 
   const countdown = HOME_COLORS.COUNTDOWN_BANNER;
@@ -167,7 +169,11 @@ const DiscountCountdownBanner: React.FC<DiscountCountdownBannerProps> = ({
             (Android's adjustsFontSizeToFit ignores minimumFontScale and makes it tiny).
           */}
           <Text
-            style={[styles.label, isCompact && styles.labelCompact]}
+            style={[
+              styles.label,
+              isCompact && styles.labelCompact,
+              { minWidth: labelMinWidth },
+            ]}
             numberOfLines={3}
           >
             {isDiscountActive

@@ -173,8 +173,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   iconBtn: {
-    width: 24,
-    height: 24,
+    minWidth: 44,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
   },

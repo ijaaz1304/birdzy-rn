@@ -129,3 +129,15 @@ Shared rules now implemented:
 - Sound recording/no-match/crop, permission and relevant popup bodies scroll when content exceeds the viewport. Home rows stack under the same compact/enlarged-text policy; nearby banner text has intrinsic flow instead of absolute height anchoring.
 
 New tests under `__tests__/responsive` exercise callbacks and geometry contracts using the repository's existing renderer. They do not run Yoga/native glyph measurement or establish device visual acceptance. Native generated headers were regenerated locally while attempting simulator validation; no native source, Podfile/lockfile or generated tracked artifact changed. Further simulator checks were stopped at requester direction.
+
+## Figma font scale — 19 November 2026
+
+`src/common/typography.ts`, `src/design-system/typography/index.ts`, and `src/design/typography.ts` share one scale. `scaleFigmaFontSize` is Figma size × the system font scale. Scale 1 leaves the Figma size and its line height unchanged. The scale does not read screen width and does not cap the system font scale. `Text` and `AppText` read `useWindowDimensions().fontScale`, which updates when font size or display size changes, and set `allowFontScaling` to false after applying that scale so it is not applied twice. Grids and stacks still use window width and font scale from `getResponsiveGridColumns`. Check frames remain 360×800, 393×852, and 430×932.
+
+## Android light-mode frame contract — 19 November 2026
+
+Day 1 of the screen pass follows the Mobile App Responsive Design report. Phone layouts use one type scale. Default text is the Figma size. Width does not change the font size. Text wraps, then ellipsizes at the report’s line limits. Dialogs and short fixed screens scroll when the content exceeds the safe area.
+
+Reference frames for Android light mode: small 360×800, standard 393×852, large 430×932. Font size up to 200% and a larger display size stay part of the same check. Dark mode and iOS are outside this pass.
+
+Source updated for Home identify cards and banner, the Identify method chooser, both location permission dialogs, the Identify hub, the inline camera permission state, and the live camera chrome (close, flash, gallery, shutter, zoom, scan count, and the free-scan banner). Those controls use the safe area and the shared type scale. Gallery, crop, and the identifying loader are not in this change. No device matrix was run.

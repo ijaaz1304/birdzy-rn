@@ -1,9 +1,10 @@
 import { AppImage } from "@/components/AppImage";
 import React from "react";
-import { Text, TextProps, StyleSheet, TextStyle, View } from "react-native";
+import { Text, TextProps, StyleSheet, TextStyle, View, useWindowDimensions } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { Typography } from "../../design";
 import { Images } from "../../assets";
+import { getAccessibilityFontScale, scaleFigmaFontSize } from "../../common/typography";
 
 import { spacing } from "../../design-system/spacing";
 
@@ -19,11 +20,26 @@ const AppText: React.FC<AppTextProps> = ({
   style,
   children,
   showDiagnosisBanner = false,
+  allowFontScaling = true,
   ...rest
 }) => {
   const theme = useTheme();
   const colors = theme.colors;
   const preset = Typography.presets[variant];
+  const { fontScale } = useWindowDimensions();
+  const typeScale = allowFontScaling ? getAccessibilityFontScale(fontScale) : 1;
+  const flatStyle = StyleSheet.flatten(style) as TextStyle | undefined;
+  const baseFontSize = flatStyle?.fontSize ?? preset?.fontSize;
+  const baseLineHeight =
+    typeof flatStyle?.lineHeight === "number" ? flatStyle.lineHeight : preset?.lineHeight;
+  const scaledType: TextStyle = {
+    ...(typeof baseFontSize === "number"
+      ? { fontSize: scaleFigmaFontSize(baseFontSize, typeScale) }
+      : null),
+    ...(typeof baseLineHeight === "number"
+      ? { lineHeight: scaleFigmaFontSize(baseLineHeight, typeScale) }
+      : null),
+  };
 
   if (showDiagnosisBanner) {
     const bannerSource =
@@ -44,8 +60,10 @@ const AppText: React.FC<AppTextProps> = ({
             { color: color || colors.textPrimary },
             styles.bannerText,
             style,
+            scaledType,
           ]}
           {...rest}
+          allowFontScaling={false}
         >
           {children}
         </Text>
@@ -60,8 +78,10 @@ const AppText: React.FC<AppTextProps> = ({
         preset as TextStyle, // 👈 ensures type compatibility
         { color: color || colors.textPrimary },
         style,
+        scaledType,
       ]}
       {...rest}
+      allowFontScaling={false}
     >
       {children}
     </Text>

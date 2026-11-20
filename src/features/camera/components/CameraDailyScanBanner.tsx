@@ -7,14 +7,20 @@ import React from "react";
 import {
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type StyleProp,
+  type TextStyle,
   type ViewStyle,
 } from "react-native";
 import MaskedView from "@react-native-masked-view/masked-view";
 import LinearGradient from "react-native-linear-gradient";
 import { useStrings } from "../../../hooks/useStrings";
-import { FONTS } from "../../../common/typography";
+import {
+  FONTS,
+  getAccessibilityFontScale,
+  scaleFigmaFontSize,
+} from "../../../common/typography";
 import { HOME_COLORS } from "../../../constants/colorConstants";
 
 const GRADIENT = [...HOME_COLORS.DISCOUNT_BANNER.GRADIENT_LIGHT] as string[];
@@ -33,12 +39,12 @@ function GradientHighlight({
   style,
 }: {
   children: string;
-  style: object;
+  style: TextStyle;
 }) {
   return (
     <MaskedView
       maskElement={
-        <Text style={[style, styles.maskText]} numberOfLines={1}>
+        <Text style={[style, styles.maskText]} numberOfLines={1} allowFontScaling={false}>
           {children}
         </Text>
       }
@@ -48,7 +54,7 @@ function GradientHighlight({
         start={GRADIENT_START}
         end={GRADIENT_END}
       >
-        <Text style={[style, styles.hiddenText]} numberOfLines={1}>
+        <Text style={[style, styles.hiddenText]} numberOfLines={1} allowFontScaling={false}>
           {children}
         </Text>
       </LinearGradient>
@@ -62,7 +68,13 @@ export const CameraDailyScanBanner: React.FC<Props> = ({
   style,
 }) => {
   const strings = useStrings();
+  const { fontScale } = useWindowDimensions();
+  const typeScale = getAccessibilityFontScale(fontScale);
   const scansLabel = `${remaining}/${dailyLimit}`;
+  const copyStyle: TextStyle = {
+    fontSize: scaleFigmaFontSize(14, typeScale),
+    lineHeight: scaleFigmaFontSize(20, typeScale),
+  };
 
   return (
     <View style={[styles.banner, style]}>
@@ -70,10 +82,10 @@ export const CameraDailyScanBanner: React.FC<Props> = ({
         <ScanInfoFigma />
       </View>
       <View style={styles.textRow}>
-        <Text style={styles.bodyText}>
+        <Text style={[styles.bodyText, copyStyle]} allowFontScaling={false}>
           {strings.camera.limits.freeScansLeftPrefix}
         </Text>
-        <GradientHighlight style={styles.highlightText}>
+        <GradientHighlight style={{ ...styles.highlightText, ...copyStyle }}>
           {scansLabel}
         </GradientHighlight>
       </View>

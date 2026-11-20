@@ -98,8 +98,8 @@ test.each([
 
 test("large text keeps the Figma layout (no fallback) and grows inside the scrollable column", async () => {
   await render(360, 640, 2);
-  // Same Figma typography; the OS font scale is applied natively.
-  expect(StyleSheet.flatten(title().props.style).fontSize).toBe(24);
+  // Typography Build A: Figma size (24) × font scale (2).
+  expect(StyleSheet.flatten(title().props.style).fontSize).toBe(48);
   expect(title().props.numberOfLines).toBeUndefined();
   expect(column().flexGrow).toBe(1);
   expect(copy().props.scrollEnabled).not.toBe(false);
@@ -199,9 +199,9 @@ test.each([
   const authTitle = tree.root
     .findAllByType(Text)
     .find((n) => String(n.props.children).startsWith("Keep track"))!;
-  // Figma Title/28px/Bold at every size; OS font scale applied natively; no weight (Android Roboto fallback).
+  // Figma Title/28px/Bold × the font scale (Typography Build A); no weight (Android Roboto fallback).
   const titleStyle = StyleSheet.flatten(authTitle.props.style);
-  expect(titleStyle.fontSize).toBe(28);
+  expect(titleStyle.fontSize).toBe(28 * fs);
   expect(titleStyle.fontWeight).toBeUndefined();
   const labels = tree.root.findAllByType(Text).map((n) => n.props.children);
   expect(labels).toEqual(expect.arrayContaining(["Sign up", "Log in", "Continue as guest"]));

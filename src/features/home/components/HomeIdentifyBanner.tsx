@@ -29,7 +29,7 @@ export const HomeIdentifyBanner: React.FC<Props> = ({ onPress }) => {
 const styles = StyleSheet.create({
   wrap: {
     width: "100%",
-    height: 154,
+    aspectRatio: 393 / 154,
     borderRadius: HOME_LAYOUT.BANNER_RADIUS,
     overflow: "hidden",
   },

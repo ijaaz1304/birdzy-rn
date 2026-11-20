@@ -108,6 +108,18 @@ Run `npx jest __tests__/lifecycle --runInBand` for account/session isolation, in
 Device/backend/sandbox acceptance and QA owner assignment remain open. Automated results are recorded in the handover changelog.
 
 
+## Android light-mode Identify entry — 19 November 2026
+
+Source changes are in the changelog. Device acceptance is still open for the Identify dialogs, location dialogs, hub, and camera permission on the current bundle.
+
+Home greeting, Android light mode, Pixel_9, font scale 2.0, density 440, current Metro bundle (`10.0.2.2:8081`):
+
+- [x] 393×852: greeting wraps to two lines and stays clear of Go Pro and search.
+- [x] 360×800: greeting wraps to two lines, second line ellipsizes, Go Pro and search stay visible.
+- [x] 430×932: greeting wraps to two lines, Go Pro and search stay visible.
+
+Still open: Identify method dialog, both location dialogs, Identify hub, and camera permission at those three windows on this bundle. Also still open: a display size larger than these windows, and the three-button navigation bar.
+
 ## App-local responsive audit — 12 November 2026
 
 See [Birdzy responsive design audit](../audits/responsiveness-2026-11-11/05-birdzy-responsive-audit.md) for source findings, proposed fixes and the pending QA matrix. Original audit date: 11 November 2026. No application code changed.

@@ -6,8 +6,9 @@
  */
 
 import React from "react";
-import { Text as RNText, TextProps as RNTextProps, TextStyle, StyleSheet } from "react-native";
+import { Text as RNText, TextProps as RNTextProps, TextStyle, StyleSheet, useWindowDimensions } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
+import { getAccessibilityFontScale, scaleFigmaFontSize } from "../../common/typography";
 
 export interface TextProps extends RNTextProps {
   variant?: "display" | "headline" | "title" | "body" | "label" | "caption";
@@ -108,9 +109,12 @@ export const Text: React.FC<TextProps> = ({
   weight,
   style,
   children,
+  allowFontScaling = true,
   ...props
 }) => {
   const theme = useTheme();
+  const { fontScale } = useWindowDimensions();
+  const typeScale = allowFontScaling ? getAccessibilityFontScale(fontScale) : 1;
 
   // Safely access typography style with fallback
   const variantStyles = theme.typography[variant];
@@ -129,21 +133,23 @@ export const Text: React.FC<TextProps> = ({
   const defaultTextColor =
     typeof themeColor === "string" ? themeColor : color;
   const textColor = styleObj?.color ?? defaultTextColor;
-  const actualFontSize = styleObj?.fontSize || typographyStyle?.fontSize || 14;
+  const baseFontSize = styleObj?.fontSize || typographyStyle?.fontSize || 14;
+  const actualFontSize = scaleFigmaFontSize(baseFontSize, typeScale);
 
-  // Check if text is bold (weight is bold or fontWeight is 700/bold)
   const isBold =
     weight === "bold" ||
     styleObj?.fontWeight === "700" ||
     styleObj?.fontWeight === "bold";
 
-  // Ensure safe lineHeight to prevent vertical clipping
-  // Always recalculate based on actual fontSize being used
-  const safeLineHeight = getSafeLineHeight(
-    actualFontSize,
-    typographyStyle?.lineHeight,
-    isBold
-  );
+  const baseLineHeight =
+    typeof styleObj?.lineHeight === "number"
+      ? styleObj.lineHeight
+      : typographyStyle?.lineHeight;
+  // Keep the Figma line-height ratio. Only fill a line height when the token has none.
+  const safeLineHeight =
+    typeof baseLineHeight === "number"
+      ? Math.max(scaleFigmaFontSize(baseLineHeight, typeScale), actualFontSize)
+      : getSafeLineHeight(actualFontSize, undefined, isBold);
 
   // Handle fontWeight safely: prefer fontFamily if available, fallback to fontWeight
   const fontFamily = getFontFamily(weight, theme.fontFamilies);
@@ -159,10 +165,15 @@ export const Text: React.FC<TextProps> = ({
     fontFamily && { fontFamily },
     !fontFamily && fontWeight && { fontWeight },
     style,
+    { fontSize: actualFontSize, lineHeight: safeLineHeight },
   ];
 
   return (
-    <RNText style={StyleSheet.flatten(textStyle)} {...props}>
+    <RNText
+      {...props}
+      allowFontScaling={false}
+      style={StyleSheet.flatten(textStyle)}
+    >
       {children}
     </RNText>
   );

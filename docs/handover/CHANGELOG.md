@@ -1,5 +1,32 @@
 # Birdzy — handover change history
 
+## 2026-11-19 — Home greeting checked on the current bundle
+
+The installed dev build was still serving the embedded bundle, so the Home greeting stayed the same size at font scale 2. The emulator packager host was `10.0.2.2:8082`. It is now `10.0.2.2:8081`, with `adb reverse tcp:8081 tcp:8081`, and Metro logged an Android bundle of `index.js`.
+
+On Pixel_9, light mode, font scale 2.0, density 440:
+
+- 393×852 (`wm size 1080x2343`): greeting wraps to “Hello,” / “Guest User!”. Ink height is about 65–72px, against about 31px on the previous embedded bundle. The second line ends before Go Pro. Search stays visible.
+- 360×800 (`wm size 990x2200`): greeting wraps to two lines and the second line ellipsizes (“Guest U…”). Go Pro and search stay visible.
+- 430×932 (`wm size 1183x2563`): greeting wraps to “Hello, Guest” / “User!”. Go Pro and search stay visible.
+
+Identify cards stacked to one column at font scale 2 on the 393 window. Identify dialogs, location dialogs, the hub, and camera permission were not rechecked on this bundle. A larger display size than these three windows was not run. The window was put back to 393×852. Font scale was left at 2.0.
+
+## 2026-11-19 — Figma font scale (Build A)
+
+The typography report’s selected rule is the shared scale: final size = Figma size × system font scale. At the default font and display settings the size and line height stay on the Figma token. Screen width does not change the font size, and the system font scale is not capped. `Text` and `AppText` apply this once and turn off the extra native multiplier so it is not applied twice. Display size still changes the logical window. Check frames remain 360×800, 393×852, and 430×932.
+
+## 2026-11-19 — Android light-mode responsiveness, Identify entry
+
+Started the screen pass against the Mobile App Responsive Design report: primary frame 393×852, check 360×800 and 430×932, Figma font size at the default setting, wrap or scroll instead of shrinking type with width.
+
+- Home identify cards no longer drop to 12px below 360px. Titles stay on the body token and ellipsize after 3 lines. Cards still stack below 360px width or above 1.2 font scale. The identify banner uses a 393:154 aspect ratio instead of a fixed 154px height.
+- Identify method, location permission, and manage-location dialogs scroll inside the safe-area overlay. Titles stop at 2 lines. Button labels stop at 2 lines and the buttons grow from a 48px minimum. Permission body copy is not ellipsized.
+- Identify hub content scrolls. Screen title is 2 lines, card titles 3, hints 5.
+- Camera permission title and action are 2 lines. The explanation stays complete inside the existing scroll region between the camera chrome. Fixed line heights that could clip scaled type were removed so the text atom’s line height applies.
+
+Docs: DEVELOPMENT responsive section. The Home greeting check on the current bundle is recorded in the later 2026-11-19 entry. Identify dialogs, the hub, camera permission, and a larger display size were not run.
+
 ## 2026-11-12 — Sound matches header + step-by-step test payload
 
 - Sound Possible Matches header: the ⋯ menu used a fixed-width middle spacer, so it sat next to back instead of the top-right. Middle slot is now `flex: 1` (`OtherPossibleMatchesScreen`).

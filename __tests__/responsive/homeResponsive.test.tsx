@@ -29,9 +29,14 @@ jest.mock("react-native-vector-icons/FontAwesome5", () => "FontAwesome5");
 jest.mock("react-native-vector-icons/MaterialCommunityIcons", () => "MaterialCommunityIcons");
 jest.mock("react-native-gesture-handler", () => ({ GestureDetector: ({ children }: any) => children, Gesture: {} }));
 jest.mock("react-native-svg", () => ({ __esModule: true, default: "Svg", Path: "Path", Circle: "Circle", G: "G" }));
+jest.mock("../../src/assets/home/identify_sound_arrow.svg", () => "Svg");
+jest.mock("../../src/assets/home/identify_sound_bird.svg", () => "Svg");
+jest.mock("../../src/assets/home/identify_sound_wave.svg", () => "Svg");
 jest.mock("react-native-linear-gradient", () => ({ __esModule: true, default: ({ children }: any) => children }));
 
 import { HomeBirdCornerSection } from "../../src/features/home/components/HomeBirdCornerSection";
+import { HomeIdentifyCardsSection } from "../../src/features/home/components/HomeIdentifyCardsSection";
+import { HomeIdentifyBanner } from "../../src/features/home/components/HomeIdentifyBanner";
 import AppOtherAppCard from "../../src/components/shared/AppOtherAppCard";
 import DiscountBanner from "../../src/components/customui/DiscountBanner";
 import DiscountCountdownBanner from "../../src/components/customui/DiscountCountdownBanner";
@@ -79,6 +84,31 @@ describe("Your Bird Corner (Figma 8598:65523)", () => {
     expect(row).toBeDefined();
     expect(flat(row).height).toBeUndefined();
     expect(lib.findAllByType(Text)[0].props.numberOfLines).toBe(2);
+  });
+});
+
+describe("Home identify entry (Android light, Figma frame contract)", () => {
+  test("card titles keep the body token and wrap to 3 lines at 360 and at large text", async () => {
+    mockDims.width = 360;
+    mockDims.fontScale = 2;
+    await render(
+      <HomeIdentifyCardsSection onSoundPress={jest.fn()} onPhotoPress={jest.fn()} />
+    );
+    const titles = tree.root.findAllByType(Text);
+    expect(titles.length).toBeGreaterThanOrEqual(2);
+    titles.forEach((node) => {
+      expect(node.props.numberOfLines).toBe(3);
+      expect(flat(node).fontSize).toBe(28);
+    });
+    const row = tree.root.findAllByType(View).find((node) => flat(node).flexDirection === "column");
+    expect(row).toBeDefined();
+  });
+
+  test("identify banner keeps the 393×154 aspect instead of a fixed height", async () => {
+    await render(<HomeIdentifyBanner onPress={jest.fn()} />);
+    const wrap = tree.root.findAllByType(TouchableOpacity)[0];
+    expect(flat(wrap).aspectRatio).toBeCloseTo(393 / 154);
+    expect(flat(wrap).height).toBeUndefined();
   });
 });
 

@@ -8,11 +8,16 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import { FONTS } from "../../../common/typography";
+import {
+  FONTS,
+  getAccessibilityFontScale,
+  scaleFigmaFontSize,
+} from "../../../common/typography";
 import { APP_COLORS } from "../../../config/colors";
 import { CAMERA_STRINGS } from "../../../config/strings/camera.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
@@ -31,6 +36,11 @@ export const CameraScanCountBadge: React.FC<Props> = ({
   style,
   disabled,
 }) => {
+  const { fontScale } = useWindowDimensions();
+  const typeScale = getAccessibilityFontScale(fontScale);
+  const labelSize = scaleFigmaFontSize(12, typeScale);
+  const labelLine = scaleFigmaFontSize(14, typeScale);
+  const badgeSize = Math.max(CAPTURE_SIDE_BUTTON_SIZE, labelLine * 2 + 8);
   const a11y = CAMERA_STRINGS.limits.scansRemainingA11y.replace(
     "{count}",
     String(remaining)
@@ -39,23 +49,36 @@ export const CameraScanCountBadge: React.FC<Props> = ({
   const content = (
     <View style={styles.labelStack}>
       <Text
-        style={styles.remaining}
+        style={[styles.remaining, { fontSize: labelSize, lineHeight: labelLine }]}
         numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.75}
+        allowFontScaling={false}
       >
         {remaining}
       </Text>
-      <Text style={styles.leftLabel} numberOfLines={1}>
+      <Text
+        style={[styles.leftLabel, { fontSize: labelSize, lineHeight: labelLine }]}
+        numberOfLines={1}
+        allowFontScaling={false}
+      >
         {CAMERA_STRINGS.limits.leftLabel}
       </Text>
     </View>
   );
 
+  const badgeStyle = [
+    styles.circle,
+    {
+      width: badgeSize,
+      height: badgeSize,
+      borderRadius: badgeSize / 2,
+    },
+    style,
+  ];
+
   if (!onPress) {
     return (
       <View
-        style={[styles.circle, style]}
+        style={badgeStyle}
         accessibilityRole="text"
         accessibilityLabel={a11y}
       >
@@ -70,7 +93,7 @@ export const CameraScanCountBadge: React.FC<Props> = ({
       disabled={disabled}
       activeOpacity={0.8}
       hitSlop={HIT_SLOP.CLOSE}
-      style={[styles.circle, style]}
+      style={badgeStyle}
       accessibilityRole="button"
       accessibilityLabel={a11y}
       accessibilityState={{ disabled: !!disabled }}

@@ -9,16 +9,20 @@ import React, { useEffect } from "react";
 import {
   BackHandler,
   Modal,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../hooks/useTheme";
 import { Text } from "../../atoms";
 import { Images } from "../../assets";
 import { MODAL_STRINGS } from "../../config/strings/modals.strings";
 import { OVERLAY_COLORS } from "../../constants/colorConstants";
 import { getPopupChromeStyle } from "../../design-system/modalTokens";
+import { getAvailableOverlayHeight } from "../../utils/responsiveLayout";
 
 /** Light purple fill for the featured Identify by Sound option (Figma selected Answer). */
 const SOUND_OPTION_BG_LIGHT = "#EBE4EE";
@@ -44,6 +48,12 @@ export const ChooseMethodPopup: React.FC<ChooseMethodPopupProps> = ({
   const radius = theme.radius;
   const copy = MODAL_STRINGS.bottomSheets.chooseMethod;
   const isDark = theme.mode === "dark";
+  const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const cardMaxHeight = Math.max(
+    1,
+    getAvailableOverlayHeight(windowHeight, insets.top, insets.bottom) - 32
+  );
 
   useEffect(() => {
     if (!visible) return undefined;
@@ -69,7 +79,12 @@ export const ChooseMethodPopup: React.FC<ChooseMethodPopupProps> = ({
           { backgroundColor: OVERLAY_COLORS.MODAL_BACKDROP },
         ]}
       >
-        <View style={[styles.card, getPopupChromeStyle(theme)]}>
+        <ScrollView
+          style={[styles.scroll, { maxHeight: cardMaxHeight }]}
+          contentContainerStyle={[styles.card, getPopupChromeStyle(theme)]}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+        >
           <TouchableOpacity
             onPress={onClose}
             style={[
@@ -97,6 +112,8 @@ export const ChooseMethodPopup: React.FC<ChooseMethodPopupProps> = ({
             variant="headline"
             size="large"
             weight="bold"
+            numberOfLines={2}
+            ellipsizeMode="tail"
             style={[styles.title, { color: colors.textPrimary }]}
           >
             {copy.title}
@@ -132,7 +149,9 @@ export const ChooseMethodPopup: React.FC<ChooseMethodPopupProps> = ({
                 variant="body"
                 size="medium"
                 weight="bold"
-                style={{ color: colors.primaryCTA }}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                style={{ color: colors.primaryCTA, textAlign: "center" }}
               >
                 {copy.sound}
               </Text>
@@ -155,7 +174,9 @@ export const ChooseMethodPopup: React.FC<ChooseMethodPopupProps> = ({
               <Text
                 variant="body"
                 size="medium"
-                style={{ color: colors.textSecondary }}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                style={{ color: colors.textSecondary, textAlign: "center" }}
               >
                 {copy.photo}
               </Text>
@@ -178,13 +199,15 @@ export const ChooseMethodPopup: React.FC<ChooseMethodPopupProps> = ({
               <Text
                 variant="body"
                 size="medium"
-                style={{ color: colors.textSecondary }}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                style={{ color: colors.textSecondary, textAlign: "center" }}
               >
                 {copy.stepByStep}
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );
@@ -197,9 +220,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
   },
-  card: {
+  scroll: {
     width: "100%",
     maxWidth: 335,
+    flexGrow: 0,
+  },
+  card: {
+    width: "100%",
     paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -223,11 +250,11 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: "center",
-    lineHeight: 28,
+    alignSelf: "stretch",
   },
   subtitle: {
     textAlign: "center",
-    lineHeight: 24,
+    alignSelf: "stretch",
   },
   options: {
     width: "100%",

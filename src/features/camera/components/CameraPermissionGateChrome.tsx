@@ -45,6 +45,8 @@ export const getCameraPermissionGateContentInsets = (
 type CameraPermissionGateChromeProps = {
   topInset: number;
   bottomInset: number;
+  leftInset?: number;
+  rightInset?: number;
   onBack: () => void;
   onGallery: () => void;
   galleryDisabled?: boolean;
@@ -52,10 +54,25 @@ type CameraPermissionGateChromeProps = {
 
 export const CameraPermissionGateChrome: React.FC<
   CameraPermissionGateChromeProps
-> = ({ topInset, bottomInset, onBack, onGallery, galleryDisabled = false }) => (
+> = ({
+  topInset,
+  bottomInset,
+  leftInset = 0,
+  rightInset = 0,
+  onBack,
+  onGallery,
+  galleryDisabled = false,
+}) => (
   <>
     <View
-      style={[styles.topBar, { top: topInset + TOP_BAR_OFFSET }]}
+      style={[
+        styles.topBar,
+        {
+          top: topInset + TOP_BAR_OFFSET,
+          left: 20 + leftInset,
+          right: 20 + rightInset,
+        },
+      ]}
       pointerEvents="box-none"
     >
       <TouchableOpacity
@@ -90,7 +107,12 @@ export const CameraPermissionGateChrome: React.FC<
         { paddingBottom: bottomBarPaddingBottom(bottomInset) },
       ]}
     >
-      <View style={styles.controls}>
+      <View
+        style={[
+          styles.controls,
+          { paddingHorizontal: 20 + Math.max(leftInset, rightInset) },
+        ]}
+      >
         <TouchableOpacity
           onPress={onGallery}
           disabled={galleryDisabled}

@@ -10,6 +10,13 @@ import { PostAuthLocationAccessSlide } from "../../src/features/post-auth-onboar
 import { ThemeContext } from "../../src/app/ThemeProvider";
 import { themes } from "../../src/design-system/themes";
 
+// Default font and display settings: Typography Build A keeps exact Figma sizes at font scale 1
+// (React Native's Jest setup otherwise reports a font scale of 2).
+jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
+  __esModule: true,
+  default: () => ({ width: 393, height: 852, scale: 3, fontScale: 1 }),
+}));
+
 jest.mock("../../src/components/AppImage", () => ({
   AppImage: "AppImage",
   CachedRemoteImage: "CachedRemoteImage",

@@ -1,6 +1,12 @@
 import React from "react";
 import { act, create, ReactTestRenderer } from "react-test-renderer";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
+
+const mockDims = { width: 393, height: 852, scale: 3, fontScale: 1 };
+jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
+  __esModule: true,
+  default: () => mockDims,
+}));
 import { Button } from "../../src/atoms/Button/Button";
 import { BirdSoundRow } from "../../src/features/collection/components/BirdSoundRow";
 import { CameraPermissionInlineState } from "../../src/features/camera/components/CameraPermissionInlineState";
@@ -52,7 +58,8 @@ test("shared action labels wrap at the requested font size while presses and dis
   });
   const label = tree.root.findByType(Text);
   expect(label.props.children).toBe(title);
-  expect(label.props.allowFontScaling).toBe(true);
+  expect(label.props.allowFontScaling).toBe(false);
+  expect(StyleSheet.flatten(label.props.style).fontSize).toBe(16);
   expect(label.props.numberOfLines).toBeUndefined();
   expect(label.props.adjustsFontSizeToFit).not.toBe(true);
   expect(StyleSheet.flatten(label.props.style).flexShrink).toBe(1);
@@ -111,8 +118,11 @@ test("camera settings explanation and action can enlarge and wrap, including the
   expect(labels).toHaveLength(3);
   labels.forEach((node) => {
     expect(node.props.allowFontScaling).not.toBe(false);
-    expect(node.props.numberOfLines).toBeUndefined();
   });
+  // Permission heading wraps fully (3 lines): permission screens prioritise content visibility
+  expect(labels[0].props.numberOfLines).toBe(3);
+  expect(labels[1].props.numberOfLines).toBeUndefined();
+  expect(labels[2].props.numberOfLines).toBe(2);
   await act(async () => tree.root.findByType(TouchableOpacity).props.onPress());
   expect(onAction).toHaveBeenCalledTimes(1);
   await act(async () => {

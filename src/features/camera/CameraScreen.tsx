@@ -1292,6 +1292,8 @@ export const CameraScreen: React.FC = () => {
               <CameraPermissionGateChrome
                 topInset={insets.top}
                 bottomInset={insets.bottom}
+                leftInset={insets.left}
+                rightInset={insets.right}
                 onBack={handleBackPress}
                 onGallery={openGallery}
                 galleryDisabled={isNativeDialogActive}
@@ -1307,6 +1309,7 @@ export const CameraScreen: React.FC = () => {
                   showIdentifyReview && styles.topNavButtonRaised,
                   {
                     top: insets.top + 12,
+                    left: 20 + insets.left,
                   },
                 ]}
                 activeOpacity={0.8}
@@ -1356,7 +1359,7 @@ export const CameraScreen: React.FC = () => {
                   styles.topNavButtonBack,
                   {
                     top: insets.top + 12,
-                    right: device?.hasTorch ? 80 : 28,
+                    right: (device?.hasTorch ? 80 : 28) + insets.right,
                   },
                 ]}
                 activeOpacity={0.8}
@@ -1380,6 +1383,7 @@ export const CameraScreen: React.FC = () => {
                     styles.topNavButtonBack,
                     {
                       top: insets.top + 12,
+                      right: 20 + insets.right,
                     },
                   ]}
                   activeOpacity={0.8}
@@ -1406,7 +1410,11 @@ export const CameraScreen: React.FC = () => {
                 style={[
                   styles.locationBannerWrap,
                   showIdentifyReview && styles.locationBannerWrapRaised,
-                  { top: locationBannerTop },
+                  {
+                    top: locationBannerTop,
+                    left: 20 + insets.left,
+                    right: 20 + insets.right,
+                  },
                 ]}
               >
                 <IdentificationLocationBanner
@@ -1470,7 +1478,12 @@ export const CameraScreen: React.FC = () => {
                 <View
                   style={[
                     styles.hintPill,
-                    { backgroundColor: theme.colors.surface + "E6" },
+                    {
+                      backgroundColor: theme.colors.surface + "E6",
+                      bottom: bottomControlsHeight + 8,
+                      left: 16 + insets.left,
+                      right: 16 + insets.right,
+                    },
                   ]}
                 >
                   <AppImage
@@ -1505,6 +1518,8 @@ export const CameraScreen: React.FC = () => {
                   styles.captureContentColumn,
                   {
                     top: captureContentLayout.top,
+                    left: 20 + insets.left,
+                    right: 20 + insets.right,
                   },
                 ]}
                 pointerEvents="box-none"
@@ -1597,7 +1612,15 @@ export const CameraScreen: React.FC = () => {
                   },
                 ]}
               >
-                <View style={styles.controls}>
+                <View
+                  style={[
+                    styles.controls,
+                    {
+                      paddingHorizontal:
+                        20 + Math.max(insets.left, insets.right),
+                    },
+                  ]}
+                >
                   <TouchableOpacity
                     onPress={openGallery}
                     style={[

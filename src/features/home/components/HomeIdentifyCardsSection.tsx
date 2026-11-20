@@ -21,13 +21,8 @@ import { Radius } from "../../../design";
 /** Identify by sound card background */
 const SOUND_CARD_BG = "#01474F";
 const SOUND_PANEL_BG = "rgba(255,255,255,0.9)";
-/**
- * Figma titles are single-line (whitespace-nowrap) at 14/20. Below this window
- * width (iPhone SE / small Android) they use 12/16 so "Identify by sound"
- * still fits on one line and both cards keep the same height.
- * (Not adjustsFontSizeToFit — Android ignores minimumFontScale and shrinks too far.)
- */
-const COMPACT_BREAKPOINT = 360;
+/** Card titles wrap, then ellipsize. Font size stays the Figma token at every width. */
+const CARD_TITLE_MAX_LINES = 3;
 
 type Props = {
   onSoundPress: () => void;
@@ -45,7 +40,6 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
   const titleColor = theme.colors.textPrimary;
   const { width: windowWidth, fontScale } = useWindowDimensions();
   const stacked = getResponsiveGridColumns(windowWidth, fontScale) === 1;
-  const isCompact = windowWidth < COMPACT_BREAKPOINT;
 
   return (
     <View style={[styles.row, stacked && { flexDirection: "column" }]}>
@@ -59,7 +53,9 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
         <View style={styles.soundHeader}>
           <AppText
             variant="body14"
-            style={[styles.soundTitle, isCompact && styles.titleCompact]}
+            numberOfLines={CARD_TITLE_MAX_LINES}
+            ellipsizeMode="tail"
+            style={styles.soundTitle}
           >
             {strings.soundIdentify.title}
           </AppText>
@@ -85,11 +81,9 @@ export const HomeIdentifyCardsSection: React.FC<Props> = ({
         <View style={styles.cardHeader}>
           <AppText
             variant="body14"
-            style={[
-              styles.cardTitle,
-              isCompact && styles.titleCompact,
-              { color: titleColor },
-            ]}
+            numberOfLines={CARD_TITLE_MAX_LINES}
+            ellipsizeMode="tail"
+            style={[styles.cardTitle, { color: titleColor }]}
           >
             {strings.identifyByPhoto.title}
           </AppText>
@@ -131,7 +125,6 @@ const styles = StyleSheet.create({
   soundTitle: {
     flex: 1,
     fontFamily: FONTS.bold,
-    lineHeight: 20,
     color: "#FFFFFF",
   },
   arrowSlot: {
@@ -173,14 +166,8 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontFamily: FONTS.bold,
-    lineHeight: 20,
     flex: 1,
     paddingRight: 4,
-  },
-  /** Narrow screens (< COMPACT_BREAKPOINT): 12/16 keeps titles on one line */
-  titleCompact: {
-    fontSize: 12,
-    lineHeight: 16,
   },
   photoIllustration: {
     height: 72,

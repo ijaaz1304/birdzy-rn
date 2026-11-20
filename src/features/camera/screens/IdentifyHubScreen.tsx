@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import {
   SafeAreaView,
@@ -13,7 +13,10 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme } from "../../../hooks/useTheme";
 import { Text, NavBackIcon } from "../../../atoms";
-import { CameraStackParamList, RootStackParamList } from "../../../navigation/types";
+import {
+  CameraStackParamList,
+  RootStackParamList,
+} from "../../../navigation/types";
 import { NAVIGATION_STRINGS } from "../../../config/navigation.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { spacing } from "../../../design-system/spacing";
@@ -73,54 +76,97 @@ export const IdentifyHubScreen: React.FC = () => {
   return (
     <View style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        <View style={[styles.header, { paddingTop: insets.top > 0 ? 0 : spacing[2] }]}>
+        <View
+          style={[
+            styles.header,
+            { paddingTop: insets.top > 0 ? 0 : spacing[2] },
+          ]}
+        >
           <TouchableOpacity onPress={handleBack} hitSlop={HIT_SLOP.CLOSE}>
             <NavBackIcon color={colors.textPrimary} size={24} />
           </TouchableOpacity>
-          <Text variant="headline" size="medium" weight="bold" style={styles.headerTitle}>
+          <Text
+            variant="headline"
+            size="medium"
+            weight="bold"
+            numberOfLines={2}
+            ellipsizeMode="tail"
+            style={styles.headerTitle}
+          >
             {strings.title}
           </Text>
           <View style={styles.headerSpacer} />
         </View>
 
-        <Text
-          variant="body"
-          size="medium"
-          color="textSecondary"
-          style={styles.subtitle}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
-          {strings.subtitle}
-        </Text>
+          <Text
+            variant="body"
+            size="medium"
+            color="textSecondary"
+            style={styles.subtitle}
+          >
+            {strings.subtitle}
+          </Text>
 
-        <View style={styles.cards}>
-          {options.map((opt) => (
-            <TouchableOpacity
-              key={opt.id}
-              style={[
-                styles.card,
-                {
-                  backgroundColor: colors.surfaceSecondary,
-                  borderColor: colors.border,
-                },
-              ]}
-              onPress={opt.onPress}
-              activeOpacity={0.85}
-            >
-              <View style={[styles.iconWrap, { backgroundColor: `${colors.primary}18` }]}>
-                <MaterialIcons name={opt.icon} size={32} color={colors.primary} />
-              </View>
-              <View style={styles.cardCopy}>
-                <Text variant="title" size="medium" weight="semibold">
-                  {opt.title}
-                </Text>
-                <Text variant="body" size="small" color="textSecondary">
-                  {opt.hint}
-                </Text>
-              </View>
-              <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
-            </TouchableOpacity>
-          ))}
-        </View>
+          <View style={styles.cards}>
+            {options.map((opt) => (
+              <TouchableOpacity
+                key={opt.id}
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: colors.surfaceSecondary,
+                    borderColor: colors.border,
+                  },
+                ]}
+                onPress={opt.onPress}
+                activeOpacity={0.85}
+              >
+                <View
+                  style={[
+                    styles.iconWrap,
+                    { backgroundColor: `${colors.primary}18` },
+                  ]}
+                >
+                  <MaterialIcons
+                    name={opt.icon}
+                    size={32}
+                    color={colors.primary}
+                  />
+                </View>
+                <View style={styles.cardCopy}>
+                  <Text
+                    variant="title"
+                    size="medium"
+                    weight="semibold"
+                    numberOfLines={3}
+                    ellipsizeMode="tail"
+                  >
+                    {/* Break opportunity after hyphens: "Step-by-" / "step", never "Step-by-st" / "ep" */}
+                    {opt.title.replace(/-/g, "-\u200B")}
+                  </Text>
+                  <Text
+                    variant="body"
+                    size="small"
+                    color="textSecondary"
+                    numberOfLines={5}
+                    ellipsizeMode="tail"
+                  >
+                    {opt.hint}
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={colors.textSecondary}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
@@ -138,6 +184,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { flex: 1, textAlign: "center" },
   headerSpacer: { width: 24 },
+  scrollContent: { paddingBottom: spacing[4] },
   subtitle: {
     paddingHorizontal: spacing[6],
     marginBottom: spacing[4],

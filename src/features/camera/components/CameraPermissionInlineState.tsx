@@ -51,7 +51,9 @@ export const CameraPermissionInlineState: React.FC<
               width={TAKE_PHOTO_ILLUSTRATION_SIZE}
               height={TAKE_PHOTO_ILLUSTRATION_SIZE}
             />
-            <Text style={styles.title}>{copy.deniedTitle ?? copy.title}</Text>
+            <Text numberOfLines={3} ellipsizeMode="tail" style={styles.title}>
+              {copy.deniedTitle ?? copy.title}
+            </Text>
           </>
         ) : null}
 
@@ -73,7 +75,9 @@ export const CameraPermissionInlineState: React.FC<
           {loading ? (
             <ActivityIndicator color={APP_COLORS.surfaceWhite} />
           ) : (
-            <Text style={styles.buttonLabel}>{buttonLabel}</Text>
+            <Text numberOfLines={2} ellipsizeMode="tail" style={styles.buttonLabel}>
+              {buttonLabel}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -100,7 +104,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FONTS.bold,
     fontSize: 20,
-    lineHeight: 28,
     letterSpacing: 0,
     color: APP_COLORS.surfaceWhite,
     textAlign: "center",
@@ -110,7 +113,6 @@ const styles = StyleSheet.create({
   body: {
     fontFamily: FONTS.regular,
     fontSize: 16,
-    lineHeight: 24,
     letterSpacing: -0.16,
     color: APP_COLORS.cameraPermissionTextSecondary,
     textAlign: "center",
@@ -130,7 +132,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    minHeight: 44,
+    minHeight: 48,
     borderRadius: 24,
     backgroundColor: APP_COLORS.cameraPermissionCta,
   },
@@ -140,7 +142,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: FONTS.medium,
     fontSize: 16,
-    lineHeight: 24,
     letterSpacing: 0,
     color: APP_COLORS.surfaceWhite,
   },
