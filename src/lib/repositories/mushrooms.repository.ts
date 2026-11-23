@@ -86,6 +86,10 @@ class MushroomsRepository {
     return false;
   }
 
+  /**
+   * Resolves true on success. Rethrows on failure so callers keep the server /
+   * validation reason (the service already logs it to App Logs).
+   */
   async toggleFavorite(
     mushroomId: string,
     isCurrentlyFavorite: boolean
@@ -99,7 +103,7 @@ class MushroomsRepository {
       return true;
     } catch (error) {
       console.error(`Error toggling wishlist for ${mushroomId}:`, error);
-      return false;
+      throw error;
     }
   }
 }

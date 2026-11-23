@@ -8,6 +8,9 @@ import { useTheme } from "../../../hooks/useTheme";
 import { spacing } from "../../../design-system/spacing";
 import { WIZARD_QUESTION_COUNT } from "../stepByStep.constants";
 
+/** Figma 9380:170085 (dark): track Surface-Secondary #091421, fill Brand-2 light-2 #009DA7. */
+const PROGRESS_DARK = { track: "#091421", fill: "#009DA7" } as const;
+
 type Props = {
   questionIndex: number;
   onBack: () => void;
@@ -22,6 +25,7 @@ export function WizardProgressHeader({
   skipLabel,
 }: Props) {
   const theme = useTheme();
+  const isDark = theme.mode === "dark";
   const progress = Math.max(
     (questionIndex + 1) / WIZARD_QUESTION_COUNT,
     1 / WIZARD_QUESTION_COUNT
@@ -35,7 +39,11 @@ export function WizardProgressHeader({
       <View
         style={[
           styles.track,
-          { backgroundColor: theme.colors.surfaceSecondary },
+          {
+            backgroundColor: isDark
+              ? PROGRESS_DARK.track
+              : theme.colors.surfaceSecondary,
+          },
         ]}
       >
         <View
@@ -43,7 +51,9 @@ export function WizardProgressHeader({
             styles.fill,
             {
               width: `${Math.round(progress * 100)}%`,
-              backgroundColor: UI_COLORS.WIZARD_PROGRESS,
+              backgroundColor: isDark
+                ? PROGRESS_DARK.fill
+                : UI_COLORS.WIZARD_PROGRESS,
             },
           ]}
         />
@@ -58,10 +68,11 @@ export function WizardProgressHeader({
 }
 
 const styles = StyleSheet.create({
+  // Figma Top Navigation Bar: px16 / py12, gap 8.
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing[4],
+    gap: spacing[2],
     paddingHorizontal: spacing[4],
     paddingVertical: 12,
     minHeight: 52,

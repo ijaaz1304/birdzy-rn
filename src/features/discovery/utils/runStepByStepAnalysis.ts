@@ -6,12 +6,7 @@ import { mapStepByStepItemToPossibleMatch } from "./mapStepByStepMatches";
 
 /**
  * Runs the step-by-step search after the wizard finishes.
- *
- * Body fields here are currently ignored: `archetype.service.stepByStep`
- * forces `STEP_BY_STEP_TEST_REQUEST` for every search. Location resolution
- * is skipped so a missing GPS fix cannot leave DiagnosisLoading spinning.
- * Restore resolveBirdDiscoveryLocation + real answers when removing the
- * test payload.
+ * Posts the wizard's location, date, and size to POST /core/archetypes/step-by-step.
  */
 export async function fetchStepByStepMatches(): Promise<
   PossibleMatchListItem[]

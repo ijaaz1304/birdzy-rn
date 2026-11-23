@@ -57,6 +57,10 @@ export { default as AskAiCameraIconSvg } from "./askai/icons/camera.svg";
 export { default as AskAiSendIconSvg } from "./askai/icons/send.svg";
 export { default as CancelIconLight } from "./common/icons/cancel.svg";
 export { default as CancelIconDark } from "./common/icons/cancel_dark.svg";
+/** Figma 9399:158787 "Illustration/ trash" (dark): #009DA7 bin on #072C38 ellipse, 64×64. */
+export { default as RemoveWishlistTrashDark } from "./dark/figma/remove_wishlist_trash.svg";
+/** Figma 9603:38239 "Illustration/ trash" (dark Delete Account): #16B6B4 bin on #072C38 ellipse, 64×64. */
+export { default as DeleteAccountTrashDark } from "./dark/figma/delete_account_trash.svg";
 
 export { default as NotificationFeed } from "./common/icons/notification.svg";
 export { default as NotificationFeedDark } from "./common/icons/notification_dark.svg";
@@ -479,6 +483,8 @@ export const Images = {
   homeIdentifyByPhoto: require("./home/identify_by_photo_inner.png"),
   homeWizardBanner: require("./home/wizard_banner.png"),
   wizardFindYourBird: require("./discovery/wizard/find_your_bird.png"),
+  /** Dark Step-by-step intro bird (Figma 9380:170609): transparent bg, #072C38 shadow. */
+  wizardFindYourBirdDark: require("./dark/figma/wizard_find_your_bird.png"),
   homeExploreNearYouMap: require("../features/explore/assets/home-map.png"),
   homeExploreNearYouBanner: require("./home/explore_near_you_banner.png"),
   homeBirdOfDayCard: require("./home/bird_of_the_day_home.webp"),

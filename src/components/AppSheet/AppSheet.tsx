@@ -85,6 +85,7 @@ import {
 } from "../../constants/appConstants";
 import { useStrings } from "../../hooks/useStrings";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import Svg, { Path } from "react-native-svg";
 import { FONTS } from "../../common/typography";
 
 import { Radius } from "../../design";
@@ -182,6 +183,8 @@ export type AppSheetPayload = {
   createCollection?: {
     onCreated: (collection: Collection) => void;
     onLimitReached?: () => void;
+    /** Names already on Collection, including Identified, Wishlist, and Near You. */
+    existingNames?: string[];
   };
   rateUs?: {
     onLowRating: (rating: number) => void;
@@ -293,7 +296,7 @@ const SHEET_CONFIG: Record<AppSheetType, SheetConfig> = {
     use50PercentBackground: false,
     enableBackdropDismiss: true,
     showDefaultHeader: true,
-    title: "Create New Collection",
+    title: "Create new collection",
   },
   rateUs: {
     height: "52%",
@@ -1075,6 +1078,9 @@ export const AppSheet: React.FC<AppSheetProps> = ({
             style={[
               styles.closeButton,
               usesTitleCloseHeaderRow && styles.closeButtonCreateCollection,
+              type === "createCollection" &&
+                isDark &&
+                styles.closeButtonCreateCollectionDark,
             ]}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessibilityRole="button"
@@ -1083,7 +1089,11 @@ export const AppSheet: React.FC<AppSheetProps> = ({
             <CloseIcon
               isDark={isDark}
               variant={getSheetCloseIconVariant(type)}
-              style={styles.closeIcon}
+              style={
+                type === "createCollection" && isDark
+                  ? { width: 16, height: 16 }
+                  : styles.closeIcon
+              }
             />
           </TouchableOpacity>
         </View>
@@ -1427,6 +1437,7 @@ function renderContentForType(
         <CreateCollectionContent
           onCreated={payload.onCreated}
           onLimitReached={payload.onLimitReached}
+          existingNames={payload.existingNames}
           onClose={ctx.onClose}
           theme={ctx.theme}
           isDark={ctx.isDark}
@@ -2523,6 +2534,18 @@ function LimitReachedContent({
   const isCollectionLimit = isCollectionLimitType(limitType);
   const isIdentificationLimit = limitType === "identification";
   const isBirdOfDayLimit = limitType === "birdOfDay";
+  const isFeedLimit = limitType === "feed";
+
+  if (isFeedLimit) {
+    return (
+      <FeedLimitContent
+        ctaLabel={upgradeCtaLabel}
+        onUpgrade={onUpgrade}
+        theme={theme}
+        bottomPadding={bottomPadding}
+      />
+    );
+  }
 
   return (
     <View style={sheetStyles.limitRoot}>
@@ -2587,6 +2610,88 @@ function LimitReachedContent({
   );
 }
 
+/**
+ * Feed daily post limit — Figma 9406:7173 ("Create a post but reach daily limit").
+ * Copy lives here (not SUBSCRIPTION_CAROUSEL_ITEMS) because the carousel item is also
+ * used by onboarding / upgrade surfaces.
+ */
+const FEED_LIMIT_COPY = {
+  titleBefore: "Get unlimited posts daily- ",
+  titleGoPro: "Go pro",
+  titleAfter: " now",
+  description:
+    "As a free user, you're allowed to create one post daily. Go Pro for more posting options!",
+} as const;
+
+function FeedLimitContent({
+  ctaLabel,
+  onUpgrade,
+  theme,
+  bottomPadding,
+}: {
+  ctaLabel: string;
+  onUpgrade: () => void;
+  theme: ReturnType<typeof useTheme>;
+  bottomPadding: number;
+}) {
+  return (
+    <View style={sheetStyles.limitRoot}>
+      <View
+        style={[
+          sheetStyles.limitTextCtaSection,
+          sheetStyles.feedLimitSection,
+          { marginTop: "auto", paddingBottom: bottomPadding },
+        ]}
+      >
+        {/* Title/28px/Bold, "Go pro" in Text & icon-Brand 1 */}
+        <Text
+          allowFontScaling={false}
+          style={[sheetStyles.feedLimitTitle, { color: theme.colors.textPrimary }]}
+        >
+          {FEED_LIMIT_COPY.titleBefore}
+          {/* The atom Text re-applies body defaults to nested spans, so repeat the
+              title typography here or "Go pro" renders at body size. */}
+          <Text
+            allowFontScaling={false}
+            style={[sheetStyles.feedLimitTitle, { color: theme.colors.textBrand }]}
+          >
+            {FEED_LIMIT_COPY.titleGoPro}
+          </Text>
+          {FEED_LIMIT_COPY.titleAfter}
+        </Text>
+        <Text
+          allowFontScaling={false}
+          style={[
+            sheetStyles.feedLimitDesc,
+            { color: theme.colors.textSecondary },
+          ]}
+        >
+          {FEED_LIMIT_COPY.description}
+        </Text>
+        <TouchableOpacity
+          onPress={onUpgrade}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          style={[
+            sheetStyles.feedLimitCta,
+            { backgroundColor: theme.colors.primaryCTA },
+          ]}
+        >
+          <Text
+            allowFontScaling={false}
+            style={[
+              sheetStyles.feedLimitCtaLabel,
+              { color: theme.colors.onPrimary },
+            ]}
+          >
+            {ctaLabel}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 const CREATE_CANCEL_BORDER_LIGHT = APP_COLORS.cancelSecondaryBorderLight;
 const CREATE_CANCEL_BORDER_DARK = APP_COLORS.cancelSecondaryBorderDark;
 const CREATE_CANCEL_DARK_BG = APP_COLORS.surfaceAuthDark;
@@ -2595,9 +2700,46 @@ const CREATE_CANCEL_LIGHT_BG = "#FFFFFF";
 const CREATE_CANCEL_DARK_TEXT = APP_COLORS.modalTextOnPrimary;
 const CREATE_CANCEL_LIGHT_TEXT = APP_COLORS.surfaceDark;
 
+const COLLECTION_NAME_ERROR = "#EF4444";
+
+function collectionNameIsTaken(name: string, existingNames: string[]): boolean {
+  const trimmed = name.trim().toLowerCase();
+  if (!trimmed) return false;
+  return existingNames.some((existing) => existing.trim().toLowerCase() === trimmed);
+}
+
+function isDuplicateCollectionError(reason: string): boolean {
+  return /already exists|duplicate|has been used|E11000/i.test(reason);
+}
+
+/** Figma alert-01 (9399:176750), 16pt warning triangle. */
+function CollectionNameTakenIcon() {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
+      <Path
+        d="M8 14.333C4.78176 14.333 3.17265 14.333 2.30998 13.5394C1.83539 13.1029 1.50826 12.524 1.37548 11.8859C1.13413 10.7259 1.93869 9.30224 3.54781 6.45495C5.15692 3.60765 5.96148 2.18401 7.06551 1.81754C7.67287 1.61593 8.32713 1.61593 8.93449 1.81754C10.0385 2.18401 10.8431 3.60765 12.4522 6.45495C14.0613 9.30224 14.8659 10.7259 14.6245 11.8859C14.4917 12.524 14.1646 13.1029 13.69 13.5394C12.8274 14.333 11.2182 14.333 8 14.333Z"
+        stroke={COLLECTION_NAME_ERROR}
+      />
+      <Path
+        d="M8.16146 11.333V8.66634C8.16146 8.35207 8.16146 8.19493 8.06383 8.09729C7.9662 7.99966 7.80906 7.99966 7.49479 7.99966"
+        stroke={COLLECTION_NAME_ERROR}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M7.99466 6H8.00065"
+        stroke={COLLECTION_NAME_ERROR}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 function CreateCollectionContent({
   onCreated,
   onLimitReached,
+  existingNames = [],
   onClose,
   theme,
   isDark,
@@ -2605,6 +2747,7 @@ function CreateCollectionContent({
 }: {
   onCreated: (c: Collection) => void;
   onLimitReached?: () => void;
+  existingNames?: string[];
   onClose: () => void;
   theme: ReturnType<typeof useTheme>;
   isDark: boolean;
@@ -2615,10 +2758,13 @@ function CreateCollectionContent({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [serverNameTaken, setServerNameTaken] = useState(false);
+  const nameTaken =
+    serverNameTaken || collectionNameIsTaken(name, existingNames);
   const handleCreate = async () => {
     if (preview) { onClose(); return; }
     const t = name.trim();
-    if (!t || loading) return;
+    if (!t || loading || nameTaken) return;
     setLoading(true);
     try {
       // Keep collection flow aligned with other premium-gated features:
@@ -2664,25 +2810,30 @@ function CreateCollectionContent({
         }, 280);
         return;
       }
-      showToast(
-        e instanceof Error ? e.message : "Failed to create collection",
-        "error"
-      );
+      const duplicateText = `${reason} ${
+        e instanceof Error ? e.message : ""
+      }`;
+      if (isDuplicateCollectionError(duplicateText)) {
+        setServerNameTaken(true);
+      } else {
+        showToast(
+          e instanceof Error ? e.message : "Failed to create collection",
+          "error"
+        );
+      }
       setLoading(false);
     }
   };
   return (
-    <View
-      style={[
-        sheetStyles.createContent,
-        { paddingHorizontal: theme.spacing[2] },
-      ]}
-    >
+    <View style={sheetStyles.createContent}>
       <Text
         variant="body"
         size="small"
         color="textSecondary"
-        style={sheetStyles.createSubtext}
+        style={[
+          sheetStyles.createSubtext,
+          isDark && { color: "#D1D1D1", fontSize: 16, lineHeight: 24 },
+        ]}
       >
         {strings.collection.forms.createCollection.subtitle}
       </Text>
@@ -2691,21 +2842,44 @@ function CreateCollectionContent({
         size="small"
         weight="medium"
         color="text"
-        style={sheetStyles.createLabel}
+        style={[
+          sheetStyles.createLabel,
+          isDark && { fontSize: 14, lineHeight: 20, marginBottom: 8 },
+        ]}
       >
         Collection name
       </Text>
       <TextInput
         placeholder="Enter collection name"
-        placeholderTextColor={theme.colors.textTertiary}
+        placeholderTextColor={isDark ? "#949494" : theme.colors.textTertiary}
         value={name}
-        onChangeText={setName}
+        onChangeText={(value) => {
+          setName(value);
+          setServerNameTaken(false);
+        }}
         editable={!loading}
         style={[
           sheetStyles.createInput,
-          { borderColor: theme.colors.border, color: theme.colors.text },
+          {
+            borderColor: nameTaken
+              ? COLLECTION_NAME_ERROR
+              : isDark
+                ? "#333333"
+                : theme.colors.border,
+            color: theme.colors.text,
+          },
+          isDark && sheetStyles.createInputDark,
+          nameTaken && sheetStyles.createInputError,
         ]}
       />
+      {nameTaken ? (
+        <View style={sheetStyles.createNameErrorRow}>
+          <CollectionNameTakenIcon />
+          <Text style={sheetStyles.createNameErrorText}>
+            {strings.collection.forms.collectionName.duplicate}
+          </Text>
+        </View>
+      ) : null}
       {/* Description field commented out
       <TextInput
         placeholder="Description (optional)"
@@ -2742,25 +2916,58 @@ function CreateCollectionContent({
             <Text
               variant="label"
               size="medium"
-              weight="semibold"
+              weight="medium"
               style={{
                 color: isDark
                   ? CREATE_CANCEL_DARK_TEXT
                   : CREATE_CANCEL_LIGHT_TEXT,
+                fontSize: 16,
+                lineHeight: 24,
               }}
             >
               {strings.common.buttons.cancel}
             </Text>
           </TouchableOpacity>
-          <Button
-            title={strings.common.buttons.save}
-            variant="primary"
-            size="large"
+          <TouchableOpacity
             onPress={handleCreate}
-            loading={loading}
-            disabled={loading || !name.trim()}
-            style={sheetStyles.createBtnPrimary}
-          />
+            disabled={loading || !name.trim() || nameTaken}
+            activeOpacity={0.7}
+            style={[
+              sheetStyles.createBtnSave,
+              isDark &&
+                (!name.trim() || nameTaken) &&
+                sheetStyles.createBtnSaveDisabledDark,
+              isDark &&
+                !!name.trim() &&
+                !nameTaken && { backgroundColor: theme.colors.primaryCTA },
+              !isDark && {
+                backgroundColor:
+                  name.trim() && !nameTaken
+                    ? theme.colors.primaryCTA
+                    : theme.colors.border,
+              },
+            ]}
+          >
+            <Text
+              variant="label"
+              size="medium"
+              weight="medium"
+              style={{
+                fontSize: 16,
+                lineHeight: 24,
+                color:
+                  isDark && (!name.trim() || nameTaken)
+                    ? "#6D6D6D"
+                    : isDark
+                      ? "#FFFFFF"
+                      : name.trim() && !nameTaken
+                        ? theme.colors.onPrimary
+                        : theme.colors.textTertiary,
+              }}
+            >
+              {strings.common.buttons.save}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -3499,10 +3706,16 @@ function IdentificationMilestoneContent({
         >
           {strings.title}
         </Text>
-        <Text color="textSecondary" style={sheetStyles.milestoneSubtitle}>
+        <Text
+          color="textSecondary"
+          style={[sheetStyles.milestoneSubtitle, { marginBottom: 4 }]}
+        >
           {formatString(strings.subtitle, {
             ordinal: getOrdinal(count),
           })}
+        </Text>
+        <Text color="textSecondary" style={sheetStyles.milestoneSubtitle}>
+          {strings.keepGoing}
         </Text>
         <View style={sheetStyles.milestoneCtaWrap}>
           <PermissionPrimaryButton
@@ -3758,14 +3971,14 @@ const styles = StyleSheet.create({
   },
   /** Create / rename collection: title + close on one row (Figma). */
   headerCreateCollection: {
-    paddingTop: 12,
+    paddingTop: 20,
     paddingBottom: 8,
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: 20,
     minHeight: 44,
   },
   title: { flex: 1 },
   titleCreateCollection: {
-    fontSize: 22,
+    fontSize: 20,
     lineHeight: 28,
   },
   closeButton: {
@@ -3781,6 +3994,18 @@ const styles = StyleSheet.create({
     marginLeft: 0,
     justifyContent: "center",
     alignItems: "center",
+  },
+  /** Figma 9399:176746 — 24pt close chip, surface-secondary on the sheet. */
+  closeButtonCreateCollectionDark: {
+    width: 24,
+    height: 24,
+    minWidth: 24,
+    minHeight: 24,
+    padding: 0,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#091421",
   },
   closeIcon: { width: 24, height: 24 },
   closeIconLarger: { width: 28, height: 28 },
@@ -3798,7 +4023,8 @@ const styles = StyleSheet.create({
   },
   /** Create / rename collection: minimal gap below header → subtitle */
   contentScrollContentCreateCollection: {
-    paddingTop: 4,
+    paddingTop: 0,
+    paddingHorizontal: 20,
   },
   /** Select / move collection sheets: flex body with pinned footer */
   collectionPickerContentHost: {
@@ -3975,6 +4201,43 @@ const sheetStyles = StyleSheet.create({
     width: "100%",
   },
   limitTitle: { textAlign: "center" },
+  // Feed limit — Figma 9406:7173: px12, title/desc gap 4, 24 to CTA, CTA 44 / r24.
+  feedLimitSection: {
+    paddingHorizontal: 12,
+    alignItems: "center",
+  },
+  feedLimitTitle: {
+    width: "100%",
+    maxWidth: 315,
+    fontFamily: FONTS.bold,
+    fontSize: 28,
+    lineHeight: 36,
+    textAlign: "center",
+  },
+  feedLimitDesc: {
+    width: "100%",
+    maxWidth: 315,
+    marginTop: 4,
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  feedLimitCta: {
+    width: "100%",
+    height: 44,
+    marginTop: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  feedLimitCtaLabel: {
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
+  },
   collectionLimitTitle: {
     fontSize: 20,
     lineHeight: 28,
@@ -4022,25 +4285,54 @@ const sheetStyles = StyleSheet.create({
   },
   createContent: {
     alignItems: "stretch",
+    paddingHorizontal: 0,
   },
   createSubtext: {
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 24,
     marginTop: 0,
-    marginBottom: 14,
+    marginBottom: 16,
     textAlign: "left",
   },
   createLabel: {
-    marginBottom: 4,
+    marginBottom: 8,
     textAlign: "left",
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 20,
   },
   createInput: {
     borderWidth: 1,
     borderRadius: 28,
-    padding: 10,
-    marginBottom: 10,
-    fontSize: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 16,
+    fontSize: 16,
+    lineHeight: 24,
+    height: 48,
+  },
+  /** Figma 9399:176747 — pill field on surface-secondary. */
+  createInputDark: {
+    backgroundColor: "#091421",
+    borderRadius: 360,
+  },
+  /** Figma 9399:176750 — taken name, 8pt gap before the error row. */
+  createInputError: {
+    marginBottom: 8,
+    borderColor: "#EF4444",
+  },
+  createNameErrorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+    width: "100%",
+  },
+  createNameErrorText: {
+    flex: 1,
+    color: "#EF4444",
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: FONTS.regular,
   },
   createDesc: { minHeight: 80, textAlignVertical: "top" },
   createBtnWrap: { marginTop: 10, flexShrink: 0 },
@@ -4060,6 +4352,18 @@ const sheetStyles = StyleSheet.create({
     justifyContent: "center",
   },
   createBtnPrimary: { flex: 1, minWidth: 0 },
+  createBtnSave: {
+    flex: 1,
+    minWidth: 0,
+    height: 44,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  /** Figma 9399:176748 — empty name, Save is surface-disabled. */
+  createBtnSaveDisabledDark: {
+    backgroundColor: "#333333",
+  },
   rateContent: {
     flexGrow: 1,
     justifyContent: "flex-end",

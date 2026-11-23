@@ -72,13 +72,15 @@ export const ExploreTabBar: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  bar: { flexDirection: "row", paddingTop: 8, paddingBottom: 16 },
+  // Figma 9376:267165: tabs 32 high (16/24 label), 16 above the card grid.
+  // Space above the tabs comes from the screen (16 after the location card).
+  bar: { flexDirection: "row", paddingBottom: 16 },
   tab: {
     flex: 1,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 12,
-    paddingVertical: 8,
     borderBottomWidth: 2,
     borderBottomColor: "transparent",
   },

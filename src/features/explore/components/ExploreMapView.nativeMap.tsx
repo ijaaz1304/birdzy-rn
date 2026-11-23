@@ -96,6 +96,12 @@ const SELECTED_CIRCLE = {
   circleStrokeWidth: 1,
   circleStrokeColor: EXPLORE_COLORS.selectedStroke,
 };
+/** Dark: teal selected area (keep in sync with the legend swatch). */
+const SELECTED_CIRCLE_DARK = {
+  ...SELECTED_CIRCLE,
+  circleColor: EXPLORE_COLORS.selectedFillDark,
+  circleStrokeColor: EXPLORE_COLORS.selectedStrokeDark,
+};
 
 export type ExploreMapViewProps = {
   center?: [number, number];
@@ -299,6 +305,8 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
           key={instance}
           style={styles.map}
           styleURL={isDark ? Mapbox.StyleURL.Dark : Mapbox.StyleURL.Street}
+          // Figma has no scale bar (it sat under the +/− chips). Logo/attribution stay (Mapbox terms).
+          scaleBarEnabled={false}
           onDidFinishLoadingMap={() => setStatus("ready")}
           onMapLoadingError={() => setStatus("error")}
           onCameraChanged={saveCamera}
@@ -349,7 +357,7 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
             >
               <CircleLayer
                 id="explore-selection-circle"
-                style={SELECTED_CIRCLE}
+                style={isDark ? SELECTED_CIRCLE_DARK : SELECTED_CIRCLE}
               />
             </ShapeSource>
           )}
@@ -413,7 +421,12 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
         </View>
       )}
       <View
-        style={[styles.zoomControls, !MAPBOX_ACCESS_TOKEN && styles.hidden]}
+        style={[
+          styles.zoomControls,
+          // Expanded view overlays its own search bar at the top.
+          expanded && styles.zoomControlsExpanded,
+          !MAPBOX_ACCESS_TOKEN && styles.hidden,
+        ]}
       >
         <TouchableOpacity
           accessibilityRole="button"
@@ -537,7 +550,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 12,
   },
-  zoomControls: { position: "absolute", top: 64, left: 8, gap: 4 },
+  // Figma 9376:267165: 32px chips, +/− 7 from top-left, locate/expand 7 from bottom-right.
+  zoomControls: { position: "absolute", top: 7, left: 7, gap: 4 },
+  zoomControlsExpanded: { top: 64, left: 8 },
   expandedSearchOverlay: { position: "absolute", top: 12, left: 8, right: 8 },
   expandedSelectionOverlay: {
     position: "absolute",
@@ -548,11 +563,11 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },
-  bottomControls: { position: "absolute", bottom: 8, right: 8, gap: 4 },
+  bottomControls: { position: "absolute", bottom: 7, right: 7, gap: 4 },
   button: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",

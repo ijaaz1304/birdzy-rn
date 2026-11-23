@@ -7,7 +7,7 @@ import React from "react";
 import { CommonActions } from "@react-navigation/native";
 import { useAuthStore } from "../features/auth/auth.store";
 import { useTheme } from "../hooks/useTheme";
-import { Images } from "../assets";
+import { DeleteAccountTrashDark, Images } from "../assets";
 import { NavigationService } from "../utils/navigation";
 import { SettingsAccountDialog } from "../features/settings/components/SettingsAccountDialog";
 
@@ -21,8 +21,7 @@ export const DeleteAccountConfirmation: React.FC<
 > = ({ visible, onClose }) => {
   const theme = useTheme();
   const { deleteProfile } = useAuthStore();
-  const trashIcon =
-    theme.mode === "dark" ? Images.trashDark : Images.trashLight;
+  const isDark = theme.mode === "dark";
 
   const handleYes = async () => {
     await deleteProfile();
@@ -46,7 +45,11 @@ export const DeleteAccountConfirmation: React.FC<
     <SettingsAccountDialog
       visible={visible}
       kind="delete"
-      icon={trashIcon}
+      icon={isDark ? undefined : Images.trashLight}
+      // Figma 9603:38239: 64px teal trash illustration in dark mode.
+      iconNode={
+        isDark ? <DeleteAccountTrashDark width={64} height={64} /> : undefined
+      }
       onClose={onClose}
       onConfirm={handleYes}
     />

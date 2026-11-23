@@ -2,6 +2,7 @@ import { AppImage } from "@/components/AppImage";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../../../atoms";
+import { FONTS } from "../../../common/typography";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { Images } from "../../../assets";
 import { type AskAiSuggestedPromptId } from "../../../config/strings/ask-ai.strings";
@@ -57,20 +58,14 @@ export function AskAIEmptyState({
         />
         <View style={styles.heroTextBlock}>
           <Text
-            variant="title"
-            size="medium"
-            weight="bold"
-            style={{ color: colors.textPrimary, textAlign: "center" }}
+            style={[styles.heroTitle, { color: colors.textPrimary }]}
           >
             {heroTitle}
           </Text>
           <Text
-            variant="body"
-            size="small"
-            weight="medium"
             style={[
               styles.heroSubtitle,
-              { color: colors.textSecondary, textAlign: "center" },
+              { color: isDark ? "#D1D1D1" : colors.textSecondary },
             ]}
           >
             {heroSubtitle}
@@ -117,8 +112,17 @@ const styles = StyleSheet.create({
     gap: 12,
     width: "100%",
   },
+  heroTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    lineHeight: 24,
+    textAlign: "center",
+  },
   heroSubtitle: {
+    fontFamily: FONTS.medium,
+    fontSize: 12,
     lineHeight: 16,
+    textAlign: "center",
   },
   promptList: {
     width: "100%",

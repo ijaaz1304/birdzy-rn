@@ -5,6 +5,7 @@ import {
   ensurePermission,
 } from "../../services/permissions/permission.service";
 import { getCurrentLocation } from "../../utils/locationService";
+import { reverseGeocodeAddress } from "./utils/geocodingApi";
 import { isValidCoordinate } from "@/features/explore/utils/locationCoordinates";
 import type { ExploreSelectedLocation } from "./components/ExploreLocationSearchBar";
 
@@ -43,8 +44,11 @@ export function useExploreLocation(initialLocation?: InitialLocation) {
     },
     []
   );
-  const attempt = useCallback(async () => {
-    if (inFlight.current || explicitLocation.current) return;
+  /** `force` re-reads the device location even after one was set (search-bar target icon). */
+  const attempt = useCallback(async (force = false) => {
+    if (inFlight.current) return;
+    if (explicitLocation.current && !force) return;
+    if (force) explicitLocation.current = false;
     inFlight.current = true;
     const request = ++generation.current;
     const current = () =>
@@ -75,6 +79,24 @@ export function useExploreLocation(initialLocation?: InitialLocation) {
         },
         true
       );
+      // Replace the placeholder with the detected city ("Bengaluru, Karnataka")
+      // unless the user picked another place in the meantime.
+      // Shown on the right of the "Current Location:" card and in the search bar.
+      reverseGeocodeAddress(device.latitude, device.longitude)
+        .then((city) => {
+          if (!mounted.current || !city.trim()) return;
+          setLocation((prev) =>
+            prev &&
+            prev.latitude === device.latitude &&
+            prev.longitude === device.longitude &&
+            prev.label === "Current Location"
+              ? { ...prev, label: city.trim() }
+              : prev
+          );
+        })
+        .catch(() => {
+          // Keep "Current Location" if the city lookup fails.
+        });
     } catch (cause) {
       if (!current()) return;
       setSystemUnavailable((cause as { code?: number })?.code === 2);
@@ -147,7 +169,7 @@ export function useExploreLocation(initialLocation?: InitialLocation) {
               },
             ]
           );
-        } else await attempt();
+        } else await attempt(true);
       }
     },
   };

@@ -21,7 +21,9 @@ import {
   selectIsPremium,
 } from "../../../features/subscription/subscription.store";
 import { Text } from "../../../atoms";
+import { FONTS } from "../../../common/typography";
 import { aiService } from "../../../services";
+import { getApiErrorReason } from "../../../services/api/errors";
 import { AskAIStackParamList } from "../../../navigation/types";
 import { Images, UploadIconSvg, AskAiCameraIconSvg, AskAiSendIconSvg } from "../../../assets";
 import { LoadingImage } from "../../../components/LoadingImage";
@@ -116,6 +118,33 @@ function shouldUseGotBitten(
   return /\b(bit me|bitten|bird bite)\b/i.test(trimmed);
 }
 
+function isOrnithologyDatabaseDown(error: unknown): boolean {
+  return /ornithological database/i.test(getApiErrorReason(error));
+}
+
+/** BirdBot chat is down; photo questions can still use image identification. */
+async function replyFromBirdPhoto(imageUris: string[]): Promise<string> {
+  const result = await aiService.identifyMushroom(imageUris);
+  const top = result.matches[0];
+  const common = top?.commonName?.trim();
+  const scientific = top?.scientificName?.trim();
+  const name = common || scientific;
+  if (!name) {
+    return "I couldn't match that photo to a bird. Try a clearer picture.";
+  }
+  const scientificSuffix =
+    common &&
+    scientific &&
+    scientific.toLowerCase() !== common.toLowerCase()
+      ? ` (${scientific})`
+      : "";
+  const summary = top.summary?.trim();
+  if (summary) {
+    return `This looks like a ${name}${scientificSuffix}. ${summary}`;
+  }
+  return `This looks like a ${name}${scientificSuffix}.`;
+}
+
 async function requestAskAiReply(params: {
   assistant?: "chat" | "gotBitten";
   message: string;
@@ -127,7 +156,14 @@ async function requestAskAiReply(params: {
       imageUris: params.imageUris,
     });
   }
-  return aiService.chat(params.message, params.imageUris);
+  try {
+    return await aiService.chat(params.message, params.imageUris);
+  } catch (error) {
+    if (params.imageUris?.length && isOrnithologyDatabaseDown(error)) {
+      return replyFromBirdPhoto(params.imageUris);
+    }
+    throw error;
+  }
 }
 
 export const AskAIScreen: React.FC = () => {
@@ -536,17 +572,32 @@ export const AskAIScreen: React.FC = () => {
           style={[
             styles.messageBubble,
             item.isUser
-              ? [styles.userBubble, { backgroundColor: colors.warning }]
-              : [styles.aiBubble, { backgroundColor: colors.surfaceVariant }],
+              ? [
+                  styles.userBubble,
+                  isDark
+                    ? styles.userBubbleDark
+                    : { backgroundColor: colors.warning },
+                ]
+              : [
+                  styles.aiBubble,
+                  isDark
+                    ? styles.aiBubbleDark
+                    : { backgroundColor: colors.surfaceVariant },
+                ],
           ]}
         >
           <Text
             variant="body"
             size="small"
-            color={item.isUser ? "text" : "text"}
             style={[
               styles.messageText,
-              item.isUser ? { color: colors.onPrimary } : undefined,
+              isDark
+                ? item.isUser
+                  ? styles.userMessageTextDark
+                  : styles.aiMessageTextDark
+                : item.isUser
+                  ? { color: colors.onPrimary }
+                  : undefined,
             ]}
           >
             {item.text}
@@ -919,11 +970,39 @@ const createStyles = (theme: any) =>
     userBubble: {
       borderBottomRightRadius: 4,
     },
+    /** Figma 9403:59208 — user bubble is brand-2 primary. */
+    userBubbleDark: {
+      backgroundColor: "#01474F",
+      borderRadius: 20,
+      borderBottomRightRadius: 20,
+      paddingVertical: 8,
+    },
     aiBubble: {
       borderBottomLeftRadius: 4,
     },
+    /** Figma 9403:59208 — AI bubble is surface-secondary with a border. */
+    aiBubbleDark: {
+      backgroundColor: "#091421",
+      borderWidth: 1,
+      borderColor: "#333333",
+      borderRadius: 20,
+      borderBottomLeftRadius: 20,
+      paddingVertical: 8,
+    },
     messageText: {
       lineHeight: 18,
+    },
+    userMessageTextDark: {
+      color: "#FFFFFF",
+      fontFamily: FONTS.regular,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    aiMessageTextDark: {
+      color: "#D1D1D1",
+      fontFamily: FONTS.regular,
+      fontSize: 14,
+      lineHeight: 20,
     },
     iconContainer: {
       width: 24,

@@ -1,7 +1,7 @@
 /**
  * Identification permission flow (location + camera/microphone popups).
  * Identify tab opens Choose a Method. Photo: location → camera popup → Camera.
- * Sound: location → microphone popup → SoundIdentify.
+ * Sound: microphone popup on the current screen → SoundIdentify after Allow.
  */
 
 import React, {
@@ -25,6 +25,7 @@ import {
 import { RootStackParamList } from "../../navigation/types";
 import {
   checkCameraPermission,
+  checkMicrophonePermission,
   openDeviceSettings,
   requestMicrophonePermission,
 } from "../../services/permissions";
@@ -156,8 +157,20 @@ export const IdentificationEntryProvider: React.FC<React.PropsWithChildren> = ({
   }, [beginIdentificationEntry]);
 
   const startSoundIdentificationEntry = useCallback(() => {
-    void beginIdentificationEntry("sound");
-  }, [beginIdentificationEntry]);
+    flowActiveRef.current = true;
+    flowKindRef.current = "sound";
+    setShowMicrophonePopup(false);
+    void (async () => {
+      const microphone = await checkMicrophonePermission();
+      if (!flowActiveRef.current || flowKindRef.current !== "sound") return;
+      if (microphone.granted) {
+        navigateToSoundIdentify();
+        return;
+      }
+      setMicrophoneBlocked(!!microphone.blocked);
+      setShowMicrophonePopup(true);
+    })();
+  }, [navigateToSoundIdentify]);
 
   useEffect(() => {
     const store = useIdentificationEntryStore.getState();

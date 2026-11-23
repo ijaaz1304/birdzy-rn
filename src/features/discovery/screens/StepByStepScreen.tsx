@@ -8,6 +8,9 @@ import { AppImage } from "@/components/AppImage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -23,26 +26,23 @@ import {
   Images,
   WizardClockIcon,
   WizardCurrentLocationIcon,
-  WizardMapPinIcon,
 } from "../../../assets";
 import { CloseIcon } from "../../../components/shared/CloseIcon";
 import { Text } from "../../../atoms";
-import { ChangeLocationBottomSheet } from "../../../molecules/Modal";
 import { HOME_STRINGS } from "../../../config/strings/home.strings";
 import { HIT_SLOP } from "../../../constants/uiConstants";
 import { FONTS } from "../../../common/typography";
-import { Radius } from "../../../design";
 import { FindYourBirdBackground } from "../../bird-personality/components/FindYourBirdBackground";
 import { useTheme } from "../../../hooks/useTheme";
 import { HomeStackParamList } from "../../../navigation/types";
 import { getCurrentLocation } from "../../../utils/locationService";
 import { resolveLocationAddress } from "../../camera/resolveLocationAddress";
-import type { IdentificationLocation } from "../../camera/identificationLocation.store";
 import { useStepByStepStore } from "../stepByStep.store";
 import { WIZARD_QUESTIONS } from "../stepByStep.types";
 import type { WizardRecentLocation } from "../stepByStep.types";
 import { WizardCalendar } from "../components/WizardCalendar";
 import { WizardProgressHeader } from "../components/WizardProgressHeader";
+import { WizardLocationSearchField } from "../components/WizardLocationSearchField";
 import { WizardSizePicker } from "../components/WizardSizePicker";
 import {
   hasWizardQuestionAnswer,
@@ -52,16 +52,6 @@ import {
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "StepByStep">;
 type ScreenRoute = RouteProp<HomeStackParamList, "StepByStep">;
-
-function toRecentLocation(
-  location: IdentificationLocation
-): WizardRecentLocation {
-  return {
-    label: location.address,
-    latitude: location.latitude,
-    longitude: location.longitude,
-  };
-}
 
 export const StepByStepScreen: React.FC = () => {
   const theme = useTheme();
@@ -80,8 +70,25 @@ export const StepByStepScreen: React.FC = () => {
 
   const [phase, setPhase] = useState<"intro" | "question">("intro");
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [showLocationSheet, setShowLocationSheet] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, () =>
+      setKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener(hideEvent, () =>
+      setKeyboardVisible(false)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
   const [locationSource, setLocationSource] = useState<
     "search" | "current" | "recent" | null
   >(null);
@@ -230,38 +237,18 @@ export const StepByStepScreen: React.FC = () => {
               {wizardQuestionTitle(0, strings.questions.location)}
             </Text>
             <View style={styles.locationSections}>
-              <View style={styles.locationSection}>
+              <View style={[styles.locationSection, styles.locationSearchSection]}>
                 <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>
                   {strings.customLocation}
                 </Text>
-                <TouchableOpacity
-                  onPress={() => setShowLocationSheet(true)}
-                  style={[
-                    styles.locationRow,
-                    {
-                      backgroundColor: colors.surfacePrimary,
-                      borderColor:
-                        locationSource === "search" && answers.location
-                          ? colors.primaryCTA
-                          : colors.border0,
-                    },
-                  ]}
-                >
-                  <WizardMapPinIcon width={20} height={20} />
-                  <Text
-                    style={[
-                      styles.locationRowLabel,
-                      {
-                        color: customFieldFilled
-                          ? colors.textPrimary
-                          : colors.textTertiary,
-                      },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {customFieldLabel}
-                  </Text>
-                </TouchableOpacity>
+                <WizardLocationSearchField
+                  value={customFieldFilled ? customFieldLabel : ""}
+                  placeholder={strings.enterLocation}
+                  searchingLabel={strings.searchingLocations}
+                  emptyLabel={strings.noLocationMatches}
+                  selected={locationSource === "search" && !!answers.location}
+                  onSelect={(location) => applyLocation(location, "search")}
+                />
               </View>
 
               <View style={styles.locationSection}>
@@ -383,7 +370,11 @@ export const StepByStepScreen: React.FC = () => {
             </View>
             <View style={styles.introBody}>
               <AppImage
-                source={Images.wizardFindYourBird}
+                source={
+                  theme.mode === "dark"
+                    ? Images.wizardFindYourBirdDark
+                    : Images.wizardFindYourBird
+                }
                 style={styles.introArt}
                 resizeMode="contain"
               />
@@ -415,7 +406,12 @@ export const StepByStepScreen: React.FC = () => {
             </View>
           </>
         ) : (
-          <>
+          // Figma dev note (9380:170789): Continue floats above the keyboard.
+          // iOS needs padding; Android already resizes (adjustResize).
+          <KeyboardAvoidingView
+            style={styles.flex}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          >
             <WizardProgressHeader
               questionIndex={questionIndex}
               onBack={goBack}
@@ -433,7 +429,12 @@ export const StepByStepScreen: React.FC = () => {
             <View
               style={[
                 styles.footer,
-                { paddingBottom: Math.max(insets.bottom, 16) },
+                {
+                  // Keyboard open: 16px above the keys (Figma), not the home-indicator inset.
+                  paddingBottom: keyboardVisible
+                    ? 16
+                    : Math.max(insets.bottom, 16),
+                },
               ]}
             >
               <TouchableOpacity
@@ -463,26 +464,17 @@ export const StepByStepScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-          </>
+          </KeyboardAvoidingView>
         )}
       </SafeAreaView>
 
-      <ChangeLocationBottomSheet
-        visible={showLocationSheet}
-        onClose={() => setShowLocationSheet(false)}
-        variant={customFieldFilled ? "custom" : "add"}
-        initialQuery={customFieldFilled ? customFieldLabel : ""}
-        onConfirm={(location) => {
-          applyLocation(toRecentLocation(location), "search");
-          setShowLocationSheet(false);
-        }}
-      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  flex: { flex: 1 },
   safe: { flex: 1 },
   introHeader: {
     flexDirection: "row",
@@ -529,9 +521,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 24,
   },
+  // Figma "Dialog, modal/body": pt20, gap 20 between title and sections.
   questionBlock: {
-    gap: 24,
-    paddingTop: 12,
+    gap: 20,
+    paddingTop: 20,
   },
   questionTitle: {
     fontFamily: FONTS.bold,
@@ -544,19 +537,26 @@ const styles = StyleSheet.create({
   locationSection: {
     gap: 8,
   },
+  // Lets the search dropdown draw over the sections below it.
+  locationSearchSection: {
+    zIndex: 10,
+    elevation: 10,
+  },
   fieldLabel: {
     fontFamily: FONTS.regular,
     fontSize: 14,
     lineHeight: 20,
   },
+  // Figma "Answer" pill: radius 100, px16/py8, gap 12, 40 high.
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
+    height: 40,
     borderWidth: 1,
-    borderRadius: Radius.md,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    borderRadius: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   locationRowLabel: {
     flex: 1,
@@ -576,9 +576,10 @@ const styles = StyleSheet.create({
     minHeight: 280,
     justifyContent: "center",
   },
+  // Figma footer: px20 / pt16, fades from transparent into the surface.
   footer: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   cta: {
     height: 44,

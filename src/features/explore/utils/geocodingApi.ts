@@ -196,6 +196,19 @@ export async function reverseGeocodeAddress(
   longitude: number
 ): Promise<string> {
   if (!hasGeocodingConfig()) {
+    // Same provider rule as forward search: Mapbox when geocode.maps.co isn't configured.
+    if (MAPBOX_ACCESS_TOKEN?.trim()) {
+      try {
+        const label = await reverseMapboxCity(latitude, longitude);
+        logLocation("reverseGeocode (mapbox): response", {
+          label: label || "(empty)",
+        });
+        return label;
+      } catch (error) {
+        logLocationError("reverseGeocode (mapbox): failed", error);
+        return "";
+      }
+    }
     logLocation("reverseGeocode: skipped — geocoding env not configured");
     return "";
   }
@@ -301,6 +314,53 @@ export async function geocodeAddress(
 }
 
 /** Temporary Mapbox suggestions are used in-session only, never cached. */
+/**
+ * Mapbox Geocoding v6 reverse lookup → "City, Region" (e.g. "Bengaluru, Karnataka").
+ * Falls back to the feature name when the city/region context is missing.
+ */
+async function reverseMapboxCity(
+  latitude: number,
+  longitude: number,
+  signal?: AbortSignal
+): Promise<string> {
+  if (!isValidCoordinate(latitude, longitude)) return "";
+  const url = new URL("https://api.mapbox.com/search/geocode/v6/reverse");
+  url.searchParams.set("longitude", String(longitude));
+  url.searchParams.set("latitude", String(latitude));
+  url.searchParams.set("types", "place,locality,district,region");
+  url.searchParams.set("limit", "1");
+  url.searchParams.set("access_token", MAPBOX_ACCESS_TOKEN.trim());
+  const data = (await fetchNominatim(url.toString(), signal, true)) as {
+    features?: Array<{
+      properties?: {
+        name?: string;
+        feature_type?: string;
+        context?: {
+          place?: { name?: string };
+          locality?: { name?: string };
+          district?: { name?: string };
+          region?: { name?: string };
+        };
+      };
+    }>;
+  };
+  const properties = data?.features?.[0]?.properties;
+  if (!properties) return "";
+  const context = properties.context ?? {};
+  const city =
+    context.place?.name ||
+    (properties.feature_type === "place" ? properties.name : undefined) ||
+    context.locality?.name ||
+    context.district?.name ||
+    properties.name;
+  const region =
+    context.region?.name ||
+    (properties.feature_type === "region" ? properties.name : undefined);
+  return [city, region !== city ? region : undefined]
+    .filter((part): part is string => !!part && !!part.trim())
+    .join(", ");
+}
+
 async function searchMapbox(
   query: string,
   signal?: AbortSignal

@@ -3,7 +3,6 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { BirdSizeScaleGraphic } from "../../../assets";
 import { Text } from "../../../atoms";
 import { UI_COLORS } from "../../../constants/colorConstants";
-import { Radius } from "../../../design";
 import { FONTS } from "../../../common/typography";
 import { spacing } from "../../../design-system/spacing";
 import { useTheme } from "../../../hooks/useTheme";
@@ -14,8 +13,20 @@ type Props = {
   onSelect: (index: number) => void;
 };
 
+/**
+ * Dark radios (Figma 9380:170248 layout): selected = teal rgba(22, 182, 180, 1) / #16B6B4
+ * 2px ring + 10px dot (design request; Figma render shows #785284);
+ * unselected = #D1D1D1 fill with #B0B0B0 ring.
+ */
+const RADIO_DARK = {
+  selected: "#16B6B4",
+  fill: "#D1D1D1",
+  border: "#B0B0B0",
+} as const;
+
 export function WizardSizePicker({ selectedIndex, onSelect }: Props) {
   const theme = useTheme();
+  const isDark = theme.mode === "dark";
   const label =
     selectedIndex != null ? WIZARD_SIZE_LABELS[selectedIndex] : undefined;
 
@@ -38,6 +49,8 @@ export function WizardSizePicker({ selectedIndex, onSelect }: Props) {
           width="100%"
           height={78}
           preserveAspectRatio="xMidYMid meet"
+          // SVG uses currentColor: Figma #F6F6F6 silhouettes in dark, #111111 in light.
+          color={isDark ? "#F6F6F6" : "#111111"}
         />
         <View style={styles.radios}>
           {WIZARD_SIZE_LABELS.map((sizeLabel, index) => {
@@ -54,18 +67,31 @@ export function WizardSizePicker({ selectedIndex, onSelect }: Props) {
                 <View
                   style={[
                     styles.radio,
-                    {
-                      borderColor: selected
-                        ? theme.colors.primaryCTA
-                        : theme.colors.border0,
-                    },
+                    isDark
+                      ? {
+                          borderColor: selected
+                            ? RADIO_DARK.selected
+                            : RADIO_DARK.border,
+                          backgroundColor: selected
+                            ? "transparent"
+                            : RADIO_DARK.fill,
+                        }
+                      : {
+                          borderColor: selected
+                            ? theme.colors.primaryCTA
+                            : theme.colors.border0,
+                        },
                   ]}
                 >
                   {selected ? (
                     <View
                       style={[
                         styles.radioInner,
-                        { backgroundColor: theme.colors.primaryCTA },
+                        {
+                          backgroundColor: isDark
+                            ? RADIO_DARK.selected
+                            : theme.colors.primaryCTA,
+                        },
                       ]}
                     />
                   ) : null}
@@ -84,9 +110,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 20,
   },
+  // Figma Tag/Filter: 1px #41EDE9, radius 24, px8/py4.
   pill: {
     borderWidth: 1,
-    borderRadius: Radius.full,
+    borderRadius: 24,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },

@@ -44,13 +44,28 @@ The Mapbox public token was configured locally. Device rendering, live backend c
 - Evidence/status: source or historical reference reviewed; current device/release status to confirm.
 - Next action: reproduce or reconcile the relevant source/contract, record a decision, and link the verification result.
 
-## 2026-11-12 — step-by-step static test body still active
+## 2026-11-12 — step-by-step static test body removed
 
-`archetypeService.stepByStep` forces a Malaysia test payload and ignores wizard/catalogue answers. Needed so API testing is not stuck on empty `lat/lng` 0 or GPS waits, but it is not production behavior. Owner must remove `STEP_BY_STEP_TEST_REQUEST` and restore `resolveBirdDiscoveryLocation` in `runStepByStepAnalysis.ts` once backend search with real answers is confirmed.
+The Malaysia test body (`lat` 3.7 / `lng` 101.7, fixed date and size) is no longer forced by `archetypeService.stepByStep`. Collection Near You, Catalogue Near You, and the wizard post the caller's location, date, and size. `region` is still stripped before the HTTP body, matching the API contract test.
 
 - Owner: not yet assigned.
-- Evidence/status: restored from an earlier uncommitted chat change that had been lost from the working tree.
-- Next action: confirm live results with the test body, then remove the override and re-verify with real wizard location/date/size.
+- Evidence/status: source updated 2026-11-23. Live empty-result check on a device is still open.
+- Next action: open Collection → Near You with location allowed and confirm the catalogue list is not the generic empty state.
+
+## 2026-11-23 — Wishlist add fails for birds with flight pattern “Mixed” (backend)
+
+`PUT /core/archetypes/wishlist/add/{archetypeId}` returns HTTP 500 for at least the Besra (`6a61f6c65db631270434c4b1`). The response is `Specimen validation failed: flightPattern.0: 'Mixed' is not a valid enum value for path 'flightPattern.0'.`
+- The app sends no body; the server builds the wishlist specimen from the archetype.
+- The archetype data and `GET /core/archetypes/filteritems` both treat `Mixed` as a valid flight pattern, but the Specimen schema's `flightPattern` enum does not include it.
+- So any archetype whose flight pattern includes `Mixed`, and possibly other values missing from that enum, cannot be wishlisted from the Catalogue, Search or Possible Matches.
+
+- Owner: backend, not yet assigned.
+- Evidence/status: Android device logcat (`R9ZWA0A52AK`), 2026-11-23 14:49. The client id and request are correct.
+- Next action: align the Specimen `flightPattern` enum with the archetype values: `Flapping`, `Diving`, `Undulating`, `Soaring`, `Mixed`, `Hovering`, `Erratic/zigzag`, `Skimming`, `Gliding`, `Low flight`. Check the other copied enums (habitat, diet, etc.) the same way. Then retest the wishlist add for Besra.
+- Client workaround (2026-11-23): on this enum error, `archetypeService.addWishlistArchetype` falls back to `POST /core/specimen/add` with `isWishlisted: true`. The payload is built from the archetype details, and the values the server names as rejected are removed (`specimenEnumSanitizer.ts`).
+  - Effect: those wishlist specimens are saved **without** the rejected value. For example, Besra's flight pattern loses “Mixed”.
+  - Remove the workaround once the backend enums are fixed.
+  - Open question for the backend: whether a specimen-only wishlist row (with no archetype wishlist PUT) is reported as `isWishlisted` on catalogue archetype lists after refetch.
 
 ## Shared open decisions
 

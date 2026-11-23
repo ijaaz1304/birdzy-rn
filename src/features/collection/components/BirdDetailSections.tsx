@@ -518,6 +518,8 @@ function BirdSizeScale({
         width="100%"
         height={78}
         preserveAspectRatio="xMidYMid meet"
+        // SVG uses currentColor: Figma #F6F6F6 silhouettes in dark, #111111 in light.
+        color={theme.mode === "dark" ? "#F6F6F6" : "#111111"}
       />
     </View>
   );

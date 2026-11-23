@@ -1,5 +1,5 @@
-import { EXPLORE_COLORS } from "../content/explore.colors";
 import { EXPLORE_COPY } from "../content/explore.strings";
+import { FONTS } from "../../../common/typography";
 /** Location search with debouncing, provider pacing and cancelable requests. */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -21,6 +21,8 @@ import { spacing } from "../../../design-system/spacing";
 import {
   ExploreLocationSearchIcon,
   ExploreLocationSearchIconDark,
+  ExploreSearchTargetIcon,
+  ExploreSearchTargetIconDark,
 } from "../assets";
 import type { GeocodingSearchResult } from "@/features/explore/utils/geocodingApi";
 import { useLocationSuggestions } from "@/features/explore/hooks/useLocationSuggestions";
@@ -36,11 +38,14 @@ export type ExploreSelectedLocation = {
 type Props = {
   onSelectLocation: (location: ExploreSelectedLocation) => void;
   locationLabel?: string;
+  /** Right-hand target icon (Figma): re-locate to the device position. */
+  onUseCurrentLocation?: () => void;
 };
 
 export const ExploreLocationSearchBar: React.FC<Props> = ({
   onSelectLocation,
   locationLabel = "",
+  onUseCurrentLocation,
 }) => {
   const theme = useTheme();
   const isDark = useIsDark();
@@ -126,15 +131,16 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
         style={[
           styles.inputRow,
           {
-            backgroundColor: theme.colors.surfacePrimary,
-            borderColor: EXPLORE_COLORS.searchBorder,
+            // Figma: Textfield Surface/Secondary + Border-0 (dark #091421 / #333).
+            backgroundColor: isDark ? "#091421" : theme.colors.surfacePrimary,
+            borderColor: theme.colors.border0,
           },
         ]}
       >
         {isDark ? (
-          <ExploreLocationSearchIconDark width={20} height={20} />
+          <ExploreLocationSearchIconDark width={24} height={24} />
         ) : (
-          <ExploreLocationSearchIcon width={20} height={20} />
+          <ExploreLocationSearchIcon width={24} height={24} />
         )}
         <TextInput
           style={[styles.input, { color: theme.colors.textPrimary }]}
@@ -167,7 +173,8 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
             }, 150);
           }}
         />
-        {query.length > 0 && (
+        {isFocused && query.length > 0 ? (
+          // While typing: clear the typed text.
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={EXPLORE_COPY.clearSearch}
@@ -180,7 +187,21 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
               color={theme.colors.textTertiary}
             />
           </TouchableOpacity>
-        )}
+        ) : onUseCurrentLocation ? (
+          // Figma 9376:267165 target-03 (24px): jump back to the device location.
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={EXPLORE_COPY.recenter}
+            onPress={onUseCurrentLocation}
+            hitSlop={8}
+          >
+            {isDark ? (
+              <ExploreSearchTargetIconDark width={24} height={24} />
+            ) : (
+              <ExploreSearchTargetIcon width={24} height={24} />
+            )}
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {showDropdown && (
@@ -226,22 +247,31 @@ const styles = StyleSheet.create({
   wrap: {
     width: "100%",
   },
+  // Figma Search Bar: 48 high, px16/py12, gap 12, Body/16 Regular.
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 12,
     borderWidth: 1,
     borderRadius: Radius.full ?? 999,
     paddingHorizontal: spacing[4],
-    height: 44,
+    height: 48,
   },
   input: {
     flex: 1,
-    fontSize: 14,
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    letterSpacing: -0.16,
     paddingVertical: 0,
   },
+  // Overlays the map below instead of pushing the layout down.
   dropdown: {
-    marginTop: 8,
+    position: "absolute",
+    top: 56,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    elevation: 20,
     maxHeight: 160,
     borderWidth: 1,
     borderRadius: Radius.md,

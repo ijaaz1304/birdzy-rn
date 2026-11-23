@@ -14,8 +14,9 @@ import { Icon } from "../../../atoms";
 import { themes } from "../../../design-system/themes";
 import { COLLECTION_CARD } from "../../../constants/colorConstants";
 
-const TITLE_FONT_SIZE = 20;
-const TITLE_LINE_HEIGHT = 30;
+/** Figma Body/16px/SemiBold on collection cards. */
+const TITLE_FONT_SIZE = 16;
+const TITLE_LINE_HEIGHT = 24;
 const TITLE_MAX_LINES = 2;
 
 interface CollectionCardProps {
@@ -112,10 +113,10 @@ export const CollectionCard: React.FC<CollectionCardProps> = React.memo(
                             <Text
                               variant="body"
                               size="small"
-                              weight="semibold"
+                              weight="medium"
                               style={styles.remainingCountText}
                             >
-                              + {overflowCount}
+                              +{overflowCount}
                             </Text>
                           </LinearGradient>
                         </AppImageBackground>
@@ -130,10 +131,10 @@ export const CollectionCard: React.FC<CollectionCardProps> = React.memo(
                           <Text
                             variant="body"
                             size="small"
-                            weight="semibold"
+                            weight="medium"
                             style={styles.remainingCountText}
                           >
-                            + {overflowCount}
+                            +{overflowCount}
                           </Text>
                         </LinearGradient>
                       )}
@@ -162,7 +163,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = React.memo(
           <Text
             variant="title"
             size="small"
-            weight="semibold"
+            weight="bold"
             numberOfLines={TITLE_MAX_LINES}
             style={[styles.title, { color: spec.titleColor }]}
           >
@@ -172,7 +173,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = React.memo(
 
         {/* Subtitle: item count + created date */}
         <View style={styles.subtitleRow}>
-          <Icon name="clock" size={12} color={spec.subtitleColor} />
+          <Icon name="clock" size={16} color={spec.subtitleColor} />
           <Text
             variant="body"
             size="small"
@@ -217,12 +218,13 @@ const styles = StyleSheet.create({
     height: "100%",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 4,
+    gap: 8,
   },
   gridItem: {
-    width: "48%",
-    height: "48%",
-    borderRadius: 6,
+    flexGrow: 1,
+    flexBasis: "40%",
+    height: 64,
+    borderRadius: 8,
     overflow: "hidden",
     position: "relative",
   },
@@ -241,10 +243,12 @@ const styles = StyleSheet.create({
   },
   remainingCountText: {
     color: COLLECTION_CARD.CARD_ICON_ON_OVERLAY,
+    fontSize: 14,
+    lineHeight: 20,
   },
   titleContainer: {
     width: "100%",
-    minHeight: TITLE_LINE_HEIGHT * TITLE_MAX_LINES,
+    gap: 4,
     justifyContent: "center",
   },
   title: {
@@ -256,7 +260,7 @@ const styles = StyleSheet.create({
   subtitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 8,
     width: "100%",
     minWidth: 0,
   },
@@ -264,6 +268,6 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     fontSize: 12,
-    lineHeight: 18,
+    lineHeight: 16,
   },
 });

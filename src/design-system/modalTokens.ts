@@ -91,15 +91,14 @@ export function getBottomSheetChromeStyle(theme: Theme): ViewStyle {
   };
 }
 
-/** Figma 9375:212793 — shared dark primary CTA; light callers receive no overrides. */
+/**
+ * Figma 9375:212793 — shared dark primary CTA; light callers receive no overrides.
+ * Flat fill: the former #FFAE00 glow + Android elevation read as a green haze under the
+ * teal button and is absent from the current Figma screens, so it was removed (2026-11-23).
+ */
 export function getDarkPrimaryCtaStyle(theme: Theme): ViewStyle {
   return theme.mode === "dark" ? {
     backgroundColor: theme.colors.primaryCTA,
     borderRadius: 24,
-    shadowColor: "#FFAE00",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.26,
-    shadowRadius: 12.5,
-    elevation: 6,
   } : {};
 }

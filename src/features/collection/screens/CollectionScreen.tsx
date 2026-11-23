@@ -709,8 +709,9 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
     () => ({
       onCreated: handleCollectionCreated,
       onLimitReached: handleCreateLimitReached,
+      existingNames: collections.map((c) => c.name),
     }),
-    [handleCollectionCreated, handleCreateLimitReached]
+    [collections, handleCollectionCreated, handleCreateLimitReached]
   );
 
   const handleFABPress = () => {
@@ -781,7 +782,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
           },
         ]}
       >
-        <Text variant="title" size="large" weight="bold">
+        <Text variant="title" size="small" weight="bold">
           Collection
         </Text>
         <TouchableOpacity
@@ -802,7 +803,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
             variant="body"
             size="small"
             weight="medium"
-            style={{ color: colors.textPrimary }}
+            style={{ color: colors.textPrimary, fontSize: 14, lineHeight: 20 }}
           >
             {strings.collection.buttons.goToSoundLibrary}
           </Text>
@@ -870,6 +871,13 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = () => {
         onPress={handleFABPress}
         bottomOffset={20}
         rightOffset={16}
+        {...(isDark
+          ? {
+              backgroundColor: "rgba(7, 44, 56, 1)",
+              iconColor: "rgba(22, 182, 180, 1)",
+              labelColor: "rgba(22, 182, 180, 1)",
+            }
+          : null)}
       />
 
       {/* Add New Mineral Modal */}

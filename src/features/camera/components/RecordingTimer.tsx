@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { APP_COLORS } from "../../../config/colors";
 import { FONTS } from "../../../common/typography";
 import { soundIdentifyRecordingService } from "../../../services/audio/soundIdentifyRecording.service";
 import { RECORDING_TIMER_INTERVAL_MS } from "../constants/soundRecording.constants";
 import { formatSoundHms } from "../utils/soundCrop";
 import { logSoundRenderCount } from "../utils/soundRecordLog";
 
-const TIMER_PILL_COLOR = APP_COLORS.createButtonFg;
+/** Recording timer pill — teal rgba(22, 182, 180, 1) / #16B6B4, label stays white. */
+const TIMER_PILL_COLOR = "rgba(22, 182, 180, 1)";
 
 /** Isolated timer — only this subtree re-renders on tick. */
 export const RecordingTimer = React.memo(function RecordingTimer() {

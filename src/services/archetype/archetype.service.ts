@@ -29,19 +29,11 @@ import { mushroomSpecimenService } from "../specimen/mushroomSpecimen.service";
 import { useAppLogsStore } from "../../features/app-logs/app-logs.store";
 import { API_ENDPOINTS } from "../../constants/api";
 import { BIRD_ARCHETYPE_FILTER_DEFAULTS } from "../../constants/birdFilterDefaults";
-
-/**
- * Temporary testing payload for every step-by-step search (wizard, Near You,
- * collection preview). Wizard answers are ignored until this is removed.
- */
-const STEP_BY_STEP_TEST_REQUEST: BirdStepByStepRequest = {
-  location: {
-    lat: 3.7,
-    lng: 101.7,
-  },
-  seenDate: "2026-06-26T10:00:00Z",
-  birdSize: ["Small", "Medium-Small"],
-};
+import {
+  isSpecimenEnumValidationError,
+  parseRejectedEnumValues,
+  stripRejectedEnumValues,
+} from "./specimenEnumSanitizer";
 
 const wishlistLog = (
   level: "info" | "warn" | "error",
@@ -247,6 +239,17 @@ class ArchetypeService {
       }
 
       const normalized = normalizeError(error);
+
+      // Backend Specimen enum drift (e.g. flightPattern "Mixed"): create the wishlist
+      // specimen ourselves without the rejected values. See specimenEnumSanitizer.ts.
+      if (isSpecimenEnumValidationError(normalized.message)) {
+        wishlistLog("warn", "[Wishlist] add: enum validation, using specimen fallback", {
+          archetypeId: id,
+          rejected: parseRejectedEnumValues(normalized.message),
+        });
+        return this.addWishlistViaSpecimen(id, normalized.message);
+      }
+
       wishlistLog("error", "[Wishlist] add: request failed", {
         archetypeId: id,
         message: normalized.message,
@@ -254,6 +257,57 @@ class ArchetypeService {
       });
       throw normalized;
     }
+  }
+
+  /**
+   * Fallback wishlist add: POST /core/specimen/add with isWishlisted=true, built from the
+   * archetype details, stripping enum values the Specimen schema rejects (up to 5 rounds).
+   * The Wishlist screen and removeWishlistArchetype both work off wishlisted specimens.
+   */
+  private async addWishlistViaSpecimen(
+    archetypeId: string,
+    firstErrorMessage: string
+  ): Promise<MushroomSpecimen> {
+    // Lazy require (runs only on this fallback): a top-level import would create a
+    // load-time cycle (collection.utils → archetype.service → editMushroomDetails.utils).
+    const { buildMushroomSpecimenAddFromRaw } =
+      require("../../features/collection/editMushroomDetails.utils") as typeof import("../../features/collection/editMushroomDetails.utils");
+    const detail = await this.getArchetypeDetails(archetypeId);
+    let payload = buildMushroomSpecimenAddFromRaw(
+      detail as unknown as Record<string, unknown>,
+      archetypeId,
+      { isIdentified: false, isWishlisted: true }
+    );
+    let rejected = parseRejectedEnumValues(firstErrorMessage);
+
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      const stripped = stripRejectedEnumValues(payload, rejected);
+      payload = stripped.payload;
+      try {
+        const specimen = await mushroomSpecimenService.addSpecimen(payload);
+        wishlistLog("info", "[Wishlist] add: specimen fallback success", {
+          archetypeId,
+          attempt,
+          removed: rejected,
+          specimen: summarizeWishlistSpecimen(specimen),
+        });
+        return specimen;
+      } catch (error) {
+        const normalized = normalizeError(error);
+        const next = parseRejectedEnumValues(normalized.message);
+        const progress = stripRejectedEnumValues(payload, next).changed;
+        if (!next.length || !progress) {
+          wishlistLog("error", "[Wishlist] add: specimen fallback failed", {
+            archetypeId,
+            attempt,
+            message: normalized.message,
+          });
+          throw normalized;
+        }
+        rejected = next;
+      }
+    }
+    throw new ApiException("Failed to add wishlist archetype");
   }
 
   private async findSpecimensForArchetype(
@@ -410,10 +464,7 @@ class ArchetypeService {
     };
   }> {
     try {
-      const response = await coreApi.stepByStep(
-        STEP_BY_STEP_TEST_REQUEST,
-        pagination
-      );
+      const response = await coreApi.stepByStep(_body, pagination);
       if (response.error) {
         throw new ApiException(
           response.reason || "Failed to fetch step-by-step birds"

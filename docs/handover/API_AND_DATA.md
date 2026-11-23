@@ -49,10 +49,10 @@ These are path declarations found in source, intended as navigation aids for a d
 - `/core/archetypes/identified/add` — [src/constants/api.ts](../../src/constants/api.ts)
 - `/core/archetypes/specimens-of-the-day` — [src/constants/api.ts](../../src/constants/api.ts)
 - `/core/archetypes/stats` — [src/constants/api.ts](../../src/constants/api.ts)
-- `/core/archetypes/step-by-step` — [src/constants/api.ts](../../src/constants/api.ts). **Temporary (testing):** [src/services/archetype/archetype.service.ts](../../src/services/archetype/archetype.service.ts) currently ignores the caller body and always posts `STEP_BY_STEP_TEST_REQUEST` (`location` 3.7/101.7, `seenDate` `2026-06-26T10:00:00Z`, `birdSize` `["Small","Medium-Small"]`). Affects wizard DiagnosisLoading, Near You catalogue, and collection preview. Remove before shipping real wizard answers.
+- `/core/archetypes/step-by-step` — [src/constants/api.ts](../../src/constants/api.ts). Callers pass location, seen date, and optional size. `coreApi.stepByStep` posts those fields and does not send the client-only `region` id. Catalogue Near You and the Collection Near You preview use `resolveBirdDiscoveryLocation` (GPS, or the saved birding-region centroid).
 - `/core/archetypes/wishlist/add` — [src/constants/api.ts](../../src/constants/api.ts)
 - `/core/archetypes/wishlist/remove` — [src/constants/api.ts](../../src/constants/api.ts)
-- `/core/chat` — [src/constants/api.ts](../../src/constants/api.ts)
+- `/core/chat` — [src/constants/api.ts](../../src/constants/api.ts). Ask AI still sends text and photos here. When that call returns 500 “ornithological database is currently unreachable” and a photo was attached, the screen falls back to `POST /core/ai/identify` and shows the top bird match. Text-only chat has no fallback.
 - `/core/collections/add` — [src/constants/api.ts](../../src/constants/api.ts)
 - `/core/collections/delete` — [src/constants/api.ts](../../src/constants/api.ts)
 - `/core/collections/fetchAll` — [src/constants/api.ts](../../src/constants/api.ts)

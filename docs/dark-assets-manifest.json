@@ -324,6 +324,10 @@
     "filterIcon": "./catalogue/icons/species/filter.png"
   },
   "figmaAssets": {
+    "src/assets/dark/figma/wizard_find_your_bird.png": {
+      "fileKey": "wkpRZxcGSwbl6nOU2VvESd",
+      "nodeId": "9380:170609"
+    },
     "src/assets/dark/figma/home_map.png": {
       "fileKey": "wkpRZxcGSwbl6nOU2VvESd",
       "nodeId": "I9375:212475;8230:72837"

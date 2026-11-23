@@ -478,7 +478,8 @@ export const COLLECTION_CARD = {
     outerBorderRadius: 12,
     outerBorderWidth: 1,
     outerBorderColor: SCREEN_COLORS.DARK.border,
-    outerBackground: "#111111",
+    /** Figma 9399:176895 — card is surface-primary, not the page fill. */
+    outerBackground: "#091B21",
     titleColor: APP_COLORS.modalTextOnPrimary,
     subtitleColor: "#D1D1D1",
   },
@@ -486,7 +487,8 @@ export const COLLECTION_CARD = {
   imageCardBorderRadius: 8,
   outerPadding: 12,
   outerGap: 8,
-  imageCardHeight: 120,
+  /** Figma 9399:176895 — two 64pt rows plus an 8pt gap. */
+  imageCardHeight: 136,
   /** Fourth tile overlay when showing "add" placeholder */
   FOURTH_TILE_OVERLAY: "rgba(0, 0, 0, 0.60)",
   FOURTH_TILE_PLACEHOLDER_BG: "#D9D9D9",
@@ -727,8 +729,9 @@ export const COLLECTION_SCREEN_COLORS = {
     screenBg: "#ffffff",
   },
   DARK: {
-    collectionBg: APP_COLORS.surfaceAuthDark,
-    screenBg: APP_COLORS.homeSurfaceDark,
+    /** Figma 9399:176895 page fill (surface-secondary). Shared dark surface token stays #091B21. */
+    collectionBg: "#091421",
+    screenBg: "#091421",
   },
 } as const;
 

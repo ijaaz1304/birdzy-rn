@@ -17,6 +17,8 @@ type Props = {
   visible: boolean;
   kind: "delete" | "logout";
   icon?: ImageSourcePropType;
+  /** Optional rendered icon (e.g. an SVG component); takes precedence over `icon`. */
+  iconNode?: React.ReactNode;
   onClose: () => void;
   onConfirm: () => void | Promise<void>;
 };
@@ -26,6 +28,7 @@ export function SettingsAccountDialog({
   visible,
   kind,
   icon,
+  iconNode,
   onClose,
   onConfirm,
 }: Props) {
@@ -73,7 +76,9 @@ export function SettingsAccountDialog({
           ]}
         >
           <View style={styles.header}>
-            {kind === "delete" && icon ? (
+            {kind === "delete" && iconNode ? (
+              <View style={styles.icon}>{iconNode}</View>
+            ) : kind === "delete" && icon ? (
               <Image source={icon} style={styles.icon} resizeMode="contain" />
             ) : null}
             <Text

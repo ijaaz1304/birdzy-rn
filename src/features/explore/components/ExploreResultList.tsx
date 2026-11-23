@@ -92,8 +92,9 @@ const ExploreResultCard = ({
   return (
     <AppCard
       imageUrls={item.defaultImageUrl ? [item.defaultImageUrl] : item.imageUrls}
-      title={item.scientificName}
-      subtitle={item.commonName ?? undefined}
+      // Figma 9376:267165: common name as title, scientific name below.
+      title={item.commonName?.trim() || item.scientificName}
+      subtitle={item.commonName?.trim() ? item.scientificName : undefined}
       enableImageCarousel={false}
       starred={starred}
       starDisabled={pending}
@@ -193,7 +194,8 @@ export const ExploreResultList: React.FC<Props> = ({
   );
 };
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 24 },
+  // Figma: grid px20, starts 16 below the tabs (tab bar supplies the 16).
+  content: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 24 },
   columnWrapper: { gap: 12, marginBottom: 12 },
   emptyContent: { flexGrow: 1, justifyContent: "center", paddingTop: 40 },
   footerLoader: { paddingVertical: 16 },

@@ -97,6 +97,7 @@ export const MODAL_STRINGS = {
     congratulations: {
       title: "Congratulations!",
       subtitle: "You have identified your {ordinal} bird",
+      keepGoing: "Keep going!",
       backToHomeButton: "Back to Home",
     },
     identificationSafety: {

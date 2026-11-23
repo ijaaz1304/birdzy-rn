@@ -90,7 +90,10 @@ import { shouldShowLocationBannerAsGranted } from "./locationToggle.helpers";
 import { useLocationToggleFlow } from "./useLocationToggleFlow";
 import { useLocationPermissionUiStore } from "./locationPermissionUi.store";
 import { createCameraStyles } from "./camera.styles";
-import { checkCameraPermission } from "../../services/permissions";
+import {
+  checkCameraPermission,
+  checkStoragePermission,
+} from "../../services/permissions";
 import { useIdentifyCameraPermissionFlow } from "./useIdentifyCameraPermissionFlow";
 import {
   buildGalleryPickerParams,
@@ -455,6 +458,38 @@ export const CameraScreen: React.FC = () => {
       }
     })();
   }, [hasPermission, isAddingAnotherPhoto, selectedImages.length]);
+
+  // Figma dev note (8830:1773): if Gallery permission is granted while Camera is denied,
+  // open Scanning Tips immediately (same once-per-install flag as above).
+  useEffect(() => {
+    if (hasPermission || !permissionChecked || !cameraPermissionInline) return;
+    if (isNativeDialogActive || hasShownTipsRef.current) return;
+    if (selectedImages.length > 0 || isAddingAnotherPhoto) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const gallery = await checkStoragePermission();
+        if (cancelled || !gallery.granted || hasShownTipsRef.current) return;
+        const hasSeen = await AsyncStorage.getItem(HAS_SEEN_CAMERA_TIPS_KEY);
+        if (cancelled || hasSeen === "true") return;
+        hasShownTipsRef.current = true;
+        await AsyncStorage.setItem(HAS_SEEN_CAMERA_TIPS_KEY, "true");
+        setShowTipsModal(true);
+      } catch {
+        // Leave the permission screen as is if storage/permission checks fail.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    cameraPermissionInline,
+    hasPermission,
+    isAddingAnotherPhoto,
+    isNativeDialogActive,
+    permissionChecked,
+    selectedImages.length,
+  ]);
 
   const photoScreenEnterTimeRef = useRef(0);
   useFocusEffect(
@@ -954,6 +989,12 @@ export const CameraScreen: React.FC = () => {
   };
 
   const handleTipsClose = () => setShowTipsModal(false);
+  // Figma dev note (8830:1773): closing Tips with X while Camera is denied opens the
+  // Gallery automatically. With Camera granted, X just closes (normal camera flow).
+  const handleTipsCloseButton = () => {
+    setShowTipsModal(false);
+    if (!hasPermission) openGallery();
+  };
   const handleDontShowTipsAgain = async () => {
     try {
       await AsyncStorage.setItem(HAS_SEEN_CAMERA_TIPS_KEY, "true");
@@ -1681,6 +1722,7 @@ export const CameraScreen: React.FC = () => {
       <CameraTipsModal
         visible={showTipsModal && !freeScanPopupVisible}
         onClose={handleTipsClose}
+        onCloseButtonPress={handleTipsCloseButton}
         onDontShowAgain={handleDontShowTipsAgain}
         overlay
       />

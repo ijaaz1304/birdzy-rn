@@ -95,7 +95,7 @@ export const COLLECTION_STRINGS = {
     createCollection: "Create",
     editCollection: "Edit Collection",
     renameCollection: "Rename collection",
-    deleteCollection: "Delete Collection",
+    deleteCollection: "Delete",
     goToSoundLibrary: "Go to Sound Library",
   },
   collections: {
@@ -140,7 +140,7 @@ export const COLLECTION_STRINGS = {
     createCollection: {
       title: "Create New Collection",
       subtitle:
-        "Give your bird collection a name and start curating your favorite species!",
+        "Create your bird collection and start saving your favorite species.",
     },
   },
   errors: {

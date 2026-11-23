@@ -15,6 +15,7 @@ import {
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import Svg, { Path } from "react-native-svg";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
 import { useStrings } from "../../../hooks/useStrings";
 import { Text, NavBackIcon } from "../../../atoms";
@@ -25,8 +26,6 @@ import {
   RootStackParamList,
 } from "../../../navigation/types";
 import { screenStyles } from "../../../styles/common";
-import { Images } from "../../../assets";
-import { AppImage } from "@/components/AppImage";
 import { EmptyState } from "../../../molecules";
 import {
   EmptyCollectionContent,
@@ -48,11 +47,8 @@ import { useCollectionInvalidationStore } from "../collectionInvalidation.store"
 import { analyticsService } from "../../../services/analytics/analytics.service";
 import { EVENTS } from "../../../services/analytics/analytics.events";
 
-import { Radius } from "../../../design";
-
 import { spacing } from "../../../design-system/spacing";
-
-import { APP_COLORS } from "../../../config/colors";
+import { FONTS } from "../../../common/typography";
 import { DeleteCollectionConfirmation } from "../../../components/DeleteCollectionConfirmation";
 import {
   getSpecimenDisplayImageUrls,
@@ -61,6 +57,63 @@ import {
   resolveArchetypeIdFromSpecimen,
 } from "../collection.utils";
 import { useBackHandler } from "../../../utils/backHandler";
+
+/** Figma pencil-edit-01, drawn at its 14.83 source size inside a 20pt slot. */
+function CollectionMenuPencil({ color }: { color: string }) {
+  return (
+    <View style={styles.menuIconSlot}>
+      <Svg width={14.8333} height={14.8333} viewBox="0 0 14.8333 14.8333" fill="none">
+        <Path
+          d="M12.4314 4.73826L5.5698 11.5998C4.69872 12.4709 4.26317 12.9064 3.73242 13.203C3.20168 13.4996 1.94842 13.798 0.750015 14.0833C1.03535 12.8849 1.33374 11.6317 1.63032 11.1009C1.9269 10.5702 2.36245 10.1346 3.23354 9.26354L10.0951 2.40199L11.2632 1.23386C11.9084 0.588715 12.9543 0.588714 13.5995 1.23386C14.2446 1.879 14.2446 2.92498 13.5995 3.57013L12.4314 4.73826ZM10.0951 2.40199L12.4314 4.73826"
+          stroke={color}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M6.58335 14.0833H11.5833"
+          stroke={color}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+        />
+      </Svg>
+    </View>
+  );
+}
+
+/** Figma delete-02, drawn at its 16.5×18.17 source size inside a 20pt slot. */
+function CollectionMenuTrash() {
+  return (
+    <View style={styles.menuIconSlot}>
+      <Svg width={16.5} height={18.1667} viewBox="0 0 16.5 18.1667" fill="none">
+        <Path
+          d="M14.5 3.66667L13.9836 12.0209C13.8516 14.1554 13.7856 15.2226 13.2506 15.9899C12.9861 16.3692 12.6455 16.6894 12.2506 16.93C11.4518 17.4167 10.3825 17.4167 8.24395 17.4167C6.1026 17.4167 5.03192 17.4167 4.23254 16.9291C3.83733 16.6881 3.49666 16.3673 3.23224 15.9874C2.6974 15.2188 2.63288 14.1501 2.50384 12.0126L2 3.66667"
+          stroke="#EF4444"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+        />
+        <Path
+          d="M0.75 3.66667H15.75M11.6298 3.66667L11.0609 2.49311C10.683 1.71355 10.494 1.32377 10.1681 1.08067C10.0958 1.02675 10.0192 0.978787 9.93919 0.937253C9.57826 0.750002 9.1451 0.750002 8.27877 0.750002C7.39069 0.750002 6.94665 0.750002 6.57974 0.945101C6.49842 0.988342 6.42082 1.03825 6.34774 1.09431C6.01803 1.34725 5.83386 1.7513 5.4655 2.55938L4.96077 3.66667"
+          stroke="#EF4444"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+        />
+        <Path
+          d="M6.16667 12.8333L6.16667 7.83334"
+          stroke="#EF4444"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+        />
+        <Path
+          d="M10.3333 12.8333L10.3333 7.83334"
+          stroke="#EF4444"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+        />
+      </Svg>
+    </View>
+  );
+}
 
 type CollectionDetailsScreenRouteProp = RouteProp<
   CollectionStackParamList,
@@ -573,10 +626,7 @@ export const CollectionDetailsScreen: React.FC = () => {
           <View
             style={[
               styles.menuDropdown,
-              {
-                backgroundColor: colors.surfacePrimary,
-                borderColor: colors.border,
-              },
+              isDark ? styles.menuDropdownDark : styles.menuDropdownLight,
             ]}
           >
             <TouchableOpacity
@@ -584,15 +634,12 @@ export const CollectionDetailsScreen: React.FC = () => {
               onPress={handleRenameCollection}
               activeOpacity={0.7}
             >
-              <AppImage
-                source={Images.iconEdit}
-                style={styles.menuItemIcon}
-                resizeMode="contain"
-              />
+              <CollectionMenuPencil color={isDark ? "#D1D1D1" : "#5D5D5D"} />
               <Text
-                variant="body"
-                size="medium"
-                style={{ marginLeft: Space[2] }}
+                style={[
+                  styles.menuLabel,
+                  { color: isDark ? "#D1D1D1" : "#5D5D5D" },
+                ]}
               >
                 {strings.collection.buttons.renameCollection}
               </Text>
@@ -602,20 +649,8 @@ export const CollectionDetailsScreen: React.FC = () => {
               onPress={handleDeleteCollection}
               activeOpacity={0.7}
             >
-              <AppImage
-                source={isDark ? Images.trashDark : Images.speciesTrash}
-                style={[
-                  styles.menuDeleteIcon,
-                  isDark ? { tintColor: colors.textPrimary } : undefined,
-                ]}
-                resizeMode="contain"
-                preferRNImage
-              />
-              <Text
-                variant="body"
-                size="medium"
-                style={{ color: colors.error, marginLeft: Space[2] }}
-              >
+              <CollectionMenuTrash />
+              <Text style={[styles.menuLabel, styles.menuDeleteLabel]}>
                 {strings.collection.buttons.deleteCollection}
               </Text>
             </TouchableOpacity>
@@ -800,31 +835,45 @@ const styles = StyleSheet.create({
   menuDropdown: {
     position: "absolute",
     top: 48,
-    right: 24,
-    minWidth: 180,
-    borderRadius: Radius.md,
+    right: 16,
+    borderRadius: 8,
     borderWidth: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    gap: 4,
     zIndex: 100,
-    elevation: 8,
-    shadowColor: APP_COLORS.shadowBlack,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    overflow: "hidden",
+  },
+  menuDropdownLight: {
+    backgroundColor: "#F6F6F6",
+    borderColor: "#E7E7E7",
+  },
+  menuDropdownDark: {
+    backgroundColor: "#091B21",
+    borderColor: "#333333",
+    shadowColor: "#FFFFFF",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.07,
     shadowRadius: 8,
+    elevation: 4,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    gap: 8,
+    paddingVertical: 8,
     paddingHorizontal: 12,
   },
-  menuItemIcon: {
+  menuIconSlot: {
     width: 20,
     height: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  menuDeleteIcon: {
-    width: 20,
-    height: 20,
+  menuLabel: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  menuDeleteLabel: {
+    color: "#EF4444",
   },
 });

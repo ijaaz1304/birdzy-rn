@@ -50,6 +50,7 @@ export const CAMERA_STRINGS = {
     identified: "Identified",
     possibleMatches: "Other Possible Matches",
     possibleMatchesHeading: "Possible Matches",
+    accuracyScore: "Accuracy Score",
     diagnosis: "Best Match",
   },
   limits: {

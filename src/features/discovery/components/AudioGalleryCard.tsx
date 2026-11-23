@@ -15,6 +15,7 @@ import { Radius } from "../../../design";
 import { spacing } from "../../../design-system/spacing";
 import { useTheme } from "../../../hooks/useTheme";
 import type { BirdGalleryAudioFile } from "../../../services/api/features/bird.api.types";
+import type { CardMenuAnchor } from "./AudioGalleryCardMenu";
 
 export type AudioGalleryCardVariant = "identified" | "unknown";
 
@@ -30,7 +31,13 @@ type Props = {
   onOpen?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  /** Unknown cards: long-press opens the Rename/Delete menu anchored to this card. */
+  onLongPress?: (anchor: CardMenuAnchor) => void;
+  /** Card whose menu is open — Figma Border-brand #01474F outline. */
+  highlighted?: boolean;
 };
+
+type CardBodyProps = Props & { onLongPressBody?: () => void };
 
 export function getClipTimestamp(item: BirdGalleryAudioFile): number {
   const raw = item.createdAt || item.capturedAt;
@@ -85,30 +92,49 @@ export function formatClipMeta(
   return parts.join(" • ");
 }
 
-const PlayButton: React.FC<{ isPlaying: boolean; onPress: () => void }> = ({
-  isPlaying,
-  onPress,
-}) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.85}
-    hitSlop={HIT_SLOP.SMALL}
-    style={[styles.playBtn]}
-    accessibilityRole="button"
-    accessibilityLabel={isPlaying ? "Pause recording" : "Play recording"}
-  >
-    {isPlaying ? (
-      <View style={styles.pauseGlyph}>
-        <View style={styles.pauseBar} />
-        <View style={styles.pauseBar} />
-      </View>
-    ) : (
-      <SoundLibraryPlayIcon width={24} height={24} color="#FFFFFF" />
-    )}
-  </TouchableOpacity>
-);
+/**
+ * Figma 9380:111722 (dark): play button Surface-brand-1 #16B6B4 with a #091B21 glyph;
+ * secondary text Text & icon-Secondary #D1D1D1. Light keeps the existing brown/grey.
+ */
+const DARK_CARD = {
+  playBg: "#16B6B4",
+  playGlyph: "#091B21",
+  secondaryText: "#D1D1D1",
+  /** Figma 9380:111789 "My Recording" tag: Surface-brand-1 Accent + Text & icon-Brand 1. */
+  badgeBg: "#072C38",
+  badgeText: "#16B6B4",
+  /** Figma 9380:111788 highlighted card (menu open): Border-brand. */
+  highlightBorder: "#01474F",
+} as const;
 
-const CardBody: React.FC<Props> = ({
+const PlayButton: React.FC<{
+  isPlaying: boolean;
+  isDark: boolean;
+  onPress: () => void;
+}> = ({ isPlaying, isDark, onPress }) => {
+  const glyph = isDark ? DARK_CARD.playGlyph : "#FFFFFF";
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      hitSlop={HIT_SLOP.SMALL}
+      style={[styles.playBtn, isDark && { backgroundColor: DARK_CARD.playBg }]}
+      accessibilityRole="button"
+      accessibilityLabel={isPlaying ? "Pause recording" : "Play recording"}
+    >
+      {isPlaying ? (
+        <View style={styles.pauseGlyph}>
+          <View style={[styles.pauseBar, { backgroundColor: glyph }]} />
+          <View style={[styles.pauseBar, { backgroundColor: glyph }]} />
+        </View>
+      ) : (
+        <SoundLibraryPlayIcon width={24} height={24} color={glyph} />
+      )}
+    </TouchableOpacity>
+  );
+};
+
+const CardBody: React.FC<CardBodyProps> = ({
   item,
   variant,
   isPlaying,
@@ -118,9 +144,12 @@ const CardBody: React.FC<Props> = ({
   matchesLabel,
   onPlay,
   onOpen,
+  onLongPressBody,
 }) => {
   const theme = useTheme();
   const colors = theme.colors;
+  const isDark = theme.mode === "dark";
+  const secondaryStyle = isDark ? { color: DARK_CARD.secondaryText } : null;
   const imageUrl =
     item.specimen?.defaultImageUrl || item.specimen?.imageUrls?.[0];
   const common = item.specimen?.commonName;
@@ -150,20 +179,29 @@ const CardBody: React.FC<Props> = ({
           >
             {title}
           </Text>
-          <View style={styles.badge}>
+          <View
+            style={[
+              styles.badge,
+              isDark && { backgroundColor: DARK_CARD.badgeBg },
+            ]}
+          >
             <Text
               variant="caption"
               size="small"
               weight="medium"
               numberOfLines={1}
-              style={styles.badgeText}
+              style={[
+                styles.badgeText,
+                isDark && { color: DARK_CARD.badgeText },
+              ]}
             >
               {myRecordingLabel}
             </Text>
           </View>
         </View>
       ) : (
-        <>
+        // Figma: name + scientific grouped (gap 2); meta sits at the bottom of the 64px row.
+        <View style={styles.nameGroup}>
           <Text
             variant="body"
             size="medium"
@@ -178,19 +216,19 @@ const CardBody: React.FC<Props> = ({
               variant="caption"
               size="small"
               numberOfLines={1}
-              style={styles.scientific}
+              style={[styles.scientific, secondaryStyle]}
             >
               {scientific}
             </Text>
           ) : null}
-        </>
+        </View>
       )}
       {meta ? (
         <Text
           variant="caption"
           size="small"
           numberOfLines={1}
-          style={styles.meta}
+          style={[styles.meta, secondaryStyle]}
         >
           {meta}
         </Text>
@@ -205,11 +243,13 @@ const CardBody: React.FC<Props> = ({
         { backgroundColor: colors.surfacePrimary },
       ]}
     >
-      {variant === "identified" || onOpen ? (
+      {variant === "identified" || onOpen || onLongPressBody ? (
         <TouchableOpacity
           style={styles.identifiedMain}
           onPress={onOpen}
-          disabled={!onOpen}
+          onLongPress={onLongPressBody}
+          delayLongPress={350}
+          disabled={!onOpen && !onLongPressBody}
           activeOpacity={onOpen ? 0.85 : 1}
         >
           {variant === "identified" ? (
@@ -223,7 +263,11 @@ const CardBody: React.FC<Props> = ({
               <View
                 style={[
                   styles.thumb,
-                  { backgroundColor: APP_COLORS.createButtonBg },
+                  {
+                    backgroundColor: isDark
+                      ? colors.surfaceSecondary
+                      : APP_COLORS.createButtonBg,
+                  },
                 ]}
               />
             )
@@ -233,7 +277,7 @@ const CardBody: React.FC<Props> = ({
       ) : (
         textBlock
       )}
-      <PlayButton isPlaying={isPlaying} onPress={onPlay} />
+      <PlayButton isPlaying={isPlaying} isDark={isDark} onPress={onPlay} />
     </View>
   );
 };
@@ -241,7 +285,26 @@ const CardBody: React.FC<Props> = ({
 export const AudioGalleryCard: React.FC<Props> = (props) => {
   const theme = useTheme();
   const swipeRef = useRef<Swipeable>(null);
-  const borderColor = theme.colors.border0;
+  const shellRef = useRef<View>(null);
+  const borderColor =
+    props.highlighted && theme.mode === "dark"
+      ? DARK_CARD.highlightBorder
+      : props.highlighted
+      ? theme.colors.primaryCTA
+      : theme.colors.border0;
+
+  const openMenu = props.onLongPress
+    ? () => {
+        shellRef.current?.measureInWindow((x, y, width, height) => {
+          props.onLongPress?.({ x, y, width, height });
+        });
+      }
+    : undefined;
+  // Unknown cards used the light pink #F5EBEB even in dark; use the dark surface instead.
+  const unknownSurface =
+    theme.mode === "dark"
+      ? theme.colors.surfacePrimary
+      : APP_COLORS.createButtonBg;
 
   const closeThen = (action?: () => void) => {
     swipeRef.current?.close();
@@ -251,11 +314,13 @@ export const AudioGalleryCard: React.FC<Props> = (props) => {
   if (props.variant === "unknown") {
     return (
       <View
+        ref={shellRef}
+        collapsable={false}
         style={[
           styles.cardShell,
           {
             borderColor,
-            backgroundColor: APP_COLORS.createButtonBg,
+            backgroundColor: unknownSurface,
           },
         ]}
       >
@@ -265,7 +330,12 @@ export const AudioGalleryCard: React.FC<Props> = (props) => {
           rightThreshold={40}
           overshootRight={false}
           renderRightActions={() => (
-            <View style={styles.swipeActions}>
+            <View
+              style={[
+                styles.swipeActions,
+                { backgroundColor: unknownSurface },
+              ]}
+            >
               <TouchableOpacity
                 onPress={() => closeThen(props.onEdit)}
                 hitSlop={HIT_SLOP.SMALL}
@@ -275,7 +345,11 @@ export const AudioGalleryCard: React.FC<Props> = (props) => {
                 <SoundLibraryEditIcon
                   width={20}
                   height={20}
-                  color={APP_COLORS.textSecondaryGray}
+                  color={
+                    theme.mode === "dark"
+                      ? DARK_CARD.secondaryText
+                      : APP_COLORS.textSecondaryGray
+                  }
                 />
               </TouchableOpacity>
               <TouchableOpacity
@@ -289,7 +363,7 @@ export const AudioGalleryCard: React.FC<Props> = (props) => {
             </View>
           )}
         >
-          <CardBody {...props} />
+          <CardBody {...props} onLongPressBody={openMenu} />
         </Swipeable>
       </View>
     );
@@ -334,9 +408,15 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: Radius.md,
   },
+  // Figma: text column fills the row; name group on top, meta at the bottom (min gap 4).
   textCol: {
     flex: 1,
     minWidth: 0,
+    alignSelf: "stretch",
+    justifyContent: "space-between",
+    gap: 4,
+  },
+  nameGroup: {
     gap: 2,
   },
   titleRow: {
@@ -345,31 +425,36 @@ const styles = StyleSheet.create({
     gap: spacing[2],
     flexWrap: "wrap",
   },
+  // Figma Body/16px/SemiBold and Caption/12px/Regular (scientific is not italic in Figma).
   commonName: {
     fontFamily: FONTS.bold,
     fontSize: 16,
+    lineHeight: 24,
     flexShrink: 1,
   },
   scientific: {
     fontFamily: FONTS.regular,
     fontSize: 12,
-    fontStyle: "italic",
+    lineHeight: 16,
     color: APP_COLORS.textSecondaryGray,
   },
   meta: {
     fontFamily: FONTS.regular,
     fontSize: 12,
+    lineHeight: 16,
     color: APP_COLORS.textSecondaryGray,
   },
+  // Figma Tag/Status order: px8 / py4, radius 100, Caption/12px/Medium.
   badge: {
     backgroundColor: APP_COLORS.createButtonBg,
     borderRadius: 100,
     paddingHorizontal: spacing[2],
-    paddingVertical: 2,
+    paddingVertical: 4,
   },
   badgeText: {
     fontFamily: FONTS.medium,
     fontSize: 12,
+    lineHeight: 16,
     color: APP_COLORS.createButtonFg,
   },
   playBtn: {

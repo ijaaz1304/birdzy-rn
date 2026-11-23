@@ -4,11 +4,12 @@
  */
 
 import { AppImage } from "@/components/AppImage";
+import { CloseIcon } from "@/components/shared/CloseIcon";
 import React, { useCallback, useRef, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { View, StyleSheet, FlatList, TouchableOpacity, StatusBar, Pressable } from "react-native";
 import { CachedRemoteImage } from "@/components/AppImage";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
@@ -82,6 +83,21 @@ type OtherPossibleMatchesScreenNavigationProp = NativeStackNavigationProp<
   "OtherPossibleMatches"
 >;
 
+/** Identify sends similarityScore as 0–1. Mapped matches already store 0–100. */
+function matchAccuracyPercent(item: {
+  accuracy?: number;
+  similarityScore?: number;
+}): number | undefined {
+  const raw =
+    typeof item.accuracy === "number"
+      ? item.accuracy
+      : typeof item.similarityScore === "number"
+        ? item.similarityScore
+        : undefined;
+  if (raw == null || !Number.isFinite(raw)) return undefined;
+  return Math.round(raw <= 1 ? raw * 100 : raw);
+}
+
 export const OtherPossibleMatchesScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
@@ -121,6 +137,10 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
   const [showAddNote, setShowAddNote] = useState(false);
   const [recordingNote, setRecordingNote] = useState("");
   const [savedToUnknown, setSavedToUnknown] = useState(false);
+  const safeInsets = useSafeAreaInsets();
+  // Figma: toast bottom 44 = 32 home-indicator bar + 12 gap. Use the real bottom inset
+  // so it clears the home indicator / Android nav bar on every device.
+  const savedToastBottom = Math.max(safeInsets.bottom, 32) + 12;
   const [savingRecording, setSavingRecording] = useState(false);
   const { playingId, toggleSound } = useCatalogueCardSound();
   const screenTitle =
@@ -468,7 +488,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
         if (result === "added") {
           showToast(strings.collection.favorite.added, "success");
         } else {
-          showToast(strings.collection.favorite.addFailed, "error");
+          showToast(useBirdsStore.getState().lastFavoriteError ?? strings.collection.favorite.addFailed, "error");
         }
       } finally {
         wishlistToggleInFlight.current.delete(archetypeId);
@@ -488,7 +508,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
       if (result === "removed") {
         showToast(strings.collection.favorite.removed, "success");
       } else {
-        showToast(strings.collection.favorite.removeFailed, "error");
+        showToast(useBirdsStore.getState().lastFavoriteError ?? strings.collection.favorite.removeFailed, "error");
       }
     } finally {
       wishlistToggleInFlight.current.delete(pending.archetypeId);
@@ -599,6 +619,7 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
 
   const renderMatchItem = ({ item, index }: { item: any; index: number }) => {
     const displayName = getMatchDisplayName(item);
+    const accuracyPercent = matchAccuracyPercent(item);
     const imageUri = getMatchImageUri(item);
     const itemKey = item.id ?? item._id ?? `match-${index}`;
     const archetypeId = getMatchArchetypeId(item);
@@ -634,6 +655,23 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
             >
               {displayName}
             </Text>
+            {accuracyPercent != null ? (
+              <View style={styles.accuracyBlock}>
+                <Text
+                  style={[styles.accuracyValue, { color: colors.textPrimary }]}
+                >
+                  {accuracyPercent}%
+                </Text>
+                <Text
+                  style={[
+                    styles.accuracyLabel,
+                    { color: isDark ? "#D1D1D1" : colors.textSecondary },
+                  ]}
+                >
+                  {CAMERA_STRINGS.results.accuracyScore}
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           <View
@@ -866,16 +904,23 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
                     <TouchableOpacity
                       onPress={() => setShowAddNote(true)}
                       hitSlop={HIT_SLOP.SMALL}
+                      style={styles.noteEditIcon}
+                      accessibilityRole="button"
+                      accessibilityLabel="Edit note"
                     >
+                      {/* Figma pencil-edit-01: 20px frame; white in dark, #5D5D5D in light. */}
                       <SoundLibraryEditIcon
-                        width={16}
-                        height={16}
-                        color={colors.primaryCTA}
+                        width={14.8333}
+                        height={14.8333}
+                        color={isDark ? "#FFFFFF" : "#5D5D5D"}
                       />
                     </TouchableOpacity>
                   </View>
                   <Text
-                    style={[styles.noteBody, { color: colors.textPrimary }]}
+                    allowFontScaling={false}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={[styles.noteBody, { color: colors.textSecondary }]}
                   >
                     {recordingNote}
                   </Text>
@@ -947,37 +992,60 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
 
     </SafeAreaView>
     {fromSound && savedToUnknown ? (
+      // Figma "Toast message" (9380:171249): same light success toast in both modes.
       <View
         style={[
           styles.savedBanner,
           {
-            borderColor: colors.success,
-            backgroundColor: colors.surfaceSuccess,
+            bottom: savedToastBottom,
+            backgroundColor: isDark
+              ? SAVED_TOAST.surfaceDark
+              : SAVED_TOAST.surface,
           },
         ]}
       >
-        <Text style={[styles.savedText, { color: colors.success }]}>
+        <Text allowFontScaling={false} style={styles.savedText}>
           {soundCopy.savedToUnknown}
         </Text>
-        <TouchableOpacity
-          onPress={() => {
-            setSavedToUnknown(false);
-            setRecordingNote("");
-          }}
-          hitSlop={HIT_SLOP.SMALL}
-        >
-          <Text style={[styles.savedUndo, { color: colors.success }]}>
-            {soundCopy.undo}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setSavedToUnknown(false)}
-          hitSlop={HIT_SLOP.SMALL}
-        >
-          <Text style={[styles.savedClose, { color: colors.success }]}>
-            ×
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.savedActions}>
+          <TouchableOpacity
+            onPress={() => {
+              setSavedToUnknown(false);
+              setRecordingNote("");
+            }}
+            hitSlop={HIT_SLOP.SMALL}
+            style={styles.savedUndoButton}
+            accessibilityRole="button"
+          >
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.savedUndo,
+                isDark && { color: SAVED_TOAST.undoDark },
+              ]}
+            >
+              {soundCopy.undo}
+            </Text>
+          </TouchableOpacity>
+          <View
+            style={[
+              styles.savedDivider,
+              isDark && { backgroundColor: SAVED_TOAST.dividerDark },
+            ]}
+          />
+          <TouchableOpacity
+            onPress={() => setSavedToUnknown(false)}
+            hitSlop={HIT_SLOP.SMALL}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          >
+            <CloseIcon
+              variant="plain"
+              size={20}
+              color={isDark ? SAVED_TOAST.closeDark : SAVED_TOAST.close}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     ) : null}
     </View>
@@ -1022,6 +1090,19 @@ export const OtherPossibleMatchesScreen: React.FC = () => {
     </>
   );
 };
+
+/** Figma "Toast message" colours (9380:171249). Dark fill from design: rgba(18, 47, 30, 1). */
+const SAVED_TOAST = {
+  surface: "#EBFFF2", // Surface-success (light)
+  surfaceDark: "rgba(18, 47, 30, 1)", // #122F1E
+  text: "#22C55E", // Text & icon-Success (both modes)
+  undo: "#091B21", // Button text secondary (light)
+  undoDark: "#FFFFFF",
+  divider: "#B0B0B0",
+  dividerDark: "#333333",
+  close: "#5D5D5D",
+  closeDark: "#FFFFFF",
+} as const;
 
 const styles = StyleSheet.create({
   container: {
@@ -1120,12 +1201,26 @@ const styles = StyleSheet.create({
     minWidth: 0,
     zIndex: 1,
     justifyContent: "center",
+    gap: 8,
     paddingVertical: 4,
   },
   matchName: {
     fontFamily: FONTS.bold,
     fontSize: 16,
     lineHeight: 24,
+  },
+  accuracyBlock: {
+    alignItems: "flex-start",
+  },
+  accuracyValue: {
+    fontFamily: FONTS.medium,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  accuracyLabel: {
+    fontFamily: FONTS.regular,
+    fontSize: 12,
+    lineHeight: 16,
   },
   thumbnailWrap: {
     width: CARD_IMAGE_WIDTH,
@@ -1173,11 +1268,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  // Figma Body/16px/Regular, Text & icon-Secondary (#D1D1D1 dark / #5D5D5D light), one line + ellipsis.
   noteBody: {
     fontFamily: FONTS.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    fontStyle: "italic",
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
   },
   soundSectionTitle: {
     fontFamily: FONTS.bold,
@@ -1225,34 +1321,59 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
+  noteEditIcon: {
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  // Figma "Toast message": 335 wide, 48 high, radius 8, px12/py4, gap 16.
+  // Bottom offset is set at render time from the safe-area inset (Figma 44 on iPhone).
   savedBanner: {
     position: "absolute",
     left: 20,
     right: 20,
-    bottom: 24,
-    borderWidth: 1,
-    borderRadius: Radius.md,
+    height: 48,
+    borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 4,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 16,
+    shadowColor: "#000000",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
   },
   savedText: {
     flex: 1,
     fontFamily: FONTS.medium,
     fontSize: 14,
     lineHeight: 20,
+    color: SAVED_TOAST.text,
+  },
+  savedActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  savedUndoButton: {
+    height: 32,
+    paddingHorizontal: 8,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
   savedUndo: {
     fontFamily: FONTS.medium,
     fontSize: 14,
     lineHeight: 20,
-    textDecorationLine: "underline",
+    color: SAVED_TOAST.undo,
   },
-  savedClose: {
-    fontFamily: FONTS.medium,
-    fontSize: 20,
-    lineHeight: 20,
+  savedDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: SAVED_TOAST.divider,
   },
 });

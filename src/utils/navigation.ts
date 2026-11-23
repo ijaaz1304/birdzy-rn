@@ -176,7 +176,7 @@ export function navigateToSubscriptionMain(params?: Record<string, unknown>) {
   navigateToSubscriptionScreen("SubscriptionMain", params);
 }
 
-/** Open Camera tab → Sound Identify flow (location then microphone popups). */
+/** Open the sound flow: microphone popup, then Sound Identify after Allow. */
 export function navigateToSoundIdentify(
   navigation: { navigate: (name: string, params?: object) => void }
 ) {

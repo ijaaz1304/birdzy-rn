@@ -31,6 +31,8 @@ import {
 export interface CameraTipsModalProps {
   visible: boolean;
   onClose: () => void;
+  /** X (close) button only; defaults to `onClose`. Backdrop / "Understood" still use `onClose`. */
+  onCloseButtonPress?: () => void;
   onDontShowAgain?: () => void;
   /** When true, render as in-screen overlay instead of RN Modal. */
   overlay?: boolean;
@@ -47,6 +49,7 @@ type TipItem = {
 export const CameraTipsModal: React.FC<CameraTipsModalProps> = ({
   visible,
   onClose,
+  onCloseButtonPress,
   onDontShowAgain: _onDontShowAgain,
   overlay = false,
 }) => {
@@ -159,7 +162,7 @@ export const CameraTipsModal: React.FC<CameraTipsModalProps> = ({
       style={[styles.card, getPopupChromeStyle(theme), { padding: spacing[6] }]}
     >
       <TouchableOpacity
-        onPress={onClose}
+        onPress={onCloseButtonPress ?? onClose}
         style={styles.closeBtn}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         accessibilityRole="button"

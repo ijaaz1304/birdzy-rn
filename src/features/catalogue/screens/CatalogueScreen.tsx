@@ -30,6 +30,7 @@ import {
   useRoute,
   RouteProp,
   useFocusEffect,
+  NavigationProp,
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
@@ -38,7 +39,10 @@ import { Text } from "../../../atoms";
 import { SearchBar, Tab } from "../../../molecules";
 import FilterModal from "../../../organisms/FilterModal/FilterModal";
 import { EmptyState } from "../components/EmptyState";
-import { CatalogueStackParamList } from "../../../navigation/types";
+import {
+  CatalogueStackParamList,
+  MainTabParamList,
+} from "../../../navigation/types";
 import { useFeatureConfig } from "../../../config/context";
 import { screenStyles } from "../../../styles/common";
 import { FilterState } from "../../../organisms/FilterModal/types";
@@ -62,6 +66,7 @@ import { EVENTS } from "../../../services/analytics/analytics.events";
 import { useStrings } from "../../../hooks/useStrings";
 import { useToast } from "../../../hooks";
 import { RemoveFromWishlistConfirmation } from "../../../components/RemoveFromWishlistConfirmation";
+import { useAppLogsStore } from "../../app-logs/app-logs.store";
 import { archetypeService } from "../../../services/archetype/archetype.service";
 import { resolveBirdDiscoveryLocation } from "../../../utils/birdDiscoveryLocation.helpers";
 import { isSessionExpiryError } from "../../../services/api/errors";
@@ -189,6 +194,7 @@ export const CatalogueScreen: React.FC = () => {
     totalCount,
     favorites,
     toggleFavorite,
+    error: listError,
   } = useBirdsStore();
   const suppressedWishlistIds = useBirdsStore((s) => s.suppressedWishlistIds);
   const isFirstCatalogueFocus = useRef(true);
@@ -713,18 +719,40 @@ export const CatalogueScreen: React.FC = () => {
           }}
           onStarPress={() => {
             void (async () => {
+              // Diagnostics (Settings → App Logs): confirms the tap and the wishlist result.
+              const logs = useAppLogsStore.getState();
+              logs.info("[Wishlist] catalogue star pressed", {
+                archetypeId: item.id,
+                name: item.name,
+                wasStarred: isStarred,
+              });
               if (isStarred) {
                 setPendingWishlistRemove({ id: item.id, name: item.name });
                 setShowRemoveWishlistConfirm(true);
                 return;
               }
+              const startedAt = Date.now();
               const result = await toggleFavorite(item.id);
+              logs[result ? "info" : "error"]("[Wishlist] catalogue star result", {
+                archetypeId: item.id,
+                result: result ?? "failed",
+                ms: Date.now() - startedAt,
+                reason: useBirdsStore.getState().lastFavoriteError,
+              });
               if (result === "added") {
+                // Star is already filled (optimistic). Toast, then open Collection → Wishlist;
+                // `initial: false` keeps CollectionMain underneath so Back returns to Collection.
                 showToast(strings.collection.favorite.added, "success");
+                navigation
+                  .getParent<NavigationProp<MainTabParamList>>()
+                  ?.navigate("Collection", {
+                    screen: "Wishlist",
+                    initial: false,
+                  });
               } else if (result === "removed") {
                 showToast(strings.collection.favorite.removed, "success");
               } else {
-                showToast(strings.collection.favorite.addFailed, "error");
+                showToast(useBirdsStore.getState().lastFavoriteError ?? strings.collection.favorite.addFailed, "error");
               }
             })();
           }}
@@ -753,6 +781,7 @@ export const CatalogueScreen: React.FC = () => {
       strings.collection.favorite,
       playingId,
       toggleSound,
+      navigation,
     ]
   );
 
@@ -1036,12 +1065,14 @@ export const CatalogueScreen: React.FC = () => {
                 title={
                   hasActiveFilters
                     ? strings.catalogue.filterEmptyState.title
-                    : catalogueConfig.emptyState.title
+                    : listError
+                      ? "Can't load birds near you"
+                      : catalogueConfig.emptyState.title
                 }
                 subtitle={
                   hasActiveFilters
                     ? strings.catalogue.filterEmptyState.subtitle
-                    : catalogueConfig.emptyState.subtitle
+                    : listError || catalogueConfig.emptyState.subtitle
                 }
               />
             </ScrollView>
@@ -1126,7 +1157,7 @@ export const CatalogueScreen: React.FC = () => {
           if (result === "removed") {
             showToast(strings.collection.favorite.removed, "success");
           } else {
-            showToast(strings.collection.favorite.removeFailed, "error");
+            showToast(useBirdsStore.getState().lastFavoriteError ?? strings.collection.favorite.removeFailed, "error");
           }
         }}
         mushroomName={pendingWishlistRemove?.name}

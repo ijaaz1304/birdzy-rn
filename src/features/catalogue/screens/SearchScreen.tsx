@@ -398,7 +398,7 @@ export const SearchScreen: React.FC = () => {
               } else if (result === "removed") {
                 showToast(strings.collection.favorite.removed, "success");
               } else {
-                showToast(strings.collection.favorite.addFailed, "error");
+                showToast(useBirdsStore.getState().lastFavoriteError ?? strings.collection.favorite.addFailed, "error");
               }
             })();
           }}
@@ -650,7 +650,7 @@ export const SearchScreen: React.FC = () => {
           if (result === "removed") {
             showToast(strings.collection.favorite.removed, "success");
           } else {
-            showToast(strings.collection.favorite.removeFailed, "error");
+            showToast(useBirdsStore.getState().lastFavoriteError ?? strings.collection.favorite.removeFailed, "error");
           }
         }}
         mushroomName={pendingWishlistRemove?.name}

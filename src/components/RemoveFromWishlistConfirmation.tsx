@@ -6,7 +6,7 @@ import { AppImage } from "@/components/AppImage";
 import { CloseIcon } from "@/components/shared/CloseIcon";
 import React from "react";
 import { Modal, View, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from "react-native";
-import { Images } from "../assets";
+import { Images, RemoveWishlistTrashDark } from "../assets";
 import { APP_COLORS } from "../config/colors";
 import { useTheme, useIsDark } from "../hooks/useTheme";
 import { SUBSCRIPTION_COLORS } from "../constants/colorConstants";
@@ -30,7 +30,6 @@ export const RemoveFromWishlistConfirmation: React.FC<
   const ctaBg = isDark
     ? SUBSCRIPTION_COLORS.CTA_PRIMARY_DARK
     : SUBSCRIPTION_COLORS.CTA_PRIMARY_LIGHT;
-  const trashIcon = isDark ? Images.trashDark : Images.trashLight;
 
   const handleConfirm = async () => {
     try {
@@ -69,13 +68,20 @@ export const RemoveFromWishlistConfirmation: React.FC<
                 <CloseIcon isDark={isDark} style={styles.closeIcon} />
               </TouchableOpacity>
 
-              <View style={styles.iconContainer}>
-                <AppImage
-                  source={trashIcon}
-                  style={styles.trashIcon}
-                  resizeMode="contain"
-                  preferRNImage
-                />
+              <View
+                style={[styles.iconContainer, isDark && styles.iconContainerDark]}
+              >
+                {isDark ? (
+                  // Figma 9399:158787: 64px teal trash illustration, 8px above the title.
+                  <RemoveWishlistTrashDark width={64} height={64} />
+                ) : (
+                  <AppImage
+                    source={Images.trashLight}
+                    style={styles.trashIcon}
+                    resizeMode="contain"
+                    preferRNImage
+                  />
+                )}
               </View>
 
               <Text
@@ -155,6 +161,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "center",
     marginBottom: 12,
+  },
+  // Figma header gap 8 between illustration and title.
+  iconContainerDark: {
+    marginBottom: 8,
   },
   trashIcon: {
     width: 48,

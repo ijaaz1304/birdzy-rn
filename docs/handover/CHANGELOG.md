@@ -1,5 +1,476 @@
 # Birdzy — handover change history
 
+## 2026-11-23 — Explore target icon detects the current city
+
+- Before:
+  - `useExploreLocation.attempt()` returned early whenever a location had been set. The first automatic fix sets one, so the search-bar target icon (`retryLocation`) did nothing after load.
+  - The device label was hard-coded to “Current Location”.
+- `attempt(force)`: `retryLocation` (target icon and retry button) now forces a fresh device read. Automatic and app-foreground attempts keep the old behaviour.
+- After the fix, `reverseGeocodeAddress` replaces “Current Location” with “City, Region”. The label is shown on the right of the “Current Location:” card and in the search bar. The update is skipped if the user picked another place meanwhile, and the placeholder is kept on failure.
+- `reverseGeocodeAddress` (Explore) now falls back to the new `reverseMapboxCity` (Mapbox Geocoding v6 `/reverse`, types place/locality/district/region, limit 1) when geocode.maps.co is not configured. This mirrors the forward-search fallback. `GEOCODING_API_KEY` is empty in all `.env*` files; `MAPBOX_ACCESS_TOKEN` is set.
+- Affected: `useExploreLocation.ts`, `src/features/explore/utils/geocodingApi.ts`, `FLOWS.md`. No env names or values changed.
+- Validation: TypeScript is clean for `src/features/explore`. ESLint shows 0 errors (6 existing warnings). Explore tests pass (56/56). Not run on device. The live Mapbox reverse response was not exercised.
+
+## 2026-11-23 — Explore “Selected Area” is teal in dark mode
+
+- The device check showed the legend already matched the Figma values (`#785284` ring, 20% purple fill), but on the dark page it read as black. Design asked for teal `rgba(22, 182, 180, 1)` in dark mode.
+- Dark mode now uses a `#16B6B4` ring with a 20% `#16B6B4` fill (`rgba(22,182,180,0.2)`) for:
+  - the legend swatch (`selectedSwatchDark`);
+  - the map's selected-area circle (`SELECTED_CIRCLE_DARK`).
+  - New `EXPLORE_COLORS.selectedStrokeDark`, `selectedFillDark` and `selectedBackgroundDark` keep the two in sync.
+- Light mode stays purple (`#785284` ring, 20% `#725481` fill).
+- Affected: `explore.colors.ts`, `ExploreMapScreen.tsx`, `ExploreMapView.nativeMap.tsx`. No API change.
+- Validation: TypeScript is clean for `src/features/explore`. ESLint shows 0 errors (6 existing warnings). Explore tests pass (56/56). Not re-run on device.
+
+## 2026-11-23 — Explore Near You: header, spacing, search target icon, legend colours
+
+- Follow-up after a second on-device screenshot.
+- Header (Figma Top Navigation Bar): 52 high, px12, back in a p8 wrapper. The title is Satoshi Bold 18/24, left-aligned from x=60 (was a larger centred title).
+- Spacing:
+  - The tab bar no longer adds 8px on top (16 after the location card, as Figma).
+  - Tabs are fixed at 32 high (were 40).
+  - The card grid starts 16 below the tabs (was 24), with px20 (was 16).
+- Map: the Mapbox scale bar is hidden (`scaleBarEnabled={false}`). It sat under the +/− chips and is not in Figma. The Mapbox logo and attribution remain, as Mapbox terms require.
+- Search bar: the right-hand icon is the Figma `target-03`, 24px, `#5D5D5D` light / `#D1D1D1` dark, via new `ExploreSearchTargetIcon(Dark)` copies. Tapping it calls `retryLocation()` to go back to the device location (`onUseCurrentLocation` prop on both the collapsed and expanded bars). The × clear button now shows only while typing.
+- Colours (`explore.colors.ts`):
+  - `selectedStroke` `#402122` → `#785284`. The legend's “Selected Area” swatch was nearly invisible in dark; it now matches Figma.
+  - `activeTab` (light) `#402122` → `#785284`, per Figma. Dark still uses `textBrand`.
+- Affected: `ExploreMapScreen.tsx`, `ExploreTabBar.tsx`, `ExploreResultList.tsx`, `ExploreMapView.nativeMap.tsx`, `ExploreLocationSearchBar.tsx`, `explore.colors.ts`, `explore/assets/index.ts`, and the new `icons/target-search(-dark).svg`.
+- Validation: TypeScript is clean for `src/features/explore`. ESLint shows 0 errors (6 existing warnings). Explore tests pass (56/56). Not re-run on device.
+
+## 2026-11-23 — Explore Near You layout matches Figma 9376:267165
+
+- Compared against an on-device screenshot (Android, dark). The Figma frame lists light-token fallbacks over a dark page, so the dark colours follow the existing dark tokens.
+- `ExploreMapScreen`:
+  - The search bar and filter moved **out of the map overlay** into their own row (px20, pt8, gap 8, raised `zIndex`). The filter is a 48px circle with a 24px icon.
+  - The map is a card: 20 side margins, 8 top, `aspectRatio: 2` (was a full-width 280px block), radius 12, 1px Border-0, clipped.
+  - Legend: centred, gap 8, 6px dot separator, Body/14 Regular `textPrimary`.
+  - “Current Location:” card: radius 12 (was a pill), p12, gap 12. The label is `textSecondary` and the value is `textPrimary` Regular, right-aligned (was semibold, left).
+  - 16px before the tabs; tab margin 20 (was 16).
+  - The `EXPLORE_SCOPE_DESCRIPTION` note (“Map filters affect activity within 100 km…”) is no longer rendered. The string still exists.
+- `ExploreMapView.nativeMap`:
+  - Controls are 32px chips (were 40), with +/− at 7/7 top-left and locate/expand at 7/7 bottom-right (were top 64 / 8).
+  - The expanded map keeps +/− at top 64 below its overlaid search bar.
+- `ExploreLocationSearchBar`:
+  - 48 high (was 44), gap 12, 24px pin icon, Satoshi Regular 16 with −0.16 spacing.
+  - Border-0 instead of the purple `EXPLORE_COLORS.searchBorder`. Dark fill is `#091421`.
+  - The suggestions dropdown is now absolutely positioned 56 below the bar, so it overlays the map instead of pushing the layout down.
+- Result cards and the expanded “Birds in This Area” cards: the common name is the title, the scientific name the subtitle, falling back to the scientific name as title.
+- Not done:
+  - The Figma sound button on Explore cards. Explore results carry no sound URLs.
+  - White card and star surfaces from the light-token frame; cards stay on the dark card style.
+- Affected: `ExploreMapScreen.tsx`, `ExploreMapView.nativeMap.tsx`, `ExploreLocationSearchBar.tsx`, `ExploreResultList.tsx`, `FLOWS.md`. No API change.
+- Validation: TypeScript is clean for `src/features/explore`. ESLint shows 0 errors. Explore tests pass (56/56). Not re-run on device after the change.
+
+## 2026-11-23 — Feed limit sheet: “Go pro” rendered at title size
+
+- “Go pro” in the feed limit title rendered at body size. The atom `Text` re-applies its default body typography and line height to nested spans, overriding the parent's 28/36. The nested span now repeats `feedLimitTitle` (Satoshi Bold 28/36) along with the `textBrand` colour.
+- Affected: `AppSheet.tsx`. Validation: TypeScript is clean for the file; ESLint shows 0 errors. Not run on device.
+
+## 2026-11-23 — Feed daily post-limit sheet matches Figma 9406:7158
+
+- `AppSheet` `limitReached` with `limitType: "feed"` (Create Post at the daily limit) now renders a dedicated `FeedLimitContent` (Figma 9406:7173):
+  - Title “Get unlimited posts daily- **Go pro** now”: Satoshi Bold 28/36, centred, max 315 wide. Only “Go pro” is in `textBrand` (Text & icon-Brand 1: `#725481` light / `#009DA7` dark). Before, it used the orange `MUSHROOM_COLORS.ACCENT_ORANGE` mushroom-app accent on “Go pro+ now”.
+  - Description “As a free user, you're allowed to create one post daily. Go Pro for more posting options!”: Satoshi Regular 14/20, `textSecondary`, 4px under the title.
+  - CTA 24px below: 44 tall, 16/10 padding, radius 24, Satoshi Medium 16/24, `primaryCTA` fill. Before: min 50, 16px vertical padding, bold. The label still comes from the selected plan (`getSubscriptionCtaLabel`, e.g. “Get 7 Days Free Trial”).
+  - Side padding is 12 (Figma 351 content width).
+- The feed copy is defined in `AppSheet` (`FEED_LIMIT_COPY`), because `SUBSCRIPTION_CAROUSEL_ITEMS` id 7 is also used by onboarding and upgrade surfaces. Those keep their existing text.
+- Unchanged: the supplied full-bleed background/illustration art (`unlimited posts.png` dark, `feed_popup_bg.png` light), the shared 28px close chip (Figma: 24px Surface-Secondary/Border-0), and all other limit types.
+- Affected: `AppSheet.tsx`. No API change.
+- Validation: TypeScript is clean for the file. ESLint shows 0 errors (42 existing warnings). Sheet/limit/subscription tests pass (52/52). Not run on device.
+
+## 2026-11-23 — Feed “Delete post” popup matches Figma 9406:7136
+
+- `AppModal` type `deletePost` (Feed and Post Details), following Figma 9406:7139/7140/7141:
+  - Icon: 64px trash with an 8px gap to the title. Dark uses the teal Figma `DeleteAccountTrashDark` vector (was the purple `trash_dark.png` at 48px in a 72px box); light uses `trash_light` at 64px.
+  - Title: Satoshi Bold 20/28, centred, `textPrimary`.
+  - Buttons: 32px below the title, 12px apart.
+    - Primary label “Yes, Remove” → **“Delete”**. 16/12 padding (48px tall).
+    - “No, Thanks”: 16/10 padding (44px), Border-0.
+    - Both are radius 24, Satoshi Medium 16/24 (was semibold label style, radius 30, both 48px).
+  - Popup frame: 20px content padding. The close control is a 24px chip 16 from the top/right: dark `#091421` / `#333` with a `#D1D1D1` X, light `#F6F6F6` / `#E7E7E7` with a `#5D5D5D` X.
+- The Figma frame uses light-mode tokens over a dark screen (purple icon and button, white “No, Thanks”, invisible title). The dark colours follow the already-approved dark delete/remove popups. The CTA keeps the shared dark teal primary, now without glow.
+- `deleteCollection` is unchanged; it shares only the old styles.
+- Affected: `AppModal.tsx`. No API change.
+- Validation: TypeScript is clean for the file. ESLint shows 0 errors. Modal/feed tests pass (17/17). Not run on device.
+
+## 2026-11-23 — Scanning Tips: Gallery-granted trigger and X → Gallery
+
+- Implements the two missing parts of Figma dev note 8830:1773.
+- (a) `CameraScreen` opens Scanning Tips immediately when Camera is denied and Gallery permission is granted (`checkStoragePermission`).
+  - “Camera denied” means an Allow Access or Go to Settings inline screen is showing and no native dialog is open.
+  - It uses the same once-per-install `HAS_SEEN_CAMERA_TIPS` flag as the Camera-granted trigger, so Tips are shown once in total.
+- (b) `CameraTipsModal` gets an optional `onCloseButtonPress` for the X button only (defaults to `onClose`). `CameraScreen` uses it to close Tips and call `openGallery()` when Camera is not granted. Backdrop and “Understood” only close.
+- Note: on Android 13+ `checkStoragePermission` always reports granted, so (a) applies to every Camera denial there.
+- Affected: `CameraScreen.tsx`, `CameraTipsModal.tsx`, `FLOWS.md`. No API change.
+- Validation: TypeScript is clean for the changed files. ESLint shows 0 errors. Birdzy camera tests pass, including the 4 permission-flow tests. The one existing failure, `cameraIdentifyReview.test.tsx`, renders `CameraIdentifyReview` without a `ThemeProvider` and is unrelated to these files. Not run on device.
+
+## 2026-11-23 — Camera permission flow checked against Figma 8558:25287
+
+- New `__tests__/camera/identifyCameraPermission.test.ts` encodes the Figma rules for `identifyCameraPermission.helpers.ts` (4/4 pass):
+  - Case 1 (deny → Allow Access → native again → deny → Go to Settings);
+  - Case 2 (visit 1 deny → Allow Access; visit 2 native → deny → Go to Settings; visit 3+ Go to Settings);
+  - OS-blocked → Go to Settings;
+  - iOS: one native dialog, then Go to Settings. That is an OS limitation, so iOS has no Allow Access step.
+- Scanning Tips: shown once (`HAS_SEEN_CAMERA_TIPS`), only after camera permission is granted. This matches the dev note.
+- Not implemented from the dev note:
+  - (a) open Scanning Tips immediately when Gallery permission is granted while Camera is denied;
+  - (b) closing Tips with X auto-opens the Gallery sheet. `handleTipsClose` only closes.
+- No app code changed. Not run on device.
+
+## 2026-11-23 — Delete Account popup: Figma trash icon in dark mode
+
+- `DeleteAccountConfirmation` (Settings → Delete Account) used the purple/yellow raster `trash_dark.png` in dark mode.
+- Dark mode now renders the Figma 9603:38239 “Illustration/ trash” vector at 64×64: a `#16B6B4` bin on a `#072C38` ellipse. It is the same shape as the wishlist icon, but that one uses `#009DA7`.
+  - New file `src/assets/dark/figma/delete_account_trash.svg`, exported as `DeleteAccountTrashDark`.
+- `SettingsAccountDialog` gets an optional `iconNode` prop. A rendered icon takes precedence over the `icon` image source. Log Out is unaffected.
+- Light mode is unchanged (`trash_light.webp`).
+- Still on `trash_dark.png`: `RemoveFromWishlistModal`, `RemoveFromCollectionModal`, `AppModal`.
+- Affected: `DeleteAccountConfirmation.tsx`, `SettingsAccountDialog.tsx`, `src/assets/index.ts`, the new SVG. No API change.
+- Validation: TypeScript and ESLint are clean for the changed files. `verify-dark-assets.js` passes. Not run on device.
+
+## 2026-11-23 — Remove-from-wishlist popup: Figma trash icon in dark mode
+
+- `RemoveFromWishlistConfirmation` (Bird Details, Catalogue, Search) used the purple/yellow raster `trash_dark.png` at 48px in dark mode.
+- Dark mode now renders the Figma 9399:158787 “Illustration/ trash” vector: a `#009DA7` bin on a `#072C38` ellipse, at 64×64, with an 8px gap to the title (was 12).
+  - New file `src/assets/dark/figma/remove_wishlist_trash.svg` (Figma export with fixed size), exported as `RemoveWishlistTrashDark`.
+- Light mode is unchanged (`trash_light.webp`).
+- Not changed: `RemoveFromWishlistModal`, `RemoveFromCollectionModal`, `DeleteAccountConfirmation` and `AppModal` still use `trash_dark.png` in dark mode.
+- Affected: `RemoveFromWishlistConfirmation.tsx`, `src/assets/index.ts`, the new SVG. No API change.
+- Validation: TypeScript is clean for the changed files. ESLint shows 0 errors (1 existing warning). `verify-dark-assets.js` passes. Not run on device.
+
+## 2026-11-23 — Wishlist add works around the backend “Mixed” enum error
+
+- `archetypeService.addWishlistArchetype` handles a backend `Specimen validation failed … is not a valid enum value for path …` error with a new private `addWishlistViaSpecimen` fallback.
+  - It loads the archetype details and builds a specimen with `buildMushroomSpecimenAddFromRaw(…, { isIdentified: false, isWishlisted: true })`.
+  - It removes every value the server named as rejected, then `POST /core/specimen/add`. If the server names more values, it strips those and retries, up to 5 rounds.
+  - Any other error is rethrown as before, so the toast still shows the real reason.
+- New `src/services/archetype/specimenEnumSanitizer.ts`: parses the rejected values (including several per message and nested paths) and strips them from a payload without mutating the original.
+  - The payload builder is required lazily inside the fallback, to avoid a load-time import cycle (`collection.utils → archetype.service → editMushroomDetails.utils`).
+- App Logs: `[Wishlist] add: enum validation, using specimen fallback`, then `… specimen fallback success` (with attempt and removed values) or `… specimen fallback failed`.
+- Trade-off: the saved wishlist specimen omits the rejected value (e.g. Besra's “Mixed” flight pattern). The backend fix in `KNOWN_GAPS.md` is still needed.
+- Affected: `archetype.service.ts`, the new `specimenEnumSanitizer.ts`, and the new `__tests__/collection/specimenEnumSanitizer.test.ts`. No endpoint or env change; uses the existing `specimen/add` endpoint.
+- Validation:
+  - New sanitizer tests pass (5/5). Collection, wishlist lifecycle and core contract suites pass (84/84 together).
+  - TypeScript: no errors in changed files (the 2 existing `AskAIScreen.tsx` errors remain). ESLint clean.
+  - Not run on device. Starring Besra from the Catalogue needs retesting.
+
+## 2026-11-23 — Wishlist failure root cause found (backend enum mismatch)
+
+- Device logcat shows `PUT /core/archetypes/wishlist/add/6a61f6c65db631270434c4b1` (Besra) returning 500. The reason is `Specimen validation failed: flightPattern.0: 'Mixed' is not a valid enum value`.
+- The client is correct: archetype id, endpoint, and an empty body as designed. The earlier `custom_id` suspicion is ruled out.
+- Logged as a backend item in `KNOWN_GAPS.md`. No app code changed in this entry.
+- Also noted: App Logs only collect after logging is enabled in Settings → App Logs (`isEnabled` defaults to `false`). The Metro / `adb logcat` console mirror is the reliable source on dev builds.
+
+## 2026-11-23 — Wishlist failures show the real reason instead of “Failed to add to wishlist”
+
+- Problem: `mushroomsRepository.toggleFavorite` caught every error and returned `false`, so the store and screens could only show the generic add/remove failure toast. The real reasons from `archetypeService.addWishlistArchetype` were lost. Known reasons:
+  - “This is already identified, can't wishlist.” (any specimen for the archetype is identified)
+  - “This bird is already in your collection. The server couldn't add it to wishlist.”
+  - the server `reason`
+  - network or HTTP errors
+- Fix:
+  - The repository now rethrows (still `console.error` + service App Logs).
+  - `useBirdsStore.toggleFavorite` keeps the message in a new `lastFavoriteError` field, cleared at the start of each toggle, and still returns `null`.
+  - The Catalogue, Search and Possible Matches failure toasts now show `lastFavoriteError ?? <generic string>`.
+- Wishlist failures no longer set the store `error`. That field drives list-load UI (the uncommitted Catalogue empty state shows it as “Can't load birds near you”).
+- Catalogue App Logs `[Wishlist] catalogue star result` now records `reason`.
+- Not confirmed: why the device add fails. One code-level suspect: catalogue card ids come from `getBirdCardId` (`archetypeId → custom_id → _id → id`). If list items lack `archetypeId`, the wishlist PUT and specimen lookup would get `custom_id`. The new toast/log reason will show which case applies.
+- Affected: `mushrooms.repository.ts`, `birds.store.ts`, `CatalogueScreen.tsx`, `SearchScreen.tsx`, `OtherPossibleMatchesScreen.tsx`. No API change.
+- Validation: there are no TypeScript errors in changed files (the 2 existing `AskAIScreen.tsx` errors remain). ESLint shows 0 errors. Wishlist tests pass (37/37). Not run on device.
+
+## 2026-11-23 — Catalogue star: fill, toast, then open Wishlist
+
+- Requested flow: tap star → star fills → “added” toast → Collection → Wishlist.
+- Implementation:
+  - The star still fills optimistically through `toggleFavorite`.
+  - On an “added” result, `CatalogueScreen` shows the success toast, then calls `navigation.getParent()?.navigate("Collection", { screen: "Wishlist", initial: false })`. This keeps `CollectionMain` under the Wishlist so Back works.
+  - Navigation waits for backend confirmation, so the Wishlist (which refetches on focus) already contains the bird.
+  - Failed adds keep the error toast, revert the star, and stay on Catalogue. Removing a star is unchanged (confirmation, stays on Catalogue).
+- The earlier `[Wishlist] catalogue star …` App Logs diagnostics remain, to help if the tap still produces nothing on device.
+- Affected: `CatalogueScreen.tsx`, `FLOWS.md`. No API change.
+- Validation: TypeScript is clean for the file. ESLint shows 0 errors and 13 existing warnings (the new hook-dependency warning was fixed). Not run on device. Whether the earlier “nothing happens on tap” symptom remains is unconfirmed.
+
+## 2026-11-23 — Catalogue star: diagnostics for “no wishlist add, no toast, star not filled” (open)
+
+- Reported: tapping the star on a Catalogue card does not add the bird, shows no toast, and the star stays empty.
+- Static review found no fault in the code path:
+  - `AppCard` star button: top-right with `zIndex 2`, `stopPropagation`; no overlap with the sound button.
+  - `birds.store.toggleFavorite` fills the star optimistically before any network call, then always returns “added”, “removed” or `null`.
+  - `CatalogueScreen` shows a success or error toast for each of those results. `ToastProvider` has no filtering.
+  - The star images are fine: a red outline and a red fill.
+  - `__tests__/lifecycle/wishlistCollectionRefresh.test.ts` and `__tests__/api/coreContract.test.ts` pass (37/37).
+- Two causes fit the symptoms:
+  - (a) the tap never reaches the star on device;
+  - (b) the request hangs. `addWishlistArchetype` first resolves existing and wishlisted specimens before the PUT, with no timeout. This alone would not keep the star empty.
+- Added diagnostics in `CatalogueScreen` (Settings → App Logs):
+  - `[Wishlist] catalogue star pressed`, with archetype id, name and previous state.
+  - `[Wishlist] catalogue star result`, with “added”/“removed”/“failed”, duration in ms, and the store error.
+  - These sit alongside the existing `[Wishlist] add: …` service logs. No behaviour change.
+- Side effect to note: a failed toggle sets `useBirdsStore.error`. The uncommitted catalogue empty-state change reads that as `listError` (“Can't load birds near you”).
+- Affected: `CatalogueScreen.tsx`. No API change.
+- Validation: TypeScript is clean for the file. ESLint shows 0 errors. Not run on device. Root cause not yet confirmed.
+
+## 2026-11-23 — Dark primary buttons: glow removed everywhere
+
+- `getDarkPrimaryCtaStyle` (`src/design-system/modalTokens.ts`) no longer adds the `#FFAE00` shadow (26%, 12.5 blur, offset 0/2) or Android `elevation: 6`. It keeps only the `#16B6B4` fill and 24 radius.
+- This covers every dark primary button built on it: the shared Button/PrimaryButton/AppButton variants, `getPopupPrimaryCtaStyle` popups, subscription, camera review, post-auth and others (about 20 files). Requested by the design owner after the green haze showed under the “Select a collection” Done button.
+- The per-button override added earlier today in `AddToCollectionModal` has been removed, since the shared fix makes it unnecessary. `ONBOARDING_CTA_NO_SHADOW` is still in place and has no effect now.
+- Not changed: the separate Bird of the Day `#FFDD24` gold glow in `BirdOfTheDayModal.tsx`. Light mode is unchanged.
+- Affected: `modalTokens.ts`, `AddToCollectionModal.tsx`, `DEVELOPMENT.md`. No API change.
+- Validation: there are no TypeScript errors in changed files. The only errors under `src/` are 2 existing ones in `AskAIScreen.tsx` (already modified before this session), plus errors in the untracked `mushrooms-reactNative/` folder. ESLint shows 0 errors. Not run on device.
+
+## 2026-11-23 — Select a collection: no glow on the Done button
+
+- In dark mode the Done button in `AddToCollectionModal` had the shared CTA glow from `getPopupPrimaryCtaStyle` → `getDarkPrimaryCtaStyle`: `#FFAE00` shadow at 26% opacity, 12.5 blur, Android `elevation: 6`. On the teal fill it showed as a greenish shadow. Figma 9380:111844 has a flat button.
+- That button now overrides the shadow and elevation to 0. The teal fill and 24px radius are kept.
+- Not changed: about 20 other files still use the shared dark CTA style and its glow.
+- Affected: `AddToCollectionModal.tsx`. No API change.
+- Validation: TypeScript is clean for the Birdzy file (the only errors reported are in the untracked `mushrooms-reactNative/` folder). ESLint shows 0 errors and 1 existing warning. Not run on device.
+
+## 2026-11-23 — Bird Sound Library Unknown tab: badge, card highlight, Rename/Delete menu
+
+- Figma 9380:111772. The dark colours were sampled from the render.
+- “My Recording” badge: dark is `#072C38` with `#16B6B4` text (was pink/brown). 4px vertical padding (was 2), 12/16 Medium. Light colours are unchanged.
+- New Rename / Delete menu (`AudioGalleryCardMenu`, Figma 9380:111794):
+  - It opens on **long-press** of an Unknown card. Figma has no visible trigger, so long-press was chosen.
+  - Size and position: 120 wide, 4px under the card, right-aligned. It flips above the card near the screen bottom.
+  - Style: radius 8, gap 4, rows with 12/8 padding, 20px icon, 14/20 label.
+  - Dark: `#091421` fill with a `#333` border and a white 7% shadow. Rename is `#D1D1D1`, Delete is `#EF4444`.
+  - It is drawn in a transparent Modal so it overlays the following rows. Tapping outside closes it.
+  - Rename runs the existing edit flow. Delete opens the existing delete confirmation.
+- While its menu is open, the card has a `#01474F` border in dark (theme CTA in light).
+- The existing swipe Edit/Delete actions are kept.
+- Affected: `AudioGalleryScreen.tsx`, `AudioGalleryCard.tsx`, the new `AudioGalleryCardMenu.tsx`, `home.strings.ts` (`menuRename`, `menuDelete`). No API change.
+- Validation: TypeScript is clean. ESLint shows 0 errors: 1 new inline-style warning in the menu, plus the screen's 9 existing warnings. Not run on device.
+- QA: check the menu position on Android. `measureInWindow` combined with a `statusBarTranslucent` Modal can be offset by the status-bar height if the app is not edge-to-edge.
+
+## 2026-11-23 — Bird Sound Library matches Figma in dark mode
+
+- Figma 9380:111722. The dark colours were sampled from the render, because the export only lists light fallbacks.
+- `AudioGalleryScreen`:
+  - Tabs: dark active is `#009DA7` (text and 2px underline), dark inactive is `#D1D1D1`. Before, both modes used brown `#402122` and grey `#5D5D5D`.
+  - Tab size and type: 32 high with 12 side padding. Labels 16/24, Medium when active and Regular with −0.16 spacing otherwise.
+  - Dark search field fill is `#091421`, with the Border-0 `#333333` border.
+  - Spacing: 20 side padding (was 16), 8 above search (was 4), 24 search → tabs (was 12).
+  - The dark loading spinner uses the theme CTA.
+- `AudioGalleryCard`:
+  - Dark play button is `#16B6B4` with a `#091B21` play/pause glyph. Before, it was brown with a white glyph.
+  - Dark scientific name and meta are `#D1D1D1` (was `#5D5D5D`).
+  - The scientific name is no longer italic, in both modes, as in Figma. Name 16/24, captions 12/16.
+  - Text layout: the name group sits at the top and the meta line at the bottom of the 64px row.
+  - Unknown-tab cards, the swipe area and the empty thumbnail used light pink `#F5EBEB` in dark; they now use the dark surface. The edit icon is `#D1D1D1` in dark.
+- Light colours are unchanged apart from the non-italic scientific name.
+- Not changed, no dark Figma for these: the “My Recording” badge (pink/brown) on Unknown cards, and the empty-state “Identify by Sound” button (pink/brown).
+- Affected: `AudioGalleryScreen.tsx`, `AudioGalleryCard.tsx`. No API change.
+- Validation: TypeScript is clean. ESLint shows 0 errors and 9 existing warnings, none on changed lines. Not run on device.
+
+## 2026-11-23 — Bird size scale: light silhouettes and Figma radios in dark mode
+
+- `size_scale.svg` had `#111111` hard-coded, so the bird silhouettes stayed black in dark mode. Its fill and stroke are now `currentColor`, and both callers pass a colour: `#F6F6F6` in dark (Figma 9380:170241), `#111111` in light, so light mode is unchanged.
+  - Callers: `WizardSizePicker` (step-by-step “How big was the bird?”, Figma 9380:170233) and `BirdDetailSections` (collection bird details size scale).
+- Step-by-step size radios in dark mode (Figma 9380:170248): selected is a teal `#16B6B4` (`rgba(22, 182, 180, 1)`) 2px ring with a 10px dot, on design request; the Figma render shows `#785284`; unselected is `#D1D1D1` fill with a `#B0B0B0` ring. Before, dark used the theme CTA and Border-0 with no fill. Light is unchanged.
+- The size pill radius is now explicitly 24 (Figma Tag/Filter). The border stays `#41EDE9`.
+- Affected: `size_scale.svg`, `WizardSizePicker.tsx`, `BirdDetailSections.tsx`. No API change.
+- Validation: TypeScript is clean. ESLint shows 0 errors and 7 existing warnings, none on changed lines. Not run on device.
+
+## 2026-11-23 — Step-by-step location suggestions use the Explore search (Mapbox fallback)
+
+- Root cause of “no suggestions”: `WizardLocationSearchField` called the shared `src/utils/geocodingApi.ts`. That needs `GEOCODING_API_KEY`, which is empty in `.env`, `.env.dev` and `.env.prod`, so it returned `[]` without sending any request. `MAPBOX_ACCESS_TOKEN` is set in all three. Only presence was checked; values were not read.
+- The field now imports `searchAddressSuggestions` and `geocodeAddress` from `src/features/explore/utils/geocodingApi.ts`. It uses geocode.maps.co when that key is set, otherwise Mapbox Geocoding v6, and returns the same result shape. Superseded requests are cancelled with an `AbortController`.
+- Not changed: `ChangeLocationBottomSheet` and other callers of the shared util still use geocode.maps.co only. They return no suggestions until `GEOCODING_API_KEY` is set or they are switched the same way.
+- Affected: `WizardLocationSearchField.tsx`, `FLOWS.md`. No env names or values changed.
+- Validation: `npx jest __tests__/explore/geocodingApi.test.ts` passes (6/6, including the Mapbox fallback with no geocoding key). TypeScript is clean. ESLint shows the same 2 existing warnings. Not run on device; live Mapbox results are not verified.
+
+## 2026-11-23 — Step-by-step location: suggestions open after 3 letters; Continue above keyboard
+
+- `WizardLocationSearchField` now opens its dropdown as soon as 3+ characters are typed. Before, it only appeared after results came back, so slow, empty or failed searches showed nothing.
+  - The dropdown shows “Searching…” from the first keystroke, covering the 300 ms debounce, then the suggestions. If there are none it shows “No matching places”. That includes a failed request or missing `GEOCODING_API_*` config (the env var names are present in all `.env*` files; values not checked).
+  - Earlier results stay visible while a new search runs.
+  - New strings: `stepByStep.searchingLocations` and `stepByStep.noLocationMatches`.
+- Figma dev note 9380:170789: “The continue button should float above the keyboard”.
+  - Question view wrapped in `KeyboardAvoidingView`: iOS uses `padding`; Android already uses `adjustResize`.
+  - Footer bottom padding is 16 while the keyboard is open, instead of the home-indicator inset.
+- Affected: `WizardLocationSearchField.tsx`, `StepByStepScreen.tsx`, `home.strings.ts`, `FLOWS.md`. No API change.
+- Validation: TypeScript is clean. ESLint shows 5 warnings of the existing `void` / inline-style kinds. Not run on device.
+- Follow-up: device QA on iOS and Android for the dropdown, real search results, and the keyboard lift. If it always shows “No matching places”, check that the build loads `GEOCODING_API_BASE_URL` and `GEOCODING_API_KEY`.
+
+## 2026-11-23 — Step-by-step location question matches Figma
+
+- Custom Location is now typed inline (Figma 9380:170051), using the new `WizardLocationSearchField` instead of opening `ChangeLocationBottomSheet`.
+  - The field is a 40px pill: radius 100, 16/8 padding, gap 12. The cursor is teal `#16B6B4` in dark mode.
+  - Suggestions use the same `searchAddressSuggestions` search, with a 3-character minimum and 300 ms debounce.
+  - The dropdown sits 4px under the field: radius 12, 12 padding, gap 8, rows with 4 padding at 16/24. It shows up to 3 rows (136 tall) and scrolls beyond that. Border-0 outline, with a white 15% shadow in dark and black 8% in light.
+  - Pressing search on the keyboard uses the first suggestion, or else geocodes the typed text.
+- The Current location pill uses the same Figma pill shape. Before, it had a 12px radius with 20/16 padding.
+- Question body: top padding 20 and gap 20 (was 12 / 24). Footer: 20 side padding and 16 top (was 16 / 8).
+- Footer button label: “Next” → “Continue”, as in Figma (`stepByStep.next`, used only here).
+- Progress header: gap 8 (was 16). Dark track `#091421` and dark fill `#009DA7`. Light colours are unchanged.
+- Not done: the Figma footer fade (transparent → `#091B21`). The footer sits below the scroll area, not over it, so the fade would not be visible.
+- Affected: `StepByStepScreen.tsx`, the new `WizardLocationSearchField.tsx`, `WizardProgressHeader.tsx`, `home.strings.ts`, `FLOWS.md`. Same geocoding API; no API change.
+- Validation: TypeScript is clean. ESLint shows 4 warnings: 2 in the new field (`void` and inline style, the repo's usual pattern) and 2 already in the screen. Not run on device. Typing, suggestions, dropdown overlap on Android, and keyboard behaviour need device QA.
+
+## 2026-11-23 — Step-by-step intro bird: no white box in dark mode
+
+- The “Let’s Find Your Bird” intro used `find_your_bird.png`, which has an opaque white background, so dark mode showed a white box behind the bird.
+- Dark mode now uses the new `src/assets/dark/figma/wizard_find_your_bird.png` (300×274, registered as `Images.wizardFindYourBirdDark` and listed in `docs/dark-assets-manifest.json`). It matches Figma 9380:170609: transparent background and a `#072C38` ground shadow. The bird art is unchanged.
+- How it was made: Figma's export is only 150×137 and the vector uses about 20 masked layers, so the dark file was made from the light PNG. The white background, including the enclosed gap under the belly, was made transparent, with edge un-blending so no white halo remains. The light `#CCDADC` shadow was recoloured to `#072C38`, keeping its soft edges.
+- Light mode is unchanged.
+- Affected: `StepByStepScreen.tsx`, `src/assets/index.ts`, the new dark PNG, `dark-assets-manifest.json`, `DEVELOPMENT.md`. No API change.
+- Validation: `scripts/verify-dark-assets.js` passes. TypeScript is clean. ESLint shows the file's 2 existing warnings. The result was checked visually on `#091B21` in a preview render. Not run on device.
+- Follow-up: replace it with a design-supplied transparent export if one is provided.
+
+## 2026-11-23 — Choose a Method: scan-bird icon is teal in dark mode
+
+- The popup hero used the purple raster `identify_option_icon.png` in both modes. In dark mode it is now drawn from the Figma 9380:171047 “Scan” vectors with `react-native-svg`:
+  - `#16B6B4` scan frame with a 2.4 stroke, and a `#16B6B4` bird.
+  - A `#072C38` 29.29×17.35 ellipse at the bottom centre.
+  - All inside a 64px box, with the 48px scan box 6px above centre.
+- Light mode still uses the existing PNG.
+- Affected: `ChooseMethodPopup.tsx`. No API change.
+- Validation: TypeScript and ESLint are clean for the file. Not run on device.
+
+## 2026-11-23 — Sound results: note pencil and “Recording saved” toast match Figma
+
+- Note text: it was 14/20 italic `textPrimary`. It is now Figma Body/16px/Regular: Satoshi Regular 16/24 with −0.16 spacing, `textSecondary` (`#D1D1D1` dark / `#5D5D5D` light). It shows on one line with a tail ellipsis and doesn't scale with the system font size.
+- Note card pencil (Figma 9380:171249, `pencil-edit-01`): it was brand-tinted at 16px. It is now in a 20px frame with the 14.83px glyph, white in dark and `#5D5D5D` in light.
+- “Recording saved to Unknown.” toast now follows the Figma “Toast message” in both modes. Before, it was a bordered success banner with an underlined green Undo and a text “×”, 24 from the bottom.
+  - Layout: 48 high, 20 from each side (335 wide), 8px radius, 12/4 padding, gap 16. No border. Soft shadow (4,4 / 4 blur / 8% black).
+  - Placement: the bottom offset is `max(safe-area bottom, 32) + 12`. Figma's 44 is a 32px home-indicator bar plus a 12px gap. A fixed 44 did not clear the bottom inset on every device.
+  - Colours: light uses a `#EBFFF2` fill. Dark uses `rgba(18, 47, 30, 1)` (`#122F1E`), on design request. The message is Satoshi Medium 14/20 `#22C55E` in both modes.
+  - Dark actions: Undo and the X are white and the divider is `#333333`, so they stay visible on the dark fill.
+  - Actions: a 32px-high Undo button with 8px side padding and 24px radius, Satoshi Medium 14/20 `#091B21`, not underlined. Then a 1×32 `#B0B0B0` divider, then a 20px `#5D5D5D` close X.
+  - Undo and close behave as before.
+- Affected: `OtherPossibleMatchesScreen.tsx`. No API change.
+- Validation: TypeScript is clean for the file. ESLint shows only the file's 10 existing warnings, none on changed lines. Not run on device.
+- Follow-up: confirm the dark Undo, divider and X colours with design. Only the dark fill was given; the others were chosen so they stay readable.
+
+## 2026-11-23 — Sound “Add note” popup matches Figma
+
+- `AddSoundNotePopup` now follows Figma 9380:171302 (on 9380:171250).
+  - Card: 335 max width, 16px radius, 1px Border-0 outline, `surfacePrimary` fill.
+  - Sections: header pt20/pb16/px20 with gap 8, body px20/py4, footer pt16/pb20/px20.
+  - Close chip: absolute, 16 from the top and right, 24px. Light: `#F6F6F6` fill, `#E7E7E7` border, `#5D5D5D` X. Dark: Figma dark Surface-Secondary `#091421` fill, Border-0 `#333333` border, white X.
+  - Text: title Satoshi Bold 20/28. Subtitle Satoshi Regular 16/24 with −0.16 spacing (was 14/20).
+  - Textarea: 100px high, 12px radius, 16px side padding and 10px top/bottom padding, 16/24 text, `#949494` placeholder. Light: `#F6F6F6` fill, `#E7E7E7` border, `#091B21` text. Dark, on design request: `rgba(9, 27, 33, 1)` (`#091B21`) fill, Border-0 `#333333` outline, white typed text.
+  - Continue: `#785284` in light and teal `rgba(22, 182, 180, 1)` (`#16B6B4`) in dark, as requested by design. No glow, 10/16 padding, 24px radius, Satoshi Medium 16/24 white.
+  - Text in the popup does not scale with the system font size.
+- Dark mode was checked against the Figma render. Card `#091B21`, outline `#333333`, and placeholder `#949494` all match. On design request, the dark Continue button is teal `#16B6B4`, not the Figma render's `#785284`. The subtitle is now fixed to Figma `#5D5D5D` in both modes (dark was `#D1D1D1`).
+- Kept on purpose: Figma's “Add note” title is `#091B21` on the `#091B21` card, so it can't be seen. The app keeps the title `textPrimary` (white in dark) so it stays readable. The Figma frame should be fixed.
+- Light mode: the Continue fill changes from `#725481` to the Figma `#785284`, and the popup now has the 1px `#E7E7E7` outline.
+- Affected: `AddSoundNotePopup.tsx`. The shared `TextArea` molecule is no longer used here. No API change.
+- Validation: TypeScript is clean for the file. ESLint shows 1 inline-style warning (busy opacity). Not run on device.
+
+## 2026-11-23 — Recorded sound crop: dark location card uses dark tokens
+
+- The Figma crop frame 9380:171315 shows dark mode with light-mode tokens. The heading is `#091B21` on `#091B21`, so it can't be seen. The subtitle is `#5D5D5D` and the location card is `#F6F6F6`. The design owner chose proper dark tokens. The heading stays `textPrimary` (white) and the subtitle stays `textSecondary` (grey 200). In dark mode the location card now uses `surfaceSecondary` (`#091B21`) with a 1px `borderPrimary` (`#333333`) border, 8px radius and `textPrimary` copy. Before, it was hard-coded to `#F6F6F6` / `#E7E7E7` with `#091B21` text. The link stays `#007AFF`. Light mode is unchanged.
+- Affected: `SoundRecordingCropContent.tsx`. No API change.
+- Validation: TypeScript is clean for the file. ESLint shows only the file's existing inline-style warnings. Not run on device.
+- Follow-up: the Figma frame should be fixed to use dark-mode variables.
+
+## 2026-11-23 — Recording timer pill uses teal
+
+- The recording timer pill used the create-button brown (`#402122`), then briefly Surface-brand-1 `#785284`. On design request it now uses teal `rgba(22, 182, 180, 1)` (`#16B6B4`) with white time text, in both themes. Only that fill changed.
+- Affected: `RecordingTimer.tsx`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Microphone permission icon follows Brand 1 by theme
+
+- The microphone stayed purple in dark mode. It now uses Figma “Text & icon-Brand 1”: `#785284` in light and `#009DA7` in dark. The shadow uses “Surface-brand 2 Accent”: `#C1D8DB` in light and `#072C38` in dark.
+- Affected: `MicrophonePermissionPopup.tsx`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Microphone permission icon uses the Figma purple
+
+- The microphone glyph was clipped by a white rectangle, so the icon did not stay the Figma purple `#785284`. The clip is removed and the path fill is `#785284`. The ellipse stays `#C1D8DB`.
+- Affected: `src/assets/common/icons/microphone-popup/mic.svg`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Microphone permission icon matches Figma
+
+- The permission popup was using a raster microphone that did not match Figma 9380:170991. It now uses the Figma ellipse and microphone SVGs in the 64px slot.
+- Affected: `MicrophonePermissionPopup.tsx`, `src/assets/common/icons/microphone-popup/`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Identify by sound opens the microphone popup first
+
+- Home and other Identify by sound entry points were skipping the microphone popup and opening the recorder. The popup now stays on the current screen. Allow continues to Sound Identify after access is granted. Not Now stays put. An already-granted microphone skips the popup.
+- The popup matches Figma 9380:170991: 16px card radius and border, 24px close chip, 20/28 title, 16/24 subtitle, and 16/24 medium button labels. Copy is unchanged.
+- Affected: `IdentificationEntryProvider.tsx`, `MicrophonePermissionPopup.tsx`, `FLOWS.md`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Identification congratulations adds “Keep going!”
+
+- The milestone sheet still uses the existing title, identified-count line, and Back to Home button. A second subtitle line, “Keep going!”, now sits under the count, matching Figma 9376:243399.
+- Affected: `AppSheet.tsx`, `modals.strings.ts`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Possible Matches shows the accuracy score
+
+- Each photo match card on Possible Matches now shows the percent and “Accuracy Score”. The percent is `similarityScore` from `POST /core/ai/identify`, already mapped to `accuracy` as 0–100. A match with no score still shows only the name.
+- Affected: `OtherPossibleMatchesScreen.tsx`, `camera.strings.ts`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Diagnosis loading uses the dark background
+
+- In dark mode the analyzing screen called `AskAIScreenBackground` without `isDark`, so it painted the light sky and white fade over the dark page. It now passes `isDark` and uses the supplied Ask AI night background. Light mode is unchanged.
+- Affected: `DiagnosisLoadingScreen.tsx`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Ask AI photo falls back when BirdBot chat is down
+
+- Device log on 2026-11-23: an Ask AI photo reached `POST /core/chat` and the server returned 500, reason “The ornithological database is currently unreachable.” Text chat still depends on that database. A photo that hits this 500 now calls `POST /core/ai/identify` and shows the top match. If identify also fails, the original chat error is still shown.
+- Affected: `AskAIScreen.tsx`, `API_AND_DATA.md`.
+- Validation: not retested on device after the fallback.
+
+## 2026-11-23 — Ask AI chat bubbles match Figma 9403:59208
+
+- Dark user bubbles are `#01474F` with white 14/20 text. Dark AI bubbles are `#091421` with a `#333333` border and `#D1D1D1` 14/20 text. Both use a 20pt radius. Light bubbles are unchanged.
+- Affected: `AskAIScreen.tsx`. No API or send-flow change.
+- Validation: not run on device.
+
+## 2026-11-23 — Ask AI greeting type matches Figma 9403:59273
+
+- The empty Ask AI heading “Hello, how can I help you?” is 18/24 bold. The subtitle “Choose a question or ask anything about bird.” is 12/16 medium, `#D1D1D1` in dark. The shared title token had been rendering the heading at 24px.
+- Affected: `AskAIEmptyState.tsx`. No flow or API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Delete collection dialog matches Figma 9399:176896
+
+- Dark delete-collection popup is a 335pt card on `#091B21` with a `#333333` border and 16pt radius. The backdrop is `rgba(0, 0, 0, 0.6)`. The trash illustration is the 64pt teal icon. The title is 20/28. **Yes, Delete** is `#16B6B4` with `#091B21` text. **No, Thanks** is outlined. The close control is a 24pt chip on `#091421`.
+- Affected: `DeleteCollectionConfirmation.tsx`. Copy and delete behavior are unchanged. Light mode still uses the existing popup chrome.
+- Validation: not run on device.
+
+## 2026-11-23 — Collection options menu matches Figma 9399:177008
+
+- The three-dot menu on a collection is an 8pt-radius dropdown. Rows are 14/20 with 12×8 padding and an 8pt icon gap. “Rename collection” uses secondary text (`#5D5D5D` light, `#D1D1D1` dark). “Delete” and the trash icon are `#EF4444`. Light fill is `#F6F6F6` with an `#E7E7E7` border. Dark fill is `#091B21` with a `#333333` border and the Figma white 7% shadow.
+- Affected: `CollectionDetailsScreen.tsx`, `collection.strings.ts`. No API or navigation change. The delete confirmation copy is unchanged.
+- Validation: not run on device.
+
+## 2026-11-23 — Duplicate collection name matches Figma 9399:176750
+
+- Typing a name that already exists on Collection (including Identified, Wishlist, and Near You) keeps the Create sheet open. The field border turns `#EF4444`, a 16pt alert icon appears, and the line “This collection name has been used.” is shown at 12/16. Save stays disabled (`#333333` / `#6D6D6D` in dark). The same inline state is used when create fails with a duplicate-key response. Other create failures still toast.
+- Affected: `AppSheet.tsx`, `CollectionScreen.tsx`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Create collection sheet matches Figma 9399:176742
+
+- Dark Create collection sheet title is “Create new collection” at 20/28. The subtitle matches the frame. The name field is a 48pt pill on `#091421` with a `#333333` border. Empty Save is `#333333` with `#6D6D6D` text. The close control is a 24pt chip on `#091421`. Sheet fill stays `#091B21` and the backdrop stays `rgba(0, 0, 0, 0.6)`.
+- Affected: `AppSheet.tsx`, `collection.strings.ts`. No API change.
+- Validation: not run on device.
+
+## 2026-11-23 — Near You uses the real step-by-step location
+
+- Collection → Near You opens Catalogue on the Near You tab, which is the intended navigation. The empty “Oops! No birds found.” state came from `POST /core/archetypes/step-by-step`: `archetypeService.stepByStep` ignored the caller and always posted a fixed test body (`lat` 3.7, `lng` 101.7, date 2026-06-26, sizes Small and Medium-Small). It now posts the location, date, and size the caller built. Catalogue Near You and the collection preview build that body from `resolveBirdDiscoveryLocation`.
+- Updated API_AND_DATA and KNOWN_GAPS. The client-only `region` field is still omitted from the HTTP body.
+- Validation: `__tests__/api/coreServices.test.ts` passed (3 tests). Device log on 2026-11-23: Collection → Near You opens Catalogue, GPS returns `No location provider available` (code 2), and `step-by-step` is not called. The empty state now shows that location message instead of only “Oops! No birds found.”
+
+## 2026-11-23 — Collection dark page matches Figma 9399:176895
+
+- Dark Collection page fill is now `#091421` (Figma surface-secondary). Cards are `#091B21` with a `#333333` border, 16/24 titles, an 8pt photo grid of 64pt tiles, and a Create chip of `rgba(7, 44, 56, 1)` with `rgba(22, 182, 180, 1)` text, matching Figma 9399:176895. The screen title is 20/28. Light Collection colors are unchanged. The shared dark surface token stays `#091B21`.
+- Affected files: `src/constants/colorConstants.ts`, `src/features/collection/components/CollectionCard.tsx`, `src/features/collection/screens/CollectionScreen.tsx`. No flow, API, or environment change.
+- Validation: not run (no device screenshot against the Figma frame). Owner for a dark-mode Collection visual check is unassigned.
+
 ## 2026-11-20 — remove root Dark Mode design dump
 
 - Deleted the untracked root `Dark Mode/` folder (~55MB design source). App dark assets remain under `src/assets/dark/supplied/` and `src/assets/dark/figma/`. Manifest `suppliedAssets` is now a path list; `verify:dark-assets` checks those files exist and fails if `Dark Mode/` returns. Updated DEVELOPMENT, QA, and HANDOVER_60_DAYS.

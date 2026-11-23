@@ -1,10 +1,7 @@
 import { EXPLORE_COLORS } from "../content/explore.colors";
 import { EXPLORE_MAP_FILTERS } from "../content/explore.config";
-import { EXPLORE } from "../content/explore.config";
-import {
-  EXPLORE_SCOPE_DESCRIPTION,
-  EXPLORE_COPY,
-} from "../content/explore.strings";
+import { EXPLORE_COPY } from "../content/explore.strings";
+import { FONTS } from "../../../common/typography";
 import React, {
   useCallback,
   useEffect,
@@ -41,6 +38,7 @@ import { exploreService } from "@/features/explore/services/explore.service";
 const FILTER_FIELDS = EXPLORE_MAP_FILTERS;
 export const ExploreMapScreen: React.FC = () => {
   const theme = useTheme();
+  const isDark = theme.mode === "dark";
   const navigation =
     useNavigation<
       NativeStackNavigationProp<ExploreStackParamList, "ExploreMap">
@@ -158,21 +156,60 @@ export const ExploreMapScreen: React.FC = () => {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["top", "bottom"]}
     >
+      {/* Figma Top Navigation Bar: 52 high, px12; back in p8 wrapper; title
+          Title/18 Bold, left-aligned from x=60. */}
       <View style={styles.header}>
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel={EXPLORE_COPY.back}
           onPress={() => navigation.goBack()}
           hitSlop={8}
+          style={styles.headerBack}
         >
-          <NavBackIcon color={theme.colors.text} />
+          <NavBackIcon color={theme.colors.textPrimary} size={24} />
         </TouchableOpacity>
-        <Text variant="title" size="medium" weight="semibold">
+        <Text
+          allowFontScaling={false}
+          numberOfLines={1}
+          style={[styles.headerTitle, { color: theme.colors.textPrimary }]}
+        >
           {EXPLORE_COPY.title}
         </Text>
-        <View style={styles.headerSpacer} />
       </View>
-      <View style={styles.mapContainer}>
+      {/* Figma 9376:267165: search + filter row sits above the map (raised so the
+          suggestion dropdown overlays the map card). */}
+      <View style={styles.searchRow}>
+        <View style={styles.container}>
+          <ExploreLocationSearchBar
+            locationLabel={location?.label}
+            onSelectLocation={selectLocation}
+            onUseCurrentLocation={retryLocation}
+          />
+        </View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={EXPLORE_COPY.mapFilters}
+          accessibilityState={{ busy: filterLoading }}
+          disabled={filterLoading}
+          style={[
+            styles.filterButton,
+            {
+              backgroundColor: theme.colors.surfacePrimary,
+              borderColor: theme.colors.border0,
+            },
+          ]}
+          onPress={() => openFilters()}
+        >
+          {filterLoading ? (
+            <ActivityIndicator color={theme.colors.primary} />
+          ) : (
+            <Icon name="filter" size={24} color={theme.colors.textPrimary} />
+          )}
+        </TouchableOpacity>
+      </View>
+      <View
+        style={[styles.mapContainer, { borderColor: theme.colors.border0 }]}
+      >
         <ExploreMapView
           center={mapCenter}
           instant={instant}
@@ -183,6 +220,7 @@ export const ExploreMapScreen: React.FC = () => {
             <ExploreLocationSearchBar
               locationLabel={location?.label}
               onSelectLocation={selectLocation}
+            onUseCurrentLocation={retryLocation}
             />
           }
           selectionOverlay={
@@ -204,8 +242,10 @@ export const ExploreMapScreen: React.FC = () => {
                         : item.imageUrls
                     }
                     hasSound={false}
-                    title={item.scientificName}
-                    subtitle={item.commonName ?? undefined}
+                    title={item.commonName?.trim() || item.scientificName}
+                    subtitle={
+                      item.commonName?.trim() ? item.scientificName : undefined
+                    }
                     enableImageCarousel={false}
                     onPress={() =>
                       navigation.navigate("BirdDetails", {
@@ -220,46 +260,36 @@ export const ExploreMapScreen: React.FC = () => {
             </View>
           }
         />
-        <View style={styles.searchOverlay}>
-          <View style={styles.container}>
-            <ExploreLocationSearchBar
-              locationLabel={location?.label}
-              onSelectLocation={selectLocation}
-            />
-          </View>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={EXPLORE_COPY.mapFilters}
-            accessibilityState={{ busy: filterLoading }}
-            disabled={filterLoading}
-            style={[
-              styles.filterButton,
-              {
-                backgroundColor: theme.colors.surfacePrimary,
-                borderColor: theme.colors.border0,
-              },
-            ]}
-            onPress={() => openFilters()}
-          >
-            {filterLoading ? (
-              <ActivityIndicator color={theme.colors.primary} />
-            ) : (
-              <Icon name="filter" size={20} color={theme.colors.textPrimary} />
-            )}
-          </TouchableOpacity>
-        </View>
       </View>
       <View style={styles.legend}>
+        {/* Figma: centred legend, 8 gaps, 6px dot separator, Body/14 Regular. */}
         <View style={styles.legendRow}>
           <View style={styles.legendItem}>
             <View style={[styles.swatch, styles.activitySwatch]} />
-            <Text variant="body" size="small">
+            <Text
+              allowFontScaling={false}
+              style={[styles.legendLabel, { color: theme.colors.textPrimary }]}
+            >
               {EXPLORE_COPY.activityAreas}
             </Text>
           </View>
+          <View
+            style={[
+              styles.legendDot,
+              { backgroundColor: theme.colors.textSecondary },
+            ]}
+          />
           <View style={styles.legendItem}>
-            <View style={[styles.swatch, styles.selectedSwatch]} />
-            <Text variant="body" size="small">
+            <View
+              style={[
+                styles.swatch,
+                isDark ? styles.selectedSwatchDark : styles.selectedSwatch,
+              ]}
+            />
+            <Text
+              allowFontScaling={false}
+              style={[styles.legendLabel, { color: theme.colors.textPrimary }]}
+            >
               {EXPLORE_COPY.selectedArea}
             </Text>
           </View>
@@ -274,15 +304,24 @@ export const ExploreMapScreen: React.FC = () => {
               },
             ]}
           >
-            <Text variant="body" size="small" color="textSecondary">
+            {/* Figma: Body/14 Regular — label secondary, value primary right-aligned. */}
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.currentLocationText,
+                { color: theme.colors.textSecondary },
+              ]}
+            >
               {EXPLORE_COPY.currentLocation}
             </Text>
             <Text
-              variant="body"
-              size="small"
-              weight="semibold"
+              allowFontScaling={false}
               numberOfLines={1}
-              style={styles.currentLocationValue}
+              style={[
+                styles.currentLocationText,
+                styles.currentLocationValue,
+                { color: theme.colors.textPrimary },
+              ]}
             >
               {location.label}
             </Text>
@@ -314,12 +353,10 @@ export const ExploreMapScreen: React.FC = () => {
           </Text>
         )}
       </View>
-      <Text style={styles.scopeDescription} size="small" color="textSecondary">
-        {EXPLORE_SCOPE_DESCRIPTION(EXPLORE.SEARCH_RADIUS_KM)}
-      </Text>
+      {/* Figma has no scope note between the location card and the tabs. */}
       <ExploreTabBar
         activeTab={activeTab}
-        horizontalMargin={16}
+        horizontalMargin={20}
         counts={{
           growingNow:
             tabs && queryMatchesLocation ? tabs.spottedNowCount : null,
@@ -407,8 +444,6 @@ export const ExploreMapScreen: React.FC = () => {
 };
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerSpacer: { width: 24 },
-  scopeDescription: { paddingHorizontal: 16 },
   activitySwatch: {
     backgroundColor: EXPLORE_COLORS.sightingsBackground,
     borderColor: EXPLORE_COLORS.sightingsStroke,
@@ -417,26 +452,47 @@ const styles = StyleSheet.create({
     backgroundColor: EXPLORE_COLORS.selectedBackground,
     borderColor: EXPLORE_COLORS.selectedStroke,
   },
+  selectedSwatchDark: {
+    backgroundColor: EXPLORE_COLORS.selectedBackgroundDark,
+    borderColor: EXPLORE_COLORS.selectedStrokeDark,
+  },
   header: {
+    height: 52,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
+    paddingHorizontal: 12,
   },
-  mapContainer: { height: 280 },
-  searchOverlay: {
+  headerBack: { padding: 8 },
+  headerTitle: {
     position: "absolute",
-    top: 12,
-    left: 16,
-    right: 16,
+    left: 60,
+    right: 60,
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  // Figma: content px20, pt8; search row gap 8; map 8 below, 2:1, r12, 1px Border-0.
+  searchRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 8,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    zIndex: 10,
+    elevation: 10,
+  },
+  mapContainer: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    aspectRatio: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: "hidden",
   },
   filterButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -446,21 +502,33 @@ const styles = StyleSheet.create({
   selectionPanelTitle: { paddingHorizontal: 16, paddingBottom: 8 },
   selectionPanelList: { paddingHorizontal: 16, gap: 12 },
   selectionPanelCard: { width: 140 },
-  legendRow: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  legendRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 8 },
+  legendLabel: { fontFamily: FONTS.regular, fontSize: 14, lineHeight: 20 },
+  legendDot: { width: 6, height: 6, borderRadius: 3 },
   swatch: { width: 16, height: 16, borderRadius: 8, borderWidth: 1 },
-  legend: { paddingHorizontal: 16, paddingTop: 8, gap: 4 },
+  // Figma: legend 8 below the map; location card 8 below; 16 before the tabs.
+  legend: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 8 },
   currentLocation: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+    alignItems: "flex-start",
+    gap: 12,
     borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginVertical: 4,
+    borderRadius: 12,
+    padding: 12,
   },
-  currentLocationValue: { flex: 1 },
+  currentLocationText: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  currentLocationValue: { flex: 1, textAlign: "right" },
   selection: {
     flexDirection: "row",
     flexWrap: "wrap",

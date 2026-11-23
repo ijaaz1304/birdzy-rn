@@ -294,10 +294,13 @@ export function SoundRecordingCropContent({
             style={[
               styles.locationCard,
               { backgroundColor: colors.surfaceSecondary },
-              isDark && styles.darkLocationCard,
+              isDark && [
+                styles.darkLocationCard,
+                { borderColor: colors.borderPrimary },
+              ],
             ]}
           >
-            <Text style={[styles.locationCopy, { color: isDark ? "#091B21" : colors.textPrimary }]}>
+            <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
               {copy.enableLocation}
             </Text>
             <Toggle
@@ -314,13 +317,16 @@ export function SoundRecordingCropContent({
             style={[
               styles.locationCard,
               { backgroundColor: colors.surfaceSecondary },
-              isDark && styles.darkLocationCard,
+              isDark && [
+                styles.darkLocationCard,
+                { borderColor: colors.borderPrimary },
+              ],
             ]}
             onPress={() => openCustomLocationSheet()}
             activeOpacity={0.85}
             disabled={isAnalyzing}
           >
-            <Text style={[styles.locationCopy, { color: isDark ? "#091B21" : colors.textPrimary }]}>
+            <Text style={[styles.locationCopy, { color: colors.textPrimary }]}>
               {copy.locationSpottedPrefix}
               <Text style={styles.locationLink}>{isDark ? `<${place}>` : place}</Text>
             </Text>
@@ -382,12 +388,11 @@ export function SoundRecordingCropContent({
 const styles = StyleSheet.create({
   darkCopy: { width: "100%", gap: 8 },
   lightCopy: { width: "100%", gap: 16 },
+  /** Dark: theme surface-secondary + border-primary (Figma 9380:171315 radius/border, dark tokens). */
   darkLocationCard: {
     marginTop: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E7E7E7",
-    backgroundColor: "#F6F6F6",
   },
   header: {
     flexDirection: "row",

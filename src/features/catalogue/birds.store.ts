@@ -54,7 +54,12 @@ interface MushroomsState {
     /** Keep current list visible while fetching (smooth category tab switches). */
     keepPrevious?: boolean
   ) => Promise<void>;
-  /** Returns "added" | "removed" on success, null on failure. */
+  /**
+   * Reason for the last failed toggleFavorite (server/validation message), for toasts.
+   * Kept separate from `error` so a wishlist failure doesn't look like a list-load error.
+   */
+  lastFavoriteError: string | null;
+  /** Returns "added" | "removed" on success, null on failure (see lastFavoriteError). */
   toggleFavorite: (
     mushroomId: string
   ) => Promise<"added" | "removed" | null>;
@@ -78,6 +83,7 @@ const initialState = {
   suppressedWishlistIds: [],
   isLoading: false,
   error: null,
+  lastFavoriteError: null,
   currentPage: 0,
   totalCount: 0,
   activeFilters: {},
@@ -428,6 +434,7 @@ export const useBirdsStore = create<MushroomsState>()(
           favorites: optimisticFavorites,
           mushrooms: optimisticMushrooms,
           suppressedWishlistIds: optimisticSuppressed,
+          lastFavoriteError: null,
         });
 
         try {
@@ -452,16 +459,18 @@ export const useBirdsStore = create<MushroomsState>()(
           });
           return null;
         } catch (error) {
+          // Keep the real reason (e.g. "This is already identified, can't wishlist.")
+          // for the toast; don't write it to `error`, which drives list-load UI.
+          const errorMessage =
+            error instanceof Error && error.message.trim()
+              ? error.message.trim()
+              : null;
           set({
             favorites,
             mushrooms: previousMushrooms,
             suppressedWishlistIds: previousSuppressed,
+            lastFavoriteError: errorMessage,
           });
-          const errorMessage =
-            error instanceof Error
-              ? error.message
-              : "Failed to toggle favorite";
-          set({ error: errorMessage });
           return null;
         }
       },

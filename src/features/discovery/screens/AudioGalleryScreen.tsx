@@ -49,6 +49,10 @@ import {
   clipDisplayName,
   getClipTimestamp,
 } from "../components/AudioGalleryCard";
+import {
+  AudioGalleryCardMenu,
+  type CardMenuAnchor,
+} from "../components/AudioGalleryCardMenu";
 import { RecordingLimitBanner } from "../components/RecordingLimitBanner";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "AudioGallery">;
@@ -60,6 +64,7 @@ const strings = HOME_STRINGS.discovery.audioGallery;
 export const AudioGalleryScreen: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
+  const isDark = theme.mode === "dark";
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const isPremium = useSubscriptionStore(selectIsPremium);
@@ -72,6 +77,10 @@ export const AudioGalleryScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<LibraryTab>("identified");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortMode>("newest");
+  const [cardMenu, setCardMenu] = useState<{
+    item: BirdGalleryAudioFile;
+    anchor: CardMenuAnchor;
+  } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<BirdGalleryAudioFile | null>(
     null
   );
@@ -334,6 +343,8 @@ export const AudioGalleryScreen: React.FC = () => {
               showFilterButton={false}
               leftIcon="search"
               inputStyle={styles.searchInput}
+              // Figma dark search field: Surface-Secondary #091421 (border stays Border-0 #333).
+              containerStyle={isDark ? styles.searchDark : undefined}
             />
           </View>
           <TouchableOpacity
@@ -362,18 +373,23 @@ export const AudioGalleryScreen: React.FC = () => {
           <LibraryTabButton
             label={`${strings.identified} (${identified.length})`}
             active={activeTab === "identified"}
+            isDark={isDark}
             onPress={() => setActiveTab("identified")}
           />
           <LibraryTabButton
             label={`${strings.unknown} (${unknown.length})`}
             active={activeTab === "unknown"}
+            isDark={isDark}
             onPress={() => setActiveTab("unknown")}
           />
         </View>
 
         {loading ? (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color={APP_COLORS.createButtonFg} />
+            <ActivityIndicator
+              size="large"
+              color={isDark ? colors.primaryCTA : APP_COLORS.createButtonFg}
+            />
           </View>
         ) : error ? (
           <View style={styles.centered}>
@@ -413,6 +429,12 @@ export const AudioGalleryScreen: React.FC = () => {
                     ? () => setPendingDelete(item)
                     : undefined
                 }
+                onLongPress={
+                  activeTab === "unknown"
+                    ? (anchor) => setCardMenu({ item, anchor })
+                    : undefined
+                }
+                highlighted={cardMenu?.item.fileId === item.fileId}
               />
             )}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -431,6 +453,19 @@ export const AudioGalleryScreen: React.FC = () => {
         )}
       </SafeAreaView>
 
+      <AudioGalleryCardMenu
+        anchor={cardMenu?.anchor ?? null}
+        renameLabel={strings.menuRename}
+        deleteLabel={strings.menuDelete}
+        onClose={() => setCardMenu(null)}
+        onRename={() => {
+          if (cardMenu) editUnknown(cardMenu.item);
+        }}
+        onDelete={() => {
+          if (cardMenu) setPendingDelete(cardMenu.item);
+        }}
+      />
+
       <ConfirmationModal
         visible={pendingDelete != null}
         onClose={() => setPendingDelete(null)}
@@ -445,38 +480,40 @@ export const AudioGalleryScreen: React.FC = () => {
   );
 };
 
+/** Figma 9380:111730 (dark): active tab #009DA7 text + 2px underline, inactive #D1D1D1. */
+const TAB_DARK = { active: "#009DA7", inactive: "#D1D1D1" } as const;
+
 const LibraryTabButton: React.FC<{
   label: string;
   active: boolean;
+  isDark: boolean;
   onPress: () => void;
-}> = ({ label, active, onPress }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.8}
-    style={[
-      styles.tab,
-      active && {
-        borderBottomColor: APP_COLORS.createButtonFg,
-      },
-    ]}
-  >
-    <Text
-      variant="body"
-      size="medium"
-      weight={active ? "medium" : "regular"}
-      style={{
-        fontFamily: active ? FONTS.medium : FONTS.regular,
-        fontSize: 16,
-        color: active
-          ? APP_COLORS.createButtonFg
-          : APP_COLORS.textSecondaryGray,
-      }}
-      numberOfLines={1}
+}> = ({ label, active, isDark, onPress }) => {
+  const activeColor = isDark ? TAB_DARK.active : APP_COLORS.createButtonFg;
+  const inactiveColor = isDark
+    ? TAB_DARK.inactive
+    : APP_COLORS.textSecondaryGray;
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={[styles.tab, active && { borderBottomColor: activeColor }]}
     >
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
+      <Text
+        variant="body"
+        size="medium"
+        weight={active ? "medium" : "regular"}
+        style={[
+          active ? styles.tabLabelActive : styles.tabLabel,
+          { color: active ? activeColor : inactiveColor },
+        ]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
@@ -495,17 +532,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   headerSpacer: { width: 24 },
+  // Figma body: px20, pt8; search row gap 8.
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: spacing[5],
     gap: spacing[2],
-    marginTop: spacing[1],
+    marginTop: spacing[2],
   },
   searchBarWrap: { flex: 1, minWidth: 0 },
   searchInput: {
     fontSize: 16,
     fontFamily: FONTS.regular,
+  },
+  searchDark: {
+    backgroundColor: "#091421",
   },
   filterButton: {
     width: 48,
@@ -515,21 +556,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  // Figma: 24 between search and tabs; tab 32 high, px12; label Body/16 Medium (active) / Regular.
   tabs: {
     flexDirection: "row",
-    marginTop: spacing[3],
-    paddingHorizontal: spacing[4],
+    marginTop: spacing[6],
+    paddingHorizontal: spacing[5],
   },
   tab: {
     flex: 1,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: spacing[2],
+    paddingHorizontal: spacing[3],
     borderBottomWidth: 2,
     borderBottomColor: "transparent",
   },
+  tabLabel: {
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.16,
+  },
+  tabLabelActive: {
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  // Figma: 16 below tabs, cards gap 12, px20.
   listContent: {
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: spacing[5],
     paddingTop: spacing[4],
   },
   listEmptyGrow: {

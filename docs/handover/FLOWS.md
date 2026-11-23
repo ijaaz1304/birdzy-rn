@@ -27,6 +27,10 @@ Evidence: [App.tsx](../../App.tsx); [src/features/auth/auth.store.ts](../../src/
 
 **Camera permission screens (Figma 8558:25287):** Android shows the native camera dialog at most twice (deny → in-app "Allow access"; second deny → "Go to settings" from then on); iOS shows it once, then "Go to settings". Both in-app screens use the Figma chrome from `CameraPermissionGateChrome`: back + flash on top, gallery (works), greyed-out shutter and flip camera at the bottom. Only back and gallery respond to taps.
 
+Scanning Tips (Figma dev note 8830:1773):
+- Shown once per install (`HAS_SEEN_CAMERA_TIPS`), either when Camera is granted or when Camera is denied (an in-app permission screen is showing) while Gallery permission is granted. On Android 13+ `checkStoragePermission` always reports Gallery as granted.
+- Closing Tips with **X** while Camera is denied opens the Gallery picker. Backdrop, “Understood” and X with Camera granted only close.
+
 **Recovery to demonstrate:** first denial, repeated denial/settings return, cancel/back during upload, background/foreground, slow/offline server, no match, duplicate submit and free allowance exhaustion.
 
 Evidence: [src/features/camera/CameraScreen.tsx](../../src/features/camera/CameraScreen.tsx); [src/services/api/features/core.api.ts](../../src/services/api/features/core.api.ts); [src/features/collection/screens/BirdDetailsScreen.tsx](../../src/features/collection/screens/BirdDetailsScreen.tsx).
@@ -34,6 +38,12 @@ Evidence: [src/features/camera/CameraScreen.tsx](../../src/features/camera/Camer
 ## Catalogue → detail → save/edit → collection
 
 Browse/search/filter, open the selected birds record, then add to wishlist or a collection. Reopen the saved specimen to edit or remove it. Backend acknowledgement should determine the final durable state; a failed mutation must not leave a permanently optimistic counter or star.
+
+Catalogue card star (`CatalogueScreen`):
+- Tapping an empty star fills it immediately.
+- Once the backend confirms the add, the app shows the “added” toast and opens Collection → Wishlist. The navigation uses `initial: false`, so Back returns to the Collection list. The Wishlist refetches on focus.
+- If the add fails, the star reverts, an error toast appears, and the app stays on Catalogue.
+- Tapping a filled star asks for confirmation before removing it, and stays on Catalogue.
 
 From identification, Add to Collection uploads the user photo to `posts/images` and sends that public Storage URL first on `POST /core/specimen/add`, including Identified and Wishlist. Specimen update does not accept image fields. If a specimen already exists, the client creates a new row with the photo and deletes the previous row. Collection display uses the inner photo when fetchAll glues a catalogue folder onto the stored URL. Device confirmation of this save is still open.
 
@@ -55,7 +65,7 @@ Existing navigation/deep-link references are listed in [the feature catalogue](F
 
 ## Sound identification and audio library
 
-Start sound identification, allow microphone access, record or select audio, choose a crop, and submit. Open a matched bird or the no-match recovery screen; the audio library separates identified and unknown files.
+From Home, tap Identify by sound. The microphone permission popup stays on the current screen. Allow requests microphone access and, once granted, opens Sound Identify. Not Now or close stays on the current screen. If microphone access is already granted, the popup is skipped and Sound Identify opens. Record or select audio, choose a crop, and submit. Open a matched bird or the no-match recovery screen; the audio library separates identified and unknown files.
 
 **Acceptance/recovery:** Test microphone denial, zero-length audio, interrupted recording, playback cleanup, no match, and saving the user recording.
 
@@ -64,6 +74,8 @@ Evidence: [src/features/camera/screens/SoundIdentifyScreen.tsx](../../src/featur
 ## Step-by-step identification
 
 Choose observation location, date, and bird size; submit the answers and review nearby species. The current implementation forwards actual answers and uses page 1 for this endpoint.
+
+Location question (Figma 9380:170051): the user types directly in the Custom Location field. Once 3 characters are typed, a dropdown opens under the field. It shows “Searching…” while the request runs (300 ms debounce), then the address suggestions, or “No matching places” if the search returns none or fails. Suggestions use Explore's `src/features/explore/utils/geocodingApi.ts`: geocode.maps.co when `GEOCODING_API_KEY` is set, otherwise Mapbox Geocoding v6 with `MAPBOX_ACCESS_TOKEN`. The shared `src/utils/geocodingApi.ts` returns nothing without the geocode.maps.co key. While the keyboard is open, Continue floats 16px above it (Figma dev note 9380:170789). Tapping one, or pressing search on the keyboard (which uses the first suggestion, or else a geocode of the typed text), sets the answer and adds it to Recently Used. As in the bottom sheet this replaces, a failed geocode keeps the typed text with 0,0 coordinates. Current location and Recently Used work as before.
 
 **Acceptance/recovery:** Change each answer and confirm the outgoing request changes. Missing location must not silently become an invented location.
 
@@ -80,6 +92,16 @@ Evidence: [src/features/settings/screens/SettingsScreen.tsx](../../src/features/
 ## Explore Near You
 
 Open Explore from the Home banner (whole panel tappable), the Spotted Now / Year-round rows, or Catalogue's "Explore Near You" button and map banner. Under the **Explore Near You** heading the banner shows: "Discover bird sightings, hotspots, and species around your area." Home and Catalogue share [useExploreEntry](../../src/features/explore/useExploreEntry.tsx): location access is requested first ("Enable Location Access" on Android, existing iOS App Review wording), then the map opens. The Home / Catalogue banner reads "Enable Location" while access is off and "Explore Map" when it is on; the Catalogue banner is hidden while catalogue filters are applied. On the map, switch Spotted Now / Year-round (equal halves of the tab row), select a group, and open bird details. Map filters affect map activity; seasonal tabs affect the nearby list.
+
+Explore screen layout (Figma 9376:267165):
+- The location search and filter sit in a row above the map: 48 high, 20 side margins. Suggestions overlay the map.
+- The map is a 2:1 card with radius 12 and a Border-0 outline. Controls are 32px chips: +/− at the top left, locate/expand at the bottom right. The expanded full-screen map keeps its own overlaid search bar.
+- Below the map: a centred legend with a dot separator, then the “Current Location:” card (value right-aligned).
+- Cards show the common name as the title and the scientific name underneath. The previous radius note under the location card was removed to match Figma.
+- The search-bar target icon re-reads the device location, even after a searched place was chosen.
+  - The label first shows “Current Location”, then is replaced by the detected city (“City, Region”, e.g. “Bengaluru, Karnataka”), on the right of the “Current Location:” card and in the search bar.
+  - The city comes from `reverseGeocodeAddress`: geocode.maps.co when `GEOCODING_API_KEY` is set, otherwise Mapbox Geocoding v6 reverse.
+  - If the lookup fails, the label stays “Current Location”.
 
 **Acceptance/recovery:** Check map token, denied location from Home and Catalogue, Android first-ask copy, custom location sheet, manual search, delayed requests, map-only retry, clusters, full-screen return, pagination, empty/filtered empty states, and dark mode.
 

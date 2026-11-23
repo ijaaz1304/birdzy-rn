@@ -11,7 +11,7 @@ import { View, StyleSheet, Modal as RNModal, TouchableOpacity, Dimensions, Scrol
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Linking } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
-import { Images } from "../../assets";
+import { DeleteAccountTrashDark, Images } from "../../assets";
 import { Text, Button } from "../../atoms";
 import {
   OVERLAY_COLORS,
@@ -167,23 +167,48 @@ export const AppModal: React.FC<AppModalProps> = ({
               },
             ]}
           >
-            <TouchableOpacity
-              style={[
-                styles.popupClose,
-                {
-                  top: isDeleteConfirmPopup ? 12 : theme.spacing[3],
-                  right: isDeleteConfirmPopup ? 12 : theme.spacing[3],
-                },
-              ]}
-              onPress={onClose}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <CloseIcon isDark={theme.mode === "dark"} />
-            </TouchableOpacity>
+            {type === "deletePost" ? (
+              // Figma 9406:7140 Button-Icon: 24px chip, 16 from top/right,
+              // Surface-Secondary fill + Border-0, 16px X.
+              <TouchableOpacity
+                style={[
+                  styles.popupCloseChip,
+                  theme.mode === "dark"
+                    ? { backgroundColor: "#091421", borderColor: "#333333" }
+                    : { backgroundColor: "#F6F6F6", borderColor: "#E7E7E7" },
+                ]}
+                onPress={onClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+              >
+                <CloseIcon
+                  variant="plain"
+                  size={16}
+                  color={theme.mode === "dark" ? "#D1D1D1" : "#5D5D5D"}
+                />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.popupClose,
+                  {
+                    top: isDeleteConfirmPopup ? 12 : theme.spacing[3],
+                    right: isDeleteConfirmPopup ? 12 : theme.spacing[3],
+                  },
+                ]}
+                onPress={onClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <CloseIcon isDark={theme.mode === "dark"} />
+              </TouchableOpacity>
+            )}
             <View
               style={[
                 styles.popupContent,
-                isDeleteConfirmPopup
+                type === "deletePost"
+                  ? { padding: 20 }
+                  : isDeleteConfirmPopup
                   ? {
                       paddingTop: theme.spacing[4],
                       paddingBottom: theme.spacing[5],
@@ -771,29 +796,32 @@ function DeletePostContent({
   onClose: () => void;
   theme: ReturnType<typeof useTheme>;
 }) {
-  const trashIcon =
-    theme.mode === "dark" ? Images.trashDark : Images.trashLight;
+  const isDark = theme.mode === "dark";
+  // Figma 9406:7139: header (64px trash, gap 8, Title/20 SemiBold) + footer
+  // (Delete px16/py12, No, Thanks px16/py10, gap 12, Button/16px Medium).
   return (
     <>
-      <View style={popupStyles.deleteConfirmIconWrap}>
-        <AppImage
-          source={trashIcon}
-          style={popupStyles.deleteConfirmIcon}
-          resizeMode="contain"
-        />
+      <View style={popupStyles.deletePostIcon}>
+        {isDark ? (
+          <DeleteAccountTrashDark width={64} height={64} />
+        ) : (
+          <AppImage
+            source={Images.trashLight}
+            style={popupStyles.deletePostIcon}
+            resizeMode="contain"
+          />
+        )}
       </View>
       <Text
-        variant="title"
-        size="large"
-        weight="bold"
+        allowFontScaling={false}
         style={[
-          popupStyles.compactTitle,
-          { color: theme.colors.textPrimary, marginBottom: theme.spacing[6] },
+          popupStyles.deletePostTitle,
+          { color: theme.colors.textPrimary },
         ]}
       >
         Do you want to delete this post?
       </Text>
-      <View style={popupStyles.deletePostButtons}>
+      <View style={popupStyles.deletePostFooter}>
         <TouchableOpacity
           onPress={() => {
             onClose();
@@ -801,35 +829,36 @@ function DeletePostContent({
           }}
           activeOpacity={0.7}
           style={[
-            popupStyles.deletePostButton,
-            {
-              ...getPopupPrimaryCtaStyle(theme),
-              marginBottom: 12,
-            },
+            popupStyles.deletePostPrimary,
+            getPopupPrimaryCtaStyle(theme),
+            popupStyles.deletePostRadius,
           ]}
         >
           <Text
-            variant="label"
-            size="medium"
-            weight="semibold"
-            style={{ color: theme.colors.onPrimary }}
+            allowFontScaling={false}
+            style={[
+              popupStyles.deletePostButtonLabel,
+              { color: theme.colors.onPrimary },
+            ]}
           >
-            Yes, Remove
+            Delete
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={onClose}
           activeOpacity={0.7}
           style={[
-            popupStyles.deletePostButton,
+            popupStyles.deletePostSecondary,
             getPopupSecondaryCtaStyle(theme),
+            popupStyles.deletePostRadius,
           ]}
-          >
+        >
           <Text
-            variant="label"
-            size="medium"
-            weight="semibold"
-            style={{ color: getPopupSecondaryCtaTextColor(theme) }}
+            allowFontScaling={false}
+            style={[
+              popupStyles.deletePostButtonLabel,
+              { color: getPopupSecondaryCtaTextColor(theme) },
+            ]}
           >
             No, Thanks
           </Text>
@@ -1050,6 +1079,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  popupCloseChip: {
+    position: "absolute",
+    zIndex: 10,
+    top: 16,
+    right: 16,
+    width: 24,
+    height: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   popupContent: {
     alignItems: "center",
     zIndex: 2,
@@ -1098,6 +1139,48 @@ const popupStyles = StyleSheet.create({
   deletePostButtons: {
     width: "100%",
     marginTop: 0,
+  },
+  // Delete post — Figma 9406:7139.
+  deletePostIcon: {
+    width: 64,
+    height: 64,
+    alignSelf: "center",
+  },
+  deletePostTitle: {
+    marginTop: 8,
+    fontFamily: FONTS.bold,
+    fontSize: 20,
+    lineHeight: 28,
+    textAlign: "center",
+  },
+  deletePostFooter: {
+    width: "100%",
+    // header pb16 + footer pt16
+    marginTop: 32,
+    gap: 12,
+  },
+  deletePostPrimary: {
+    width: "100%",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deletePostSecondary: {
+    width: "100%",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deletePostRadius: {
+    borderRadius: 24,
+  },
+  deletePostButtonLabel: {
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+    lineHeight: 24,
   },
   deleteConfirmIconWrap: {
     alignItems: "center",

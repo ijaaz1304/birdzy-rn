@@ -504,7 +504,11 @@ export const DiagnosisLoadingScreen: React.FC = () => {
       {/* Hide loading UI when error or limit sheet is visible */}
       {!showErrorModal && !soundError && !showUpgradeSheet && (
         <>
-          {isDark ? <AskAIScreenBackground /> : <FindYourBirdBackground />}
+          {isDark ? (
+            <AskAIScreenBackground isDark />
+          ) : (
+            <FindYourBirdBackground />
+          )}
           <HiddenRemoteImagePrefetcher
             uris={thumbPrefetchUris}
             decodeWidth={POSSIBLE_MATCH_THUMBNAIL_WIDTH}
