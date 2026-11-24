@@ -5,6 +5,8 @@ export { default as ExploreTargetIconDark } from "./icons/target-dark.svg";
 export { default as ExploreSearchTargetIcon } from "./icons/target-search.svg";
 export { default as ExploreSearchTargetIconDark } from "./icons/target-search-dark.svg";
 export { default as ExploreArrowShrinkIcon } from "./icons/arrow-shrink.svg";
+/** Figma 9376:269342 arrow-shrink-01-sharp, dark theme (white stroke). */
+export { default as ExploreArrowShrinkIconDark } from "./icons/arrow-shrink-dark.svg";
 export { default as ExploreArrowExpandIconDark } from "./icons/arrow-expand-dark.svg";
 export { default as ExplorePinIcon } from "./icons/pin.svg";
 export { default as ExploreLocationSearchIcon } from "./icons/location-search.svg";

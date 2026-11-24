@@ -723,15 +723,15 @@ export const SHEET_COLORS = {
 } as const;
 
 /** Collection screen backgrounds */
+/** Same page fill as the Feed screen: surface-primary #FFFFFF light, FEED_COLORS.BACKGROUND_FILL_DARK (#091B21) dark. */
 export const COLLECTION_SCREEN_COLORS = {
   LIGHT: {
-    collectionBg: APP_COLORS.surfaceAuthLight,
+    collectionBg: "#ffffff",
     screenBg: "#ffffff",
   },
   DARK: {
-    /** Figma 9399:176895 page fill (surface-secondary). Shared dark surface token stays #091B21. */
-    collectionBg: "#091421",
-    screenBg: "#091421",
+    collectionBg: FEED_COLORS.BACKGROUND_FILL_DARK,
+    screenBg: FEED_COLORS.BACKGROUND_FILL_DARK,
   },
 } as const;
 

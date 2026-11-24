@@ -6,6 +6,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ExploreStackParamList } from "./types";
 import { ExploreMapScreen } from "../features/explore/screens/ExploreMapScreen";
+import { ExploreFilterResultsScreen } from "../features/explore/screens/ExploreFilterResultsScreen";
 import { BirdDetailsScreen } from "../features/collection/screens/BirdDetailsScreen";
 
 const Stack = createNativeStackNavigator<ExploreStackParamList>();
@@ -20,6 +21,10 @@ export const ExploreStack: React.FC = () => {
       }}
     >
       <Stack.Screen name="ExploreMap" component={ExploreMapScreen} />
+      <Stack.Screen
+        name="ExploreFilterResults"
+        component={ExploreFilterResultsScreen}
+      />
       <Stack.Screen name="BirdDetails" component={BirdDetailsScreen} />
     </Stack.Navigator>
   );

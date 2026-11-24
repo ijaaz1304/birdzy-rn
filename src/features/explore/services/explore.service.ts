@@ -20,6 +20,7 @@ import {
   validateMapGeoJSON,
 } from "./exploreGeoJSON";
 import { archetypeService } from "@/services/archetype/archetype.service";
+import { EXPLORE_MAP_FILTERS } from "@/features/explore/content/explore.config";
 
 class ExploreService {
   private filterItems: ReturnType<
@@ -114,6 +115,20 @@ class ExploreService {
       });
     }
     return this.filterItems;
+  }
+
+  /** Filter sheet options limited to the traits the map endpoint can filter by. */
+  async getExploreFilterOptions(): Promise<Record<string, string[]>> {
+    const options = (await this.getFilterItems()) as Record<string, unknown>;
+    const scoped = Object.fromEntries(
+      EXPLORE_MAP_FILTERS.flatMap((key) => {
+        const values = options?.[key];
+        return Array.isArray(values) && values.length ? [[key, values]] : [];
+      })
+    ) as Record<string, string[]>;
+    if (!Object.keys(scoped).length)
+      throw new Error("Filter options are unavailable.");
+    return scoped;
   }
 }
 

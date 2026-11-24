@@ -35,6 +35,7 @@ import {
   ExploreTargetIcon,
   ExploreTargetIconDark,
   ExploreArrowShrinkIcon,
+  ExploreArrowShrinkIconDark,
   ExploreArrowExpandIconDark,
   ExplorePinIcon,
   ExplorePlusIconDark,
@@ -491,7 +492,21 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
             <ExploreTargetIcon width={18} height={18} />
           )}
         </TouchableOpacity>
-        {!expanded && (
+        {expanded ? (
+          // Figma 9376:269342: shrink chip under the target returns to the inline map.
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={EXPLORE_COPY.minimizeMap}
+            style={buttonStyle}
+            onPress={() => changePresentation(false)}
+          >
+            {isDark ? (
+              <ExploreArrowShrinkIconDark width={20} height={20} />
+            ) : (
+              <ExploreArrowShrinkIcon width={20} height={20} />
+            )}
+          </TouchableOpacity>
+        ) : (
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={EXPLORE_COPY.expand}

@@ -68,6 +68,7 @@ export const EXPLORE_COPY = {
   recenter: "Recenter on selected location",
   expand: "Expand map",
   closeMap: "Close expanded map",
+  minimizeMap: "Minimize map",
   enterLocation: "Enter location",
   searchLocation: "Search location",
   clearSearch: "Clear location search",
@@ -81,6 +82,12 @@ export const EXPLORE_COPY = {
   moreBirds: "Loading more birds",
   loadSelection: "Load more results for selected group",
   loadSelectionText: "Load more results for this selection",
+  results: "Results",
+  filters: "Filters",
+  searchResults: "Search birds",
+  removeFilter: (label: string) => `Remove filter ${label}`,
+  resultsTruncated:
+    "Showing the closest matching birds. Some farther matches may not be listed.",
 } as const;
 
 export const EXPLORE_SCOPE_DESCRIPTION = (radiusKm: number) =>

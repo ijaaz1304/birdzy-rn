@@ -434,6 +434,8 @@ export type ExploreStackParamList = {
         initialTab?: "growingNow" | "yearRound";
       }
     | undefined;
+  /** Filtered nearby birds; filters and location come from the Explore store. */
+  ExploreFilterResults: undefined;
   BirdDetails: { mushroomId: string; source: "explore" };
 };
 

@@ -34,7 +34,7 @@ type Props = {
 };
 
 /** Own each item's pending state; serialize taps and reconcile with shared wishlist state. */
-const ExploreResultCard = ({
+export const ExploreResultCard = ({
   item,
   onPress,
 }: {

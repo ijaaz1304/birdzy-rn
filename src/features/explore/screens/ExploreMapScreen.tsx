@@ -1,5 +1,5 @@
 import { EXPLORE_COLORS } from "../content/explore.colors";
-import { EXPLORE_MAP_FILTERS } from "../content/explore.config";
+import { countFilterValues } from "../utils/filteredNearbyResults";
 import { EXPLORE_COPY } from "../content/explore.strings";
 import { FONTS } from "../../../common/typography";
 import React, {
@@ -35,7 +35,6 @@ import { cardsForMapSelection } from "../exploreSelection";
 import { useExploreLocation } from "../useExploreLocation";
 import { exploreService } from "@/features/explore/services/explore.service";
 
-const FILTER_FIELDS = EXPLORE_MAP_FILTERS;
 export const ExploreMapScreen: React.FC = () => {
   const theme = useTheme();
   const isDark = theme.mode === "dark";
@@ -130,18 +129,8 @@ export const ExploreMapScreen: React.FC = () => {
     setFilterLoading(true);
     setFilterError(null);
     try {
-      const options = await exploreService.getFilterItems();
+      const scoped = await exploreService.getExploreFilterOptions();
       if (!mounted.current) return;
-      const scoped = Object.fromEntries(
-        FILTER_FIELDS.flatMap((key) => {
-          const values = options?.[key];
-          return Array.isArray(values) && values.length ? [[key, values]] : [];
-        })
-      );
-      if (!Object.keys(scoped).length)
-        throw new Error(
-          "Filter options are unavailable. Tap Filters to retry."
-        );
       setFilterData(scoped);
       setShowFilters(true);
     } catch {
@@ -433,8 +422,12 @@ export const ExploreMapScreen: React.FC = () => {
           filterDataFromApi={filterData}
           defaultFilters={filters}
           onApplyFilters={(values, hasFilters) => {
-            applyFilters(hasFilters ? values : {});
+            const next = hasFilters ? values : {};
+            void applyFilters(next);
             setShowFilters(false);
+            // Figma 8947:19104: applying filters opens the filtered Results list.
+            if (countFilterValues(next) > 0 && location)
+              navigation.navigate("ExploreFilterResults");
           }}
           comingFrom="global_collection"
         />
