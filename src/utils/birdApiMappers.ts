@@ -333,6 +333,7 @@ export function normalizeBirdSpecimenListItem(
   return {
     specimenId: String(raw.specimenId ?? raw._id ?? raw.id ?? ""),
     _archetype: asString(raw._archetype) ?? asString(raw.archetypeId),
+    birdsLifeId: asString(raw.birdsLifeId) ?? asString(raw.birds_life_id),
     scientificName: names.scientificName,
     commonName: getBirdDisplayName(names) || names.commonName,
     defaultImageUrl:

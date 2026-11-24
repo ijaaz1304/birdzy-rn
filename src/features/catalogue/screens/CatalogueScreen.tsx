@@ -30,7 +30,6 @@ import {
   useRoute,
   RouteProp,
   useFocusEffect,
-  NavigationProp,
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme, useIsDark } from "../../../hooks/useTheme";
@@ -39,10 +38,7 @@ import { Text } from "../../../atoms";
 import { SearchBar, Tab } from "../../../molecules";
 import FilterModal from "../../../organisms/FilterModal/FilterModal";
 import { EmptyState } from "../components/EmptyState";
-import {
-  CatalogueStackParamList,
-  MainTabParamList,
-} from "../../../navigation/types";
+import { CatalogueStackParamList } from "../../../navigation/types";
 import { useFeatureConfig } from "../../../config/context";
 import { screenStyles } from "../../../styles/common";
 import { FilterState } from "../../../organisms/FilterModal/types";
@@ -280,13 +276,9 @@ export const CatalogueScreen: React.FC = () => {
     if (!cached) {
       return false;
     }
-    useBirdsStore.setState({
-      mushrooms: cached.mushrooms,
-      totalCount: cached.totalCount,
-      currentPage: cached.currentPage,
-      isLoading: false,
-      error: null,
-    });
+    // Re-applies today's wishlist so a bird removed elsewhere (e.g. from a
+    // Wishlist bird's details) doesn't come back starred from the saved copy.
+    useBirdsStore.getState().restoreCachedList(cached);
     return true;
   }, []);
 
@@ -740,15 +732,8 @@ export const CatalogueScreen: React.FC = () => {
                 reason: useBirdsStore.getState().lastFavoriteError,
               });
               if (result === "added") {
-                // Star is already filled (optimistic). Toast, then open Collection → Wishlist;
-                // `initial: false` keeps CollectionMain underneath so Back returns to Collection.
+                // Star is already filled (optimistic). Stay on Catalogue; the toast confirms it.
                 showToast(strings.collection.favorite.added, "success");
-                navigation
-                  .getParent<NavigationProp<MainTabParamList>>()
-                  ?.navigate("Collection", {
-                    screen: "Wishlist",
-                    initial: false,
-                  });
               } else if (result === "removed") {
                 showToast(strings.collection.favorite.removed, "success");
               } else {

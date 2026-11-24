@@ -278,6 +278,8 @@ export interface BirdSpecimenCollectionRef {
 export interface BirdSpecimenListItem {
   specimenId: string;
   _archetype?: string;
+  /** BirdLife species ID; identifies the catalogue bird when `_archetype` is absent. */
+  birdsLifeId?: string;
   scientificName: string;
   commonName?: string;
   defaultImageUrl?: string;

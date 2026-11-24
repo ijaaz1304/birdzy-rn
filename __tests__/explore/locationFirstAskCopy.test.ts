@@ -15,7 +15,7 @@ test("on Android the popup is the Enable Location Access popup of the design", (
   const copy = copyFor("android");
   expect(copy.title).toBe("Enable Location Access");
   expect(copy.subtitle).toBe(
-    "Our identification accuracy exceeds 90% with location access."
+    "Enable location access to find birds near you and improve AI accuracy."
   );
   expect(copy.continueLabel).toBe("Allow Location");
 });

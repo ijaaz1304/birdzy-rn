@@ -49,6 +49,7 @@ export const LocationPermissionPopup: React.FC<
   const copy = getLocationFirstAskUiCopy();
   const customLocationButton =
     MODAL_STRINGS.bottomSheets.enableLocation.customLocationButton;
+  const notNowButton = MODAL_STRINGS.bottomSheets.enableLocation.notNowButton;
 
   useEffect(() => {
     if (!visible) return undefined;
@@ -163,6 +164,28 @@ export const LocationPermissionPopup: React.FC<
               </Text>
             </TouchableOpacity>
           ) : null}
+
+          {/* Figma 9376:274011 "Not Now": no fill or border, 44 high, 12 below. */}
+          <TouchableOpacity
+            style={[
+              styles.textButton,
+              { borderRadius: radius.xl, marginTop: spacing[3] },
+            ]}
+            onPress={onClose}
+            activeOpacity={0.7}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel={notNowButton}
+          >
+            <Text
+              variant="body"
+              size="medium"
+              weight="medium"
+              style={{ color: colors.textPrimary }}
+            >
+              {notNowButton}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -224,6 +247,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
+    minHeight: 44,
+  },
+  textButton: {
+    width: "100%",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 44,
   },
 });

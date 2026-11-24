@@ -66,6 +66,26 @@ interface MushroomsState {
   /** Sync: add/remove from local favorites when wishlist is changed elsewhere (e.g. WishlistScreen, CollectionDetailsScreen). */
   addFavorite: (mushroomId: string) => void;
   removeFavorite: (mushroomId: string) => void;
+  /**
+   * Un-star a bird removed from the wishlist when its archetype ID may be
+   * missing or wrong (Wishlist specimens can lack `_archetype`): also matches
+   * loaded catalogue cards by BirdLife ID, then scientific name.
+   * Returns the archetype IDs that were cleared.
+   */
+  removeFavoriteForBird: (bird: {
+    archetypeId?: string | null;
+    birdsLifeId?: string | null;
+    scientificName?: string | null;
+  }) => string[];
+  /**
+   * Put back a catalogue tab's saved list (tab switch). Its isWishlisted flags
+   * are from when it was saved, so they are replaced by today's favorites.
+   */
+  restoreCachedList: (cached: {
+    mushrooms: MushroomListItem[];
+    totalCount: number;
+    currentPage: number;
+  }) => void;
   addToCollection: (mushroomId: string) => Promise<void>;
   removeFromCollection: (mushroomId: string) => Promise<void>;
   clearSearch: () => void;
@@ -150,6 +170,43 @@ function applyWishlistOverlay(
   });
 }
 
+const normalizeName = (value?: string | null) =>
+  (value ?? "").trim().toLowerCase();
+
+/** Same species: BirdLife ID when both sides have one, else exact scientific name. */
+export function catalogueItemMatchesBird(
+  item: MushroomListItem,
+  bird: { birdsLifeId?: string | null; scientificName?: string | null }
+): boolean {
+  const itemLifeId = (item as { birdsLifeId?: string }).birdsLifeId?.trim();
+  const birdLifeId = bird.birdsLifeId?.trim();
+  if (itemLifeId && birdLifeId) return itemLifeId === birdLifeId;
+  const birdName = normalizeName(bird.scientificName);
+  return !!birdName && normalizeName(item.scientificName) === birdName;
+}
+
+/**
+ * A saved list was synced into `favorites` when it was fetched, and every
+ * wishlist change since (Catalogue star, Wishlist screen, bird details) updated
+ * `favorites`, so `favorites` — not the saved flag — is the current answer.
+ */
+export function applySavedListWishlistState(
+  list: MushroomListItem[],
+  favorites: string[],
+  suppressed: string[]
+): MushroomListItem[] {
+  const fav = new Set(favorites);
+  const sup = new Set(suppressed);
+  return list.map((m) => {
+    const id = mushroomListId(m);
+    if (!id) return m;
+    const isWishlisted = !sup.has(id) && fav.has(id);
+    return isWishlisted === Boolean(m.isWishlisted)
+      ? m
+      : { ...m, isWishlisted };
+  });
+}
+
 function applyListWishlistState(
   currentFavorites: string[],
   suppressed: string[],
@@ -206,21 +263,24 @@ export const useBirdsStore = create<MushroomsState>()(
           if (generation !== listFetchGeneration) {
             return;
           }
+          // Re-read after the await: a wishlist add/remove made while this page
+          // was loading (e.g. in Collection → Wishlist) must not be overwritten.
+          const stateAfter = get();
 
           if (append) {
             const existingIds = new Set(
-              currentState.mushrooms.map((m) => m.archetypeId ?? (m as any).id)
+              stateAfter.mushrooms.map((m) => m.archetypeId ?? (m as any).id)
             );
             const newItems = (response.data ?? []).filter(
               (m: MushroomListItem) =>
                 !existingIds.has(m.archetypeId ?? (m as any).id)
             );
-            const merged = [...currentState.mushrooms, ...newItems];
-            const cap = currentState.totalCount;
+            const merged = [...stateAfter.mushrooms, ...newItems];
+            const cap = stateAfter.totalCount;
             const capped = cap > 0 ? merged.slice(0, cap) : merged;
             const wishlistState = applyListWishlistState(
-              currentState.favorites,
-              currentState.suppressedWishlistIds,
+              stateAfter.favorites,
+              stateAfter.suppressedWishlistIds,
               capped
             );
             set({
@@ -228,7 +288,7 @@ export const useBirdsStore = create<MushroomsState>()(
               favorites: wishlistState.favorites,
               suppressedWishlistIds: wishlistState.suppressedWishlistIds,
               currentPage: response.pagination.pageNo,
-              totalCount: currentState.totalCount,
+              totalCount: stateAfter.totalCount,
               isLoading: false,
               allTabPrimed: true,
             });
@@ -236,8 +296,8 @@ export const useBirdsStore = create<MushroomsState>()(
             // initial load or refresh
             const list = response.data ?? [];
             const wishlistState = applyListWishlistState(
-              currentState.favorites,
-              currentState.suppressedWishlistIds,
+              stateAfter.favorites,
+              stateAfter.suppressedWishlistIds,
               list
             );
             set({
@@ -506,6 +566,33 @@ export const useBirdsStore = create<MushroomsState>()(
               ? { ...m, isWishlisted: false }
               : m
           ),
+        });
+      },
+
+      removeFavoriteForBird: (bird) => {
+        const ids = new Set<string>();
+        const archetypeId = bird.archetypeId?.trim();
+        if (archetypeId) ids.add(archetypeId);
+        for (const m of get().mushrooms) {
+          const id = mushroomListId(m);
+          if (id && catalogueItemMatchesBird(m, bird)) ids.add(id);
+        }
+        ids.forEach((id) => get().removeFavorite(id));
+        return [...ids];
+      },
+
+      restoreCachedList: ({ mushrooms, totalCount, currentPage }) => {
+        const { favorites, suppressedWishlistIds } = get();
+        set({
+          mushrooms: applySavedListWishlistState(
+            mushrooms,
+            favorites,
+            suppressedWishlistIds
+          ),
+          totalCount,
+          currentPage,
+          isLoading: false,
+          error: null,
         });
       },
 

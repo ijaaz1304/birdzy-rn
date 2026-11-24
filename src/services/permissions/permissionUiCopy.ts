@@ -74,7 +74,7 @@ export function getLocationFirstAskUiCopy(): PermissionPromptCopy {
   const c = CAMERA_STRINGS.galleryLocationAccess;
   return {
     title: c.title,
-    subtitle: c.subtitle,
+    subtitle: MODAL_STRINGS.bottomSheets.enableLocation.androidSubtitle,
     continueLabel: MODAL_STRINGS.bottomSheets.enableLocation.allowButton,
     openSettingsLabel: "Go to Settings",
   };

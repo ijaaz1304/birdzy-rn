@@ -260,43 +260,59 @@ export const AudioGalleryScreen: React.FC = () => {
   const renderEmpty = () => {
     if (loading || error) return null;
     if (isLibraryEmpty) {
+      const ctaFg = isDark ? EMPTY_DARK.ctaFg : APP_COLORS.createButtonFg;
+      // Figma 9380:111759: art, then 22 to the text, 8 title→subtitle, 12 to the button.
       return (
         <View style={styles.emptyWrap}>
-          <AppImage
-            source={Images.soundLibraryEmptyBird}
-            style={styles.emptyArt}
-            resizeMode="contain"
-          />
-          <Text
-            variant="body"
-            size="medium"
-            weight="medium"
-            style={[styles.emptyTitle, { color: colors.textPrimary }]}
-          >
-            {strings.emptyTitle}
-          </Text>
-          <Text variant="body" size="small" style={styles.emptySubtitle}>
-            {strings.emptySubtitle}
-          </Text>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => navigateToSoundIdentify(navigation)}
-            style={styles.identifyCta}
-          >
-            <CreatePlusIcon
-              width={24}
-              height={24}
-              color={APP_COLORS.createButtonFg}
+          <View style={styles.emptyArtFrame}>
+            <AppImage
+              source={Images.soundLibraryEmptyBird}
+              style={styles.emptyArt}
+              resizeMode="contain"
             />
-            <Text
-              variant="body"
-              size="medium"
-              weight="medium"
-              style={styles.identifyCtaLabel}
+          </View>
+          <View style={styles.emptyBody}>
+            <View style={styles.emptyText}>
+              <Text
+                variant="body"
+                size="medium"
+                weight="medium"
+                style={[styles.emptyTitle, { color: colors.textPrimary }]}
+              >
+                {strings.emptyTitle}
+              </Text>
+              <Text
+                variant="body"
+                size="small"
+                style={[
+                  styles.emptySubtitle,
+                  isDark && { color: EMPTY_DARK.subtitle },
+                ]}
+              >
+                {strings.emptySubtitle}
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigateToSoundIdentify(navigation)}
+              style={[
+                styles.identifyCta,
+                isDark && styles.identifyCtaDark,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={strings.identifyCta}
             >
-              {strings.identifyCta}
-            </Text>
-          </TouchableOpacity>
+              <CreatePlusIcon width={24} height={24} color={ctaFg} />
+              <Text
+                variant="body"
+                size="medium"
+                weight="medium"
+                style={[styles.identifyCtaLabel, { color: ctaFg }]}
+              >
+                {strings.identifyCta}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       );
     }
@@ -480,6 +496,16 @@ export const AudioGalleryScreen: React.FC = () => {
   );
 };
 
+/**
+ * Figma 9380:111746 (dark empty library): subtitle Text & icon-Secondary #D1D1D1;
+ * "Identify by Sound" Text & icon-Brand 1 #16B6B4 on Surface-brand-1 Accent #072C38.
+ */
+const EMPTY_DARK = {
+  subtitle: "#D1D1D1",
+  ctaFg: "#16B6B4",
+  ctaBg: "#072C38",
+} as const;
+
 /** Figma 9380:111730 (dark): active tab #009DA7 text + 2px underline, inactive #D1D1D1. */
 const TAB_DARK = { active: "#009DA7", inactive: "#D1D1D1" } as const;
 
@@ -591,23 +617,41 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   separator: { height: spacing[3] },
+  // Figma: block starts 24 below the tabs (list pt16 + 8), 295 wide (px20 + list px20).
   emptyWrap: {
-    flex: 1,
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing[6],
+    paddingTop: spacing[2],
+    paddingHorizontal: spacing[5],
     paddingBottom: spacing[8],
-    gap: spacing[3],
+    gap: 22,
   },
-  emptyArt: {
+  // Figma 9380:111760: 219×168 frame clips a 185×185 bird placed at (17, 6).
+  emptyArtFrame: {
     width: 219,
     height: 168,
+    overflow: "hidden",
+  },
+  emptyArt: {
+    position: "absolute",
+    left: 17,
+    top: 6,
+    width: 185,
+    height: 185,
+  },
+  emptyBody: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    gap: spacing[3],
+  },
+  emptyText: {
+    alignSelf: "stretch",
+    gap: spacing[2],
   },
   emptyTitle: {
     fontFamily: FONTS.medium,
     fontSize: 16,
+    lineHeight: 24,
     textAlign: "center",
-    marginTop: spacing[1],
   },
   emptySubtitle: {
     fontFamily: FONTS.regular,
@@ -616,21 +660,30 @@ const styles = StyleSheet.create({
     color: APP_COLORS.textSecondaryGray,
     textAlign: "center",
   },
+  // Figma Button: 44 high, px16, gap 8, radius ~24, drop shadow #313131 28% (0,4) blur 5.
   identifyCta: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    height: 44,
+    minHeight: 44,
+    paddingVertical: 10,
     paddingHorizontal: spacing[4],
     borderRadius: 24,
     backgroundColor: APP_COLORS.createButtonBg,
     gap: spacing[2],
-    marginTop: spacing[2],
+  },
+  identifyCtaDark: {
+    backgroundColor: EMPTY_DARK.ctaBg,
+    shadowColor: "#313131",
+    shadowOpacity: 0.28,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 5,
+    elevation: 4,
   },
   identifyCtaLabel: {
     fontFamily: FONTS.medium,
     fontSize: 16,
-    color: APP_COLORS.createButtonFg,
+    lineHeight: 24,
   },
   tabEmpty: {
     textAlign: "center",

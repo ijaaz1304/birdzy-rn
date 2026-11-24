@@ -47,6 +47,9 @@ export { default as ExplorePinIcon } from "../features/explore/assets/home-pin.s
 export { default as SoundLibraryFilterIcon } from "./discovery/icons/filter.svg";
 export { default as SoundLibraryPlayIcon } from "./discovery/icons/play.svg";
 export { default as SoundLibraryEditIcon } from "./discovery/icons/edit.svg";
+/** Figma 9376:274355 Add Custom Location sheet (map-pinpoint-02, clock-02); stroke = `color` prop. */
+export { default as LocationPinpointIcon } from "./location/icons/map-pinpoint.svg";
+export { default as LocationRecentIcon } from "./location/icons/clock.svg";
 export { default as SoundLibraryDeleteIcon } from "./discovery/icons/delete.svg";
 export { default as WizardMapPinIcon } from "./discovery/wizard/map_pin.svg";
 export { default as WizardCurrentLocationIcon } from "./discovery/wizard/current_location.svg";

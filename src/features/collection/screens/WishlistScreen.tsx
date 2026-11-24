@@ -32,6 +32,7 @@ import { mushroomSpecimenService } from "../../../services/specimen/mushroomSpec
 import { archetypeService } from "../../../services/archetype/archetype.service";
 import { CardSkeleton } from "../../../components/skeleton";
 import { useBirdsStore } from "../../../features/catalogue/birds.store";
+import { resolveCatalogueArchetypeId } from "../wishlistBirdIdentity";
 import { useWishlistInvalidationStore } from "../wishlistInvalidation.store";
 import { EmptyCollectionContent } from "../components";
 import { useStrings } from "../../../hooks/useStrings";
@@ -69,6 +70,8 @@ export const WishlistScreen: React.FC = () => {
     id: string;
     specimenId: string;
     archetypeId?: string;
+    birdsLifeId?: string;
+    rawScientificName?: string;
     name: string;
   } | null>(null);
   const removedSpecimenIdsRef = useRef<Set<string>>(new Set());
@@ -128,6 +131,9 @@ export const WishlistScreen: React.FC = () => {
         archetypeId: resolveArchetypeIdFromSpecimen(
           specimen as unknown as Record<string, unknown>
         ),
+        birdsLifeId:
+          (specimen as { birdsLifeId?: string }).birdsLifeId ?? undefined,
+        rawScientificName: specimen.scientificName,
         name: getDisplayName(specimen),
         scientificName: getMushroomDisplayScientificFromFields(specimen),
         image: (() => {
@@ -244,6 +250,8 @@ export const WishlistScreen: React.FC = () => {
     id: string;
     specimenId: string;
     archetypeId?: string;
+    birdsLifeId?: string;
+    rawScientificName?: string;
     name: string;
   }) => {
     setSelectedItem(item);
@@ -267,9 +275,20 @@ export const WishlistScreen: React.FC = () => {
             specimenRes as unknown as Record<string, unknown>
           ) ?? "";
       }
+      // Wishlist specimens can lack `_archetype` (the lookup above may then
+      // return the specimen's own ID): resolve the real catalogue bird.
+      const bird = {
+        archetypeId,
+        specimenId: itemToRemove.specimenId,
+        birdsLifeId: itemToRemove.birdsLifeId ?? null,
+        scientificName: itemToRemove.rawScientificName ?? null,
+      };
+      archetypeId = (await resolveCatalogueArchetypeId(bird)) ?? "";
       if (archetypeId) {
-        await archetypeService.removeWishlistArchetype(archetypeId);
-        useBirdsStore.getState().removeFavorite(archetypeId);
+        await archetypeService.removeWishlistArchetype(
+          archetypeId,
+          itemToRemove.specimenId || undefined
+        );
         analyticsService.logEvent(EVENTS.remove_wishlist, {
           mushroom_id: String(archetypeId),
         });
@@ -284,6 +303,11 @@ export const WishlistScreen: React.FC = () => {
         showToast(strings.collection.favorite.removeFailed, "error");
         return;
       }
+      // After the server succeeded: clear the Catalogue star, even when the
+      // bird could only be matched by BirdLife ID / scientific name.
+      useBirdsStore
+        .getState()
+        .removeFavoriteForBird({ ...bird, archetypeId: archetypeId || null });
       if (itemToRemove.specimenId) {
         removedSpecimenIdsRef.current.add(itemToRemove.specimenId);
       }

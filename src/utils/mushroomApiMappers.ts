@@ -65,6 +65,8 @@ export function birdListItemToMushroomListItem(
 ): MushroomListItem {
   return {
     archetypeId: bird.archetypeId,
+    // Kept so a Wishlist specimen (which has no archetype ID) can be matched to its card.
+    birdsLifeId: bird.birdsLifeId,
     commonName: bird.commonName,
     commonNames: bird.commonName ? [bird.commonName] : [],
     scientificName: bird.scientificName,

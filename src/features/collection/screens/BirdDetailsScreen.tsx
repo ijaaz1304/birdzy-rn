@@ -126,6 +126,7 @@ import { coreApi } from "../../../services/api/features/core.api";
 import { archetypeService } from "../../../services/archetype/archetype.service";
 import { soundRecordingService } from "../../../services/audio/soundRecording.service";
 import { useBirdsStore } from "../../../features/catalogue/birds.store";
+import { resolveCatalogueArchetypeId } from "../wishlistBirdIdentity";
 import {
   MUSHROOM_DETAILS_EXTRA,
   SCREEN_COLORS,
@@ -1094,15 +1095,33 @@ export const BirdDetailsScreen: React.FC = () => {
       return;
     }
 
+    // Wishlist specimens can lack `_archetype`, leaving the specimen's own ID
+    // here; find the real catalogue bird so the server and the Catalogue star
+    // are both cleared for the right ID.
+    const bird = {
+      archetypeId,
+      specimenId: specimenId ? String(specimenId) : undefined,
+      birdsLifeId:
+        (mushroomData as { birdsLifeId?: string } | null)?.birdsLifeId ?? null,
+      scientificName: mushroomData?.scientificName ?? null,
+    };
+
     try {
-      if (archetypeId) {
-        await archetypeService.removeWishlistArchetype(archetypeId);
-        useBirdsStore.getState().removeFavorite(archetypeId);
+      const catalogueId = await resolveCatalogueArchetypeId(bird);
+      if (catalogueId) {
+        // Pass the opened Wishlist specimen so it is cleared directly.
+        await archetypeService.removeWishlistArchetype(
+          catalogueId,
+          bird.specimenId
+        );
       } else if (specimenId) {
         await mushroomSpecimenService.updateSpecimen(String(specimenId), {
           isWishlisted: false,
         });
       }
+      useBirdsStore
+        .getState()
+        .removeFavoriteForBird({ ...bird, archetypeId: catalogueId });
       useWishlistInvalidationStore.getState().invalidate();
       setIsWishlisted(false);
       setMushroomData((prev) =>

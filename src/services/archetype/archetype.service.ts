@@ -19,6 +19,7 @@ import {
   normalizeArchetypeStats,
   normalizeArchetypeListResponse,
   normalizeMushroomDetail,
+  resolveSpecimenArchetypeId,
 } from "../../utils/mushroomApiMappers";
 import type {
   BirdArchetypeFilterParams,
@@ -317,7 +318,16 @@ class ArchetypeService {
       { _archetype: [archetypeId] } as MushroomSpecimenFilterRequest,
       { pageNo: 0, pageSize: 20 }
     );
-    return data ?? [];
+    // `_archetype` is not a documented fetchAll filter. If the server ignores
+    // it, these are the user's latest specimens of any bird, so keep only this
+    // bird's rows — otherwise removing one bird could un-wishlist others, and
+    // another bird's identified specimen could block wishlisting this one.
+    return (data ?? []).filter(
+      (row) =>
+        resolveSpecimenArchetypeId(
+          row as unknown as Record<string, unknown>
+        ) === archetypeId
+    );
   }
 
   private async resolveWishlistedSpecimen(
@@ -341,8 +351,15 @@ class ArchetypeService {
    * Remove archetype from wishlist and clear any stale wishlisted specimen rows
    * so Collection/Wishlist lists (specimen fetchAll isWishlisted) stay in sync.
    */
-  async removeWishlistArchetype(id: string): Promise<void> {
-    wishlistLog("info", "[Wishlist] remove: request", { archetypeId: id });
+  async removeWishlistArchetype(
+    id: string,
+    /** The wishlist specimen the screen already knows (Wishlist list/details). */
+    knownSpecimenId?: string
+  ): Promise<void> {
+    wishlistLog("info", "[Wishlist] remove: request", {
+      archetypeId: id,
+      specimenId: knownSpecimenId ?? null,
+    });
     try {
       const response = await coreApi.removeWishlistArchetype(id);
       if (response.error) {
@@ -364,7 +381,7 @@ class ArchetypeService {
         );
       }
 
-      await this.clearWishlistedSpecimensForArchetype(id);
+      await this.clearWishlistedSpecimensForArchetype(id, knownSpecimenId);
       wishlistLog("info", "[Wishlist] remove: success", { archetypeId: id });
     } catch (error) {
       const normalized = normalizeError(error);
@@ -378,12 +395,27 @@ class ArchetypeService {
   }
 
   private async clearWishlistedSpecimensForArchetype(
-    archetypeId: string
+    archetypeId: string,
+    knownSpecimenId?: string
   ): Promise<void> {
-    const specimens = await this.findSpecimensForArchetype(archetypeId);
-    for (const row of specimens) {
-      if (!row.isWishlisted || !row.specimenId) continue;
-      const sid = String(row.specimenId);
+    const found = await this.findSpecimensForArchetype(archetypeId).catch(
+      () => [] as MushroomSpecimenListItem[]
+    );
+    const rows: { specimenId: string; isIdentified: boolean }[] = found
+      .filter((row) => row.isWishlisted && row.specimenId)
+      .map((row) => ({
+        specimenId: String(row.specimenId),
+        isIdentified: Boolean(row.isIdentified),
+      }));
+    // The Wishlist row the user tapped is always cleared, even if the lookup
+    // above missed it (it only reads the latest 20 specimens).
+    if (knownSpecimenId && !rows.some((r) => r.specimenId === knownSpecimenId)) {
+      // Identification state unknown here: treat as identified so a failed
+      // patch never falls through to deleting the specimen.
+      rows.unshift({ specimenId: knownSpecimenId, isIdentified: true });
+    }
+    for (const row of rows) {
+      const sid = row.specimenId;
       try {
         await mushroomSpecimenService.updateSpecimen(sid, {
           isWishlisted: false,

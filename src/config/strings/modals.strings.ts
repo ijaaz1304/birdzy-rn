@@ -14,9 +14,17 @@ export const MODAL_STRINGS = {
       subtitle:
         "Use your location to improve Near You results and step-by-step suggestions for your area.",
       enableButton: "Continue",
+      /**
+       * Android "Enable Location Access" popup subtitle. Figma 9376:274002 has the
+       * microphone sentence pasted in; this is the same wording made about location.
+       */
+      androidSubtitle:
+        "Enable location access to find birds near you and improve AI accuracy.",
       /** Android first-ask primary button (Figma). iOS keeps enableButton. */
       allowButton: "Allow Location",
       customLocationButton: "Custom Location",
+      /** Figma 9376:274011: third, text-only button that dismisses the popup. */
+      notNowButton: "Not Now",
     },
     cameraPermission: {
       title: "Improve Identification With Camera",
@@ -57,12 +65,19 @@ export const MODAL_STRINGS = {
     },
     changeLocation: {
       title: "Change Location",
-      addTitle: "Add Location",
+      /** Figma 9376:274355 "Add Custom Location". */
+      addTitle: "Add Custom Location",
       customTitle: "Change Location",
       subtitle:
         "Help us provide more accurate bird insights based on your area.",
       customLocationLabel: "Location",
+      addLocationLabel: "Custom Location",
       placeholder: "Enter location",
+      recentlyUsed: "Recently Used",
+      /** Figma 9376:274415: search finished with no matches. */
+      noLocationFound: "No location found.",
+      /** Search request failed (offline/provider error) — not the same as no match. */
+      searchFailed: "Couldn't search locations. Check your connection and try again.",
     },
     pushNotifications: {
       title: "Enable Notifications",
