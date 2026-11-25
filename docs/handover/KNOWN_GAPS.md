@@ -46,11 +46,11 @@ The Mapbox public token was configured locally. Device rendering, live backend c
 
 ## 2026-11-12 — step-by-step static test body removed
 
-The Malaysia test body (`lat` 3.7 / `lng` 101.7, fixed date and size) is no longer forced by `archetypeService.stepByStep`. Collection Near You, Catalogue Near You, and the wizard post the caller's location, date, and size. `region` is still stripped before the HTTP body, matching the API contract test.
+The Malaysia test body (`lat` 3.7 / `lng` 101.7, fixed date and size) is no longer forced by `archetypeService.stepByStep` on `codex/dark-mode` (removed in the Nov 23 dark-mode work; param rename/confirm 2026-11-25). Collection Near You, Catalogue Near You, and the wizard post the caller's location, date, and size. `region` is still stripped before the HTTP body, matching the API contract test. **Note:** `main` still contains `STEP_BY_STEP_TEST_REQUEST` until that branch is updated or this fix is merged.
 
 - Owner: not yet assigned.
-- Evidence/status: source updated 2026-11-23. Live empty-result check on a device is still open.
-- Next action: open Collection → Near You with location allowed and confirm the catalogue list is not the generic empty state.
+- Evidence/status: source updated 2026-11-23 / confirmed 2026-11-25 on dark-mode. Live empty-result check on a device is still open.
+- Next action: open Collection → Near You with location allowed and confirm the catalogue list is not the generic empty state; merge/remove the override from `main` if that branch is still used for builds.
 
 ## 2026-11-23 — Wishlist add fails for birds with flight pattern “Mixed” (backend)
 

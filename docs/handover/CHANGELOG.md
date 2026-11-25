@@ -1,5 +1,12 @@
 # Birdzy — handover change history
 
+## 2026-11-25 — Step-by-step uses caller answers (no static test body)
+
+- Confirmed `archetypeService.stepByStep` forwards the caller body (wizard location/date/size, or Near You discovery coords). The temporary Malaysia test override (`lat` 3.7 / `lng` 101.7, fixed date and sizes) is not present on this branch.
+- Renamed the unused-looking `_body` parameter to `body` and noted that no fixed test location may be substituted.
+- Affected: `src/services/archetype/archetype.service.ts`. FLOWS already describe forwarding real answers.
+- Validation: `__tests__/api/coreServices.test.ts` (step-by-step forward case). Device retest open — reload the JS bundle if an older build still posts the Malaysia body.
+
 ## 2026-11-23 — Explore target icon detects the current city
 
 - Before:

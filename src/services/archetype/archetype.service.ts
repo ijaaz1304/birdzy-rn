@@ -485,7 +485,7 @@ class ArchetypeService {
    * Nearby birds by location and date (POST /core/archetypes/step-by-step).
    */
   async stepByStep(
-    _body: BirdStepByStepRequest,
+    body: BirdStepByStepRequest,
     pagination?: { pageNo?: number; pageSize?: number }
   ): Promise<{
     data: MushroomArchetypeListItem[];
@@ -496,7 +496,9 @@ class ArchetypeService {
     };
   }> {
     try {
-      const response = await coreApi.stepByStep(_body, pagination);
+      // Forward the caller's answers (wizard / Near You). Do not substitute a
+      // fixed test location — that override was removed.
+      const response = await coreApi.stepByStep(body, pagination);
       if (response.error) {
         throw new ApiException(
           response.reason || "Failed to fetch step-by-step birds"
