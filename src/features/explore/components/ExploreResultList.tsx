@@ -1,22 +1,28 @@
 import { EXPLORE_COPY } from "../content/explore.strings";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   StyleSheet,
   TouchableOpacity,
   View,
+  type ViewToken,
 } from "react-native";
 import { AppCard } from "../../../components/shared";
 import { Text } from "../../../atoms";
 import { ExploreEmptyState } from "./ExploreEmptyState";
 import { ExploreArchetypeCard } from "@/features/explore/services/explore.api.types";
-import { archetypeService } from "../../../services/archetype/archetype.service";
 import { useTheme } from "../../../hooks/useTheme";
-import { useBirdsStore } from "../../catalogue/birds.store";
-import { useAuthStore } from "../../auth/auth.store";
-import { useWishlistInvalidationStore } from "../../collection/wishlistInvalidation.store";
+
+import { ExploreFastPhoto } from "./ExploreFastPhoto";
+import { prefetchExplorePhotos } from "../services/exploreImages";
+import { useExploreWishlist } from "../useExploreWishlist";
+
+export const EXPLORE_LIST_WINDOW = {
+  initialNumToRender: 3,
+  maxToRenderPerBatch: 4,
+  windowSize: 3,
+} as const;
 
 type Props = {
   data: ExploreArchetypeCard[];
@@ -33,80 +39,42 @@ type Props = {
   filtered?: boolean;
 };
 
-/** Own each item's pending state; serialize taps and reconcile with shared wishlist state. */
-export const ExploreResultCard = ({
+/** Every mounted/recycled instance observes one shared pending operation. */
+export const ExploreResultCard = React.memo(function ExploreResultCard({
   item,
   onPress,
 }: {
   item: ExploreArchetypeCard;
   onPress: (id: string) => void;
-}) => {
-  const favorite = useBirdsStore((state) =>
-    state.favorites.includes(item.archetypeId)
-  );
-  const suppressed = useBirdsStore((state) =>
-    state.suppressedWishlistIds.includes(item.archetypeId)
-  );
-  const [pending, setPending] = useState(false);
-  const [optimistic, setOptimistic] = useState<boolean | null>(null);
-  const pendingRef = useRef(false);
-  const alive = useRef(true);
-  useEffect(() => {
-    alive.current = true;
-    return () => {
-      alive.current = false;
-    };
-  }, []);
-  const starred =
-    optimistic ?? (suppressed ? false : favorite || item.isWishlisted);
-  const toggle = async () => {
-    if (pendingRef.current) return;
-    pendingRef.current = true;
-    const account = useAuthStore.getState().user?.id;
-    const token = useAuthStore.getState().token;
-    const sameSession = () =>
-      useAuthStore.getState().user?.id === account &&
-      useAuthStore.getState().token === token;
-    const next = !starred;
-    setPending(true);
-    setOptimistic(next);
-    try {
-      if (next) await archetypeService.addWishlistArchetype(item.archetypeId);
-      else await archetypeService.removeWishlistArchetype(item.archetypeId);
-      if (!sameSession()) return;
-      const store = useBirdsStore.getState();
-      if (next) store.addFavorite(item.archetypeId);
-      else store.removeFavorite(item.archetypeId);
-      useWishlistInvalidationStore.getState().invalidate();
-    } catch {
-      if (alive.current && sameSession())
-        Alert.alert(EXPLORE_COPY.wishlist, EXPLORE_COPY.wishlistError);
-    } finally {
-      pendingRef.current = false;
-      if (alive.current) {
-        setPending(false);
-        setOptimistic(null);
-      }
-    }
-  };
+}) {
+  const { starred, pending, pendingRef, toggle } = useExploreWishlist(item);
+  const commonName = item.commonName?.trim();
   return (
     <AppCard
       imageUrls={item.defaultImageUrl ? [item.defaultImageUrl] : item.imageUrls}
-      // Figma 9376:267165: common name as title, scientific name below.
-      title={item.commonName?.trim() || item.scientificName}
-      subtitle={item.commonName?.trim() ? item.scientificName : undefined}
+      imageSlot={
+        <ExploreFastPhoto
+          uri={
+            item.defaultImageUrl ||
+            item.imageUrls?.find((uri) => typeof uri === "string")
+          }
+          style={StyleSheet.absoluteFillObject}
+        />
+      }
+      title={commonName || item.scientificName}
+      subtitle={commonName ? item.scientificName : undefined}
       enableImageCarousel={false}
       starred={starred}
       starDisabled={pending}
       hasSound={false}
-      onStarPress={() => toggle()}
+      onStarPress={toggle}
       onPress={() => {
         if (!pendingRef.current) onPress(item.archetypeId);
       }}
       style={styles.card}
     />
   );
-};
+});
 
 export const ExploreResultList: React.FC<Props> = ({
   data,
@@ -122,9 +90,31 @@ export const ExploreResultList: React.FC<Props> = ({
   filtered = false,
 }) => {
   const theme = useTheme();
+  const cardsRef = useRef(data);
+  cardsRef.current = data;
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const indexes = viewableItems.flatMap((token) =>
+        token.index == null ? [] : [token.index]
+      );
+      if (!indexes.length) return;
+      prefetchExplorePhotos(
+        cardsRef.current
+          .slice(Math.min(...indexes), Math.max(...indexes) + 3)
+          .map((card) => card.defaultImageUrl || card.imageUrls?.[0])
+      );
+    }
+  ).current;
+  const renderCard = useCallback(
+    ({ item }: { item: ExploreArchetypeCard }) => (
+      <ExploreResultCard item={item} onPress={onCardPress} />
+    ),
+    [onCardPress]
+  );
   return (
     <FlatList
       data={data}
+      onViewableItemsChanged={onViewableItemsChanged}
       keyExtractor={(item) => item.archetypeId}
       numColumns={2}
       columnWrapperStyle={data.length ? styles.columnWrapper : undefined}
@@ -187,9 +177,8 @@ export const ExploreResultList: React.FC<Props> = ({
           </TouchableOpacity>
         ) : null
       }
-      renderItem={({ item }) => (
-        <ExploreResultCard item={item} onPress={onCardPress} />
-      )}
+      renderItem={renderCard}
+      {...EXPLORE_LIST_WINDOW}
     />
   );
 };

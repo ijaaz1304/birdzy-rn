@@ -95,3 +95,9 @@ Explore now handles binaries missing Mapbox without an import crash, but install
 - Device, store-purchase, provider restrictions and live Bird PATCH/Explore acceptance remain open. A source/test audit cannot certify every deployed service or hardware behavior.
 
 Final audit checks: TypeScript and app-wide ESLint error check passed; 752 whole-app tests plus 2 dedicated Mapbox wrapper regressions passed. Native compilation was interrupted, with build execution handed to the user on request. The 849-warning baseline remains a source-review backlog, not a build failure or a resolved item.
+
+## 2026-11-27 — Explore optimization acceptance and baseline tooling
+
+The [Explore audit/fixes](../audits/explore-optimization-2026-11-27.md) cover request scheduling, coherent TTL/snapshot caches, retry ownership, map-filter/location races, shared pending wishlist state, stable cluster input and image/search work. Targeted regressions pass. Device visuals/gestures/permissions, real map/list coverage, release frame times/heap and CDN policy remain unverified; owner unassigned.
+
+The full repository suite still has the same two `cameraIdentifyReview.test.tsx` missing-ThemeProvider failures reproduced on the untouched baseline and optimized branch. TypeScript also reports two AskAIScreen legacy identification-type field errors. These unrelated areas were not changed to make an Explore-only result look green. No native build or live backend acceptance is claimed.

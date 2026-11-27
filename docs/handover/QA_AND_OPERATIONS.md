@@ -172,3 +172,15 @@ Verify Identify sends either the full recording or the selected start/duration t
 ### Dark crop location-card follow-up — 20 November 2026
 
 Inspect the sound crop screen in Dark with location off and with a long location: the full-width card is light grey with dark 14/20 text, a thin border and 8-point corners; a known place is blue/underlined inside angle brackets and can wrap without clipping. Tap to edit the known place and test the off toggle's permission flow. Check analyzing-disabled behavior and unchanged Light rendering. Device acceptance remains open.
+
+## 2026-11-27 — Explore optimization acceptance
+
+- [ ] Confirm strict Bird list HTTP body `{ location }`, existing endpoint/tab query and map-only trait filters. No bbox/radius/Mushroom/Plant fields should leak into the list body.
+- [ ] Fail page two, retry and verify page two is resent with page one retained. A duplicate-only/non-advancing page must stop reads while preserving backend totals.
+- [ ] Revalidate page one after TTL while an older page two would still be fresh: never mix snapshots. Check fresh tab/back re-entry reuse, original cache ages, forced Refresh and account isolation.
+- [ ] Apply map filters during a tab debounce; the delayed tab must not restore old map filters. Change location in filtered Results; the first new read must be page one and must not merge previous-location cards.
+- [ ] Tap stars in duplicate/recycled cards, rotate access tokens and log out during pending work. One mutation per account/species, shared rollback, successful token-refresh reconciliation and no old-session publication are required.
+- [ ] Verify compact/expanded search draft preservation, no hidden input reads, no late label overwrite, permission/settings recovery, native unavailable fallback and minimize controls in both themes.
+- [ ] Test dense selection for correct BirdLife membership/source stability and visible photos on slow networks. Capture release-device HTTP timings, first visible map/cards/photo, frame times and peak memory on iOS/Android.
+
+Owner unassigned. Source/mocked regressions are separate from device/backend acceptance; see [the audit](../audits/explore-optimization-2026-11-27.md) and CHANGELOG for actual executed checks.

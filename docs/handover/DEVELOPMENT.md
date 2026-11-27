@@ -181,3 +181,9 @@ Dark now starts with the full recording. Selecting a duration creates the existi
 ### Dark crop location card — 20 November 2026
 
 The crop location view follows the explicit card treatment in Figma 9380:171133: `#F6F6F6` background, `#E7E7E7` one-point border, 8-point radius, 12-point padding and 14/20 dark (`#091B21`) text. A known location is blue/underlined and displayed inside angle brackets. This is an intentional light-card exception inside the dark screen, overriding the earlier generic dark-surface treatment. It applies to both location-off and location-present states; the off toggle uses grey track/white thumb. Existing enable-location/edit-location actions and Light styles are retained.
+
+## 2026-11-27 — Explore optimization branch
+
+The isolated `codex/explore-near-optimization` work is based on `origin/codex/dark-mode` at `9850d3c`. [Audit and implementation](../audits/explore-optimization-2026-11-27.md) documents Bird-specific behavior, caches, request gates, account/session ownership and regressions. No environment/dependency/API-schema migration was introduced. Existing sound/navigation and map layout/presentation behavior was retained; native map persistence and asset redesign were not assumed as optimizations.
+
+Run Explore plus image-cache regressions with `node node_modules/jest/bin/jest.js __tests__/explore __tests__/utils/prefetchImages.test.ts --runInBand --no-coverage --testTimeout=15000`. Aggregate dev counters are in `src/features/explore/exploreDiagnostics.ts`; use release-device profiling to establish real timings and memory. Full repository TypeScript currently reports unrelated AskAIScreen legacy identification-type errors; final checks are recorded in CHANGELOG.

@@ -96,14 +96,14 @@ test("tab debounce immediately blocks pagination and old-tab completions", async
     pageNo: 1,
   });
 });
-test("rapid tab callers all settle and only final query is sent", async () => {
+test("rapid tab callers settle and reuse the fresh original tab", async () => {
   await prime();
   const first = useExploreStore.getState().setTab("yearRound");
   const second = useExploreStore.getState().setTab("growingNow");
   fetchExplore.mockResolvedValueOnce(result());
   await jest.advanceTimersByTimeAsync(300);
   await Promise.all([first, second]);
-  expect(fetchExplore).toHaveBeenCalledTimes(2);
+  expect(fetchExplore).toHaveBeenCalledTimes(1);
 });
 test("identical locations, active tabs and equivalent filters do not refetch", async () => {
   await prime();
@@ -242,5 +242,146 @@ test("duplicate-only pages stop pagination even if the page number advances", as
   fetchExplore.mockResolvedValueOnce(result("one", 2));
   await useExploreStore.getState().loadMore();
   await useExploreStore.getState().loadMore();
+  expect(fetchExplore).toHaveBeenCalledTimes(2);
+});
+
+test("expired queries revalidate both endpoints and cached maps keep their original age", async () => {
+  await prime();
+  await jest.advanceTimersByTimeAsync(120000);
+  fetchExplore.mockResolvedValueOnce(result("elsewhere"));
+  await useExploreStore.getState().searchLocation({ lat: 2, lng: 2 });
+  await useExploreStore.getState().searchLocation({ lat: 1, lng: 1 });
+  expect(exploreService.fetchExploreMap).toHaveBeenCalledTimes(2);
+  await jest.advanceTimersByTimeAsync(60001);
+  fetchExplore.mockResolvedValueOnce(result("fresh"));
+  await useExploreStore.getState().searchLocation({ lat: 1, lng: 1 });
+  expect(exploreService.fetchExploreMap).toHaveBeenCalledTimes(3);
+  expect(fetchExplore).toHaveBeenCalledTimes(3);
+});
+
+test("failed page two retries page two and retains loaded cards", async () => {
+  await prime();
+  fetchExplore.mockRejectedValueOnce(new Error("offline"));
+  await useExploreStore.getState().loadMore();
+  const pending = deferred<Result>();
+  fetchExplore.mockReturnValueOnce(pending.promise);
+  const retry = useExploreStore.getState().retry();
+  expect(useExploreStore.getState().data[0].archetypeId).toBe("one");
+  expect(fetchExplore.mock.calls.map(([, query]) => query?.pageNo)).toEqual([
+    1, 2, 2,
+  ]);
+  pending.resolve(result("two", 2));
+  await retry;
+  expect(
+    useExploreStore.getState().data.map((card) => card.archetypeId)
+  ).toEqual(["one", "two"]);
+});
+
+test("stalled pagination preserves backend totals instead of inventing completion", async () => {
+  await prime();
+  fetchExplore.mockResolvedValueOnce(result("one", 2));
+  await useExploreStore.getState().loadMore();
+  expect(useExploreStore.getState().pagination?.totalCount).toBe(40);
+  expect(useExploreStore.getState().paginationStalled).toBe(true);
+  await useExploreStore.getState().loadMore();
+  expect(fetchExplore).toHaveBeenCalledTimes(2);
+});
+
+test("continuation pages belong to their exact first-page snapshot", async () => {
+  await prime();
+  await jest.advanceTimersByTimeAsync(120000);
+  fetchExplore.mockResolvedValueOnce(result("old-two", 2));
+  await useExploreStore.getState().loadMore();
+  await jest.advanceTimersByTimeAsync(60001);
+  fetchExplore.mockResolvedValueOnce(result("new-one"));
+  await useExploreStore.getState().searchLocation({ lat: 1, lng: 1 });
+  fetchExplore.mockResolvedValueOnce(result("new-two", 2));
+  await useExploreStore.getState().loadMore();
+  expect(fetchExplore.mock.calls.map(([, query]) => query?.pageNo)).toEqual([
+    1, 2, 1, 2,
+  ]);
+  expect(
+    useExploreStore.getState().data.map((card) => card.archetypeId)
+  ).toEqual(["new-one", "new-two"]);
+});
+
+test("screen re-entry can reuse scoped geography but never private list snapshots", async () => {
+  useExploreStore.getState().setCacheScope("account-a");
+  await prime();
+  useExploreStore.getState().reset(true);
+  fetchExplore.mockResolvedValueOnce(result("new-list"));
+  await useExploreStore.getState().searchLocation({ lat: 1, lng: 1 });
+  expect(exploreService.fetchExploreMap).toHaveBeenCalledTimes(1);
+  expect(fetchExplore).toHaveBeenCalledTimes(2);
+  useExploreStore.getState().setCacheScope("account-b");
+  fetchExplore.mockResolvedValueOnce(result("b"));
+  await useExploreStore.getState().searchLocation({ lat: 1, lng: 1 });
+  expect(exploreService.fetchExploreMap).toHaveBeenCalledTimes(2);
+});
+
+test("wishlist invalidation prevents a late result from refilling private caches", async () => {
+  const pending = deferred<Result>();
+  fetchExplore.mockReturnValueOnce(pending.promise);
+  const request = useExploreStore.getState().searchLocation({ lat: 1, lng: 1 });
+  const {
+    useWishlistInvalidationStore,
+  } = require("../../src/features/collection/wishlistInvalidation.store");
+  useWishlistInvalidationStore.getState().invalidate();
+  pending.resolve(result("stale-flags"));
+  await request;
+  fetchExplore.mockResolvedValueOnce(result("new-flags"));
+  await useExploreStore.getState().searchLocation({ lat: 1, lng: 1 });
+  expect(fetchExplore).toHaveBeenCalledTimes(2);
+});
+
+test("refresh bypasses both caches without dropping current cards", async () => {
+  await prime();
+  const pending = deferred<Result>();
+  fetchExplore.mockReturnValueOnce(pending.promise);
+  const request = useExploreStore.getState().refresh();
+  expect(useExploreStore.getState().data[0].archetypeId).toBe("one");
+  expect(exploreService.fetchExploreMap).toHaveBeenCalledTimes(2);
+  pending.resolve(result("fresh"));
+  await request;
+  expect(useExploreStore.getState().data[0].archetypeId).toBe("fresh");
+});
+
+test("list dispatch starts before map-loading publication", async () => {
+  const calls: number[] = [];
+  const stop = useExploreStore.subscribe((state, previous) => {
+    if (state.isMapDataLoading && !previous.isMapDataLoading)
+      calls.push(fetchExplore.mock.calls.length);
+  });
+  await prime();
+  stop();
+  expect(calls).toEqual([1]);
+});
+
+test("session invalidation rejects late list/map responses before logout cleanup completes", async () => {
+  const list = deferred<Result>();
+  const map = deferred<ReturnType<typeof mapResult>>();
+  fetchExplore.mockReturnValueOnce(list.promise);
+  jest.mocked(exploreService.fetchExploreMap).mockReturnValueOnce(map.promise);
+  const request = useExploreStore.getState().searchLocation({ lat: 1, lng: 1 });
+  require("../../src/services/session/accountSession").invalidateAccountSession();
+  list.resolve(result("old-account"));
+  map.resolve(mapResult("old-map"));
+  await request;
+  await flush();
+  expect(useExploreStore.getState().data).toEqual([]);
+  expect(useExploreStore.getState().geoJSON.features).toEqual([]);
+});
+
+test("map-only filters applied during tab debounce cannot be overwritten by the old tab's map", async () => {
+  await prime();
+  const tab = useExploreStore.getState().setTab("yearRound");
+  await useExploreStore.getState().applyFilters({ birdType: ["Seabird"] });
+  fetchExplore.mockResolvedValueOnce(result("year"));
+  await jest.advanceTimersByTimeAsync(300);
+  await tab;
+  expect(exploreService.fetchExploreMap).toHaveBeenCalledTimes(2);
+  expect(
+    jest.mocked(exploreService.fetchExploreMap).mock.calls.at(-1)?.[0].birdType
+  ).toEqual(["Seabird"]);
   expect(fetchExplore).toHaveBeenCalledTimes(2);
 });

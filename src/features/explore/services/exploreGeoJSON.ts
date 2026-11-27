@@ -118,6 +118,8 @@ export function validateMapGeoJSON(value: unknown): ExploreMapGeoJSON {
     }
     features.push(feature);
   }
+  if (collection.features.length > 0 && features.length === 0)
+    throw new Error("Unable to load map activity: no usable observations.");
   return { type: "FeatureCollection", features };
 }
 

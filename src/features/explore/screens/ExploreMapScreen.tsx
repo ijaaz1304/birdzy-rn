@@ -30,6 +30,9 @@ import { ExploreTabBar } from "../components/ExploreTabBar";
 import { AppCard } from "../../../components/shared";
 import FilterModal from "../../../organisms/FilterModal/FilterModal";
 
+import { useAuthStore } from "../../auth/auth.store";
+import { getAccountSessionVersion } from "../../../services/session/accountSession";
+import { ExploreFastPhoto } from "../components/ExploreFastPhoto";
 import { useExploreStore } from "../explore.store";
 import { cardsForMapSelection } from "../exploreSelection";
 import { useExploreLocation } from "../useExploreLocation";
@@ -37,6 +40,14 @@ import { exploreService } from "@/features/explore/services/explore.service";
 
 export const ExploreMapScreen: React.FC = () => {
   const theme = useTheme();
+  const accountId = useAuthStore((state) => state.user?.id);
+  const session = getAccountSessionVersion();
+  const [mapExpanded, setMapExpanded] = useState(false);
+  const [searchDraft, setSearchDraft] = useState("");
+  const draft = useMemo(
+    () => ({ value: searchDraft, setValue: setSearchDraft }),
+    [searchDraft]
+  );
   const isDark = theme.mode === "dark";
   const navigation =
     useNavigation<
@@ -63,6 +74,7 @@ export const ExploreMapScreen: React.FC = () => {
     retryMap,
     tabs,
     pagination,
+    paginationStalled,
     isLoading,
     isLoadingMore,
     hasSearched,
@@ -72,6 +84,8 @@ export const ExploreMapScreen: React.FC = () => {
     applyFilters,
     loadMore,
     retry,
+    refresh,
+    setCacheScope,
     reset,
   } = useExploreStore();
   const [showFilters, setShowFilters] = useState(false);
@@ -97,23 +111,27 @@ export const ExploreMapScreen: React.FC = () => {
     () => (!queryMatchesLocation ? [] : cardsForMapSelection(data, selection)),
     [data, selection, queryMatchesLocation]
   );
+  const latitude = location?.latitude;
+  const longitude = location?.longitude;
   const mapCenter = useMemo<[number, number] | undefined>(
-    () => (location ? [location.longitude, location.latitude] : undefined),
-    [location]
+    () =>
+      latitude != null && longitude != null ? [longitude, latitude] : undefined,
+    [latitude, longitude]
   );
   // Each entry owns its query lifecycle; leaving aborts queued and in-flight reads.
   useEffect(() => {
-    reset();
-    return reset;
-  }, [reset]);
+    setCacheScope(JSON.stringify([accountId ?? null, session]));
+    reset(true);
+    return () => reset(true);
+  }, [reset, setCacheScope, accountId, session]);
   const initialTab = route.params?.initialTab;
   useEffect(() => {
     if (initialTab) setTab(initialTab);
-  }, [initialTab, setTab]);
+  }, [initialTab, setTab, accountId, session]);
   useEffect(() => {
-    if (location)
-      searchLocation({ lat: location.latitude, lng: location.longitude });
-  }, [location, searchLocation]);
+    if (latitude != null && longitude != null)
+      void searchLocation({ lat: latitude, lng: longitude });
+  }, [latitude, longitude, searchLocation, accountId, session]);
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -164,12 +182,26 @@ export const ExploreMapScreen: React.FC = () => {
         >
           {EXPLORE_COPY.title}
         </Text>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Refresh Explore map and birds"
+          disabled={isLoading || isMapDataLoading || !searchedLocation}
+          accessibilityState={{
+            disabled: isLoading || isMapDataLoading || !searchedLocation,
+          }}
+          style={{ marginLeft: "auto", padding: 8 }}
+          onPress={() => void refresh()}
+        >
+          <Icon name="refresh" size={20} color={theme.colors.textPrimary} />
+        </TouchableOpacity>
       </View>
       {/* Figma 9376:267165: search + filter row sits above the map (raised so the
           suggestion dropdown overlays the map card). */}
       <View style={styles.searchRow}>
         <View style={styles.container}>
           <ExploreLocationSearchBar
+            active={!mapExpanded}
+            draft={draft}
             locationLabel={location?.label}
             onSelectLocation={selectLocation}
             onUseCurrentLocation={retryLocation}
@@ -205,11 +237,14 @@ export const ExploreMapScreen: React.FC = () => {
           geoJSON={queryMatchesLocation ? geoJSON : undefined}
           onSelectionChange={setSelectedBirdsLifeIds}
           clearSelectionSignal={clearSignal}
+          onPresentationChange={setMapExpanded}
           headerOverlay={
             <ExploreLocationSearchBar
+              active={mapExpanded}
+              draft={draft}
               locationLabel={location?.label}
               onSelectLocation={selectLocation}
-            onUseCurrentLocation={retryLocation}
+              onUseCurrentLocation={retryLocation}
             />
           }
           selectionOverlay={
@@ -221,10 +256,19 @@ export const ExploreMapScreen: React.FC = () => {
                 data={displayedData}
                 keyExtractor={(item) => item.archetypeId}
                 horizontal
+                initialNumToRender={3}
+                maxToRenderPerBatch={3}
+                windowSize={3}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.selectionPanelList}
                 renderItem={({ item }) => (
                   <AppCard
+                    imageSlot={
+                      <ExploreFastPhoto
+                        uri={item.defaultImageUrl || item.imageUrls?.[0]}
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                    }
                     imageUrls={
                       item.defaultImageUrl
                         ? [item.defaultImageUrl]
@@ -349,8 +393,7 @@ export const ExploreMapScreen: React.FC = () => {
         counts={{
           growingNow:
             tabs && queryMatchesLocation ? tabs.spottedNowCount : null,
-          yearRound:
-            tabs && queryMatchesLocation ? tabs.yearRoundCount : null,
+          yearRound: tabs && queryMatchesLocation ? tabs.yearRoundCount : null,
         }}
         onSelect={(tab) => {
           void setTab(tab);
@@ -403,7 +446,9 @@ export const ExploreMapScreen: React.FC = () => {
             error={queryMatchesLocation ? error : null}
             onRetry={retry}
             selectionActive={!!selectedBirdsLifeIds}
-            hasMore={data.length < (pagination?.totalCount ?? 0)}
+            hasMore={
+              !paginationStalled && data.length < (pagination?.totalCount ?? 0)
+            }
             filtered={Object.keys(filters).length > 0}
             onEndReached={loadMore}
             onCardPress={(id) =>

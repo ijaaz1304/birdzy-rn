@@ -34,47 +34,79 @@ export function retryAfterMs(value: unknown, now = Date.now()): number | null {
   return Number.isFinite(date) ? Math.max(0, date - now) : null;
 }
 
-/** One gate per endpoint/provider. Canceled queued requests do not hit the server. */
-export function createRequestGate(minIntervalMs = 0) {
+/**
+ * One gate per endpoint/provider. Canceled queued requests do not hit the
+ * server, starts are spaced `minIntervalMs` apart, and at most `maxConcurrent`
+ * run at once so a burst of moves cannot pile work onto a slow backend.
+ */
+export function createRequestGate(minIntervalMs = 0, maxConcurrent = Infinity) {
   let nextStart = 0;
   let cooldownUntil = 0;
+  let active = 0;
+  const waiters = new Set<() => void>();
+  const release = () => {
+    active--;
+    const [next] = waiters;
+    if (next) {
+      waiters.delete(next);
+      next();
+    }
+  };
+  const waitForSlot = (signal?: AbortSignal) =>
+    new Promise<void>((resolve, reject) => {
+      if (signal?.aborted) return reject(abortError());
+      const wake = () => {
+        signal?.removeEventListener("abort", onAbort);
+        resolve();
+      };
+      const onAbort = () => {
+        waiters.delete(wake);
+        reject(abortError());
+      };
+      waiters.add(wake);
+      signal?.addEventListener("abort", onAbort, { once: true });
+    });
   return async function request<T>(
     operation: () => Promise<T>,
     signal?: AbortSignal
   ): Promise<T> {
     for (let attempt = 0; ; attempt++) {
-      // Reserve a start only after waiting: canceled searches do not consume future slots.
-      while (true) {
-        if (signal?.aborted) throw abortError();
-        if (cooldownUntil - Date.now() > 30000)
-          throw new Error("Too many requests. Please try again shortly.");
-        await waitForRequest(
-          Math.max(nextStart, cooldownUntil) - Date.now(),
-          signal
-        );
-        if (signal?.aborted) throw abortError();
-        if (Date.now() >= Math.max(nextStart, cooldownUntil)) break;
-      }
-      nextStart = Date.now() + minIntervalMs;
+      while (active >= maxConcurrent) await waitForSlot(signal);
+      active++;
       try {
-        return await operation();
-      } catch (error) {
-        if (signal?.aborted) throw abortError();
-        const response = (
-          error as {
-            response?: { status?: number; headers?: Record<string, unknown> };
-          }
-        )?.response;
-        const normalized = error as { status?: number; retryAfter?: string };
-        const status = response?.status ?? normalized.status;
-        if (status !== 429 && status !== 503) throw error;
-        const delay =
-          retryAfterMs(
-            response?.headers?.["retry-after"] ?? normalized.retryAfter
-          ) ?? 1000;
-        cooldownUntil = Math.max(cooldownUntil, Date.now() + delay);
-        // Do not hold the UI indefinitely or retry mutations. This gate is used only for reads.
-        if (attempt >= 1 || delay > 30000) throw error;
+        // Reserve a start only after waiting: canceled searches do not consume future slots.
+        while (true) {
+          if (signal?.aborted) throw abortError();
+          if (cooldownUntil - Date.now() > 30000)
+            throw new Error("Too many requests. Please try again shortly.");
+          const remaining = Math.max(nextStart, cooldownUntil) - Date.now();
+          if (remaining > 0) await waitForRequest(remaining, signal);
+          if (signal?.aborted) throw abortError();
+          if (Date.now() >= Math.max(nextStart, cooldownUntil)) break;
+        }
+        nextStart = Date.now() + minIntervalMs;
+        try {
+          return await operation();
+        } catch (error) {
+          if (signal?.aborted) throw abortError();
+          const response = (
+            error as {
+              response?: { status?: number; headers?: Record<string, unknown> };
+            }
+          )?.response;
+          const normalized = error as { status?: number; retryAfter?: string };
+          const status = response?.status ?? normalized.status;
+          if (status !== 429 && status !== 503) throw error;
+          const delay =
+            retryAfterMs(
+              response?.headers?.["retry-after"] ?? normalized.retryAfter
+            ) ?? 1000;
+          cooldownUntil = Math.max(cooldownUntil, Date.now() + delay);
+          // Do not hold the UI indefinitely or retry mutations. This gate is used only for reads.
+          if (attempt >= 1 || delay > 30000) throw error;
+        }
+      } finally {
+        release();
       }
     }
   };

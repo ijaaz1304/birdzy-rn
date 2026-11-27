@@ -3,6 +3,7 @@
  * Bird API contract: https://birds-api.trackzio.com/docs/core-module
  */
 
+import { measureExploreRead } from "../exploreDiagnostics";
 import { apiClient } from "@/services/api/axios";
 import { createRequestGate } from "@/features/explore/utils/abortableRequest";
 import { API_ENDPOINTS } from "@/features/explore/content/explore.config";
@@ -14,8 +15,8 @@ import {
   ExploreMapQueryParams,
 } from "./explore.api.types";
 
-const requestExplore = createRequestGate(300);
-const requestExploreMap = createRequestGate(300);
+const requestExplore = createRequestGate(300, 2);
+const requestExploreMap = createRequestGate(300, 2);
 
 export const exploreApi = {
   /** POST returns a raw FeatureCollection; always bound requests to a bbox. */
@@ -26,10 +27,15 @@ export const exploreApi = {
     if (!params.bbox) throw new Error("Map bounds are required.");
     const response = await requestExploreMap(
       () =>
-        apiClient.post<ExploreMapGeoJSON>(
-          API_ENDPOINTS.CORE.EXPLORE_MAP_GEOJSON,
-          undefined,
-          { params, signal }
+        measureExploreRead(
+          "map",
+          () =>
+            apiClient.post<ExploreMapGeoJSON>(
+              API_ENDPOINTS.CORE.EXPLORE_MAP_GEOJSON,
+              undefined,
+              { params, signal }
+            ),
+          signal
         ),
       signal
     );
@@ -68,10 +74,15 @@ export const exploreApi = {
 
     const response = await requestExplore(
       () =>
-        apiClient.post<ExploreNearYouResponse>(
-          API_ENDPOINTS.CORE.EXPLORE_NEAR_YOU,
-          { location: body.location },
-          { params: queryParams, signal }
+        measureExploreRead(
+          "list",
+          () =>
+            apiClient.post<ExploreNearYouResponse>(
+              API_ENDPOINTS.CORE.EXPLORE_NEAR_YOU,
+              { location: body.location },
+              { params: queryParams, signal }
+            ),
+          signal
         ),
       signal
     );

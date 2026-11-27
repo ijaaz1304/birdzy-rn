@@ -86,3 +86,13 @@ test("a map-specific rate limit does not put card queries into cooldown", async 
   ).toBe(cards);
   expect(client.post).toHaveBeenCalledTimes(2);
 });
+
+test("a ready Bird list request starts before its caller publishes native-map state", async () => {
+  client.post.mockResolvedValueOnce({ data: {} });
+  const request = api.fetchExploreNearYou({ location: { lat: 1, lng: 2 } });
+  expect(client.post).toHaveBeenCalledTimes(1);
+  expect(client.post.mock.calls[0][0]).toBe(
+    "/core/archetypes/explore-near-you"
+  );
+  await request;
+});

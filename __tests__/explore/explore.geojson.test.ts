@@ -62,3 +62,9 @@ test("map observations match list species by BirdLife ID rather than observation
   ] as ExploreArchetypeCard[];
   expect(cardsForMapSelection(cards, new Set(["123"]))).toEqual([cards[1]]);
 });
+
+test("a nonempty response with no usable coordinates is an error, not an empty area", () => {
+  expect(() =>
+    validateMapGeoJSON(collection(point("invalid", [200, 100])))
+  ).toThrow("no usable observations");
+});

@@ -142,3 +142,9 @@ Post details retains real post/comment/reply data. In dark appearance it follows
 For non-premium users who have not dismissed the inline Home offer, Dark shows the active discount banner only while the offer is active and its displayed countdown is positive. In an inactive/disabled discount phase or at zero countdown, show the full-price Upgrade to Pro banner (Figma 9375:212476). Subscribe now opens SubscriptionMain with the plan modal and `discount50: false`; the close control retains existing dismissal behavior. The existing Light banner selection/artwork is preserved.
 
 In dark identification/Bird Details, available name sound playback remains in the 48-point control at the right edge of the full-width name row, 20 points from the page edge (Figma 9375:213219). It uses dark fill, border-0 and a white volume glyph. Existing sound availability, play/stop handler and accessibility labels are retained; no sound button is fabricated when no sound URL exists.
+
+## 2026-11-27 — Explore optimization behavior
+
+Bird's Spotted Now/Year-round tabs, selected-location map scope, map-only trait filters, dedicated filtered Results, details/sound routes and direct wishlist toggle remain. The header Refresh control reloads map and cards while retaining current cards; a failed continuation retries that page. Pending stars are shared across duplicate/recycled cards, survive access-token refresh and ignore obsolete session completions.
+
+Compact/expanded search shares a draft and only the visible field reads suggestions. Late place-name updates do not restart the coordinate search or replace typing. Cluster selection retains the source and extracts unique BirdLife IDs in bounded batches; native fallback, fixed highlight geometry and minimize controls remain. Explore photos use FastImage with a small low-priority prefetch buffer. Native/device visual and performance acceptance remains open.

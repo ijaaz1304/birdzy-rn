@@ -1,14 +1,29 @@
 import { Image } from "react-native";
 import FastImage from "react-native-fast-image";
 
-const prefetchedUris = new Set<string>();
-const prefetchedReadyUris = new Set<string>();
+const HINT_TTL = 3 * 60 * 1000;
+const HINT_LIMIT = 500;
+const prefetchedUris = new Map<string, number>();
+const prefetchedReadyUris = new Map<string, number>();
+function hasHint(hints: Map<string, number>, uri: string) {
+  const at = hints.get(uri);
+  if (at === undefined) return false;
+  hints.delete(uri);
+  if (Date.now() - at >= HINT_TTL) return false;
+  hints.set(uri, at);
+  return true;
+}
+function remember(hints: Map<string, number>, uri: string) {
+  hints.delete(uri);
+  hints.set(uri, Date.now());
+  if (hints.size > HINT_LIMIT) hints.delete(hints.keys().next().value!);
+}
 
 export function isRemoteImageCacheReady(
   uri: string | undefined | null
 ): boolean {
   const trimmed = uri?.trim();
-  return !!trimmed && prefetchedReadyUris.has(trimmed);
+  return !!trimmed && hasHint(prefetchedReadyUris, trimmed);
 }
 
 /** Call from FastImage onLoad — never from FastImage.preload() kickoff. */
@@ -16,7 +31,7 @@ export function markRemoteImageCacheReady(
   uri: string | undefined | null
 ): void {
   const trimmed = uri?.trim();
-  if (trimmed) prefetchedReadyUris.add(trimmed);
+  if (trimmed) remember(prefetchedReadyUris, trimmed);
 }
 
 function isPrefetchableUri(uri: string): boolean {
@@ -28,8 +43,8 @@ function isPrefetchableUri(uri: string): boolean {
  * FastImage.preload() is fire-and-forget and has no completion signal.
  */
 function loadRemoteImageIntoCache(uri: string): void {
-  if (prefetchedUris.has(uri)) return;
-  prefetchedUris.add(uri);
+  if (hasHint(prefetchedUris, uri)) return;
+  remember(prefetchedUris, uri);
   FastImage.preload([
     {
       uri,
@@ -37,7 +52,7 @@ function loadRemoteImageIntoCache(uri: string): void {
       cache: FastImage.cacheControl.immutable,
     },
   ]);
-  void Image.prefetch(uri);
+  void Image.prefetch(uri).catch(() => prefetchedUris.delete(uri));
 }
 
 export async function prefetchRemoteImage(
@@ -61,10 +76,10 @@ export function prefetchRemoteImages(
   for (const raw of uris) {
     if (batch.length >= limit) break;
     const uri = raw?.trim();
-    if (!uri || !isPrefetchableUri(uri) || prefetchedUris.has(uri)) {
+    if (!uri || !isPrefetchableUri(uri) || hasHint(prefetchedUris, uri)) {
       continue;
     }
-    prefetchedUris.add(uri);
+    remember(prefetchedUris, uri);
     batch.push({ uri });
   }
 
@@ -77,7 +92,9 @@ export function prefetchRemoteImages(
       }))
     );
     batch.forEach((item) => {
-      void Image.prefetch(item.uri);
+      void Image.prefetch(item.uri).catch(() =>
+        prefetchedUris.delete(item.uri)
+      );
     });
   }
 }

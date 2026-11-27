@@ -49,17 +49,17 @@ const geo = (ids: (string | undefined)[]): ExploreMapGeoJSON => ({
 
 describe("filtered nearby helpers", () => {
   test("collects unique species IDs from map features", () => {
-    expect([...birdsLifeIdsFromGeoJSON(geo(["1", "2", "1", undefined]))]).toEqual(
-      ["1", "2"]
-    );
+    expect([
+      ...birdsLifeIdsFromGeoJSON(geo(["1", "2", "1", undefined])),
+    ]).toEqual(["1", "2"]);
   });
 
   test("keeps only matching species and applies the name search", () => {
     const cards = [card("1", "Blue Tit"), card("2", "Great Tit"), card("3")];
     const ids = new Set(["1", "2"]);
-    expect(filteredNearbyCards(cards, ids, "").map((c) => c.birdsLifeId)).toEqual(
-      ["1", "2"]
-    );
+    expect(
+      filteredNearbyCards(cards, ids, "").map((c) => c.birdsLifeId)
+    ).toEqual(["1", "2"]);
     expect(
       filteredNearbyCards(cards, ids, " blue ").map((c) => c.birdsLifeId)
     ).toEqual(["1"]);
@@ -110,9 +110,16 @@ describe("useNearbyBirdsForFilters", () => {
       pageSize: 20,
       tab: "yearRound",
     });
-    expect(fetchNearby.mock.calls[0][0]).toEqual({ location: { lat: 1, lng: 2 } });
+    expect(fetchNearby.mock.calls[0][0]).toEqual({
+      location: { lat: 1, lng: 2 },
+    });
     expect(latest.complete).toBe(true);
-    expect(latest.cards.map((c) => c.birdsLifeId)).toEqual(["1", "2", "3", "4"]);
+    expect(latest.cards.map((c) => c.birdsLifeId)).toEqual([
+      "1",
+      "2",
+      "3",
+      "4",
+    ]);
   });
 
   test("stops when the list ends without finding every species", async () => {
@@ -159,4 +166,27 @@ describe("useNearbyBirdsForFilters", () => {
     expect(fetchNearby.mock.calls[1][1]?.pageNo).toBe(1);
     expect(latest.cards).toHaveLength(1);
   });
+});
+
+test("changing location resets the imperative page snapshot before the next resolver starts", async () => {
+  fetchNearby
+    .mockReset()
+    .mockResolvedValueOnce(page(["old"], 1, 40))
+    .mockResolvedValueOnce(page(["new"], 1, 1));
+  let current!: ReturnType<typeof useNearbyBirdsForFilters>;
+  function Place({ lat, id }: { lat: number; id: string }) {
+    const ids = React.useMemo(() => new Set([id]), [id]);
+    current = useNearbyBirdsForFilters({ lat, lng: 2 }, ids);
+    return null;
+  }
+  let tree!: TestRenderer.ReactTestRenderer;
+  await act(async () => {
+    tree = TestRenderer.create(<Place lat={1} id="old" />);
+  });
+  await act(async () => tree.update(<Place lat={2} id="new" />));
+  expect(fetchNearby.mock.calls.map(([, query]) => query?.pageNo)).toEqual([
+    1, 1,
+  ]);
+  expect(current.cards.map((card) => card.birdsLifeId)).toEqual(["new"]);
+  await act(async () => tree.unmount());
 });

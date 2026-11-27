@@ -182,3 +182,12 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 
 - [x] 20 November 2026: matched the dark crop location view to the explicit light-card Figma reference, with dark text and blue underlined location.
 - [ ] Owner unassigned: accept location-off/known/long-place states, edit/permission actions and Light regression on iOS/Android crop screens.
+
+### 2026-11-27 — Explore optimization ownership/acceptance
+
+- [x] Audited Bird Explore independently of Mushroom/Plant product flows, starting at `9850d3c`; preserved location-only API, map-only filters, BirdLife identifiers and Results resolution. Source fixes and targeted async/cache/card/native-map regressions added in an isolated branch/worktree.
+- [ ] Owner unassigned: verify live backend count/pagination/season coverage and perform iOS/Android compact/expanded visual, permission, wishlist and release-performance acceptance. No native build/device/FPS/heap result was established by this change.
+- [ ] Owner unassigned: decide CDN thumbnail/cache policy and any future persistent-map architecture using real measurements. Environment/provider changes were not inferred from Plantzy.
+
+- [x] Scoped verification: 20 suites / 101 tests passed; explicit RN lint 0 errors / 20 warnings; handover links passed. Full-suite failures were compared with the untouched `9850d3c` checkout: the same two camera ThemeProvider failures exist on both, with no newly failing suite.
+- [ ] Owner unassigned: resolve the existing camera test fixtures and AskAIScreen type errors separately; native/backend/release performance acceptance for Explore remains open.

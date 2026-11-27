@@ -35,6 +35,8 @@ type Props = {
   style?: object;
   /** List grids: first image only, no auto-slide (faster catalogue scrolling). */
   enableImageCarousel?: boolean;
+  /** Explore can provide a native cached photo without changing other card callers. */
+  imageSlot?: React.ReactNode;
 };
 
 const AppCard: React.FC<Props> = React.memo(
@@ -49,11 +51,11 @@ const AppCard: React.FC<Props> = React.memo(
     onPress,
     onStarPress,
     showSoundButton = false,
-    hasSound = true,
     soundPlaying = false,
     onSoundPress,
     style,
     enableImageCarousel = true,
+    imageSlot,
   }) => {
     const theme = useTheme();
     const colors = theme.colors;
@@ -94,6 +96,7 @@ const AppCard: React.FC<Props> = React.memo(
       >
         {/* Image section – single or carousel via CardImageCarousel */}
         <View style={styles.imageContainer}>
+          {imageSlot ?? (
           <CardImageCarousel
             imageUrls={hasImageUrls ? carouselUrls : undefined}
             fallbackImage={hasImageUrls ? undefined : fallbackSource}
@@ -101,6 +104,7 @@ const AppCard: React.FC<Props> = React.memo(
             borderRadius={CARD_RADIUS}
             autoSlideIntervalMs={enableImageCarousel ? undefined : 0}
           />
+          )}
 
           {/* Reminders Badge - Bottom Left */}
           {remindersCount !== undefined && remindersCount > 0 && (
@@ -247,7 +251,8 @@ const AppCard: React.FC<Props> = React.memo(
       prevProps.soundPlaying === nextProps.soundPlaying &&
       prevProps.onSoundPress === nextProps.onSoundPress &&
       prevProps.style === nextProps.style &&
-      prevProps.enableImageCarousel === nextProps.enableImageCarousel
+      prevProps.enableImageCarousel === nextProps.enableImageCarousel &&
+      prevProps.imageSlot === nextProps.imageSlot
     );
   }
 );

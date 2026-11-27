@@ -1,6 +1,7 @@
 import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 
+const mockNativeLeaves = jest.fn();
 jest.mock("@/constants/env", () => ({ MAPBOX_ACCESS_TOKEN: "pk.test" }));
 jest.mock("@rnmapbox/maps", () => {
   const { View } = jest.requireActual("react-native");
@@ -9,12 +10,19 @@ jest.mock("@rnmapbox/maps", () => {
     ReactActual.createElement(View, null, children);
   const Camera = ReactActual.forwardRef(() => null);
   const ShapeSource = ReactActual.forwardRef(
-    ({ children }: { children?: React.ReactNode }, _ref: unknown) =>
-      ReactActual.createElement(View, null, children)
+    (props: { children?: React.ReactNode }, ref: unknown) => {
+      ReactActual.useImperativeHandle(ref, () => ({
+        getClusterLeaves: mockNativeLeaves,
+      }));
+      return ReactActual.createElement(View, props, props.children);
+    }
   );
   return {
     __esModule: true,
-    default: { setAccessToken: jest.fn(), StyleURL: { Dark: "d", Street: "s" } },
+    default: {
+      setAccessToken: jest.fn(),
+      StyleURL: { Dark: "d", Street: "s" },
+    },
     MapView: Passthrough,
     Camera,
     ShapeSource,
@@ -49,6 +57,7 @@ jest.mock("../../src/atoms", () => {
   return { Text, Icon: () => null };
 });
 
+import { ShapeSource } from "@rnmapbox/maps";
 import { Modal, TouchableOpacity } from "react-native";
 import { ExploreMapView } from "../../src/features/explore/components/ExploreMapView.nativeMap";
 import { EXPLORE_COPY } from "../../src/features/explore/content/explore.strings";
@@ -86,5 +95,45 @@ test("expanded map shows a minimize chip under the target that closes it", async
   expect(root.findByType(Modal).props.visible).toBe(false);
   expect(button(root, EXPLORE_COPY.expand)).toHaveLength(1);
   // The map load watchdog timer is cleared on unmount.
+  await act(async () => renderer.unmount());
+});
+
+test("cluster selection streams unique BirdLife IDs without replacing source geography", async () => {
+  const features = ["one", "two"].map((id) => ({
+    type: "Feature",
+    id,
+    geometry: { type: "Point", coordinates: [1, 2] },
+    properties: { id, birdsLifeId: "123" },
+  }));
+  const geoJSON = { type: "FeatureCollection", features } as never;
+  const selected = jest.fn();
+  let renderer!: TestRenderer.ReactTestRenderer;
+  mockNativeLeaves.mockResolvedValue({ type: "FeatureCollection", features });
+  await act(async () => {
+    renderer = TestRenderer.create(
+      <ExploreMapView
+        center={[1, 2]}
+        geoJSON={geoJSON}
+        onSelectionChange={selected}
+      />
+    );
+  });
+  const source = () =>
+    renderer.root
+      .findAllByType(ShapeSource)
+      .find((node) => node.props.id === "explore-sightings")!;
+  await act(async () =>
+    source().props.onPress({
+      features: [
+        {
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [1, 2] },
+          properties: { point_count: 2 },
+        },
+      ],
+    })
+  );
+  expect(selected).toHaveBeenLastCalledWith(["123"]);
+  expect(source().props.shape).toBe(geoJSON);
   await act(async () => renderer.unmount());
 });

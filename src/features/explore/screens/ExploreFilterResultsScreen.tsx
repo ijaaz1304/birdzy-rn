@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -20,7 +27,10 @@ import { EXPLORE_COPY } from "../content/explore.strings";
 import { useExploreStore } from "../explore.store";
 import { exploreService } from "@/features/explore/services/explore.service";
 import { ExploreFilterChips } from "../components/ExploreFilterChips";
-import { ExploreResultCard } from "../components/ExploreResultList";
+import {
+  EXPLORE_LIST_WINDOW,
+  ExploreResultCard,
+} from "../components/ExploreResultList";
 import { ExploreEmptyState } from "../components/ExploreEmptyState";
 import { useNearbyBirdsForFilters } from "../hooks/useNearbyBirdsForFilters";
 import {
@@ -49,7 +59,18 @@ export const ExploreFilterResultsScreen: React.FC = () => {
     mapDataError,
     applyFilters,
     retryMap,
-  } = useExploreStore();
+  } = useExploreStore(
+    useShallow((state) => ({
+      searchedLocation: state.searchedLocation,
+      filters: state.filters,
+      geoJSON: state.geoJSON,
+      isMapDataLoading: state.isMapDataLoading,
+      mapDataError: state.mapDataError,
+      applyFilters: state.applyFilters,
+      retryMap: state.retryMap,
+    }))
+  );
+
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filterData, setFilterData] = useState<Record<string, string[]>>();
@@ -189,6 +210,7 @@ export const ExploreFilterResultsScreen: React.FC = () => {
       </View>
       <FlatList
         data={results}
+        {...EXPLORE_LIST_WINDOW}
         keyExtractor={(item) => item.archetypeId}
         numColumns={2}
         columnWrapperStyle={results.length ? styles.columnWrapper : undefined}
@@ -266,7 +288,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
   },
-  back: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
+  back: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   search: { flex: 1, minWidth: 0 },
   filterLoading: {
     width: 48,
@@ -275,7 +302,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   // Figma: results start 24 below the search row; cards 12 apart.
-  content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 24,
+  },
   listHeader: { gap: 16, marginBottom: 16 },
   title: { fontFamily: FONTS.bold, fontSize: 20, lineHeight: 28 },
   columnWrapper: { gap: 12, marginBottom: 12 },

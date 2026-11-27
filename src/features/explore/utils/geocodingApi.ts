@@ -259,7 +259,13 @@ export async function searchAddressSuggestions(
   }
   const cacheKey = trimmed.toLocaleLowerCase();
   const cached = searchCache.get(cacheKey);
-  if (cached && Date.now() - cached.at < 60000) return cached.results;
+  if (cached) {
+    searchCache.delete(cacheKey);
+    if (Date.now() - cached.at < 60000) {
+      searchCache.set(cacheKey, cached);
+      return cached.results;
+    }
+  }
 
   try {
     const url = buildGeocodingUrl("/search", {

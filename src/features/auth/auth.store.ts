@@ -3,6 +3,7 @@
  * Complete implementation with all auth flows
  */
 
+import { invalidateAccountSession } from "../../services/session/accountSession";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -1016,6 +1017,8 @@ export const useAuthStore = create<AuthState>()(
 
       // Shared cleanup: clear session AsyncStorage, session, stores, cache (used by logout and deleteProfile).
       _clearAllSessionAndStorage: async () => {
+        // Invalidate async Explore work before any awaited storage cleanup.
+        invalidateAccountSession();
         const {
           useNotificationsStore,
         } = require("../notifications/notifications.store");

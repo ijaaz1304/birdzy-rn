@@ -109,3 +109,13 @@ Notification-list refresh uses `feedService.fetchFeedNotificationDocuments` and 
 ## Quiz artwork cleanup — 18 November 2026
 
 The existing quiz/archetype IDs have not changed. Bundled mushroom photographs have been removed; all eight legacy IDs currently use Birdzy's generic bird mascot. `quizImageMap.ts` no longer consumes `quizMushroomImage_*` Remote Config values or the inherited mushroom URL defaults for display; its remote image map is empty, and rendering uses curated bundled artwork. Backend/API payloads and Remote Config key definitions are unchanged. Distinct approved bird artwork and a bird-specific remote image contract are open product work (owner unassigned).
+
+## 2026-11-27 — Explore API ownership and caching
+
+`explore-near-you` remains a location-only Bird POST with tab/page query parameters; it was not replaced by Mushroom v2. Bird trait filters/radius are used only for map GeoJSON, and the filtered Results screen still resolves Year-round pages locally against map BirdLife IDs (maximum 15 pages). The map continues to cover the selected location's existing radius; gestures do not introduce viewport queries.
+
+First-page, continuation and map responses have separate 12-entry / three-minute in-memory caches. Continuations include their page-one snapshot identity. Cache reads do not extend the original expiry. Private list/page caches clear on screen exit or wishlist invalidation; geography may remain only in the same account/session and clears across scope/full reset. Invalidated responses cannot refill old snapshots. Failed pagination retries that page without dropping earlier cards; `paginationStalled` stops repeated/empty/non-advancing pages without changing backend totals. Refresh bypasses both result caches while retaining cards; map retry is independent.
+
+Endpoint gates retain 300 ms spacing and now limit simultaneous reads to two per endpoint. Independent map bbox/habitat reads share cancellation, preserving trait/query semantics. Read-only rate recovery remains bounded; wishlist mutations are not automatically retried. Boundary validation rejects malformed Bird IDs/photo values/counts/pagination and unusable nonempty map responses, and deduplicates first-page cards without changing server totals.
+
+Development-only `getExploreDiagnostics()` / `resetExploreDiagnostics()` expose bounded aggregate request timing/outcome/cache counters, without coordinates, IDs, URLs, tokens or payloads. See [the audit](../audits/explore-optimization-2026-11-27.md) for validation and open backend/device evidence.

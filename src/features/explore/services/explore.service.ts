@@ -3,6 +3,7 @@
  * Business logic layer for the Explore map feature.
  */
 
+import { validateExploreList } from "./exploreListValidation";
 import { exploreApi } from "./explore.api";
 import {
   ExploreNearYouRequestBody,
@@ -43,13 +44,14 @@ class ExploreService {
         query,
         signal
       );
-      if (response.error) {
+      if (response?.error) {
         throw new ApiException(
           response.reason || "Failed to fetch nearby birds"
         );
       }
+      const validated = validateExploreList(response);
       return {
-        data: response.data,
+        data: validated.data,
         tabs: response.tabs,
         pagination: response.pagination,
       };
@@ -63,25 +65,40 @@ class ExploreService {
     body: ExploreNearYouRequestBody,
     signal?: AbortSignal
   ): Promise<ExploreMapGeoJSON> {
-    const collections: ExploreMapGeoJSON[] = [];
-    // Serial bounded reads avoid a request burst for habitat unions/date-line splits.
-    for (const query of mapQueries(body)) {
-      if (signal?.aborted) throw abortError();
-      const response = await exploreApi.fetchMapGeoJSON(query, signal);
-      if (signal?.aborted) throw abortError();
-      const failure = response as unknown as {
-        error?: boolean;
-        reason?: unknown;
-      } | null;
-      if (failure?.error === true)
-        throw new ApiException(
-          typeof failure.reason === "string"
-            ? failure.reason
-            : "Unable to load map activity."
-        );
-      collections.push(validateMapGeoJSON(response));
+    const group = new AbortController();
+    const cancel = () => group.abort();
+    signal?.addEventListener("abort", cancel, { once: true });
+    if (signal?.aborted) group.abort();
+    try {
+      // The gate retains Bird's 300ms spacing and caps simultaneous map reads at two.
+      const collections = await Promise.all(
+        mapQueries(body).map(async (query) => {
+          if (group.signal.aborted) throw abortError();
+          const response = await exploreApi.fetchMapGeoJSON(
+            query,
+            group.signal
+          );
+          if (group.signal.aborted) throw abortError();
+          const failure = response as unknown as {
+            error?: boolean;
+            reason?: unknown;
+          } | null;
+          if (failure?.error === true)
+            throw new ApiException(
+              typeof failure.reason === "string"
+                ? failure.reason
+                : "Unable to load map activity."
+            );
+          return validateMapGeoJSON(response);
+        })
+      );
+      return mergeMapGeoJSON(collections, body);
+    } catch (error) {
+      group.abort();
+      throw error;
+    } finally {
+      signal?.removeEventListener("abort", cancel);
     }
-    return mergeMapGeoJSON(collections, body);
   }
 
   /** Filter category options for the Explore filter sheet — reuses the existing archetype filter-items call, not a new endpoint. */

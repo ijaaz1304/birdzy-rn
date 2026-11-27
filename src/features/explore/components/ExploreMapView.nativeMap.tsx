@@ -1,12 +1,6 @@
 import { EXPLORE_COLORS } from "../content/explore.colors";
 import { EXPLORE_COPY } from "../content/explore.strings";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -119,6 +113,7 @@ export type ExploreMapViewProps = {
    * frame.
    */
   headerOverlay?: React.ReactNode;
+  onPresentationChange?: (expanded: boolean) => void;
   /**
    * "Birds in This Area" preview panel — only meaningful inside the
    * expanded full-screen Modal (the collapsed map's equivalent lives below
@@ -126,6 +121,45 @@ export type ExploreMapViewProps = {
    */
   selectionOverlay?: React.ReactNode;
 };
+
+/** Selection overlays and list updates do not rebuild the native cluster source. */
+const ExploreActivitySource = React.memo(function ExploreActivitySource({
+  geoJSON,
+  sourceRef,
+  onPress,
+}: {
+  geoJSON: ExploreMapGeoJSON;
+  sourceRef: React.RefObject<ShapeSource | null>;
+  onPress: (event: OnPressEvent) => Promise<void>;
+}) {
+  return (
+    <ShapeSource
+      ref={sourceRef}
+      id="explore-sightings"
+      shape={geoJSON}
+      cluster
+      clusterRadius={50}
+      clusterMaxZoomLevel={16}
+      onPress={onPress}
+    >
+      <CircleLayer
+        id="explore-clusters"
+        filter={CLUSTER_FILTER}
+        style={CLUSTER_CIRCLE}
+      />
+      <SymbolLayer
+        id="explore-counts"
+        filter={CLUSTER_FILTER}
+        style={CLUSTER_TEXT}
+      />
+      <CircleLayer
+        id="explore-points"
+        filter={POINT_FILTER}
+        style={POINT_CIRCLE}
+      />
+    </ShapeSource>
+  );
+});
 
 /** Camera commands are imperative; native gesture state is saved for controls and remounts. */
 export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
@@ -136,6 +170,7 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
   clearSelectionSignal,
   headerOverlay,
   selectionOverlay,
+  onPresentationChange,
 }) => {
   const theme = useTheme();
   const isDark = useIsDark();
@@ -155,7 +190,6 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
     MAPBOX_ACCESS_TOKEN ? "loading" : "error"
   );
   const [selected, setSelected] = useState<[number, number] | null>(null);
-  const [excluded, setExcluded] = useState<Set<string | number>>(new Set());
   const selectionGeneration = useRef(0);
   const selectionCallback = useRef(onSelectionChange);
   selectionCallback.current = onSelectionChange;
@@ -163,7 +197,6 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
   const clearSelection = useCallback(() => {
     selectionGeneration.current++;
     setSelected(null);
-    setExcluded(new Set());
     selectionCallback.current?.(null);
   }, []);
   const moveCamera = useCallback(
@@ -208,70 +241,54 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
     return () => clearTimeout(timer);
   }, [status, instance, expanded]);
 
-  const shape = useMemo(
-    () =>
-      excluded.size
-        ? {
-            ...geoJSON,
-            features: geoJSON.features.filter(
-              (feature) => !excluded.has(feature.id!)
-            ),
+  const onActivityPress = useCallback(
+    async (event: OnPressEvent) => {
+      const feature = event.features[0];
+      if (feature?.geometry.type !== "Point") return;
+      const [longitude, latitude] = feature.geometry.coordinates;
+      if (!isValidCoordinate(latitude, longitude)) return;
+      const coordinate: [number, number] = [longitude, latitude];
+      const count = feature.properties?.point_count;
+      const generation = ++selectionGeneration.current;
+      const tappedSource = source.current;
+      const ids = new Set<string>();
+      const collect = (leaf: Feature) => {
+        const id = leaf.properties?.birdsLifeId;
+        if (typeof id === "string" && id) ids.add(id);
+      };
+      try {
+        if (typeof count === "number" && tappedSource) {
+          // Bound each native bridge payload and abandon work as soon as the selection changes.
+          for (let offset = 0; offset < count; offset += 200) {
+            const page = (await tappedSource.getClusterLeaves(
+              feature,
+              Math.min(200, count - offset),
+              offset
+            )) as FeatureCollection;
+            if (
+              generation !== selectionGeneration.current ||
+              tappedSource !== source.current
+            )
+              return;
+            page.features.forEach(collect);
+            if (!page.features.length) break;
           }
-        : geoJSON,
-    [geoJSON, excluded]
-  );
-
-  const onActivityPress = async (event: OnPressEvent) => {
-    const feature = event.features[0];
-    if (feature?.geometry.type !== "Point") return;
-    const [longitude, latitude] = feature.geometry.coordinates;
-    if (!isValidCoordinate(latitude, longitude)) return;
-    const coordinate: [number, number] = [longitude, latitude];
-    const count = feature.properties?.point_count;
-    const generation = ++selectionGeneration.current;
-    const tappedSource = source.current;
-    let leaves: Feature[] = [feature];
-    try {
-      if (typeof count === "number" && tappedSource) {
-        leaves = [];
-        // Bound each native bridge payload and abandon work as soon as the selection changes.
-        for (let offset = 0; offset < count; offset += 200) {
-          const page = (await tappedSource.getClusterLeaves(
-            feature,
-            Math.min(200, count - offset),
-            offset
-          )) as FeatureCollection;
-          if (
-            generation !== selectionGeneration.current ||
-            tappedSource !== source.current
-          )
-            return;
-          leaves.push(...page.features);
-          if (!page.features.length) break;
         }
+        if (typeof count !== "number" || !tappedSource) collect(feature);
+        if (generation !== selectionGeneration.current) return;
+        setSelected(coordinate);
+        selectionCallback.current?.(ids.size ? [...ids] : null);
+        const nextZoom =
+          typeof count === "number"
+            ? savedCamera.current.zoomLevel + 2
+            : Math.max(savedCamera.current.zoomLevel, 14);
+        moveCamera(coordinate, nextZoom, 500);
+      } catch {
+        if (generation === selectionGeneration.current) clearSelection();
       }
-      if (generation !== selectionGeneration.current) return;
-      const ids = [
-        ...new Set(
-          leaves
-            .map((leaf) => leaf.properties?.birdsLifeId)
-            .filter((id): id is string => typeof id === "string")
-        ),
-      ];
-      setSelected(coordinate);
-      setExcluded(
-        new Set(leaves.flatMap((leaf) => (leaf.id == null ? [] : [leaf.id])))
-      );
-      selectionCallback.current?.(ids.length ? ids : null);
-      const nextZoom =
-        typeof count === "number"
-          ? savedCamera.current.zoomLevel + 2
-          : Math.max(savedCamera.current.zoomLevel, 14);
-      moveCamera(coordinate, nextZoom, 500);
-    } catch {
-      if (generation === selectionGeneration.current) clearSelection();
-    }
-  };
+    },
+    [clearSelection, moveCamera]
+  );
   const saveCamera = (state: MapState) => {
     const coordinate = state.properties.center;
     if (!isValidCoordinate(coordinate[1], coordinate[0])) return;
@@ -291,6 +308,7 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
     setInitialCamera(savedCamera.current);
     setStatus("loading");
     setExpanded(value);
+    onPresentationChange?.(value);
   };
   const buttonStyle = [
     styles.button,
@@ -322,31 +340,11 @@ export const ExploreMapView: React.FC<ExploreMapViewProps> = ({
             minZoomLevel={MIN_ZOOM}
             maxZoomLevel={MAX_ZOOM}
           />
-          <ShapeSource
-            ref={source}
-            id="explore-sightings"
-            shape={shape}
-            cluster
-            clusterRadius={50}
-            clusterMaxZoomLevel={16}
+          <ExploreActivitySource
+            geoJSON={geoJSON}
+            sourceRef={source}
             onPress={onActivityPress}
-          >
-            <CircleLayer
-              id="explore-clusters"
-              filter={CLUSTER_FILTER}
-              style={CLUSTER_CIRCLE}
-            />
-            <SymbolLayer
-              id="explore-counts"
-              filter={CLUSTER_FILTER}
-              style={CLUSTER_TEXT}
-            />
-            <CircleLayer
-              id="explore-points"
-              filter={POINT_FILTER}
-              style={POINT_CIRCLE}
-            />
-          </ShapeSource>
+          />
           {selected && (
             <ShapeSource
               id="explore-selection"

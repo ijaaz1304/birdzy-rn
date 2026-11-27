@@ -40,30 +40,62 @@ type Props = {
   locationLabel?: string;
   /** Right-hand target icon (Figma): re-locate to the device position. */
   onUseCurrentLocation?: () => void;
+  active?: boolean;
+  draft?: {
+    value: string;
+    setValue: React.Dispatch<React.SetStateAction<string>>;
+  };
 };
 
 export const ExploreLocationSearchBar: React.FC<Props> = ({
   onSelectLocation,
   locationLabel = "",
   onUseCurrentLocation,
+  active = true,
+  draft,
 }) => {
   const theme = useTheme();
   const isDark = useIsDark();
-  const [query, setQuery] = useState("");
+  const [localQuery, setLocalQuery] = useState("");
+  const query = draft?.value ?? localQuery;
+  const setQuery = draft?.setValue ?? setLocalQuery;
+  const sharedDraft = !!draft;
+  const focused = useRef(false);
+  const previousLabel = useRef(locationLabel);
+  const firstLabel = useRef(true);
+  const visibility = useRef(active);
+  visibility.current = active;
+  const queryRef = useRef(query);
+  queryRef.current = query;
   const [isFocused, setIsFocused] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState(locationLabel);
   const selectedLabelRef = useRef(locationLabel);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { suggestions, isLoading, error, cancel } = useLocationSuggestions(
     query,
-    isFocused && query !== selectedLabel
+    active && isFocused && query !== selectedLabel
   );
   useEffect(() => {
     cancel();
-    setQuery(locationLabel);
+    const changed = previousLabel.current !== locationLabel;
+    if (
+      visibility.current &&
+      !focused.current &&
+      (!sharedDraft || changed || (firstLabel.current && !queryRef.current))
+    )
+      setQuery(locationLabel);
     setSelectedLabel(locationLabel);
     selectedLabelRef.current = locationLabel;
-  }, [locationLabel, cancel]);
+    previousLabel.current = locationLabel;
+    firstLabel.current = false;
+  }, [locationLabel, cancel, setQuery, sharedDraft]);
+  useEffect(() => {
+    if (active) return;
+    cancel();
+    if (blurTimer.current) clearTimeout(blurTimer.current);
+    focused.current = false;
+    setIsFocused(false);
+  }, [active, cancel]);
   useEffect(
     () => () => {
       if (blurTimer.current) clearTimeout(blurTimer.current);
@@ -81,6 +113,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
       selectedLabelRef.current = item.name;
       // Dismissing the keyboard can schedule onBlur with the previous label.
       if (blurTimer.current) clearTimeout(blurTimer.current);
+      focused.current = false;
       setIsFocused(false);
       onSelectLocation({
         latitude: item.location.latitude,
@@ -88,7 +121,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
         label: item.name,
       });
     },
-    [onSelectLocation, cancel]
+    [onSelectLocation, cancel, setQuery]
   );
 
   const handleClear = useCallback(() => {
@@ -96,7 +129,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
     setQuery("");
     setSelectedLabel("");
     selectedLabelRef.current = "";
-  }, [cancel]);
+  }, [cancel, setQuery]);
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<GeocodingSearchResult>) => (
@@ -121,6 +154,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
   );
 
   const showDropdown =
+    active &&
     isFocused &&
     query !== selectedLabel &&
     query.trim().length >= MIN_QUERY_LENGTH;
@@ -155,6 +189,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
           }}
           onFocus={() => {
             if (blurTimer.current) clearTimeout(blurTimer.current);
+            focused.current = true;
             setIsFocused(true);
             // selectTextOnFocus alone is unreliable on Android (doesn't
             // always re-select on tap, especially after the field has
@@ -165,6 +200,7 @@ export const ExploreLocationSearchBar: React.FC<Props> = ({
           }}
           onBlur={() => {
             blurTimer.current = setTimeout(() => {
+              focused.current = false;
               setIsFocused(false);
               // Nothing was picked from the dropdown — restore the
               // previously selected label instead of leaving the field

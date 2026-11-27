@@ -95,3 +95,24 @@ test("retries normalized Axios rate limits using preserved Retry-After", async (
   await jest.advanceTimersByTimeAsync(1);
   expect(await request).toBe("ok");
 });
+
+test("concurrent reads are capped while queued cancellations never reach transport", async () => {
+  const gate = createRequestGate(0, 2);
+  const finish: Array<(value: string) => void> = [];
+  const run = jest.fn(
+    () => new Promise<string>((resolve) => finish.push(resolve))
+  );
+  const first = gate(run),
+    second = gate(run);
+  const controller = new AbortController();
+  const canceled = gate(run, controller.signal);
+  const assertion = expect(canceled).rejects.toMatchObject({
+    name: "AbortError",
+  });
+  controller.abort();
+  await assertion;
+  expect(run).toHaveBeenCalledTimes(2);
+  finish[0]("one");
+  finish[1]("two");
+  expect(await Promise.all([first, second])).toEqual(["one", "two"]);
+});
