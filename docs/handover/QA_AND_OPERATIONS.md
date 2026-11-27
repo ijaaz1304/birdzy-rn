@@ -184,3 +184,9 @@ Inspect the sound crop screen in Dark with location off and with a long location
 - [ ] Test dense selection for correct BirdLife membership/source stability and visible photos on slow networks. Capture release-device HTTP timings, first visible map/cards/photo, frame times and peak memory on iOS/Android.
 
 Owner unassigned. Source/mocked regressions are separate from device/backend acceptance; see [the audit](../audits/explore-optimization-2026-11-27.md) and CHANGELOG for actual executed checks.
+
+## 2026-11-27 — Camera review and Ask AI full-check follow-up
+
+The camera layout unit fixtures provide ThemeContext with actual light/dark tokens; the banner/slot stacking and gesture-inset CTA checks now execute in both modes. Ask AI photo fallback tests exercise the actual normalized Bird identification result, nested summary, scientific-only label and no-match response. Camera runtime layout, AI routing and request contracts were not changed.
+
+Executed: full Jest **106 suites / 909 tests passed**, standard `tsc --noEmit --pretty false` passed, and the new helper/camera/formatter regression files linted with zero errors or warnings using the installed React Native ESLint config. Native/device acceptance is separate: at inspection ADB listed no Android devices and no iOS simulator was booted. Reconnect/select a target before physical UI/performance checks; owner unassigned.

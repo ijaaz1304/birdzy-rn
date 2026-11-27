@@ -148,3 +148,7 @@ In dark identification/Bird Details, available name sound playback remains in th
 Bird's Spotted Now/Year-round tabs, selected-location map scope, map-only trait filters, dedicated filtered Results, details/sound routes and direct wishlist toggle remain. The header Refresh control reloads map and cards while retaining current cards; a failed continuation retries that page. Pending stars are shared across duplicate/recycled cards, survive access-token refresh and ignore obsolete session completions.
 
 Compact/expanded search shares a draft and only the visible field reads suggestions. Late place-name updates do not restart the coordinate search or replace typing. Cluster selection retains the source and extracts unique BirdLife IDs in bounded batches; native fallback, fixed highlight geometry and minimize controls remain. Explore photos use FastImage with a small low-priority prefetch buffer. Native/device visual and performance acceptance remains open.
+
+## 2026-11-27 — Ask AI photo fallback fields
+
+When the existing BirdBot database-unreachable/photo fallback runs, it formats the normalized identification's display `name`, adds a different scientific name once in brackets, and includes `match.summary` when present. A missing name still yields the existing clearer-photo message. The legacy service bridge does not expose top-level `commonName` or `summary`; no endpoint, usage limit, chat/Got Bitten routing or identification schema was changed.

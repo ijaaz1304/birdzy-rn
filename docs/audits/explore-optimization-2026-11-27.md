@@ -66,3 +66,7 @@ Final full-suite/lint/type/doc results are recorded in the dated CHANGELOG imple
 - Handover checker passed: **14 pages / 308 local links** with optional sibling-portfolio notes. Whitespace passed. No native build/device/backend or numerical FPS/latency improvement is claimed.
 
 The complete TypeScript diagnostic output was compared with the untouched same-base original checkout and matched exactly (the two AskAIScreen errors). There are no new type-check failures in this change.
+
+## Requested full-check follow-up
+
+The previously recorded baseline camera/type failures have now been fixed on this branch: camera layout fixtures provide real light/dark theme context, and Ask AI photo fallback consumes normalized `name` and `match.summary`. Full Jest now passes **106 suites / 909 tests**, and standard `tsc --noEmit --pretty false` passes. The earlier failing check totals above remain historical audit evidence. Device/release performance checks still require an available target; ADB had no connected phone and no iOS simulator was booted at inspection. See the latest CHANGELOG entry for actual follow-up checks.

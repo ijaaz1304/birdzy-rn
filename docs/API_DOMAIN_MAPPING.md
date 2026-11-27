@@ -572,3 +572,7 @@ Phase 6  UI rename, assets, strings, analytics events
 ---
 
 *This document is the master map for Bird API/domain work. Update it when backend confirms ambiguous endpoints (specimens-of-the-day, maps proxy).*
+
+## 2026-11-27 — Ask AI photo-fallback normalization correction
+
+The existing photo fallback uses the Bird service's legacy compatibility result (`normalizeBirdIdentifyResponseLegacy`): the common/scientific display label is exposed as `name`, scientific identity remains `scientificName`, and the original summary is `match.summary`. AskAIScreen now delegates formatting to `src/features/ask-ai/utils/birdPhotoReply.ts` using those actual fields. It does not add fields to the API/legacy type, introduce another read, or change chat/Got Bitten routing. Tests exercise a result produced by the actual Bird normalizer, scientific-only results and no matches.

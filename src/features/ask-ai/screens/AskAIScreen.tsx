@@ -44,6 +44,7 @@ import {
 } from "../../camera/iosGallerySelection";
 import { AskAIScreenBackground, AskAIEmptyState, type AskAiPromptItem } from "../components";
 import { AI_CROPPER_OPTIONS } from "../../../constants/imagePipeline.constants";
+import { formatBirdPhotoReply } from "../utils/birdPhotoReply";
 import { ASK_AI_STRINGS } from "../../../config/strings/ask-ai.strings";
 
 import { Radius } from "../../../design";
@@ -125,24 +126,7 @@ function isOrnithologyDatabaseDown(error: unknown): boolean {
 /** BirdBot chat is down; photo questions can still use image identification. */
 async function replyFromBirdPhoto(imageUris: string[]): Promise<string> {
   const result = await aiService.identifyMushroom(imageUris);
-  const top = result.matches[0];
-  const common = top?.commonName?.trim();
-  const scientific = top?.scientificName?.trim();
-  const name = common || scientific;
-  if (!name) {
-    return "I couldn't match that photo to a bird. Try a clearer picture.";
-  }
-  const scientificSuffix =
-    common &&
-    scientific &&
-    scientific.toLowerCase() !== common.toLowerCase()
-      ? ` (${scientific})`
-      : "";
-  const summary = top.summary?.trim();
-  if (summary) {
-    return `This looks like a ${name}${scientificSuffix}. ${summary}`;
-  }
-  return `This looks like a ${name}${scientificSuffix}.`;
+  return formatBirdPhotoReply(result.matches[0]);
 }
 
 async function requestAskAiReply(params: {

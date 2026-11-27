@@ -190,4 +190,10 @@ For each phase append: date, operator, app/branch/commit, environment/build, act
 - [ ] Owner unassigned: decide CDN thumbnail/cache policy and any future persistent-map architecture using real measurements. Environment/provider changes were not inferred from Plantzy.
 
 - [x] Scoped verification: 20 suites / 101 tests passed; explicit RN lint 0 errors / 20 warnings; handover links passed. Full-suite failures were compared with the untouched `9850d3c` checkout: the same two camera ThemeProvider failures exist on both, with no newly failing suite.
-- [ ] Owner unassigned: resolve the existing camera test fixtures and AskAIScreen type errors separately; native/backend/release performance acceptance for Explore remains open.
+- [x] Follow-up: resolved the camera fixture and AskAIScreen type errors; full Jest 106 suites / 909 tests and standard TypeScript passed. Native/backend/release performance acceptance for Explore remains open; owner unassigned.
+
+
+### 2026-11-27 — Full-check follow-up and device availability
+
+- [x] Fixed themed camera-review fixture coverage (both modes) and normalized Ask AI photo reply fields; full suite 106/106 and 909/909 tests passed, with standard TypeScript passing.
+- [ ] Owner unassigned: physical-device acceptance requires a connected phone or agreed simulator target; no Android device is currently connected and no iOS simulator was booted at inspection. Release FPS/heap and live API acceptance remain open.

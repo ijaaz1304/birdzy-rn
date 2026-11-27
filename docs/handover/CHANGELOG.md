@@ -759,3 +759,11 @@ Validation: `npx jest` on the seven new Explore/Home UI suites passed (7 suites 
 - No live API calls, native builds, device acceptance, release FPS/heap measurement or production speed improvement was verified. Backend/CDN and iOS/Android acceptance remain open; owner unassigned.
 
 Baseline TypeScript comparison was also executed on the untouched `9850d3c` checkout: its diagnostics exactly match the two AskAIScreen errors from the optimized worktree. No new TypeScript diagnostic was introduced.
+
+## 2026-11-27 — Fix remaining camera tests and Ask AI type errors
+
+- Camera review tests now provide the real ThemeContext/tokens and run banner/slot stacking plus gesture-inset CTA assertions in light and dark modes. The CameraIdentifyReview runtime component was not changed to hide missing application context.
+- Ask AI's existing Bird photo fallback now formats normalized `name`, `scientificName` and `match.summary` through `birdPhotoReply.ts`. Removed reads of nonexistent top-level `commonName`/`summary` without casts, new endpoint reads, schema additions or changes to chat/Got Bitten routing/usage limits. Regression inputs include the actual Bird normalizer's output, scientific-only and no-match cases.
+- Actual validation: targeted camera/formatter checks passed **2 suites / 8 tests**. Full Jest (`--runInBand --no-coverage --testTimeout=15000`) passed **106 suites / 909 tests** (12.061 seconds). Both standard `tsc --noEmit --pretty false` and the bundler-resolution check passed. Explicit installed RN ESLint over the new helper/regression files passed with **0 errors / 0 warnings**. Whitespace and handover links are checked before publication.
+- Updated FLOWS, API_AND_DATA, DEVELOPMENT, QA_AND_OPERATIONS, KNOWN_GAPS, HANDOVER_60_DAYS and specialist API_DOMAIN_MAPPING. Prior baseline failures in earlier entries remain historical evidence, now resolved.
+- Device availability was checked: ADB reports no connected Android device; no iOS simulator was booted. No current-branch native build/device/FPS/heap or live backend result is claimed. Target selection/reconnection and native/release acceptance remain open; owner unassigned.

@@ -100,4 +100,11 @@ Final audit checks: TypeScript and app-wide ESLint error check passed; 752 whole
 
 The [Explore audit/fixes](../audits/explore-optimization-2026-11-27.md) cover request scheduling, coherent TTL/snapshot caches, retry ownership, map-filter/location races, shared pending wishlist state, stable cluster input and image/search work. Targeted regressions pass. Device visuals/gestures/permissions, real map/list coverage, release frame times/heap and CDN policy remain unverified; owner unassigned.
 
-The full repository suite still has the same two `cameraIdentifyReview.test.tsx` missing-ThemeProvider failures reproduced on the untouched baseline and optimized branch. TypeScript also reports two AskAIScreen legacy identification-type field errors. These unrelated areas were not changed to make an Explore-only result look green. No native build or live backend acceptance is claimed.
+At the initial Explore checkpoint, the full repository suite had two `cameraIdentifyReview.test.tsx` missing-ThemeProvider failures, reproduced on the untouched baseline and optimized branch, plus two AskAIScreen identification-field type errors. Those were left outside the initial Explore-only change and have now been fixed in the follow-up below. No native build or live backend acceptance is claimed.
+
+
+## 2026-11-27 — Camera test and Ask AI type follow-up resolved
+
+Camera layout fixtures now supply the real theme context/tokens and run in both light and dark modes; camera runtime layout was not changed. Ask AI photo fallback now reads the normalized display `name` and `match.summary`, with scientific-name/no-match fallback coverage, instead of nonexistent top-level fields. Full Jest passes **106 suites / 909 tests** and standard `tsc --noEmit --pretty false` passes. This resolves the previously recorded camera/type blockers, not the deployed chat database issue.
+
+Physical-device/release performance acceptance still needs an available target. The current ADB inventory has no connected Android device; `simctl list devices booted` shows no booted iOS simulator. No current-branch native/device/FPS result was established by this follow-up. Owner unassigned.

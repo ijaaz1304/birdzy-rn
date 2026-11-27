@@ -119,3 +119,7 @@ First-page, continuation and map responses have separate 12-entry / three-minute
 Endpoint gates retain 300 ms spacing and now limit simultaneous reads to two per endpoint. Independent map bbox/habitat reads share cancellation, preserving trait/query semantics. Read-only rate recovery remains bounded; wishlist mutations are not automatically retried. Boundary validation rejects malformed Bird IDs/photo values/counts/pagination and unusable nonempty map responses, and deduplicates first-page cards without changing server totals.
 
 Development-only `getExploreDiagnostics()` / `resetExploreDiagnostics()` expose bounded aggregate request timing/outcome/cache counters, without coordinates, IDs, URLs, tokens or payloads. See [the audit](../audits/explore-optimization-2026-11-27.md) for validation and open backend/device evidence.
+
+## 2026-11-27 — Normalized photo replies in Ask AI
+
+The existing `aiService.identifyMushroom` Bird compatibility method returns normalized identification entries with `name`, `scientificName` and the raw matched record in `match`. Ask AI photo fallback consumes `name` / `match.summary`, not nonexistent top-level `commonName` / `summary`. A formatter regression uses the real Bird normalizer to exercise this boundary. This is a client display correction; requests and backend schemas remain unchanged.
